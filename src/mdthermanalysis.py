@@ -1,6 +1,6 @@
 ################################################################################
 ###
-###   MDThermAnalysis - v0.3.10  - Sep 22, 2017
+###   MDThermAnalysis - v0.3.11  - Oct 10, 2017
 ###
 ################################################################################
 ###
@@ -265,6 +265,7 @@ class MDSample(object):
         for d in xrange(self.N_COMPONENTS):
             self.acf[:,d] = acf(self.traj[:,d], nlags=NLAGS, unbiased=True, \
                                        fft=True) * np.var(self.traj[:,d])
+        self.acfm = np.mean(self.acf, axis=1)  # average acf
         return
 
 
@@ -273,6 +274,7 @@ class MDSample(object):
         if self.acf is None:
             raise RuntimeError('Autocovariance is not defined.')
         self.tau = integrate_acf(self.acf)
+        self.taum = np.mean(self.tau, axis=1)  # average tau
         return
 
 
