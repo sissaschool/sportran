@@ -1,0 +1,197 @@
+
+from scipy.special import polygamma
+
+################################################################################
+
+def multicomp_cepstral_parameters( NF, N_COMPONENTS ):
+    """This function returns the variance of the cepstral coefficients and the 
+    mean of the log(PSD) distribution, generated from a periodogram that is the 
+    average of N_COMPONENTS."""
+   
+    N = 2*(NF-1)
+
+    # variance of cepstral coefficients
+    trigamma = polygamma(1, N_COMPONENTS)
+    ck_THEORY_var = 1./N * np.concatenate(([2*trigamma], [trigamma]*(NF-2), [2*trigamma]))
+
+    # bias of log(PSD)
+    psd_THEORY_mean = (polygamma(0, N_COMPONENTS) - np.log(N_COMPONENTS)) * np.ones(NF)
+    psd_THEORY_mean[0]  = polygamma(0, 0.5*N_COMPONENTS) - np.log(0.5*N_COMPONENTS)
+    psd_THEORY_mean[-1] = psd_THEORY_mean[0]
+
+    return ck_THEORY_var, psd_THEORY_mean
+
+################################################################################
+
+class CosFilter(object):
+    
+    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0, normalization=1.0):
+
+        NF = samplelogpsd.size
+        N = 2*(NF-1)
+
+        if psd_theory_mean is None:
+            # by default the THEORETICAL means are the one component ones:
+            # ck THEORY mean:
+            #    - EULER_GAMMA - log(2)   for k = {0, N/2}
+            #    - EULER_GAMMA            otherwise
+            self.logpsd_THEORY_mean = - EULER_GAMMA * np.ones(NF)
+            self.logpsd_THEORY_mean[0]  = - EULER_GAMMA - np.log(2)
+            self.logpsd_THEORY_mean[-1] = - EULER_GAMMA - np.log(2)
+        else:
+            self.logpsd_THEORY_mean = psd_theory_mean
+
+        # subtract the mean of the distribution
+        self.samplelogpsd = samplelogpsd - self.logpsd_THEORY_mean
+        self.logpsdK = dct_coefficients(self.samplelogpsd, normalization)
+        if (aic_type == 'aic'):
+            self.aic = dct_AIC(self.logpsdK, ck_theory_var)
+        elif (aic_type == 'aicc'):
+            self.aic = dct_AICc(self.logpsdK, ck_theory_var)
+        else:
+            raise ValueError('AIC type not valid.')
+        self.aic_min = np.min(self.aic)
+        self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
+        if (self.aic_Kmin >= NF):
+            print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
+        
+        if ck_theory_var is None:
+            # by default the THEORETICAL variances are the one component ones:
+            # ck THEORY variances:
+            #    (pi^2)/3/N   for k = {0, N/2}
+            #    (pi^2)/6/N   otherwise
+            self.logpsdK_THEORY_var = 1./N * np.concatenate(([np.pi**2/3], [np.pi**2/6.]*(NF-2), [np.pi**2/3]))
+            self.logpsdK_THEORY_std = np.sqrt(self.logpsdK_THEORY_var)
+            # logtau THEORY variances:  (we assume to be summing ck up to K, included)
+            #    (pi^2)/3/N*(2*K+1)   for K = {0, N/2-1}
+            #    (pi^2)/3             for K = N/2
+            self.logtau_THEORY_var = 1./N * np.concatenate((np.pi**2/3.*(2*np.arange(NF-1)+1), [np.pi**2/3.*N]))
+            self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
+        else:
+            self.logpsdK_THEORY_var = ck_theory_var
+            self.logpsdK_THEORY_std = np.sqrt(self.logpsdK_THEORY_var)
+            self.logtau_THEORY_var = np.zeros(NF)
+            self.logtau_THEORY_var[0] = self.logpsdK_THEORY_var[0]
+            for K in xrange(1, NF-1):
+                self.logtau_THEORY_var[K] = self.logtau_THEORY_var[K-1] + 4.*self.logpsdK_THEORY_var[K]
+            self.logtau_THEORY_var[-1] = self.logtau_THEORY_var[-2] + self.logpsdK_THEORY_var[-1]
+            self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
+        return
+    
+    
+    def scan_filter_tau(self, K_PSD=None, correct_mean=True):
+        """Computes the tau as a function of the cutoff K for the CosFilter.
+        Also computes psd and logpsd for the given K_PSD cutoff (or otherwise the aic_Kmin is used)."""
+        if K_PSD is None:
+            self.K_PSD = self.aic_Kmin
+        else:
+            self.K_PSD = K_PSD
+
+        # COS-filter analysis with frequency cutoff K
+        self.logtau = dct_filter_tau(self.samplelogpsd)
+        self.logpsd = dct_filter_psd(self.samplelogpsd, self.K_PSD) # usually is log(psd)@aic_Kmin
+        self.psd = np.exp(self.logpsd)
+        self.tau = np.exp(self.logtau)
+
+        if (self.aic_Kmin < self.samplelogpsd.size):
+            self.logtau_Kmin     = self.logtau[self.aic_Kmin]
+            self.logtau_var_Kmin = self.logtau_THEORY_var[self.aic_Kmin]
+            self.logtau_std_Kmin = np.sqrt(self.logtau_var_Kmin)
+            self.tau_Kmin     = self.tau[self.aic_Kmin]
+            self.tau_var_Kmin = self.tau_Kmin * self.logtau_var_Kmin
+            self.tau_std_Kmin = np.sqrt(self.tau_var_Kmin)
+        else:
+            self.logtau_Kmin     = np.NaN
+            self.logtau_var_Kmin = np.NaN
+            self.logtau_std_Kmin = np.NaN
+            self.tau_Kmin     = np.NaN
+            self.tau_var_Kmin = np.NaN
+            self.tau_std_Kmin = np.NaN
+
+        if correct_mean:
+            self.logpsd = self.logpsd + self.logpsd_THEORY_mean
+            self.logtau = self.logtau + self.logpsd_THEORY_mean[0]
+            self.logtau_Kmin = self.logtau_Kmin + self.logpsd_THEORY_mean[0]
+        return
+    
+    
+    def scan_filter_psd(self, K_LIST, correct_mean=True):
+        """Computes the psd as a function of the cutoff K for the CosFilter.
+        Repeats the procedure for all the cutoffs in the K_LIST."""
+        self.K_LIST = K_LIST
+        self.logpsd_K_LIST  = np.zeros((self.samplelogpsd.size, len(self.K_LIST)))
+        self.psd_K_LIST     = np.zeros((self.samplelogpsd.size, len(self.K_LIST)))
+        self.logtau_K_LIST  = np.zeros(len(self.K_LIST))   # DEFINED AS log(PSD[0]), no factor 0.5 or 0.25
+        self.tau_K_LIST     = np.zeros(len(self.K_LIST))
+        
+        for k, K in enumerate(self.K_LIST):
+            # COS-filter analysis with frequency cutoff K
+            self.logpsd_K_LIST[:,k] = dct_filter_psd(self.samplelogpsd, K)
+            self.logtau_K_LIST[k]   = self.logpsd_K_LIST[0,k]
+
+            self.psd_K_LIST[:,k]  = np.exp(self.logpsd_K_LIST[:,k])
+            self.tau_K_LIST[k]    = np.exp(self.logtau_K_LIST[k])
+
+            if correct_mean:
+                self.logpsd_K_LIST[:,k] = self.logpsd_K_LIST[:,k] + self.logpsd_THEORY_mean
+                self.logtau_K_LIST[k]   = self.logtau_K_LIST[k] + self.logpsd_THEORY_mean[0]
+        return
+
+    
+    def compute_p_aic(self, method='ba'):
+        """Define a weight distribution from the AIC, according to a method."""
+        NF = self.samplelogpsd.size
+        self.p_aic = produce_p(self.aic, method)
+        self.p_aic_Kave, self.p_aic_Kstd = grid_statistics(np.arange(NF), self.p_aic)
+        return
+    
+    
+    def compute_logtau_density(self, method='ba', only_stats=False, density_grid=None, grid_size=1000, correct_mean=True):
+        if self.p_aic is None:
+            raise ValueError('No P_AIC defined.')
+
+        # compute statistics
+        self.p_logtau_density_xave, self.p_logtau_density_xstd = \
+                        grid_statistics(self.logtau, self.p_aic, self.logtau_THEORY_var + self.logtau**2)
+        self.p_logtau_density_xstd2 = np.dot(self.p_aic, np.sqrt(self.logtau_THEORY_var + (self.logtau-self.p_logtau_density_xave)**2))
+        ##self.p_logtau_density_xave, self.p_logtau_density_xstd = \
+        ##                ta.grid_statistics(self.p_logtau_grid, self.p_logtau_density)
+
+        # compute distribution
+        if not only_stats:
+            if density_grid is None:
+                self.p_logtau_density, self.p_logtau_grid = produce_p_density(self.p_aic, \
+                                        self.logtau_THEORY_std, self.logtau, grid_size=grid_size)
+            else:
+                self.p_logtau_grid = density_grid
+                self.p_logtau_density = produce_p_density(self.p_aic, self.logtau_THEORY_std, \
+                                            self.logtau, grid=self.p_logtau_grid)
+
+        # tau distribution
+        self.p_tau_density_xave, self.p_tau_density_xstd = logtau_to_tau(self.p_logtau_density_xave, self.logpsd_THEORY_mean[0], self.p_logtau_density_xstd)
+        return
+
+#    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
+#        if K_LIST is not None:
+#            self.K_LIST = K_LIST
+#        self.scan_cos_filter_K()
+#        ## find minimum cutoff K that satisfies  |log(tau) - tauref| < thr
+#        if logtauref is not None:
+#            self.logtauref = logtauref
+#        else:
+#            self.logtauref = self.logtau[-1]  # if tauref is not given, use logtau with max cutoff
+#        self.optimalK_idx = len(self.K_LIST) - np.argmin(np.abs(self.logtau - self.logtauref)[::-1] <= thr)
+#        if (self.optimalK_idx < len(self.K_LIST)):
+#            self.optimalK = self.K_LIST[self.optimalK_idx]
+#        else:
+#            self.optimalK_idx = np.NaN
+#            self.optimalK = np.NaN
+#            print 'Warning: optimal cutoff K NOT FOUND.'
+#        return
+
+################################################################################
+
+def dct_coefficients(y, normalization=1.0):
+    yk = dct(y, type=1)/(y.size-1)*0.5 #normalization
+    return yk
+
