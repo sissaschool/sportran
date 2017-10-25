@@ -1,6 +1,6 @@
 
 from scipy.special import polygamma
-from .md.tools import logtau_to_tau
+from .tools import logtau_to_tau
 
 ################################################################################
 
@@ -32,7 +32,38 @@ def dct_coefficients(y):
 ################################################################################
 
 class CosFilter(object):
-    
+    """
+CEPSTRAL ANALYSIS based filtering.
+** INPUT VARIABLES: 
+  samplelogpsd    = the original sample log-PSD, \hat{L}_k
+  ck_theory_var   = the theoretical variance of cepstral coefficients, \sigma*^2(P*,N)
+  psd_theory_mean = the theoretical bias of log-PSD, \lambda_l
+  aic_type        = type of AIC to use ('aic' (default), 'aicc')
+  Kmin_corrfactor = cutoff correction factor (default: 1.0)
+  K_PSD           = cutoff used to compute logpsd (default: K_PSD = aic_Kmin)
+
+** INTERNAL VARIABLES:
+  samplelogpsd  = the original sample log-PSD - logpsd_THEORY_mean
+
+  logpsdK  = the cepstrum of the data, \hat{C}_n (i.e. the DCT of samplelogpsd)
+  aic_min  = minimum value of the AIC
+  aic_Kmin = cutoff K that minimizes the AIC, K = P*-1
+
+  logtau          = filtered log(tau) as a function of K, L_0(P*-1)
+  logtau_Kmin     = filtered log(tau) at the aic_Kmin, L*_0
+  logtau_var_Kmin = theoretical L*_0 variance
+  logtau_std_Kmin = theoretical L*_0 standard deviation
+  logpsd          = filtered log-PSD at the specified cutoff K_PSD
+
+  tau          = filtered tau as a function of K, S_0(P*-1)
+  tau_Kmin     = filtered tau at the aic_Kmin, S*_0
+  tau_var_Kmin = theoretical S*_0 variance
+  tau_std_Kmin = theoretical S*_0 standard deviation
+  psd          = filtered PSD at the specified cutoff K_PSD
+  
+  p_aic... = Bayesian AIC weighting stuff
+    """
+
     def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0):
 
         NF = samplelogpsd.size

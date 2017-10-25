@@ -1,6 +1,6 @@
 
 import matplotlib.pyplot as plt
-from .md.tools import integrate_acf, runavefilter
+from .tools import integrate_acf, runavefilter
 
 class MDSample(object):
     """An MDSample object contains all the information that represent a
@@ -68,7 +68,8 @@ class MDSample(object):
                self.MULTI_COMPONENT = False
                self.N_COMPONENTS = 1
         else:
-            self.N  = None
+            self.N = None
+            self.N_COMPONENTS = None
         if self.spectr is not None:
             self.Nfreqs = self.spectr.size
             self.DF = 0.5 / (self.Nfreqs-1)
