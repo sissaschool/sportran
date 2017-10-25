@@ -1,12 +1,13 @@
 
 from scipy.special import polygamma
+from .md.tools import logtau_to_tau
 
 ################################################################################
 
 def multicomp_cepstral_parameters( NF, N_COMPONENTS ):
-    """This function returns the variance of the cepstral coefficients and the 
-    mean of the log(PSD) distribution, generated from a periodogram that is the 
-    average of N_COMPONENTS."""
+    """This function returns the theoretical variance of the cepstral coefficients 
+    and the mean of the log(PSD) distribution, generated from a periodogram that 
+    is the average of N_COMPONENTS."""
    
     N = 2*(NF-1)
 
@@ -21,11 +22,18 @@ def multicomp_cepstral_parameters( NF, N_COMPONENTS ):
 
     return ck_THEORY_var, psd_THEORY_mean
 
+
+def dct_coefficients(y):
+    """Compute the normalized Discrete Cosine Transform coefficients of y.
+        yk = 0.5 * DCT(y) / (N-1)"""
+    yk = dct(y, type=1)/(y.size-1)*0.5  # normalization
+    return yk
+
 ################################################################################
 
 class CosFilter(object):
     
-    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0, normalization=1.0):
+    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0):
 
         NF = samplelogpsd.size
         N = 2*(NF-1)
@@ -43,7 +51,7 @@ class CosFilter(object):
 
         # subtract the mean of the distribution
         self.samplelogpsd = samplelogpsd - self.logpsd_THEORY_mean
-        self.logpsdK = dct_coefficients(self.samplelogpsd, normalization)
+        self.logpsdK = dct_coefficients(self.samplelogpsd)
         if (aic_type == 'aic'):
             self.aic = dct_AIC(self.logpsdK, ck_theory_var)
         elif (aic_type == 'aicc'):
@@ -137,7 +145,9 @@ class CosFilter(object):
                 self.logtau_K_LIST[k]   = self.logtau_K_LIST[k] + self.logpsd_THEORY_mean[0]
         return
 
-    
+    #############################
+    ####  Bayesian method
+    #############################
     def compute_p_aic(self, method='ba'):
         """Define a weight distribution from the AIC, according to a method."""
         NF = self.samplelogpsd.size
@@ -188,10 +198,4 @@ class CosFilter(object):
 #            self.optimalK = np.NaN
 #            print 'Warning: optimal cutoff K NOT FOUND.'
 #        return
-
-################################################################################
-
-def dct_coefficients(y, normalization=1.0):
-    yk = dct(y, type=1)/(y.size-1)*0.5 #normalization
-    return yk
 

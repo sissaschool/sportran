@@ -1,4 +1,6 @@
 
+import matplotlib.pyplot as plt
+from .md.tools import integrate_acf, runavefilter
 
 class MDSample(object):
     """An MDSample object contains all the information that represent a

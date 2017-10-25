@@ -1,8 +1,10 @@
 ################################################################################
 
 def integrate_acf(acf):
-    """Returns the integral function of f, i.e. its integral as a function of 
-    the upper integration limit. Supports multi-component arrays."""
+    """Returns the integral function of acf, i.e. its integral as a function of 
+    the upper integration limit. Supports multi-component (N, N_COMP) arrays.
+    Trapezial integration is used.
+          tau[i] = trapz_{0}^{i} acf"""
     N = acf.shape[0]
     tau = np.zeros(acf.shape)
     for i in range(1, N):
@@ -10,8 +12,27 @@ def integrate_acf(acf):
     return tau
 
 
+def runavefilter(X, WF):
+    """ Computes the running average of a numpy array over WF consecutive
+    elements (or WF+1 if WF is even):
+            (X[i-WF/2]+...+X[i]+...+X[i+WF/2]) / WF
+    assumes elf.tau_std_Kmin = np.sqrt(self.tau_var_Kmin)
+                                                                        hat the array is "even" ( X[-i] = X[i] ) and anti-periodic
+    (X[(N-1)+i]=X[(N-1)-i]), like a ONE-SIDED PSD."""
+    
+    if (WF%2 == 0):
+        WF = WF + 1
+    W = int(WF/2)
+    
+    Y = np.concatenate( (X[W:0:-1], X, X[-2:-W-2:-1]) )
+    return np.convolve( Y, np.array([1.0/WF]*WF), 'valid' )
+
+################################################################################
+
+
 def filter_and_sample( y_big, W, DT, window='rectangular', even_NSTEPS=True, detrend=False, drop_first=True ):
-    """Filter signal with moving average window of width W and sample it with time step DT."""
+    """Filter signal with moving average window of width W and then sample it 
+    with time step DT."""
     
     if ( W > 1 ):
         if (window == 'rectangular'):
@@ -38,22 +59,6 @@ def filter_and_sample( y_big, W, DT, window='rectangular', even_NSTEPS=True, det
     return y
 
 
-def runavefilter(X, WF):
-    """ Computes the running average of a numpy array over WF consecutive
-    elements (or WF+1 if WF is even):
-            (X[i-WF/2]+...+X[i]+...+X[i+WF/2]) / WF
-    assumes elf.tau_std_Kmin = np.sqrt(self.tau_var_Kmin)
-                                                                        hat the array is "even" ( X[-i] = X[i] ) and anti-periodic
-    (X[(N-1)+i]=X[(N-1)-i]), like a ONE-SIDED PSD."""
-    
-    if (WF%2 == 0):
-        WF = WF + 1
-    W = int(WF/2)
-    
-    Y = np.concatenate( (X[W:0:-1], X, X[-2:-W-2:-1]) )
-    return np.convolve( Y, np.array([1.0/WF]*WF), 'valid' )
-
-
 def generate_empirical_spectrum(psd):
     """Add noise to a periodogram and generate a complex spectrum."""
     ### Probabilmente ci vuole un fattore 1/N, in maniera da tirar via il fattore N 
@@ -74,6 +79,7 @@ def logtau_to_tau(logtau, logtau_mean, logtau_var, correct_mean=True):
     else:
         raise NotImplemented()
     return tau, tau_std
+
 
 def resample_psd(freqs, psd, cutfrequency):
     if (cutfrequency >= freqs[-1]):
