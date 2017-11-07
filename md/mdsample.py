@@ -252,7 +252,7 @@ class MDSample(object):
         return
 
 
-    def filter_psd(self, FILTER_WINDOW_WIDTH=None, window_type='rectangular'):
+    def filter_psd(self, FILTER_WINDOW_WIDTH=None, window_type='rectangular', logpsd_filter_type=1):
         """Filters the periodogram with the given FILTER_WINDOW_WIDTH [freq units]."""
         if self.psd is None:
             raise ValueError('Periodogram is not defined.')
@@ -264,8 +264,10 @@ class MDSample(object):
             raise ValueError('Filter window width not defined.')
         if (window_type == 'rectangular'):
             self.fpsd = runavefilter(self.psd, self.FILTER_WF)
-            #self.flogpsd = runavefilter(self.logpsd + EULER_GAMMA, self.FILTER_WF)
-            self.flogpsd = np.log(self.fpsd)
+            if logpsd_filter_type == 1:
+               self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
+            else:
+               self.flogpsd = np.log(self.fpsd)
         else:
             raise KeyError('Window type unknown.')
         return
