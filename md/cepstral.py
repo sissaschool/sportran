@@ -1,6 +1,9 @@
 
+import numpy as np
 from scipy.special import polygamma
+from scipy.fftpack import dct
 from .tools import logtau_to_tau
+from .aic import *
 
 ################################################################################
 
@@ -28,6 +31,30 @@ def dct_coefficients(y):
         yk = 0.5 * DCT(y) / (N-1)"""
     yk = dct(y, type=1)/(y.size-1)*0.5  # normalization
     return yk
+
+
+def dct_filter_psd(y, K=None):
+    # K is the maximum coefficient summed (c_k = 0 per k > K)
+    if (K >= y.size):
+        print "! Warning:  dct_filter_psd K value ({:}) out of range.".format(K)
+        return np.full(y.size, np.NaN)
+    yk = dct(y, type=1)
+    if K is not None:
+        yk[K+1:] = 0.
+    ynew = dct(yk, type=1)/(y.size-1)*0.5
+    return ynew
+
+
+def dct_filter_tau(y):
+    # K is the maximum coefficient summed (c_k = 0 per k > K)
+    yk = dct(y, type=1)/(y.size-1)
+    ftau = np.zeros(y.size)
+    ftau[0] = yk[0]
+    ftau[1] = 0.5*yk[0] + yk[1]
+    for i in range(2, yk.size-1):
+        ftau[i] = ftau[i-1] + yk[i]
+    ftau[-1] = ftau[-2] + 0.5*yk[-1]
+    return ftau
 
 ################################################################################
 
@@ -137,8 +164,8 @@ CEPSTRAL ANALYSIS based filtering.
             self.logtau_var_Kmin = self.logtau_THEORY_var[self.aic_Kmin]
             self.logtau_std_Kmin = np.sqrt(self.logtau_var_Kmin)
             self.tau_Kmin     = self.tau[self.aic_Kmin]
-            self.tau_var_Kmin = self.tau_Kmin * self.logtau_var_Kmin
-            self.tau_std_Kmin = np.sqrt(self.tau_var_Kmin)
+            self.tau_std_Kmin = self.tau_Kmin * self.logtau_std_Kmin
+            self.tau_var_Kmin = self.tau_std_Kmin**2
         else:
             self.logtau_Kmin     = np.NaN
             self.logtau_var_Kmin = np.NaN

@@ -1,3 +1,6 @@
+
+import numpy as np
+
 ################################################################################
 
 def dct_AIC(yk, theory_var=None):
@@ -19,6 +22,7 @@ def dct_AIC(yk, theory_var=None):
         aic = aic + 2.*(np.arange(yk.size) + 1)
     return aic
 
+
 def dct_AICc(yk, theory_var=None):
     """AICc[K] = AIC[K] + 2*(K+1)*(K+2)/(NF-K-2)
     Assumiamo di tenere tutti i k <= K."""
@@ -28,6 +32,7 @@ def dct_AICc(yk, theory_var=None):
     aic[-2] = aic[-3]  # not defined
     aic[-1] = aic[-3]  # not defined
     return aic
+
 
 def dct_aic_ab(yk, theory_var, A=1.0, B=2.0):
     """AIC[K] = sum_{k>K} c_k^2/theory_var + 2*K
@@ -39,41 +44,6 @@ def dct_aic_ab(yk, theory_var, A=1.0, B=2.0):
     aic = A*aic + B*(np.arange(yk.size) + 1)
     return aic
 
-def dct_filter_psd(y, K=None):
-    # K is the maximum coefficient summed (c_k = 0 per k > K)
-    if (K >= y.size):
-        print "! Warning:  dct_filter_psd K value ({:}) out of range.".format(K)
-        return np.full(y.size, np.NaN)
-    yk = dct(y, type=1)
-    if K is not None:
-        yk[K+1:] = 0.
-    ynew = dct(yk, type=1)/(y.size-1)*0.5
-    return ynew
-
-def dct_filter_tau(y):
-    # K is the maximum coefficient summed (c_k = 0 per k > K)
-    yk = dct(y, type=1)/(y.size-1)
-    ftau = np.zeros(y.size)
-    ftau[0] = yk[0]
-    ftau[1] = 0.5*yk[0] + yk[1]
-    for i in range(2, yk.size-1):
-        ftau[i] = ftau[i-1] + yk[i]
-    ftau[-1] = ftau[-2] + 0.5*yk[-1]
-    return ftau
-
-#def cos_filter(y, K=None):
-#    yk = dct(y, type=1) #*np.exp(-(xxx/50.)**8))#[:50]
-#    if K is not None:
-#        yk[K:] = 0.
-#    ynew = dct(yk, type=1)/(y.size-1)*0.5
-#    return ynew, yk
-#
-#def Cos_filter(y, K=None):      ## kept for compatibility purposes
-#    yk = dct(y, type=1) #*np.exp(-(xxx/50.)**8))#[:50]
-#    if K is not None:
-#        yk[K:] = 0.
-#    ynew = dct(yk, type=1)/(y.size-1)*0.5
-#    return ynew, yk
 
 
 ################################################################################

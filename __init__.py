@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
-import numpy as np
 import thermocepstrum.md as md
+import thermocepstrum.io as io
 
-__all__ = [ 'md' ]
+__all__ = [ 'md', 'io' ]
 

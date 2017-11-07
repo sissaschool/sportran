@@ -1,3 +1,7 @@
+
+import numpy as np
+from scipy.signal import lfilter
+
 ################################################################################
 
 def integrate_acf(acf):

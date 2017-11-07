@@ -1,25 +1,27 @@
 
+import numpy as np
 import matplotlib.pyplot as plt
 from .tools import integrate_acf, runavefilter
+from scipy.signal import periodogram
 
 class MDSample(object):
-    """An MDSample object contains all the information that represent a
+    """
+    An MDSample object contains all the information that represent a
     single and unique Molecular Dynamics sample. 
     For example it may contain:
-     - a trajectory (referred as any 1D time series 
-       in real space)
+     - a trajectory (any N-dim time series in real space)
      - its spectrum (the Fourier transform)
-     - its Power Spectral Density, also referred as periodogram
+     - its Power Spectral Density (aka periodogram)
      - ...
-    All the information contained in this object should be always consistent,
-    i.e. it should represent a single MD sample. Any operation that alters 
+    All the information contained in this object is always consistent,
+    i.e. it represents a single MD sample. Any operation that alters 
     any of the sample's properties should create a new MDSample object, in
-    order to preserve the 1:1 correspondence among the sample's properties.
+    order to preserve the 1:1 correspondence among the sample's attributes.
 
     An MDSample object can be initialized from any of its main properties
-    (trajectory, spectrum).
-    For now it is also possible to initialize a MDSample from its psd, although
-    a psd does not contain enough information to regenarate a unique trajectory.
+    (trajectory, spectrum, periodogram), although e.g. it is not be possible to
+    uniquely define a trajectory from its periodogram, as this contains less 
+    information.
 
     ATTRIBUTES:
        - traj       the trajectory (any 1D real time series). 
@@ -36,54 +38,35 @@ class MDSample(object):
        - N          size of traj
        - Nfreqs     number of trajectories, should be N/2+1
        - freqs      an array of frequencies, should be [0, 1/(2N*DT)]
-       - freqsTHz   an array of frequencies, expressed in THz
+       - freqs_THz  an array of frequencies, expressed in THz
        
     """
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, traj=None, spectr=None, psd=None, freqs=None, DT_FS=1.0):
+        #def __init__(self, *args, **kwargs):
         # args -- tuple of anonymous arguments **NOT USED
         # kwargs -- dictionary of named arguments
-        
+        #
         #for key, arg in kwargs.iterkeys():
         #    if (key == 'traj'):
         #        self.initialize_traj(arg)
-
+        #
         #check_keys = ['traj', 'spectrum']
         #for key in check_keys:
         #   arg = kwargs.get(key, None)
         #   if arg is not None:
         #     ## call correct initialize function
-              
-        self.traj   = kwargs.get('traj', None)
-        self.spectr = kwargs.get('spectrum', None)
-        #self.psd    = kwargs.get('psd', None)
-        #self.fpsd   = kwargs.get('fpsd', None)
-        #self.freqs  = kwargs.get('freqs', None)
-        if self.traj is not None:
-            self.N  = self.traj.shape[0]
-            if (len(self.traj.shape) > 1):
-               self.MULTI_COMPONENT = True
-               self.N_COMPONENTS = self.traj.shape[1]
-            else:
-               self.MULTI_COMPONENT = False
-               self.N_COMPONENTS = 1
-        else:
-            self.N = None
-            self.N_COMPONENTS = None
-        if self.spectr is not None:
-            self.Nfreqs = self.spectr.size
-            self.DF = 0.5 / (self.Nfreqs-1)
-        #elif self.psd is not None:
-        #    self.Nfreqs = self.psd.size
-        else:
-            self.Nfreqs = None
-            self.DF = None
-        self.psd = None
+        
+        #self.traj   = kwargs.get('traj', None)
+        #self.spectr = kwargs.get('spectrum', None)
+
+        self.DT_FS = DT_FS
+        self.initialize_traj(traj)
+        self.initialize_spectrum(spectr)
+        self.initialize_psd(freqs=freqs, psd=psd, DT_FS=DT_FS)
+
         self.fpsd = None
-        self.logpsd = None
         self.flogpsd = None
-        self.freqs = None
-        self.freqsTHz = None
         self.acf = None
         self.NLAGS = None
 
@@ -109,63 +92,107 @@ class MDSample(object):
         return msg
     
 
+    #############################################
     ###################################
     ###  INITIALIZE METHODS
     ###################################
+    #############################################
 
     def initialize_traj(self, array):
-        self.traj = np.array(array, dtype=float)
-        self.N = self.traj.size
-        if (N%2 == 1):
-            raise NotImplemented('Trajectory has odd number of points.')
-        if (len(self.traj.shape) > 1):
-           self.MULTI_COMPONENT = True
-           self.N_COMPONENTS = self.traj.shape[1]
+        if array is not None:
+            self.traj = np.array(array, dtype=float) 
+            self.N  = self.traj.shape[0]
+            if (self.N % 2 == 1):
+                raise NotImplemented('Trajectory has odd number of points.')
+            if (len(self.traj.shape) > 1):
+               self.MULTI_COMPONENT = True
+               self.N_COMPONENTS = self.traj.shape[1]
+            else:
+               self.MULTI_COMPONENT = False
+               self.N_COMPONENTS = 1
         else:
-           self.MULTI_COMPONENT = False
+            self.traj = None
+            self.N = None
+            self.N_COMPONENTS = None
         return
-    
 
     def initialize_spectrum(self, array):
-        self.spectr = np.array(array, dtype=complex)
-        self.Nfreqs = self.spectr.size
-        self.DF = 0.5/(self.Nfreqs-1)
+        if array is not None:
+            self.spectr = np.array(array, dtype=complex)
+            self.Nfreqs = self.spectr.size
+            self.DF = 0.5 / (self.Nfreqs-1)
+        else:
+            self.spectr = None
+            self.Nfreqs = None
+            self.DF = None
         return
 
-
-    def initialize_psd(self, freq_psd, array=None, DT=1, DT_FS=1.0): ## modificare in (self, freq_psd=None, freqs=None, psd=None)
-        if array is None:
+    def initialize_psd(self, freq_psd=None, psd=None, freqs=None, DT=1, DT_FS=1.0):
+        """
+        Initialize the PSD. This can be done in 3 ways:
+          - passing a tuple  (freqs, psd)
+              e.g.   initialize_psd((freqs,psd))
+          - passing frequencies and PSD separately
+              e.g.   initialize_psd(freqs, psd)
+              e.g.   initialize_psd(freqs=freqs, psd=psd)
+          - passing PSD only (frequencies will be computed automatically)
+              e.g.   initialize_psd(psd)
+        """
+        if freq_psd is not None:   # use freq_psd variable
             if (len(freq_psd) == 2):   # (freqs, psd) tuple was passed
+                if (freqs is not None) or (psd is not None):
+                    raise ValueError('Too many arguments.')
                 frequencies = freq_psd[0]
                 array = freq_psd[1]
-            elif (len(freq_psd) > 2):  # only psd was passed
-                frequencies = None
-                array = freq_psd
+            elif (len(freq_psd) > 2):  # array used as psd or freqs
+                if psd is None:    # only psd was passed
+                   if freqs is not None:
+                      raise ValueError('Too many arguments.')
+                   frequencies = None
+                   array = freq_psd
+                else:              # freqs and psd passed separately
+                   if freqs is not None:
+                      raise ValueError('Too many arguments.')
+                   frequencies = freq_psd
+                   array = psd
             else:
-                raise ValueError('arguments not understood.')
-        else:  # psd passed through 3rd argument (array)
-            if (len(freq_psd) > 2):
-                frequencies = freq_psd
-            else:
-                raise ValueError('Too many arguments.')
-        self.psd = np.array(array, dtype=float) * DT
+                raise ValueError('arguments not valid')
+        else:   #ignore freq)psd variable
+            frequencies = freqs
+            array = psd
+
+        # PSD
+        if array is None:
+            self.psd = None
+            self.freqs = None
+            return
+        self.psd    = np.array(array, dtype=float) * DT
         self.logpsd = np.log(self.psd)
-        self.psd_min = np.min(self.psd)
+        self.logpsd_min = np.min(self.psd)
+
+        # frequencies
         self.Nfreqs = self.psd.size
-        self.DF = 0.5/(self.Nfreqs-1)
-        if frequencies is not None:
+        if frequencies is None:  # recompute frequencies
+            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
+        else:
             self.freqs = np.array(frequencies, dtype=float)
             if (self.freqs.size != self.Nfreqs):
                 raise ValueError('Number of frequencies different from PSD array size.')
-        else:  # recompute frequencies
-            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
-        self.freqsTHz = self.freqs/DT_FS*1000.
+
+        # freqs conversions to THz
+        self.DT_FS = DT_FS
+        self.freqs_THz = self.freqs/DT_FS*1000.
+        self.Nyquist_f_THz = self.freqs_THz[-1]
+        self.DF = 0.5/(self.Nfreqs-1)
+        self.DF_THz = self.DF/DT_FS*1000.
         return
 
 
+    #############################################
     ###################################
     ###  COMPUTE METHODS
     ###################################
+    #############################################
 
     def compute_trajectory(self):
         """Computes trajectory from spectrum."""
@@ -188,7 +215,7 @@ class MDSample(object):
         return
 
     
-    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=1.0, average_components=True, normalize=False):
+    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=None, average_components=True, normalize=False):
         """Computes the periodogram from the trajectory or the spectrum. 
         If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
         The PSD is multiplied by DT at the end."""
@@ -202,7 +229,6 @@ class MDSample(object):
                 self.freqs, self.psd = periodogram(self.traj, detrend=None)
             self.psd[1:-1] = self.psd[1:-1] * 0.5
             self.psd = DT * self.psd
-            self.freqsTHz = self.freqs/DT_FS*1000.
             self.Nfreqs = self.freqs.size
             self.DF = 0.5 / (self.Nfreqs-1)
         elif (method == 'spectrum'):
@@ -211,9 +237,12 @@ class MDSample(object):
             self.psd = DT * np.abs(self.spectr)**2 / (2*(self.Nfreqs - 1))
             #self.psd[1:-1] = self.psd[1:-1] * 2.0   # factor 2 from one-sided psd
             self.freqs = np.linspace(0., 0.5, self.Nfreqs)
-            self.freqsTHz = self.freqs/DT_FS*1000.
         else:
             raise KeyError('method not understood')
+        if DT_FS is not None:
+            self.DT_FS = DT_FS
+        self.freqs_THz = self.freqs/self.DT_FS*1000.
+        self.Nyquist_f_THz = self.freqs_THz[-1]
         if normalize:
             self.psd = self.psd / np.trapz(self.psd) / self.N / DT
         self.logpsd = np.log(self.psd)
@@ -224,7 +253,7 @@ class MDSample(object):
 
 
     def filter_psd(self, FILTER_WINDOW_WIDTH=None, window_type='rectangular'):
-        """Filters the periodogram with the given FILTER_WINDOW_WIDTH."""
+        """Filters the periodogram with the given FILTER_WINDOW_WIDTH [freq units]."""
         if self.psd is None:
             raise ValueError('Periodogram is not defined.')
         if FILTER_WINDOW_WIDTH is not None:   # otherwise try to use the internal value
