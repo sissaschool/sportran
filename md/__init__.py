@@ -4,7 +4,6 @@ __all__ = [ 'aic', 'armodel', 'cepstral', 'kappa', 'lpfilter', 'mdsample', 'tool
 
 from scipy.fftpack import fft, ifft, dct
 from scipy.signal  import periodogram, lfilter
-from statsmodels.tsa.api import acf
 from . import *
 
 EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992  # Euler-Mascheroni constant
