@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from .tools import integrate_acf, runavefilter
 from scipy.signal import periodogram
+from .acf import acovf
 
 class MDSample(object):
     """
@@ -194,6 +195,9 @@ class MDSample(object):
     ###################################
     #############################################
 
+    def timeseries(self):
+        return np.arange(self.N) * self.DT_FS
+
     def compute_trajectory(self):
         """Computes trajectory from spectrum."""
         if self.spectr is None:
@@ -275,11 +279,13 @@ class MDSample(object):
 
     def compute_acf(self, NLAGS=None):
         """Computes the autocovariance function of the trajectory."""
-        self.NLAGS = NLAGS
-        self.acf = np.zeros((self.NLAGS+1, self.N_COMPONENTS))
+        if NLAGS is not None:
+            self.NLAGS = NLAGS
+        else:
+            self.NLAGS = self.N
+        self.acf = np.zeros((self.NLAGS, self.N_COMPONENTS))
         for d in xrange(self.N_COMPONENTS):
-            self.acf[:,d] = acf(self.traj[:,d], nlags=NLAGS, unbiased=True, \
-                                       fft=True) * np.var(self.traj[:,d])
+            self.acf[:,d] = acovf(self.traj[:,d],  unbiased=True, fft=True)[:NLAGS]
         self.acfm = np.mean(self.acf, axis=1)  # average acf
         return
 
