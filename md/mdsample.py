@@ -218,6 +218,78 @@ class MDSample(object):
         self.DF = 0.5 / (self.Nfreqs-1)
         return
 
+    def compute_kappa(self, other, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=None, average_components=True, normalize=False,call_other=True):
+        """Computes the spectrum for the temporal series, then computes the scalar obtained from the determinant of the matrix of the
+	cospectrum. The diagonal of this matrix will be the usual periodogram, for this trajectory and for the other trajectory.
+        If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
+        The elements of the matrix are multiplied by DT at the end.
+	"""
+        if (method == 'trajectory'):
+            if self.traj is None:
+                raise ValueError('Trajectory not defined.')
+            if self.MULTI_COMPONENT:
+                self.spectrALL = np.fft.rfft(self.traj, axis=0)
+            else:
+                self.spectrALL = np.fft.rfft(self.traj, axis=0)
+            self.Nfreqs = self.spectrALL.shape[0]
+            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
+            self.DF = 0.5 / (self.Nfreqs-1)
+        else:
+            raise KeyError('method not understood')
+        if DT_FS is not None:
+            self.DT_FS = DT_FS
+        self.freqs_THz = self.freqs/self.DT_FS*1000.
+        self.Nyquist_f_THz = self.freqs_THz[-1]
+        #calculate the same thing on the other trajectory
+        if (call_other):
+            other.compute_kappa(self,FILTER_WINDOW_WIDTH,method,DT,DT_FS,average_components,normalize,False)
+        else:
+            return
+        #now compute the mean of the various matrix computed for every frequency
+#                self.psd = np.mean(self.psdALL, axis=1)
+
+	#define the matrix. Its shape is (2,2,Nfreqs,n_spatial_dim)
+        #   self.spectrALL*self.spectrALL.conj()       self.spectrALL*other.spectrALL.conj()
+        #  other.spectrALL*self.spectrALL.conj()      other.spectrALL*other.spectrALL.conj()
+        #
+        self.covarALL=np.array([[self.spectrALL*self.spectrALL.conj(),self.spectrALL*other.spectrALL.conj()],[other.spectrALL*self.spectrALL.conj(),other.spectrALL*other.spectrALL.conj()]])*DT/ (2*(self.Nfreqs - 1))
+        #compute the mean over the last axis (x,y,z components):
+        self.cospectrum=self.covarALL.mean(axis=3)
+        #compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
+        # the diagonal elements of the inverse have very convenient statistical properties 
+        self.kappa=self.cospectrum[0,0] -self.cospectrum[0,1]*self.cospectrum[1,0]/self.cospectrum[1,1]
+      
+#            self.spectrALL[1:-1] = self.spectrALL[1:-1] * 0.5
+#            self.psd = DT * self.psd
+        if normalize:
+            self.kappa= self.kappa / np.trapz(self.kappa) / self.N / DT
+        self.logkappa = np.log(self.kappa)
+        self.kappa_min = np.min(self.kappa)
+        if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
+            self.filter_kappa( FILTER_WINDOW_WIDTH )
+        return
+
+    def filter_kappa(self, FILTER_WINDOW_WIDTH=None, window_type='rectangular', logpsd_filter_type=1):
+        """Filters the periodogram with the given FILTER_WINDOW_WIDTH [freq units]."""
+        if self.kappa is None:
+            raise ValueError('The element 0,0 of the inverse of the cospectrum (aka kappa) is not defined.')
+        if FILTER_WINDOW_WIDTH is not None:   # otherwise try to use the internal value
+            self.FILTER_WINDOW_WIDTH = FILTER_WINDOW_WIDTH
+        if self.FILTER_WINDOW_WIDTH is not None:
+            self.FILTER_WF = int(round(self.FILTER_WINDOW_WIDTH*self.Nfreqs*2.))
+        else:
+            raise ValueError('Filter window width not defined.')
+        if (window_type == 'rectangular'):
+            self.fkappa = runavefilter(self.kappa, self.FILTER_WF)
+            if logpsd_filter_type == 1:
+               self.flogkappa = runavefilter(self.logkappa, self.FILTER_WF)
+            else:
+               self.flogkappa = np.log(self.fkappa)
+        else:
+            raise KeyError('Window type unknown.')
+        return
+
+
     def compute_cospectrum_determinant_2x2(self, other, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=None, average_components=True, normalize=False,call_other=True):
         """Computes the spectrum for the temporal series, then computes the scalar obtained from the determinant of the matrix of the
 	cospectrum. The diagonal of this matrix will be the usual periodogram, for this trajectory and for the other trajectory.
@@ -234,13 +306,6 @@ class MDSample(object):
             self.Nfreqs = self.spectrALL.shape[0]
             self.freqs = np.linspace(0., 0.5, self.Nfreqs)
             self.DF = 0.5 / (self.Nfreqs-1)
-        elif (method == 'spectrum'):
-            raise KeyError('Method spectrum not implemented')   
-            if self.spectr is None:
-                raise ValueError('Spectrum not defined.')
-            self.psd = DT * np.abs(self.spectr)**2 / (2*(self.Nfreqs - 1))
-            #self.psd[1:-1] = self.psd[1:-1] * 2.0   # factor 2 from one-sided psd
-            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
         else:
             raise KeyError('method not understood')
         if DT_FS is not None:
@@ -259,7 +324,7 @@ class MDSample(object):
         #   self.spectrALL*self.spectrALL.conj()       self.spectrALL*other.spectrALL.conj()
         #  other.spectrALL*self.spectrALL.conj()      other.spectrALL*other.spectrALL.conj()
         #
-        self.covarALL=np.array([[self.spectrALL*self.spectrALL.conj(),self.spectrALL*other.spectrALL.conj()],[other.spectrALL*self.spectrALL.conj(),other.spectrALL*other.spectrALL.conj()]])
+        self.covarALL=np.array([[self.spectrALL*self.spectrALL.conj(),self.spectrALL*other.spectrALL.conj()],[other.spectrALL*self.spectrALL.conj(),other.spectrALL*other.spectrALL.conj()]])*DT/ (2*(self.Nfreqs - 1))
         #compute the mean over the last axis (x,y,z components):
         self.cospectrum=self.covarALL.mean(axis=3)
         #compute the determinant of the matrix (this is finally a 1D array)
