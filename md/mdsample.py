@@ -25,7 +25,7 @@ class MDSample(object):
     information.
 
     ATTRIBUTES:
-       - traj       the trajectory (any 1D real time series). 
+       - traj       the trajectory (any n-dim real time series). 
                     It contains N points.
        - spectr     the spectrum, i.e. trajectory's FFT. 
                     For now it is assumed to be one sided, i.e. it contains
@@ -44,23 +44,6 @@ class MDSample(object):
     """
     
     def __init__(self, traj=None, spectr=None, psd=None, freqs=None, DT_FS=1.0):
-        #def __init__(self, *args, **kwargs):
-        # args -- tuple of anonymous arguments **NOT USED
-        # kwargs -- dictionary of named arguments
-        #
-        #for key, arg in kwargs.iterkeys():
-        #    if (key == 'traj'):
-        #        self.initialize_traj(arg)
-        #
-        #check_keys = ['traj', 'spectrum']
-        #for key in check_keys:
-        #   arg = kwargs.get(key, None)
-        #   if arg is not None:
-        #     ## call correct initialize function
-        
-        #self.traj   = kwargs.get('traj', None)
-        #self.spectr = kwargs.get('spectrum', None)
-
         self.DT_FS = DT_FS
         self.initialize_traj(traj)
         self.initialize_spectrum(spectr)
@@ -267,10 +250,12 @@ class MDSample(object):
 
 
     
-    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=None, average_components=True, normalize=False):
+    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True, normalize=False):
         """Computes the periodogram from the trajectory or the spectrum. 
         If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
-        The PSD is multiplied by DT at the end."""
+        The PSD is multiplied by DT_FS at the end."""
+        if DT_FS is not None:
+            self.DT_FS = DT_FS
         if (method == 'trajectory'):
             if self.traj is None:
                 raise ValueError('Trajectory not defined.')
@@ -280,25 +265,24 @@ class MDSample(object):
             else:
                 self.freqs, self.psd = periodogram(self.traj, detrend=None)
             self.psd[1:-1] = self.psd[1:-1] * 0.5
-            self.psd = DT * self.psd
+            self.psd = self.DT_FS * self.psd
             self.Nfreqs = self.freqs.size
             self.DF = 0.5 / (self.Nfreqs-1)
         elif (method == 'spectrum'):
             if self.spectr is None:
                 raise ValueError('Spectrum not defined.')
-            self.psd = DT * np.abs(self.spectr)**2 / (2*(self.Nfreqs - 1))
+            self.psd = self.DT_FS * np.abs(self.spectr)**2 / (2*(self.Nfreqs - 1))
             #self.psd[1:-1] = self.psd[1:-1] * 2.0   # factor 2 from one-sided psd
             self.freqs = np.linspace(0., 0.5, self.Nfreqs)
         else:
             raise KeyError('method not understood')
-        if DT_FS is not None:
-            self.DT_FS = DT_FS
         self.freqs_THz = self.freqs/self.DT_FS*1000.
         self.Nyquist_f_THz = self.freqs_THz[-1]
         if normalize:
-            self.psd = self.psd / np.trapz(self.psd) / self.N / DT
+            self.psd = self.psd / np.trapz(self.psd) / self.N / self.DT_FS
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
+        self.psd_power = np.trapz(self.psd)  # one-side PSD power
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
             self.filter_psd( FILTER_WINDOW_WIDTH )
         return
