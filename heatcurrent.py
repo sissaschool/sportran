@@ -55,53 +55,53 @@ class HeatCurrent(MDSample):
       return
 
 
-   def plot_periodogram(self, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axes=None, FIGSIZE=None):
-       """
-       Plot the periodogram.
-         PSD_FILTER_W  = width of the filtering window
-         freq_units    = 'thz'  THz
-                         'red'  omega*DT/(2*pi)
-         freq_scale    = rescale red frequencies by this factor (e.g. 2 --> freq = [0, 0.25])
-         axes          = matplotlib.axes.Axes object (if None, create one)
-         FIGSIZE       = size of the plot
+   def plot_periodogram(self, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axes=None, label=None, FIGSIZE=None):
+      """
+      Plot the periodogram.
+        PSD_FILTER_W  = width of the filtering window
+        freq_units    = 'thz'  THz
+                        'red'  omega*DT/(2*pi)
+        freq_scale    = rescale red frequencies by this factor (e.g. 2 --> freq = [0, 0.25])
+        axes          = matplotlib.axes.Axes object (if None, create one)
+        FIGSIZE       = size of the plot
 
-       Returns a matplotlib.axes.Axes object.
-       """
-       self.compute_psd()
-       if PSD_FILTER_W is None:
-          if self.FILTER_WINDOW_WIDTH is None:
-             self.filter_psd(0.)
-       else:
-          if (freq_units == 'thz') or (freq_units == 'THz'):
-             self.filter_psd(PSD_FILTER_W/1000.*self.DT_FS)
-          elif (freq_units == 'red'):
-             self.filter_psd(PSD_FILTER_W)
-          else:
-             raise ValueError('Units not valid.')
+      Returns a matplotlib.axes.Axes object.
+      """
+      self.compute_psd()
+      if PSD_FILTER_W is None:
+         if self.FILTER_WINDOW_WIDTH is None:
+            self.filter_psd(0.)
+      else:
+         if (freq_units == 'thz') or (freq_units == 'THz'):
+            self.filter_psd(PSD_FILTER_W/1000.*self.DT_FS)
+         elif (freq_units == 'red'):
+            self.filter_psd(PSD_FILTER_W)
+         else:
+            raise ValueError('Units not valid.')
 
-       if axes is None:
-          figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-       plt.subplots_adjust(hspace = 0.1)
-       if (freq_units == 'thz') or (freq_units == 'THz'):
-          axes[0].plot(self.freqs_THz, self.fpsd)
-          axes[1].plot(self.freqs_THz, self.flogpsd)
-          axes[0].set_xlim([0., self.Nyquist_f_THz])
-          axes[1].set_xlim([0., self.Nyquist_f_THz])
-       elif (freq_units == 'red'):
-          axes[0].plot(self.freqs/freq_scale, self.fpsd)
-          axes[1].plot(self.freqs/freq_scale, self.flogpsd)
-          axes[0].set_xlim([0., 0.5/freq_scale])
-          axes[1].set_xlim([0., 0.5/freq_scale])
-       else:
-          raise ValueError('Units not valid.')
-       axes[0].xaxis.set_ticks_position('top')
-       axes[0].set_ylabel('PSD')
-       axes[0].grid()
-       axes[1].xaxis.set_ticks_position('bottom')
-       axes[1].set_xlabel('f [THz]')
-       axes[1].set_ylabel('log(PSD)')
-       axes[1].grid()
-       return axes
+      if axes is None:
+         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+      plt.subplots_adjust(hspace = 0.1)
+      if (freq_units == 'thz') or (freq_units == 'THz'):
+         axes[0].plot(self.freqs_THz, self.fpsd, label=label)
+         axes[1].plot(self.freqs_THz, self.flogpsd, label=label)
+         axes[0].set_xlim([0., self.Nyquist_f_THz])
+         axes[1].set_xlim([0., self.Nyquist_f_THz])
+      elif (freq_units == 'red'):
+         axes[0].plot(self.freqs/freq_scale, self.fpsd, label=label)
+         axes[1].plot(self.freqs/freq_scale, self.flogpsd, label=label)
+         axes[0].set_xlim([0., 0.5/freq_scale])
+         axes[1].set_xlim([0., 0.5/freq_scale])
+      else:
+         raise ValueError('Units not valid.')
+      axes[0].xaxis.set_ticks_position('top')
+      axes[0].set_ylabel(r'PSD')
+      axes[0].grid()
+      axes[1].xaxis.set_ticks_position('bottom')
+      axes[1].set_xlabel(r'$f$ [THz]')
+      axes[1].set_ylabel(r'log(PSD)')
+      axes[1].grid()
+      return axes
 
 
    def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0):
@@ -111,7 +111,7 @@ class HeatCurrent(MDSample):
          Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
 
       Resulting conductivity:
-         ( kappa_Kmin  +/-  kappa_Kmin_std ) W/(m*K)
+          kappa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
       """
       
       self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
@@ -119,12 +119,81 @@ class HeatCurrent(MDSample):
       self.dct.scan_filter_tau()
       self.kappa_Kmin     = self.dct.tau_Kmin     * self.kappa_scale * 0.5
       self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.kappa_scale * 0.5
+      print '  AIC_Kmin  = {:d}  (P* = {:d})'.format(self.dct.aic_Kmin, self.dct.aic_Kmin + 1)
       print '  L_0*   = {:15f} +/- {:10f}'.format(self.dct.logtau_Kmin, self.dct.logtau_std_Kmin)
       print '  S_0*   = {:15f} +/- {:10f}'.format(self.dct.tau_Kmin, self.dct.tau_std_Kmin)
       print '-------------------------------------------------'
       print '  kappa* = {:15f} +/- {:10f}  W/mK'.format(self.kappa_Kmin, self.kappa_Kmin_std)
       print '-------------------------------------------------'
       return
+
+
+   def plot_ck(self, axes=None, label=None, FIGSIZE=None):
+      if axes is None:
+         figure, axes = plt.subplots(1, figsize=FIGSIZE)
+      color=next(axes._get_lines.prop_cycler)['color']
+      axes.plot(self.dct.logpsdK, 'o-', c=color, label=label)
+      axes.plot(self.dct.logpsdK + self.dct.logpsdK_THEORY_std, '--', c=color)
+      axes.plot(self.dct.logpsdK - self.dct.logpsdK_THEORY_std, '--', c=color)
+      axes.axvline(x = self.dct.aic_Kmin, ls='--', c=color)
+      axes.set_xlabel(r'$k$')
+      axes.set_ylabel(r'$c_k$')
+      return axes
+
+
+   def plot_L0_Pstar(self, axes=None, label=None, FIGSIZE=None):
+      if axes is None:
+         figure, axes = plt.subplots(1, figsize=FIGSIZE)
+      color=next(axes._get_lines.prop_cycler)['color']
+      axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau, '.-', c=color, label=label)
+      axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau + self.dct.logtau_THEORY_std, '--', c=color)
+      axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau - self.dct.logtau_THEORY_std, '--', c=color)
+      axes.axvline(x = self.dct.aic_Kmin + 1, ls='--', c=color)
+      axes.set_xlim([0, 3*self.dct.aic_Kmin])
+      axes.set_xlabel(r'$P^*$')
+      axes.set_ylabel(r'$L_0(P*)$')
+      return axes
+
+
+   def plot_kappa_Pstar(self, axes=None, label=None, FIGSIZE=None):
+      if axes is None:
+         figure, axes = plt.subplots(1, figsize=FIGSIZE)
+      color=next(axes._get_lines.prop_cycler)['color']
+      axes.plot(np.arange(self.Nfreqs) + 1, self.dct.tau * self.kappa_scale * 0.5, '.-', c=color, label=label)
+      axes.plot(np.arange(self.Nfreqs) + 1, (self.dct.tau + self.dct.tau_THEORY_std) * self.kappa_scale * 0.5, '--', c=color)
+      axes.plot(np.arange(self.Nfreqs) + 1, (self.dct.tau - self.dct.tau_THEORY_std) * self.kappa_scale * 0.5, '--', c=color)
+      axes.axvline(x = self.dct.aic_Kmin + 1, ls='--', c=color)
+      axes.set_xlim([0, 3*self.dct.aic_Kmin])
+      axes.set_xlabel(r'$P^*$')
+      axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
+      return axes
+
+
+   def plot_cepstral_spectrum(self, freq_units='thz', freq_scale=1.0, axes=None, label=None, FIGSIZE=None):
+       if axes is None:
+          figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+       plt.subplots_adjust(hspace = 0.1)
+       if (freq_units == 'thz') or (freq_units == 'THz'):
+          axes[0].plot(self.freqs_THz, self.dct.psd, label=label)
+          axes[1].plot(self.freqs_THz, self.dct.logpsd, label=label)
+          axes[0].set_xlim([0., self.Nyquist_f_THz])
+          axes[1].set_xlim([0., self.Nyquist_f_THz])
+       elif (freq_units == 'red'):
+          axes[0].plot(self.freqs/freq_scale, self.dct.psd, label=label)
+          axes[1].plot(self.freqs/freq_scale, self.dct.logpsd, label=label)
+          axes[0].set_xlim([0., 0.5/freq_scale])
+          axes[1].set_xlim([0., 0.5/freq_scale])
+       else:
+          raise ValueError('Units not valid.')
+       axes[0].xaxis.set_ticks_position('top')
+       axes[0].set_ylabel(r'PSD')
+       axes[0].grid()
+       axes[1].xaxis.set_ticks_position('bottom')
+       axes[1].set_xlabel(r'$f$ [THz]')
+       axes[1].set_ylabel(r'log(PSD)')
+       axes[1].grid()
+       return axes
+
 
 ################################################################################
 
@@ -173,7 +242,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     print 'Resampling freq          f* =  {:12.5f} THz'.format(fstar_THz)
     print 'Sampling time         TSKIP =  {:12d} steps'.format(TSKIP)
     print '                            =  {:12.3f} fs'.format(TSKIP * x.DT_FS)
-    print 'Original n. of frequencies  =  {:12d}'.format(x.Nfreqs)
+    print 'Original  n. of frequencies =  {:12d}'.format(x.Nfreqs)
     print 'Resampled n. of frequencies =  {:12d}'.format(xf.Nfreqs)
     print 'PSD      @cutoff  (pre-filter) = {:12.5f}'.format(x.fpsd[fstar_idx])
     print '                 (post-filter) = {:12.5f}'.format(xf.fpsd[-1])
