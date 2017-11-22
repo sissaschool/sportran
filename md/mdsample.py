@@ -201,6 +201,54 @@ class MDSample(object):
         self.DF = 0.5 / (self.Nfreqs-1)
         return
 
+    def compute_kappa(self, other, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=None, average_components=True, normalize=False,call_other=True):
+        """Computes the real fourier transform of the temporal series, then computes the thermal conductivity coefficient obtained from the
+	cospectrum matrix. The results have almost the same statistical properties (WARNING: the chi-square distribution have a degreen of freedom less. There are also different factors in front of all the results).
+        The output arrays are the same as the one-component psd spectrum.
+        If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
+        The elements of the matrix are multiplied by DT at the end.
+	"""
+        if (method == 'trajectory'):
+            if self.traj is None:
+                raise ValueError('Trajectory not defined.')
+            if self.MULTI_COMPONENT:
+                self.spectrALL = np.fft.rfft(self.traj, axis=0)
+            else:
+                self.spectrALL = np.fft.rfft(self.traj, axis=0)
+            self.Nfreqs = self.spectrALL.shape[0]
+            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
+            self.DF = 0.5 / (self.Nfreqs-1)
+        else:
+            raise KeyError('method not understood')
+        if DT_FS is not None:
+            self.DT_FS = DT_FS
+        self.freqs_THz = self.freqs/self.DT_FS*1000.
+        self.Nyquist_f_THz = self.freqs_THz[-1]
+        #calculate the same thing on the other trajectory
+        if (call_other):
+            other.compute_kappa(self,FILTER_WINDOW_WIDTH,method,DT,DT_FS,average_components,normalize,False)
+        else:
+            return
+	#define the matrix. Its shape is (2,2,Nfreqs,n_spatial_dim)
+        #   self.spectrALL*self.spectrALL.conj()       self.spectrALL*other.spectrALL.conj()
+        #  other.spectrALL*self.spectrALL.conj()      other.spectrALL*other.spectrALL.conj()
+        #
+        self.covarALL=np.array([[self.spectrALL*self.spectrALL.conj(),self.spectrALL*other.spectrALL.conj()],[other.spectrALL*self.spectrALL.conj(),other.spectrALL*other.spectrALL.conj()]])*DT/ (2*(self.Nfreqs - 1))
+        #compute the mean over the last axis (x,y,z components):
+        self.cospectrum=self.covarALL.mean(axis=3)
+        #compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
+        # the diagonal elements of the inverse have very convenient statistical properties 
+        self.psd=(self.cospectrum[0,0] -self.cospectrum[0,1]*self.cospectrum[1,0]/self.cospectrum[1,1]).real
+        
+        if normalize:
+            self.psd= self.psd / np.trapz(self.psd) / self.N / DT
+        self.logpsd = np.log(self.psd)
+        self.psd_min = np.min(self.psd)
+        if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
+            self.filter_psd( FILTER_WINDOW_WIDTH )
+        return
+
+
     
     def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True, normalize=False):
         """Computes the periodogram from the trajectory or the spectrum. 
