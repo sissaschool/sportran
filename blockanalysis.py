@@ -1,10 +1,15 @@
 ################################################################################
-###    "blockanalysis" API
+###
+###   Code to analyze heat current trajectories in blocks using the CosFilter
+###
 ################################################################################
 
 import numpy as np
-import mdthermanalysis as ta
+import matplotlib.pyplot as plt
+import thermocepstrum as tc
 from scipy.stats import shapiro
+
+################################################################################
 
 class MDBlocks(object):
     
@@ -37,7 +42,7 @@ class MDBlocks(object):
             global FloatProgress, display
         
         # filter & sample big trajectory
-        self.y_big = ta.filter_and_sample(traj, self.FILTER_WIDTH_T, self.TSKIP, 'rectangular', \
+        self.y_big = tc.md.tools.filter_and_sample(traj, self.FILTER_WIDTH_T, self.TSKIP, 'rectangular', \
                                             even_NSTEPS=True, detrend=False, drop_first=True )
         self.NYQUIST_F = 0.5/TSKIP      # Nyquist frequency (rescaled) [\omega*DT/(2*pi)]
         self.TOT_TIME = self.y_big.shape[0]
@@ -57,7 +62,7 @@ class MDBlocks(object):
         print " N_BLOCKS     = {:10d}".format(self.N_BLOCKS)
         
         # define blocks from segments of y_big
-        self.block = [ ta.MDSample( traj = self.y_big[L*self.BLOCK_SIZE : (L+1)*self.BLOCK_SIZE] )  for L in range(self.N_BLOCKS) ]
+        self.block = [ tc.md.MDSample( traj = self.y_big[L*self.BLOCK_SIZE : (L+1)*self.BLOCK_SIZE] )  for L in range(self.N_BLOCKS) ]
         return
 
 
@@ -72,7 +77,7 @@ class MDBlocks(object):
         self.BLOCK_NFREQS = self.BLOCK_SIZE/2 + 1
         if self.MULTI_COMPONENT:
             print ' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS)
-            self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.BLOCK_NFREQS, self.N_COMPONENTS)
+            self.ck_THEORY_var, self.psd_THEORY_mean = tc.md.cepstral.multicomp_cepstral_parameters(self.BLOCK_NFREQS, self.N_COMPONENTS)
         self.bayes_p = bayes_p
         
         if (self.N_BLOCKS == 1):
@@ -81,11 +86,11 @@ class MDBlocks(object):
         for L in range(self.N_BLOCKS):
             if self.MULTI_COMPONENT:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS, average_components=True)
-                self.block[L].dct = ta.CosFilter(self.block[L].logpsd, \
+                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor, normalization=self.BLOCK_SIZE)
             else:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS)
-                self.block[L].dct = ta.CosFilter(self.block[L].logpsd, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor, normalization=self.BLOCK_SIZE) # theory_var=None
+                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor, normalization=self.BLOCK_SIZE) # theory_var=None
 
             self.block[L].dct.scan_filter_tau()
             if self.bayes_p:
@@ -105,9 +110,50 @@ class MDBlocks(object):
         self.freqs = self.block[0].freqs
         return
 
-#   def extractor_example(self):
-#       for col in np.transpose([y.x for y in y_list]):
-#           yield col
+    def cepstral_analysis_kappa(self,other, aic_type='aic', Kmin_corrfactor=1.0, bayes_p=False, density_grid=None): #need also "other", a class with the charge current!
+        """Perform the Cepstral Analysis on all blocks."""
+
+        if self.GUI:
+            progbar = FloatProgress(min=0, max=100)
+            progbar.description = "0 %"
+            display(progbar)
+
+        self.BLOCK_NFREQS = self.BLOCK_SIZE/2 + 1
+        if self.MULTI_COMPONENT:
+            print ' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS)
+            self.ck_THEORY_var, self.psd_THEORY_mean = tc.md.cepstral.multicomp_cepstral_parameters(self.BLOCK_NFREQS, self.N_COMPONENTS-1) #different number of degrees of freedom!
+        self.bayes_p = bayes_p
+        
+        if (self.N_BLOCKS == 1):
+            raise NotImplemented('One block.')
+        
+        for L in range(self.N_BLOCKS):
+            if self.MULTI_COMPONENT:
+                self.block[L].compute_kappa(other=other.block[L],DT=self.TSKIP, DT_FS=self.DT_FS, average_components=True) #different method call!
+                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, \
+                    ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)#, normalization=self.BLOCK_SIZE) #removed (personal comunication with Loris)
+            else:
+                self.block[L].compute_kappa(other=other.block[L],DT=self.TSKIP, DT_FS=self.DT_FS) #different method call!
+                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)#, normalization=self.BLOCK_SIZE) # theory_var=None
+
+            self.block[L].dct.scan_filter_tau()
+            if self.bayes_p:
+                self.block[L].dct.compute_p_aic(method='ba')
+                if density_grid is not None:
+                    self.density_grid = density_grid
+                    self.block[L].dct.compute_logtau_density(method='ba', only_stats=False, density_grid=density_grid)
+                else:
+                    self.block[L].dct.compute_logtau_density(method='ba', only_stats=True)
+            if self.GUI:
+                progbar.value = float(L+1)/self.N_BLOCKS*100.;
+                progbar.description = "%5.2f %%" % progbar.value
+        
+        if self.GUI:
+            progbar.close()
+
+        self.freqs = self.block[0].freqs
+        return
+
 
     def spsd(self):
         """Sample PSD custom generator function."""
@@ -283,7 +329,7 @@ class MDBlocks(object):
             self.p_aic_KAVE = np.mean(list(self.p_aic_Kave()))
             self.p_aic_KSTD =  np.std(list(self.p_aic_Kave()))
             self.avep_aic = np.mean(list(self.p_aic()), axis=1)
-            self.avep_aic_KAVE, self.avep_aic_KSTD = ta.grid_statistics(np.arange(self.BLOCK_NFREQS), self.avep_aic)
+            self.avep_aic_KAVE, self.avep_aic_KSTD = tc.md.aic.grid_statistics(np.arange(self.BLOCK_NFREQS), self.avep_aic)
             print '   AIC_weight_distr   =  {:12.3f} +/- {:8f}'.format(self.p_aic_KAVE, self.p_aic_KSTD)
             print '       ave_AIC_w check:  {:12.3f} +/- {:8f}'.format(self.avep_aic_KAVE, self.avep_aic_KSTD)
     
@@ -326,7 +372,7 @@ class MDBlocks(object):
             self.flogtau_density_XAVE = np.mean(list(self.flogtau_density_xave()))
             self.flogtau_density_XSTD = np.std(list(self.flogtau_density_xave()))
             self.flogtau_avedensity = np.mean(list(self.flogtau_density()), axis=1)
-            self.flogtau_avedensity_XAVE, self.flogtau_avedensity_XSTD = ta.grid_statistics(self.density_grid, self.flogtau_avedensity)
+            self.flogtau_avedensity_XAVE, self.flogtau_avedensity_XSTD = tc.md.aic.grid_statistics(self.density_grid, self.flogtau_avedensity)
             print '\n   flogtau[AIC_w]     =  {:12f} +/- {:8f} (errcheck: {:8f} +/- {:8f})'.format(self.flogtau_density_XAVE, self.flogtau_density_XSTD, np.mean(np.mean(list(self.flogtau_density_xstd()))), np.std(list(self.flogtau_density_xstd())))
             print '   flogtau[ave AIC_w] =  {:12f} +/- {:8f}'.format(self.flogtau_avedensity_XAVE, self.flogtau_avedensity_XSTD)
             
@@ -367,3 +413,4 @@ class MDBlocks(object):
             self.spsd_h[f,:], self.spsd_h_yedges = np.histogram( np.transpose(list(self.spsd())[f*XBINW:(f+1)*XBINW][:]).flatten(), bins=self.spsd_h_yedges, density=True );
         self.spsd_h = self.spsd_h.T
         return
+
