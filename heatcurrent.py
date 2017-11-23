@@ -250,7 +250,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     print '                 (post-filter) = {:12.5f}'.format(xf.flogpsd[-1])
     print 'min(PSD)          (pre-filter) = {:12.5f}'.format(x.psd_min)
     print 'min(PSD)         (post-filter) = {:12.5f}'.format(xf.psd_min)
-    print '% of original PSD Power f<f* (pre-filter)  = {:5f}'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
+    print '% of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
 
     if plot:
        if (freq_units == 'thz') or (freq_units == 'THz'):
