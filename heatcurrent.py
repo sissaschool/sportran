@@ -163,6 +163,7 @@ class HeatCurrent(MDSample):
       axes.plot(np.arange(self.Nfreqs) + 1, (self.dct.tau + self.dct.tau_THEORY_std) * self.kappa_scale * 0.5, '--', c=color)
       axes.plot(np.arange(self.Nfreqs) + 1, (self.dct.tau - self.dct.tau_THEORY_std) * self.kappa_scale * 0.5, '--', c=color)
       axes.axvline(x = self.dct.aic_Kmin + 1, ls='--', c=color)
+      axes.axhline(y = self.kappa_Kmin, ls='--', c=color)
       axes.set_xlim([0, 3*self.dct.aic_Kmin])
       axes.set_xlabel(r'$P^*$')
       axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
@@ -268,7 +269,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
       return xf
 
 
-def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, FIGSIZE=None, **plot_kwargs):
+def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, FIGSIZE=None, **plot_kwargs):
    """
    Simulate the resampling of x.
      TSKIP        = sampling time [steps]
@@ -294,14 +295,26 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, FIGSIZE=N
    if plot:
       figure, axes = plt.subplots(2, sharex=True, sharey=True, figsize=FIGSIZE)
       axes[0].errorbar( FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr = [xff.kappa_Kmin_std for xff in xf], **plot_kwargs )
-      axes[1].errorbar( FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr = [xff.kappa_Kmin_std for xff in xf], **plot_kwargs )
-      axes2 = [axes[0].twinx(), axes[1].twinx()]
-      color=next(axes[0]._get_lines.prop_cycler)['color']
-      color=next(axes[1]._get_lines.prop_cycler)['color']
-      x.plot_periodogram(axes=axes2, c=color)
-      axes[0].set_ylabel(r'$\kappa$ [W/(m*K)]')
-      axes[1].set_ylabel(r'$\kappa$ [W/(m*K)]')
-   return xf, axes
+      axes[1].errorbar( FSTAR_THZ_LIST, [xff.dct.logtau_Kmin for xff in xf], yerr = [xff.dct.logtau_std_Kmin for xff in xf], **plot_kwargs )
+      axes[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
+      axes[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
+      axes[0].xaxis.set_ticks_position('top')
+      axes[0].set_ylabel(r'PSD')
+      axes[0].grid()
+      axes[1].xaxis.set_ticks_position('bottom')
+      axes[1].set_xlabel(r'$f$ [THz]')
+      axes[1].set_ylabel(r'log(PSD)')
+      axes[1].grid()
+
+      #axes2 = [axes[0].twinx(), axes[1].twinx()]
+      #color=next(axes[0]._get_lines.prop_cycler)['color']
+      #color=next(axes[1]._get_lines.prop_cycler)['color']
+      #x.plot_periodogram(axes=axes2, c=color)
+      #axes[0].set_ylabel(r'$\kappa$ [W/(m*K)]')
+      #axes[1].set_ylabel(r'$\kappa$ [W/(m*K)]')
+      return xf, axes, figure
+   else:
+      return xf
 
 
 ################################################################################
