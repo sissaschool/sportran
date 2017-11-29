@@ -158,13 +158,14 @@ CEPSTRAL ANALYSIS based filtering.
         self.logpsd = dct_filter_psd(self.samplelogpsd, self.K_PSD) # usually is log(psd)@aic_Kmin
         self.psd = np.exp(self.logpsd)
         self.tau = np.exp(self.logtau)
+        self.tau_THEORY_std = self.tau * self.logtau_THEORY_std
 
         if (self.aic_Kmin < self.samplelogpsd.size):
             self.logtau_Kmin     = self.logtau[self.aic_Kmin]
             self.logtau_var_Kmin = self.logtau_THEORY_var[self.aic_Kmin]
-            self.logtau_std_Kmin = np.sqrt(self.logtau_var_Kmin)
+            self.logtau_std_Kmin = self.logtau_THEORY_std[self.aic_Kmin]
             self.tau_Kmin     = self.tau[self.aic_Kmin]
-            self.tau_std_Kmin = self.tau_Kmin * self.logtau_std_Kmin
+            self.tau_std_Kmin = self.tau_THEORY_std[self.aic_Kmin]
             self.tau_var_Kmin = self.tau_std_Kmin**2
         else:
             self.logtau_Kmin     = np.NaN

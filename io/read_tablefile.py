@@ -1,15 +1,37 @@
 ################################################################################
 ###
-###   ReadLAMMPSCurrents - v0.2.2 - August 8th, 2017
+###   ReadTABLEfile
 ###
 ################################################################################
 ###
-###  a package to read LAMMPS Log files (data of the must have been previously 
-###  extracted and placed in one file with the LAMMPS log header)
-### 
+###  a package that reads a table-style file and organizes it into a dictionary according to the column headers. 
+###  LAMMPS-style vector variables header are grouped together (only if group_vector = True). 
+###  If the name starts with "c_" or "v_", this is stripped away. 
+###    e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux0' key
+###  Comments lines are ignored. 
+###
+###  Lines are read SEQUENTIALLY with the method read_datalines. 
+###  If a start_step is not specified the file is read from the current position.
+###  This allows one to read the file in blocks.
+###
 ################################################################################
-
-# Read  a lammps currents file, sorting all the data columns into a dictionary
+###  The input file should look like this:
+###
+###  # COMMENT LINE
+###  # COMMENT LINE
+###  # COMMENT LINE
+###  Step Temp TotEng Press c_flux[1] c_flux[2] c_flux[3] c_stress[1] c_stress[2]
+###  0 257.6477 -1085.7346 -1944.803 -129.20254 124.70804 -200.42864 -64.236389 -134.0399
+###  1 247.37505 -1085.734 -1909.333 -133.77141 124.25897 -103.27461 -61.022597 -83.17237 
+###  2 238.37359 -1087.9214 -1874.56 -138.58616 115.84038 -5.7728078 -58.471318 -74.51758
+###  etc.
+###
+################################################################################ 
+###   example:
+###      current = TableFile(filename)
+###      current.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
+###      print current.data
+################################################################################
 
 import numpy as np
 from time import time
@@ -57,10 +79,32 @@ def data_length( filename ):
    return i
 
 
-class LAMMPS_Current(object):
+class TableFile(object):
    """
-   A LAMMPS_Current file that can be read in blocks.
-   example: LAMMPS_Current(filename, select_ckeys)
+   A table-style file that can be read in blocks.
+
+   example:
+      current = TableFile(filename)
+      current.read_datalines(NSTEPS=100, select_ckeys=['Step', 'Temp', 'flux'])
+      print current.data
+
+   Variables (columns) are organized into a dictionary according to the column headers. 
+   LAMMPS-style vector variables header are grouped together (only if group_vector = True). 
+   If the name starts with "c_" or "v_", this is stripped away. 
+     e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux0' key
+   Comments lines are ignored. 
+ 
+   #############################################################################
+   The input file should look like this:
+ 
+   # COMMENT LINE
+   # COMMENT LINE
+   # COMMENT LINE
+   Step Temp TotEng Press c_flux[1] c_flux[2] c_flux[3] c_stress[1] c_stress[2]
+   0 257.6477 -1085.7346 -1944.803 -129.20254 124.70804 -200.42864 -64.236389 -134.0399
+   1 247.37505 -1085.734 -1909.333 -133.77141 124.25897 -103.27461 -61.022597 -83.17237 
+   2 238.37359 -1087.9214 -1874.56 -138.58616 115.84038 -5.7728078 -58.471318 -74.51758
+   etc.
    """
 
    def __init__(self, *args, **kwargs):
@@ -74,30 +118,30 @@ class LAMMPS_Current(object):
       else:
          raise ValueError('No file given.')
       group_vectors = kwargs.get('group_vectors', True)
-      self.GUI = kwargs.get('GUI', False)
-      if self.GUI:
+      self._GUI = kwargs.get('GUI', False)
+      if self._GUI:
          from ipywidgets import FloatProgress
          from IPython.display import display
          global FloatProgress, display
       
-      self.open_file()
-      self.read_ckeys(group_vectors)
+      self._open_file()
+      self._read_ckeys(group_vectors)
       self.ckey = None
       self.MAX_NSTEPS = data_length(self.filename)
       print "Data length = ", self.MAX_NSTEPS
       return
 
    def __repr__(self):
-      msg = 'LAMMPS_Current:\n' + \
+      msg = 'TableFile:\n' + \
             '  filename:      {}\n'.format(self.filename) + \
             '  all_ckeys:     {}\n'.format(self.all_ckeys) + \
             '  select_ckeys:  {}\n'.format(self.select_ckeys) + \
             '  used ckey:     {}\n'.format(self.ckey) + \
-            '  start pos:     {}\n'.format(self.start_byte) + \
+            '  start pos:     {}\n'.format(self._start_byte) + \
             '  current pos:   {}\n'.format(self.file.tell())
       return msg
       
-   def open_file(self):
+   def _open_file(self):
       """Open the file."""
       try:
          self.file = open(self.filename, 'r')
@@ -114,7 +158,7 @@ class LAMMPS_Current(object):
       
       
 
-   def read_ckeys(self, group_vectors=True):
+   def _read_ckeys(self, group_vectors=True):
       """Read the column keys. If group_vectors=True the vector ckeys are grouped togheter"""
       self.all_ckeys = {}
       self.header = ''
@@ -155,7 +199,7 @@ class LAMMPS_Current(object):
                   else:               # if it is not, define a vector
                      self.all_ckeys[key] = np.array( [0]*vecidx )
                      self.all_ckeys[key][-1] = i
-            self.start_byte = self.file.tell()
+            self._start_byte = self.file.tell()
             break
          else:
             self.header += line
@@ -166,7 +210,7 @@ class LAMMPS_Current(object):
       return
 
 
-   def set_ckey(self, select_ckeys=None, max_vector_dim=None):
+   def _set_ckey(self, select_ckeys=None, max_vector_dim=None):
       """Set the ckeys that have been selected, checking the available ones."""
       if select_ckeys is not None:
          self.select_ckeys = select_ckeys
@@ -187,7 +231,7 @@ class LAMMPS_Current(object):
       return
 
 
-   def initialize_dic(self, NSTEPS=None):
+   def _initialize_dic(self, NSTEPS=None):
       """Initialize the data dictionary once the ckeys have been set."""
       if self.ckey is None:
          raise ValueError('ckey not set.')
@@ -209,18 +253,18 @@ class LAMMPS_Current(object):
                        0  -->  go to start step
                        N  -->  go to N-th step"""
       if (start_step >= 0):
-         self.file.seek(self.start_byte)
+         self.file.seek(self._start_byte)
          for i in range(start_step):   # advance of start_step-1 lines
             self.file.readline()
       return
 
    
-   def read_currents(self, NSTEPS=0, start_step=-1, select_ckeys=None, max_vector_dim=None, even_NSTEPS=True):
+   def read_datalines(self, NSTEPS=0, start_step=-1, select_ckeys=None, max_vector_dim=None, even_NSTEPS=True):
       """Read NSTEPS steps of file, starting from start_step, and store only
       the selected ckeys.
       INPUT:
-        NSTEPS         -> number of steps to read
-        start_step  = -1 -> continue from current step
+        NSTEPS         -> number of steps to read (default: 0 -> reads all the file)
+        start_step  = -1 -> continue from current step (default)
                        0 -> go to start step
                        N -> go to N-th step
         select_ckeys   -> an array with the column keys you want to read (see all_ckeys for a list)
@@ -229,14 +273,14 @@ class LAMMPS_Current(object):
       OUTPUT:
         data    ->  a dictionary with the selected-column steps
       """
-      if self.GUI:
+      if self._GUI:
          progbar = FloatProgress(min=0, max=100)
          display(progbar)
       start_time = time()
       if (NSTEPS == 0):
          NSTEPS = self.MAX_NSTEPS
-      self.set_ckey(select_ckeys, max_vector_dim)  # set the ckeys to read
-      self.initialize_dic(NSTEPS)  # allocate dictionary
+      self._set_ckey(select_ckeys, max_vector_dim)  # set the ckeys to read
+      self._initialize_dic(NSTEPS)  # allocate dictionary
       self.gotostep(start_step)    # jump to the starting step
       
       # read NSTEPS of the file
@@ -262,13 +306,13 @@ class LAMMPS_Current(object):
          for key, idx in self.ckey.iteritems():  # save the selected columns
             self.data[key][step,:] = np.array(map(float, values[idx]))
          if ( (step+1)%progbar_step == 0 ):
-            if self.GUI:
+            if self._GUI:
                progbar.value = float(step+1)/NSTEPS*100.;
                progbar.description = "%g %%" % progbar.value
             else:
                print "    step = {:9d} - {:6.2f}% completed".format(step+1, float(step+1)/NSTEPS*100.)
 
-      if self.GUI:
+      if self._GUI:
          progbar.close()
       # check number of steps read, keep an even number of steps
       if (step + 1 < self.NSTEPS):
