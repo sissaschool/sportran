@@ -59,7 +59,7 @@ def file_length( filename ):
    return i
 
 def data_length( filename ):
-   i = 0
+   i = -1
    with open(filename) as f:
       while is_string(f.readline().split()[0]):  # skip text lines
          pass
