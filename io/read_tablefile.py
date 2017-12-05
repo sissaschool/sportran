@@ -36,7 +36,10 @@
 import numpy as np
 from time import time
 
+
 def is_string( string ):
+   if len(string)==0:
+      return True
    try:
       float( string )
    except ValueError:
@@ -59,12 +62,20 @@ def file_length( filename ):
    return i
 
 def data_length( filename ):
-   i = 0
+   i = -1
    with open(filename) as f:
-      while is_string(f.readline().split()[0]):  # skip text lines
-         pass
-      for i, l in enumerate(f,2):
-         pass
+      #while is_string(f.readline().split()[0]):  # skip text lines
+      #   pass
+      for idx,line in enumerate(f):
+         split=line.split()
+         if len(split)==0:
+            continue
+         for splits in split:
+            if is_string(splits):
+               break
+         else: # no breaks in the for
+            # if I am here it is a line of numbers
+            i=i+1
    return i
 
 
@@ -138,18 +149,33 @@ class TableFile(object):
          raise ValueError('File does not exist.')
       return
 
+   def get_number_columns(self,line):
+      numbers=line.split()
+      for n in numbers:
+         if (is_string(n)):
+            return 0
+      return len(numbers)
+      
+      
 
    def _read_ckeys(self, group_vectors=True):
       """Read the column keys. If group_vectors=True the vector ckeys are grouped togheter"""
       self.all_ckeys = {}
       self.header = ''
+      nextline = self.file.readline() #keep in memory also the next_line
       while True:
-         line = self.file.readline()
+         line=nextline # old nextline is current line
+         nextline = self.file.readline() #read new nextline
          if len(line) == 0:  # EOF
             raise RuntimeError('Reached EOF, no ckeys found.')
          values = np.array(line.split())
+         if len(values)==0 :
+            continue
          # text line: read variables names and save indexes in ckey
-         if (is_string(values[0]) and (values[0].find('#') < 0)):
+         # if next line is composed only of numbers, with the same number of columns of the header
+         ncolumns=self.get_number_columns(nextline)
+         if ((ncolumns == len(values) ) and is_string(values[0]) and (values[0].find('#') < 0) ):
+            self.ncolumns_file=ncolumns
             self.header += line[:-1]
             for i in range(len(values)):
                if group_vectors:
@@ -243,7 +269,7 @@ class TableFile(object):
                        N -> go to N-th step
         select_ckeys   -> an array with the column keys you want to read (see all_ckeys for a list)
         max_vector_dim -> when reading vectors read only this number of components (None = read all components)
-        even_NSTEPS    -> round the number of steps to an even number (default: True)
+        even_NSTEPS    -> round the number of steps to read NSTEPS to an even number (default: True)
       OUTPUT:
         data    ->  a dictionary with the selected-column steps
       """
@@ -265,6 +291,18 @@ class TableFile(object):
             print "Warning:  reached EOF."
             break
          values = np.array(line.split())
+         #accepts line only if it contains number
+         eof=False
+         while self.get_number_columns(line) != self.ncolumns_file :
+            print "Ignored: ",line,""
+            line = self.file.readline()
+            if len(line) == 0:  # EOF
+               print "Warning:  reached EOF."
+               eof=True
+               break
+            values = np.array(line.split())
+         if eof:
+            break
          for key, idx in self.ckey.iteritems():  # save the selected columns
             self.data[key][step,:] = np.array(map(float, values[idx]))
          if ( (step+1)%progbar_step == 0 ):

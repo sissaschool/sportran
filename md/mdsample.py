@@ -202,6 +202,81 @@ class MDSample(object):
         self.DF = 0.5 / (self.Nfreqs-1)
         return
 
+    def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=None, average_components=True, normalize=False, call_other=True):  ## **REMOVE DT
+        """Computes the real fourier transform of the temporal series, then computes the thermal conductivity coefficient obtained from the
+	cospectrum matrix. The results have almost the same statistical properties:
+        !!!!
+        !!!!  WARNING: the chi-square distribution have ndf=n-l+1, where n is the number of temporal series, l is the number of currents (stored in self.ndf_chi).
+        !!!!
+        If n<l this will not work.
+        In this routine it is already used the correct factor in the mean over the number of temporal series
+        (no need for different factors in front of the final result, apart of a 0.5 factor that is needed also in the one componet case).
+        The output arrays are the same as the one-component psd spectrum.
+        If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
+        The elements of the matrix are multiplied by DT at the end.
+	others is a list of other object like this, with the other currents loaded.
+         
+        example call (4 currents in total):
+        j.compute_kappa_multi(others=[j1,j2,j3],FILTER_WINDOW_WIDTH =FILTER_WINDOW_WIDTH)
+	"""
+        if DT_FS is not None:
+            self.DT_FS = DT_FS
+        if (method == 'trajectory'):
+            if self.traj is None:
+                raise ValueError('Trajectory not defined.')
+            if self.MULTI_COMPONENT:
+                self.spectrALL = np.fft.rfft(self.traj, axis=0)
+            else:
+                self.spectrALL = np.fft.rfft(self.traj, axis=0)
+            self.Nfreqs = self.spectrALL.shape[0]
+            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
+            self.DF = 0.5 / (self.Nfreqs-1)
+        else:
+            raise KeyError('method not understood')
+        self.freqs_THz = self.freqs/self.DT_FS*1000.
+        self.Nyquist_f_THz = self.freqs_THz[-1]
+
+        #calculate the same thing on the other trajectory
+        if (call_other):
+	    for otherz in others:
+            	otherz.compute_kappa_multi([self],FILTER_WINDOW_WIDTH,method,DT,DT_FS,average_components,normalize,False)
+        else:
+            return
+	n_correnti=len(others)
+	#define the matrix. Its shape is (2,2,Nfreqs,n_spatial_dim)
+        #   self.spectrALL*self.spectrALL.conj()       self.spectrALL*other.spectrALL.conj()
+        #  other.spectrALL*self.spectrALL.conj()      other.spectrALL*other.spectrALL.conj()
+        #
+
+	other_spectrALL=[]
+        for otherz in others:
+	    other_spectrALL.append(otherz.spectrALL)
+
+	#beautiful numpy function. The output is the matrix made of the outer product of only the first indexes of the two arrays
+	self.covarALL = np.einsum('a...,b...->ab...',np.array( [self.spectrALL]+ other_spectrALL ),np.array( [self.spectrALL]+ other_spectrALL ).conj())*DT/ (2*(self.Nfreqs - 1))
+
+
+	#compute number of degrees of freedom of the chi-square distribution of the psd
+	self.ndf_chi = self.covarALL.shape[3]- len(other_spectrALL)
+        #compute the sum over the last axis (x,y,z components):
+        self.cospectrum = self.covarALL.sum(axis=3)
+	
+
+        #compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
+        # the diagonal elements of the inverse have very convenient statistical properties 
+	self.psd =  ((np.linalg.inv(self.cospectrum.transpose((2,0,1) ))[:,0,0]**-1).real)/self.ndf_chi
+
+        if normalize:
+            self.psd= self.psd / np.trapz(self.psd) / self.N / DT  # **CHANGE IN DT_FS
+        self.logpsd = np.log(self.psd)
+        self.psd_min = np.min(self.psd)
+        #self.psd_power = np.trapz(self.psd)  # one-side PSD power
+        if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
+            self.filter_psd( FILTER_WINDOW_WIDTH )
+        return
+
+
+
     def compute_kappa(self, other, FILTER_WINDOW_WIDTH=None, method='trajectory', DT=1, DT_FS=None, average_components=True, normalize=False, call_other=True):  ## **REMOVE DT
         """Computes the real fourier transform of the temporal series, then computes the thermal conductivity coefficient obtained from the
 	cospectrum matrix. The results have almost the same statistical properties (WARNING: the chi-square distribution have a degreen of freedom less. There are also different factors in front of all the results).

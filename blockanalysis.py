@@ -47,7 +47,7 @@ class MDBlocks(object):
         self.NYQUIST_F = 0.5/TSKIP      # Nyquist frequency (rescaled) [\omega*DT/(2*pi)]
         self.TOT_TIME = self.y_big.shape[0]
         print " TOT_TIME     = {:}".format(self.y_big.shape)
-        print " NYQUIST_F    = {:10g} = {:10g} THz".format(self.NYQUIST_F, self.NYQUIST_F/DT_FS*1000)
+        print " NYQUIST_F    = {:} = {:} THz".format(self.NYQUIST_F, self.NYQUIST_F/DT_FS*1000)
         return
 
 
@@ -357,15 +357,15 @@ class MDBlocks(object):
 
         self.FTAU_Kmin_ave = self.ftau_Kmin_ave * 0.5 * self.tau_scale
         self.FTAU_Kmin_std = self.ftau_Kmin_std * 0.5 * self.tau_scale
-        print '   FTAU[@AIC_Kmin]    =  {:12f} +/- {:8f}'.format(self.FTAU_Kmin_ave, self.FTAU_Kmin_std)
+        print '   FTAU[@AIC_Kmin]    =  {} +/- {}'.format(self.FTAU_Kmin_ave, self.FTAU_Kmin_std)
 
         ## log(tau), tau, TAU THEORY std @average AIC Kmin
         self.flogtau_THEORY_std_aveKmin = self.logtau_THEORY_std[int(round(self.aic_Kmin_ave))]
         self.ftau_THEORY_std_aveKmin    = self.flogtau_THEORY_std_aveKmin * self.ftau_Kmin_ave
         self.FTAU_THEORY_std_aveKmin    = self.ftau_THEORY_std_aveKmin * 0.5 * self.tau_scale
-        print '\n   THEORY_STD_flogtau[@ave_AIC_Kmin] =    {:8f}  (errcheck: {:8f} +/- {:8f})'.format(self.flogtau_THEORY_std_aveKmin, np.nanmean(list(self.flogtau_Kmin_THEORYstd())), np.nanstd(list(self.flogtau_Kmin_THEORYstd())))
-        print '   THEORY_STD_ftau[@ave_AIC_Kmin]    =    {:8f}'.format(self.ftau_THEORY_std_aveKmin)
-        print '   THEORY_STD_FTAU[@ave_AIC_Kmin]    =    {:8f}'.format(self.FTAU_THEORY_std_aveKmin)
+        print '\n   THEORY_STD_flogtau[@ave_AIC_Kmin] =    {}  (errcheck: {} +/- {})'.format(self.flogtau_THEORY_std_aveKmin, np.nanmean(list(self.flogtau_Kmin_THEORYstd())), np.nanstd(list(self.flogtau_Kmin_THEORYstd())))
+        print '   THEORY_STD_ftau[@ave_AIC_Kmin]    =    {}'.format(self.ftau_THEORY_std_aveKmin)
+        print '   THEORY_STD_FTAU[@ave_AIC_Kmin]    =    {}'.format(self.FTAU_THEORY_std_aveKmin)
 
         if self.bayes_p:
             ## DCT-Filtered Bayesian distribution log(tau), tau, TAU (SI units)
