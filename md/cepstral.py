@@ -116,7 +116,9 @@ CEPSTRAL ANALYSIS based filtering.
             self.aic = dct_AICc(self.logpsdK, ck_theory_var)
         else:
             raise ValueError('AIC type not valid.')
+        self.aic_type = aic_type
         self.aic_min = np.min(self.aic)
+        self.Kmin_corrfactor = Kmin_corrfactor
         self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
         if (self.aic_Kmin >= NF):
             print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
@@ -143,6 +145,17 @@ CEPSTRAL ANALYSIS based filtering.
             self.logtau_THEORY_var[-1] = self.logtau_THEORY_var[-2] + self.logpsdK_THEORY_var[-1]
             self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
         return
+
+
+    def __repr__(self):
+        msg = 'CosFilter:\n' + \
+              '  AIC type  = {:}\n'.format(self.aic_type) + \
+              '  AIC min   = {:f}\n'.format(self.aic_min) + \
+              '  AIC_Kmin  = {:d}  (P* = {:d})\n'.format(self.aic_Kmin, self.aic_Kmin + 1) + \
+              '  L_0*   = {:15f} +/- {:10f}\n'.format(self.logtau_Kmin, self.logtau_std_Kmin) + \
+              '  S_0*   = {:15f} +/- {:10f}\n'.format(self.tau_Kmin, self.tau_std_Kmin) + \
+              '  K_PSD  = {:d}\n'.format(self.K_PSD)
+        return msg
     
     
     def scan_filter_tau(self, K_PSD=None, correct_mean=True):

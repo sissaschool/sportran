@@ -181,6 +181,7 @@ class MDSample(object):
     def timeseries(self):
         return np.arange(self.N) * self.DT_FS
 
+
     def compute_trajectory(self):
         """Computes trajectory from spectrum."""
         if self.spectr is None:

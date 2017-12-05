@@ -8,6 +8,10 @@ from md.mdsample import MDSample
 import matplotlib.pyplot as plt
 
 
+def freq_THz_to_red(f, DT_FS):
+   return f/1000.*DT_FS
+
+
 class HeatCurrent(MDSample):
    """
    HeatCurrent API for thermo-cepstral analysis.
@@ -21,12 +25,23 @@ class HeatCurrent(MDSample):
       - VOLUME       simulation cell volume [A^3]
    """
 
-   def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None):
+   def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
       MDSample.__init__(self, traj=j, DT_FS=DT_FS)
       self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
-      self.compute_psd(PSD_FILTER_W)
+      if (freq_units == 'thz') or (freq_units == 'THz'):
+         self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
+      elif (freq_units == 'red'):
+         self.compute_psd(PSD_FILTER_W)
+      else:
+         raise ValueError('Units not valid.')
       self.initialize_cepstral_parameters()
       return
+
+
+   def __repr__(self):
+        msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__() \
+                               + self.dct.__repr__()
+        return msg
 
 
    def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
@@ -73,7 +88,7 @@ class HeatCurrent(MDSample):
             self.filter_psd(0.)
       else:
          if (freq_units == 'thz') or (freq_units == 'THz'):
-            self.filter_psd(PSD_FILTER_W/1000.*self.DT_FS)
+            self.filter_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
          elif (freq_units == 'red'):
             self.filter_psd(PSD_FILTER_W)
          else:
@@ -269,7 +284,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
       return xf
 
 
-def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, FIGSIZE=None, **plot_kwargs):
+def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None, **plot_kwargs):
    """
    Simulate the resampling of x.
      TSKIP        = sampling time [steps]
@@ -293,26 +308,32 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
    FSTAR_THZ_LIST = [ xff.Nyquist_f_THz for xff in xf ]
 
    if plot:
-      figure, axes = plt.subplots(2, sharex=True, sharey=True, figsize=FIGSIZE)
-      axes[0].errorbar( FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr = [xff.kappa_Kmin_std for xff in xf], **plot_kwargs )
-      axes[1].errorbar( FSTAR_THZ_LIST, [xff.dct.logtau_Kmin for xff in xf], yerr = [xff.dct.logtau_std_Kmin for xff in xf], **plot_kwargs )
-      axes[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
-      axes[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
-      axes[0].xaxis.set_ticks_position('top')
-      axes[0].set_ylabel(r'PSD')
-      axes[0].grid()
-      axes[1].xaxis.set_ticks_position('bottom')
-      axes[1].set_xlabel(r'$f$ [THz]')
-      axes[1].set_ylabel(r'log(PSD)')
-      axes[1].grid()
+      if axes is None:
+         figure, ax = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+      else:
+         ax = axes
+      ax[0].errorbar( FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr = [xff.kappa_Kmin_std for xff in xf], **plot_kwargs )
+      ax[1].errorbar( FSTAR_THZ_LIST, [xff.dct.logtau_Kmin for xff in xf], yerr = [xff.dct.logtau_std_Kmin for xff in xf], **plot_kwargs )
+      #ax[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
+      #ax[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
+      ax[0].xaxis.set_ticks_position('top')
+      ax[0].set_ylabel(r'PSD')
+      ax[0].grid()
+      ax[1].xaxis.set_ticks_position('bottom')
+      ax[1].set_xlabel(r'$f$ [THz]')
+      ax[1].set_ylabel(r'log(PSD)')
+      ax[1].grid()
 
-      #axes2 = [axes[0].twinx(), axes[1].twinx()]
-      #color=next(axes[0]._get_lines.prop_cycler)['color']
-      #color=next(axes[1]._get_lines.prop_cycler)['color']
-      #x.plot_periodogram(axes=axes2, c=color)
-      #axes[0].set_ylabel(r'$\kappa$ [W/(m*K)]')
-      #axes[1].set_ylabel(r'$\kappa$ [W/(m*K)]')
-      return xf, axes, figure
+      if axes is None:
+         ax2 = [ax[0].twinx(), ax[1].twinx()]
+         color=next(ax[0]._get_lines.prop_cycler)['color']
+         color=next(ax[1]._get_lines.prop_cycler)['color']
+         x.plot_periodogram(axes=ax2, c=color)
+         ax[0].set_ylabel(r'$\kappa$ [W/(m*K)]')
+         ax[1].set_ylabel(r'$\kappa$ [W/(m*K)]')
+         return xf, ax, figure
+      else:
+         return xf, ax
    else:
       return xf
 
