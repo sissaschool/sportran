@@ -28,12 +28,15 @@ class HeatCurrent(MDSample):
    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
       MDSample.__init__(self, traj=j, DT_FS=DT_FS)
       self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
-      if (freq_units == 'thz') or (freq_units == 'THz'):
-         self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
-      elif (freq_units == 'red'):
-         self.compute_psd(PSD_FILTER_W)
+      if PSD_FILTER_W is None:
+         self.compute_psd()
       else:
-         raise ValueError('Units not valid.')
+         if (freq_units == 'thz') or (freq_units == 'THz'):
+            self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
+         elif (freq_units == 'red'):
+            self.compute_psd(PSD_FILTER_W)
+         else:
+            raise ValueError('Units not valid.')
       self.initialize_cepstral_parameters()
       return
 
