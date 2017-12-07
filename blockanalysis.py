@@ -18,7 +18,7 @@ class MDBlocks(object):
              FILTER_WIDTH_T  filter window width [original time steps]"""
 
         if (len(traj.shape) > 1):
-            #raise NotImplemented('Sorry, only 1-Dimensional trajectories accepted. For now.')
+            #raise NotImplementedError('Sorry, only 1-Dimensional trajectories accepted. For now.')
             self.MULTI_COMPONENT = True
             self.N_COMPONENTS = traj.shape[1]
         else:
@@ -81,7 +81,7 @@ class MDBlocks(object):
         self.bayes_p = bayes_p
         
         if (self.N_BLOCKS == 1):
-            raise NotImplemented('One block.')
+            raise NotImplementedError('One block.')
         
         for L in range(self.N_BLOCKS):
             if self.MULTI_COMPONENT:
@@ -125,7 +125,7 @@ class MDBlocks(object):
         self.bayes_p = bayes_p
         
         if (self.N_BLOCKS == 1):
-            raise NotImplemented('One block.')
+            raise NotImplementedError('One block.')
         
         for L in range(self.N_BLOCKS):
             if self.MULTI_COMPONENT:

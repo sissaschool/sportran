@@ -91,7 +91,7 @@ class HeatCurrent(MDSample):
             self.filter_psd(0.)
       else:
          if (freq_units == 'thz') or (freq_units == 'THz'):
-            self.filter_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
+            self.filter_psd(freq_THz_to_red(PSD_FILTER_W, self.DT_FS))
          elif (freq_units == 'red'):
             self.filter_psd(PSD_FILTER_W)
          else:

@@ -87,7 +87,7 @@ class MDSample(object):
             self.traj = np.array(array, dtype=float) 
             self.N  = self.traj.shape[0]
             if (self.N % 2 == 1):
-                raise NotImplemented('Trajectory has odd number of points.')
+                raise NotImplementedError('Trajectory has odd number of points.')
             if (len(self.traj.shape) > 1):
                self.MULTI_COMPONENT = True
                self.N_COMPONENTS = self.traj.shape[1]
