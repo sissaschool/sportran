@@ -43,7 +43,6 @@ def is_string( string ):
       return True
    return False
 
-
 def is_vector_variable( string ):
    bracket = string.rfind('[')
    if (bracket == -1):

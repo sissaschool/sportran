@@ -16,7 +16,14 @@ def is_vector_variable( string ):
    return bracket
 
 
-def read_LAMMPSlogfile(filename, DUMP_RUN='DUMP_RUN', group_vectors=True, even_NSTEPS=True, GUI=False):
+def Read_LAMMPSlogfile(filename, DUMP_RUN='DUMP_RUN', group_vectors=True, even_NSTEPS=True, GUI=False):
+   """example:
+   data = read_LAMMPSlogfile('log.lammps', '_dump_run')
+   """
+   if GUI:
+      from ipywidgets import FloatProgress
+      from IPython.display import display
+      global FloatProgress, display
 
    def extract_thermo():
       script = __path__[0] + '/extract_lammps_thermo.sh'
@@ -83,7 +90,7 @@ def read_LAMMPSlogfile(filename, DUMP_RUN='DUMP_RUN', group_vectors=True, even_N
          if ( (step+1)%progbar_step == 0 ):
             if GUI:
                progbar.value = float(step+1)/NSTEPS*100.;
-               progbar.description = "%g %%" % progbar.value
+               progbar.description = "{:6.2f}%".format(progbar.value)
             else:
                print "    step = {:9d} - {:6.2f}% completed".format(step+1, float(step+1)/NSTEPS*100.)
       if GUI:
