@@ -241,7 +241,7 @@ class MDSample(object):
         # calculate the same thing on the other trajectory
         if (call_other):
 	    for otherz in others:
-            	otherz.compute_kappa_multi([self], FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize, False)
+            	otherz.compute_kappa_multi([self], FILTER_WINDOW_WIDTH, method, self.DT_FS, average_components, normalize, False)
         else:
             return
 
@@ -253,7 +253,7 @@ class MDSample(object):
 	    other_spectrALL.append(otherz.spectrALL)
 
 	# beautiful numpy function. The output is the matrix made of the outer product of only the first indexes of the two arrays
-	self.covarALL = DT_FS / (2.*(self.Nfreqs - 1.)) *\
+	self.covarALL = self.DT_FS / (2.*(self.Nfreqs - 1.)) *\
               np.einsum('a...,b...->ab...', np.array([self.spectrALL] + other_spectrALL), np.array([self.spectrALL] + other_spectrALL).conj())
 
 	# compute number of degrees of freedom of the chi-square distribution of the psd
@@ -267,7 +267,7 @@ class MDSample(object):
 	self.psd = (np.linalg.inv(self.cospectrum.transpose((2,0,1)))[:,0,0]**-1).real / self.ndf_chi
 
         if normalize:
-            self.psd = self.psd / np.trapz(self.psd) / self.N / DT_FS
+            self.psd = self.psd / np.trapz(self.psd) / self.N / self.DT_FS
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
         #self.psd_power = np.trapz(self.psd)  # one-side PSD power
