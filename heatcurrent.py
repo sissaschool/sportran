@@ -18,33 +18,39 @@ class HeatCurrent(MDSample):
    Defines a HeatCurrent object with useful tools to perform analysis.
 
    INPUT:
-      - j            the heat current time series (N * N_COMPONENTS array)
-      - units        the units of current ('metal', 'real')
-      - DT_FS        MD time step [fs]
-      - TEMPERATURE  average temperature [K]
-      - VOLUME       simulation cell volume [A^3]
+      - j             the heat current time series (N * N_COMPONENTS array)
+      - units         the units of current ('metal', 'real')
+      - DT_FS         MD time step [fs]
+      - TEMPERATURE   average temperature [K]
+      - VOLUME        simulation cell volume [A^3]
+      - PSD_FILTER_W  PSD filter window [freq_units] (optional)
+      - freq_units    frequency units   [THz or red] (optional)
    """
 
    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
       MDSample.__init__(self, traj=j, DT_FS=DT_FS)
       self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
-      if PSD_FILTER_W is None:
-         self.compute_psd()
-      else:
-         if (freq_units == 'thz') or (freq_units == 'THz'):
-            self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
-         elif (freq_units == 'red'):
-            self.compute_psd(PSD_FILTER_W)
+
+      if self.traj is not None:
+         if PSD_FILTER_W is None:
+            self.compute_psd()
          else:
-            raise ValueError('Units not valid.')
-      self.initialize_cepstral_parameters()
+            if (freq_units == 'thz') or (freq_units == 'THz'):
+               self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
+            elif (freq_units == 'red'):
+               self.compute_psd(PSD_FILTER_W)
+            else:
+               raise ValueError('Units not valid.')
+         self.initialize_cepstral_parameters()
+      else:
+         print "Warning: trajectory not initialized. You should manually initialize what you need."
       return
 
 
    def __repr__(self):
-        msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__() \
-                               + self.dct.__repr__()
-        return msg
+      msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__() \
+                             + self.dct.__repr__()
+      return msg
 
 
    def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
@@ -85,7 +91,8 @@ class HeatCurrent(MDSample):
 
       Returns a matplotlib.axes.Axes object.
       """
-      self.compute_psd()
+      if self.psd is None:
+         self.compute_psd()
       if PSD_FILTER_W is None:
          if self.FILTER_WINDOW_WIDTH is None:
             self.filter_psd(0.)
@@ -213,6 +220,22 @@ class HeatCurrent(MDSample):
        axes[1].grid()
        return axes
 
+   def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None):
+      """Multi-component kappa calculation."""
+      print "HeatCurrent.compute_kappa_multi"
+      if FILTER_WINDOW_WIDTH is None:
+         FILTER_WINDOW_WIDTH = self.FILTER_WINDOW_WIDTH
+      multi_mdsample = super(HeatCurrent, self).compute_kappa_multi(others, FILTER_WINDOW_WIDTH, DT_FS=self.DT_FS, call_other=True)
+      multi_hc = HeatCurrent(None, self.units, self.DT_FS, self.TEMPERATURE, self.VOLUME, FILTER_WINDOW_WIDTH, 'red')
+      ### CHECK THAT PSD IS NOT INITIALIZED by the HC constructor
+      ### We'd actually need a HC constructor from a MDSample object
+      ### NEED TO CHANGE FILTER_WINDOW_WIDTH into PSD_FILTER_W and check freq_units (for now = 'red')
+      multi_hc.initialize_psd(psd=multi_mdsample.psd, freqs=multi_mdsample.freqs)
+      multi_hc.filter_psd(FILTER_WINDOW_WIDTH)
+      multi_hc.covarALL = multi_mdsample.covarALL
+      multi_hc.ndf_chi = multi_mdsample.ndf_chi
+      multi_hc.cospectrum = multi_mdsample.cospectrum
+      return multi_hc
 
 ################################################################################
 
