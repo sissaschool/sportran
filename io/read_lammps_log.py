@@ -118,23 +118,23 @@ class LAMMPSLogFile(object):
      data.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
      print data.data
 
-     # to save data into a Numpy file:
+     # to save data into a Numpyz file:
      save_hc_npz(data, ['flux'], 'lammps.data', 'flux.npz')
 #############################################################################
    """
 
    def __init__(self, *args, **kwargs):
-      """ LAMMPSLogFile(filename, select_ckeys, run_keyword) """
+      """ LAMMPSLogFile(filename, run_keyword, select_ckeys) """
       if (len(args) > 0):
          self.filename = args[0]
          if (len(args) >= 2):
-            self.select_ckeys = args[1]
+            self.run_keyword = args[1]
             if (len(args) == 3):
-               self.run_keyword = args[2]
+               self.select_ckeys = args[2]
             else:
-               self.run_keyword = None
+               self.select_ckeys = None
          else:
-            self.select_ckeys = None
+            self.run_keyword = None
       else:
          raise ValueError('No file given.')
       self.run_keyword = kwargs.get('run_keyword', None)
@@ -152,7 +152,6 @@ class LAMMPSLogFile(object):
       self.MAX_NSTEPS = file_length(self.filename)
       self._read_ckeys(self.run_keyword, group_vectors)
       self.ckey = None
-      print "File length = ", self.MAX_NSTEPS
       return
 
    def __repr__(self):
@@ -182,9 +181,10 @@ class LAMMPSLogFile(object):
          line = self.file.readline()
          nlines += 1
          if len(line) == 0:  # EOF
-            raise RuntimeError('Reached EOF, no ckeys found.')
+            raise RuntimeError('Reached EOF, run_keyword was not found!')
          # check if run_keyword string is found
          if run_keyword in line:
+            print "  run_keyword found at line {:d}.".format(nlines)
             break
       while True:
          line = self.file.readline()
@@ -194,6 +194,7 @@ class LAMMPSLogFile(object):
          values = np.array(line.split())
          # find the column headers line
          if (len(values) and (is_string(values[0])) and (values[0] == 'Step')):
+            print "  column headers found at line {:d}. Reading data...".format(nlines)
             for i in range(len(values)):
                if group_vectors:
                   bracket = is_vector_variable( values[i] )  # position of left square bracket
@@ -306,7 +307,7 @@ class LAMMPSLogFile(object):
             print "Warning:  reached EOF."
             break
          if self.endrun_keyword in line:  # end-of-run keyword
-            print "endrun_keyword found."
+            print "  endrun_keyword found."
             break
          values = np.array(line.split())
          for key, idx in self.ckey.iteritems():  # save the selected columns
@@ -344,7 +345,10 @@ class LAMMPSLogFile(object):
 
 def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilename):
    """
-     # example to save data into a Numpy file:
+     Takes a LAMMPSLogFile object, a LAMMPS structure data file (optional), takes
+     the desired columns and save data into a Numpyz file.
+
+     # example to save data into a Numpyz file:
      Save_HC_npz(lammpslogfile_object, ['flux'], 'lammps.data', 'flux.npz')
    """
    def get_box(filename):
@@ -366,10 +370,11 @@ def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilena
    if not isinstance(lammpslogfile, LAMMPSLogFile):
       raise ValueError('lammpslogfile is not a LAMMPSLogFile object.')
    
+   dic = {}
    if 'Temp' not in lammpslogfile.ckey:
       raise RuntimeError('Temp not found.')
-   dic = {}
    dic['Temp_ave'] = np.mean(lammpslogfile.data['Temp'])
+
    for key in select_ckeys:
       if key in lammpslogfile.ckey:
          dic[key] = lammpslogfile.data[key]
@@ -384,14 +389,22 @@ def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilena
    if 'Time' in lammpslogfile.ckey:
       dic['DT_TIMEUNITS'] = lammpslogfile.data['Time'][1,0] - lammpslogfile.data['Time'][0,0]
 
+   print "These keys will be saved in file \"{:}\" :".format(outfilename)
+   print " ", dic.keys()
    np.savez(outfilename, **dic)
    return
 
 
-
+################################################################################
 def main ():
    """This script extracts the desired columns from a LAMMPS Log file and saves
-   them into a Numpy file for later use."""
+   them into a Numpyz file for later use.
+
+   Example:
+   start reading when "PRODUCTION RUN" is found, read "flux1" and "Press" columns from log.lammps
+   log file and structure.data data file (containing structure):
+      python read_lammps_log.py  log.lammps structure.data out.npz -k flux1 Press -d "PRODUCTION RUN"
+   """
 
    import argparse
 
