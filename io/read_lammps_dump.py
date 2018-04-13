@@ -1,6 +1,6 @@
 ################################################################################
 ###
-###   ReadLAMMPSDump - v0.1.5 - August 28th, 2017
+###   ReadLAMMPSDump - v0.1.7 - April 13, 2018
 ###
 ################################################################################
 ###
@@ -67,9 +67,10 @@ class LAMMPS_Dump(object):
    """A LAMMPS_Dump file that can be read in blocks.
    example:
       traj = LAMMPS_Dump(filename, preload=False)  -->> do not preload list of steps (suggested if the file is big)
-      traj.read_timesteps(10, select_ckeys=['id,xu,yu,vu']) -->>   Read first 10 timesteps, only the specified columns
-      traj.read_timesteps((10,30))      -->>   Read from step #10 to #30
-      traj.read_timesteps((10,30,2))    -->>   Read every 2 steps from step #10 to #30
+      traj.read_timesteps(10, start_step=0, select_ckeys=['id,xu,yu,vu']) -->>   Read first 10 timesteps, only the specified columns
+      traj.read_timesteps(10, select_ckeys=['id,xu,yu,vu']) -->>   Read the next 10 timesteps, only the specified columns (DELTA_TIMESTEP is assumed)
+      traj.read_timesteps((10,30))      -->>  Read from TIMESTEP 10 to 30
+      traj.read_timesteps((10,30,2))    -->>  Read every 2 steps from TIMESTEP 10 to 30
       print traj.data
    """
 
@@ -112,7 +113,7 @@ class LAMMPS_Dump(object):
             '  FIRST TIMESTEP: {}\n'.format(self.FIRST_TIMESTEP) + \
             '  LAST TIMESTEP:  {}\n'.format(self.LAST_TIMESTEP) + \
             '  DELTA TIMESTEP: {}\n'.format(self.DELTA_TIMESTEP) + \
-            '  current step:   {}\n'.format(self.current_timestep)
+            '  current step:   {}\n'.format(self.current_timestep)  # = -1 if it has to be readed
       return msg
       
    def _open_file(self):
@@ -209,7 +210,7 @@ class LAMMPS_Dump(object):
 
 
       # go back to the first timestep
-      self.gototimestep(0)
+      self.gototimestep(0)  # compute_first = True
       self._start_byte = 0
       print '  all_ckeys      = ', self.all_ckeys
       print '  TOT_TIMESTEPS  = ', self.TOT_TIMESTEPS
@@ -221,7 +222,9 @@ class LAMMPS_Dump(object):
 
 
    def _set_ckey(self, select_ckeys=None):
-      """Set the ckeys to read from the selected, checking the available ones."""
+      """Set the ckeys to read from the selected, checking the available ones.
+      If select_ckeys is not passed, then use the already selected ones, or all
+      the available ones if no selection was previously made."""
       if select_ckeys is not None:
          self.select_ckeys = select_ckeys
       self.ckey = {}
@@ -241,14 +244,23 @@ class LAMMPS_Dump(object):
       return
 
 
-   def _set_timesteps(self, selection, start_step=0):
+   def _set_timesteps(self, selection, start_step=-1):
       """Set the timesteps to read from the selected, checking the available ones.
-      INPUT:   scalar, start  -->  Number of steps to read from start index"""
-      if (start_step == 0):
+      INPUT:  N              -->  Read the next N steps (DELTA_TIMESTEP is assumed)
+              N, start_step=30  -->  Read N steps from the TIMESTEP 30
+                                  if compute_first=True, read the current step as well
+              (10,30)        -->  Read from TIMESTEP 10 to 30
+              (10,30,2)      -->  Read every 2 steps from TIMESTEP 10 to 30"""
+      if (start_step == -1):
+         if self._compute_current_step:
+           start_step = self.current_timestep
+         else:
+           start_step = self.current_timestep + self.DELTA_TIMESTEP
+      elif (start_step == 0):
          start_step = self.FIRST_TIMESTEP
-      if np.isscalar(selection) or (len(selection) == 1):   # select N steps from start
+      if np.isscalar(selection) or (len(selection) == 1):   # select N steps from start one
          first = start_step
-         last  = self.DELTA_TIMESTEP*selection + self.FIRST_TIMESTEP
+         last  = self.DELTA_TIMESTEP*selection + start_step
          step  = None
       elif (len(selection) == 2):
          first = selection[0]
@@ -264,6 +276,7 @@ class LAMMPS_Dump(object):
          print "Warning: step is not a multiple of the detected DELTA_TIMESTEP. You may get errors."
       if (first%step != 0):
          first += step - first%step  # round first step to the next in the list
+
       self.timestep = []
       self.select_timesteps = np.arange(first, last, step) # selected timesteps
       if self.preload_timesteps:
@@ -296,51 +309,73 @@ class LAMMPS_Dump(object):
       return
 
 
-   def gototimestep(self, start_step, fast_check=True):
+   def _gototimestep(self, start_step, fast_check=True):
       """Go to the start_step-th line in the time series (assumes step=1).
          start_step = -1  -->  ignore, continue from current step
                        0  -->  go to FIRST timestep
                        N  -->  go to N-th timestep
-         safe_check = True --> assumes the TIMESTEP are a monotonously increasing.
+         fast_check = True --> assumes the TIMESTEP are a monotonously increasing.
                                If the the start_step is passed and not found then stop."""
       if (start_step >= 0):
-         if (start_step <= self.current_timestep):  # if start_step is before/equal the current step
+         if (start_step <= self.current_timestep):# or (self.current_timestep == -1):  # if start_step is before/equal the current step
             self.file.seek(self._start_byte)         #  --> start over
-         if (start_step == 0):
-            start_step = self.FIRST_TIMESTEP
+         if (start_step == 0):# or (self.current_timestep == -1):
+            goto_step = self.FIRST_TIMESTEP
+         else:
+            goto_step = start_step
 
          # search until start_step is found     ***** MAY BE IMPROVED KNOWING THE N OF LINES TO SKIP ******
          while True:
             line = self.file.readline()
             if len(line) == 0:  # EOF
-               raise Warning("Warning (gototimestep):  reached EOF. Timestep {} NOT FOUND.".format(start_step))
+               raise Warning("Warning (gototimestep):  reached EOF. Timestep {} NOT FOUND.".format(goto_step))
             if (line == 'ITEM: TIMESTEP\n'):
                self.current_timestep = int(self.file.readline())
-               if (self.current_timestep == start_step):
+               if (self.current_timestep == goto_step):
                   while (self.file.readline().find('ITEM: ATOMS') < 0):  # jump to the data part
                      pass
                   break
-               if (fast_check) and (self.current_timestep > start_step):
-                  raise Warning("Warning (gototimestep):  Timestep {} NOT FOUND up to current_step = {}. (To force check the whole trajectory set fast_check=False)".format(start_step, self.current_timestep))
+               if (fast_check) and (self.current_timestep > goto_step):
+                  raise Warning("Warning (gototimestep):  Timestep {} NOT FOUND up to current_step = {}. (To force check the whole trajectory set fast_check=False)".format(goto_step, self.current_timestep))
+      else:
+         pass
+      return
+
+
+   def gototimestep(self, start_step, fast_check=True):
+      """Go to the start_step-th line in the time series (assumes step=1).
+         start_step = -1  -->  ignore, continue from current step
+                       0  -->  go to FIRST timestep
+                       N  -->  go to N-th timestep
+         fast_check = True --> assumes the TIMESTEP are a monotonously increasing.
+                               If the the start_step is passed and not found then stop."""
+      ## user-called function
+      self._compute_current_step = True
+      self._gototimestep(start_step, fast_check)
       return
 
    
-   def read_timesteps(self, selection, select_ckeys=None, fast_check=True):
+   def read_timesteps(self, selection, start_step=-1, select_ckeys=None, fast_check=True):
       """Read selected keys of file, within the provided range.
-      e.g.  read_timesteps((4, 10, 2))  reads steps n. 4, 6, 8"""
+      Examples:
+            read_timesteps(10, start_step=0, select_ckeys=['id,xu,yu,vu']) -->>   Read first 10 timesteps, only the specified columns
+            read_timesteps(10, select_ckeys=['id,xu,yu,vu']) -->>   Read the next 10 timesteps, only the specified columns (DELTA_TIMESTEP is assumed)
+            read_timesteps((10,30))      -->>  Read from TIMESTEP 10 to 30
+            read_timesteps((10,30,2))    -->>  Read every 2 steps from TIMESTEP 10 to 30
+      """
       if self._GUI:
          progbar = FloatProgress(min=0, max=100)
          display(progbar)
       start_time = time()
       self._set_ckey(select_ckeys)                  # set the ckeys to read      --> ckey
-      self._set_timesteps(selection)                # set the timesteps to read  --> timestep
+      self._set_timesteps(selection, start_step)    # set the timesteps to read  --> timestep
       self._initialize_dic()                        # allocate dictionary        --> data
 
       # extract the steps from the file
       progbar_step = max(1000, int(0.005*self.nsteps))
       atomid_col = self.all_ckeys['id'][0]
       for istep,step in enumerate(self.timestep):
-         self.gototimestep(step, fast_check)    # jump to the desired step
+         self._gototimestep(step, fast_check)    # jump to the desired step, 
          self.data[istep]['TIMESTEP'] = step
          for nat in xrange(self.NATOMS):           # read data (may be unsorted)
             line = self.file.readline()
@@ -368,5 +403,6 @@ class LAMMPS_Dump(object):
             self.nsteps = istep + 1
       print "  ( %d ) steps read." % (self.nsteps)
       print "DONE.  Elapsed time: ", time()-start_time, "seconds"
+      self._compute_current_step = False  # next time do not compute the current_step
       return self.data
 
