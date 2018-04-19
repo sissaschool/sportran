@@ -86,6 +86,7 @@ class LAMMPS_Dump(object):
          raise ValueError('No file given.')
       group_vectors = kwargs.get('group_vectors', True)
       preload_timesteps = kwargs.get('preload', True)
+      self._quiet = kwargs.get('quiet', False)
       self._GUI = kwargs.get('GUI', False)
       if self._GUI:
          from ipywidgets import FloatProgress
@@ -113,7 +114,7 @@ class LAMMPS_Dump(object):
             '  FIRST TIMESTEP: {}\n'.format(self.FIRST_TIMESTEP) + \
             '  LAST TIMESTEP:  {}\n'.format(self.LAST_TIMESTEP) + \
             '  DELTA TIMESTEP: {}\n'.format(self.DELTA_TIMESTEP) + \
-            '  current step:   {}\n'.format(self.current_timestep)  # = -1 if it has to be readed
+            '  current step:   {}\n'.format(self.current_timestep)
       return msg
       
    def _open_file(self):
@@ -240,7 +241,8 @@ class LAMMPS_Dump(object):
       if (len(self.ckey) == 0):
          raise KeyError("No ckey set. Check selected keys.")
       else:
-         print "  ckey = ", self.ckey
+         if not self._quiet:
+            print "  ckey = ", self.ckey
       return
 
 
@@ -291,8 +293,9 @@ class LAMMPS_Dump(object):
       if (self.nsteps == 0):
          raise ValueError("No timestep set. Check selected timesteps.")
       else:
-         print "  nsteps   = ", self.nsteps
-         print "  timestep = ", self.timestep
+         if not self._quiet:
+            print "  nsteps   = ", self.nsteps
+            print "  timestep = ", self.timestep
       return
 
 
@@ -328,7 +331,7 @@ class LAMMPS_Dump(object):
          while True:
             line = self.file.readline()
             if len(line) == 0:  # EOF
-               raise Warning("Warning (gototimestep):  reached EOF. Timestep {} NOT FOUND.".format(goto_step))
+               raise EOFError("Warning (gototimestep):  reached EOF. Timestep {} NOT FOUND.".format(goto_step))
             if (line == 'ITEM: TIMESTEP\n'):
                self.current_timestep = int(self.file.readline())
                if (self.current_timestep == goto_step):
@@ -380,7 +383,7 @@ class LAMMPS_Dump(object):
          for nat in xrange(self.NATOMS):           # read data (may be unsorted)
             line = self.file.readline()
             if len(line) == 0:   # EOF
-               raise Warning("Warning:  reached EOF.")
+               raise EOFError("Warning:  reached EOF.")
             values = np.array(line.split())
             for key, idx in self.ckey.iteritems():   # save the selected columns
                atomid = int(values[atomid_col]) - 1  # current atom index (in LAMMPS it starts from 1)
@@ -401,8 +404,9 @@ class LAMMPS_Dump(object):
          else:
             print "Warning:  less steps read."
             self.nsteps = istep + 1
-      print "  ( %d ) steps read." % (self.nsteps)
-      print "DONE.  Elapsed time: ", time()-start_time, "seconds"
+      if not self._quiet:
+         print "  ( %d ) steps read." % (self.nsteps)
+         print "DONE.  Elapsed time: ", time()-start_time, "seconds"
       self._compute_current_step = False  # next time do not compute the current_step
       return self.data
 
