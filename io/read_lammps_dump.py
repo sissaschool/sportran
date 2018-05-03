@@ -1,6 +1,6 @@
 ################################################################################
 ###
-###   ReadLAMMPSDump - v0.1.7 - April 13, 2018
+###   ReadLAMMPSDump - v0.1.8 - May 03, 2018
 ###
 ################################################################################
 ###
@@ -191,7 +191,7 @@ class LAMMPS_Dump(object):
 
          self.LAST_TIMESTEP = self.all_timesteps[-1]
          self.DELTA_TIMESTEP = self.all_timesteps[1] - self.FIRST_TIMESTEP
-         self.TOT_TIMESTEPS = self.all_timesteps.size
+         self.TOT_TIMESTEPS = len(self.all_timesteps)
          self.all_timesteps = np.array(self.all_timesteps)
       else:
          print " ** No timesteps pre-loaded. Be careful in the selection. **"
@@ -308,7 +308,10 @@ class LAMMPS_Dump(object):
       self.data = [dict() for i in xrange(self.nsteps)]
       for istep in xrange(self.nsteps):
          for key, idx in self.ckey.iteritems():
-            self.data[istep][key] = np.zeros( (self.NATOMS, len(idx)) )
+            if (key == 'element'):   # this should be improved
+              self.data[istep][key] = np.zeros( (self.NATOMS, len(idx)), dtype='S8' )
+            else:
+              self.data[istep][key] = np.zeros( (self.NATOMS, len(idx)), dtype='float64' )
       return
 
 
@@ -387,7 +390,10 @@ class LAMMPS_Dump(object):
             values = np.array(line.split())
             for key, idx in self.ckey.iteritems():   # save the selected columns
                atomid = int(values[atomid_col]) - 1  # current atom index (in LAMMPS it starts from 1)
-               self.data[istep][key][atomid,:] = np.array(map(float, values[idx]))
+               if (key == 'element'):   # this should be improved
+                  self.data[istep][key][atomid,:] = np.array(map(str, values[idx]))
+               else:
+                  self.data[istep][key][atomid,:] = np.array(map(float, values[idx]))
          if ( (istep+1)%progbar_step == 0 ):
             if self._GUI:
                progbar.value = float(istep+1)/self.nsteps*100.;
