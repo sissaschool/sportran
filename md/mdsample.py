@@ -275,61 +275,21 @@ class MDSample(object):
         #multi_psd_power = np.trapz(multi_psd)  # one-side PSD power
         #if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
         #    self.filter_psd( FILTER_WINDOW_WIDTH )
-        multi_mdsample = MDSample(psd=multi_psd, freqs=self.freqs, DT_FS=self.DT_FS)
-        multi_mdsample.covarALL = covarALL
-        multi_mdsample.ndf_chi = ndf_chi
-        multi_mdsample.cospectrum = cospectrum
-        return multi_mdsample
-#
-#
-#    def compute_kappa(self, other, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True, normalize=False, call_other=True):
-#        """Computes the real fourier transform of the temporal series, then computes the thermal conductivity coefficient obtained from the
-#        cospectrum matrix. The results have almost the same statistical properties (WARNING: the chi-square distribution have a degreen of freedom less. There are also different factors in front of all the results).
-#        The output arrays are the same as the one-component psd spectrum.
-#        If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
-#        The elements of the matrix are multiplied by DT_FS at the end.
-#        """
-#        if DT_FS is not None:
-#            self.DT_FS = DT_FS
-#        if (method == 'trajectory'):
-#            if self.traj is None:
-#                raise ValueError('Trajectory not defined.')
-#            self.spectrALL = np.fft.rfft(self.traj, axis=0)
-#            self.Nfreqs = self.spectrALL.shape[0]
-#            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
-#            self.DF = 0.5 / (self.Nfreqs-1)
-#        else:
-#            raise KeyError('method not understood')
-#        self.freqs_THz = self.freqs/self.DT_FS*1000.
-#        self.Nyquist_f_THz = self.freqs_THz[-1]
-#
-#        #calculate the same thing on the other trajectory
-#        if (call_other):
-#            other.compute_kappa(self,FILTER_WINDOW_WIDTH,method,DT_FS,average_components,normalize,False)
-#        else:
-#            return
-#
-#        #define the matrix. Its shape is (2,2,Nfreqs,n_spatial_dim)
-#        #   self.spectrALL*self.spectrALL.conj()       self.spectrALL*other.spectrALL.conj()
-#        #  other.spectrALL*self.spectrALL.conj()      other.spectrALL*other.spectrALL.conj()
-#        #
-#        self.covarALL = np.array([[self.spectrALL*self.spectrALL.conj(),self.spectrALL*other.spectrALL.conj()],[other.spectrALL*self.spectrALL.conj(),other.spectrALL*other.spectrALL.conj()]])*DT_FS/ (2*(self.Nfreqs - 1))
-#
-#        #compute the mean over the last axis (x,y,z components):
-#        self.cospectrum = self.covarALL.mean(axis=3)
-#
-#        #compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
-#        # the diagonal elements of the inverse have very convenient statistical properties 
-#        self.psd = (self.cospectrum[0,0] -self.cospectrum[0,1]*self.cospectrum[1,0]/self.cospectrum[1,1]).real
-#        
-#        if normalize:
-#            self.psd= self.psd / np.trapz(self.psd) / self.N / DT_FS  # **CHANGE IN DT_FS
-#        self.logpsd = np.log(self.psd)
-#        self.psd_min = np.min(self.psd)
-#        #self.psd_power = np.trapz(self.psd)  # one-side PSD power
-#        if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
-#            self.filter_psd( FILTER_WINDOW_WIDTH )
-#        return
+        #multi_mdsample = MDSample(psd=multi_psd, freqs=self.freqs, DT_FS=self.DT_FS)
+        #multi_mdsample.covarALL = covarALL
+        #multi_mdsample.ndf_chi = ndf_chi
+        #multi_mdsample.cospectrum = cospectrum
+        #return multi_mdsample
+
+
+        self.ndf_chi = ndf_chi
+        self.psd=multi_psd
+        self.logpsd = np.log(self.psd)
+        self.psd_min = np.min(self.psd)
+        self.psd_power = np.trapz(self.psd)  # one-side PSD power
+        if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
+            self.filter_psd( FILTER_WINDOW_WIDTH )
+        return
 
 
     def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True, normalize=False):

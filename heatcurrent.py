@@ -28,19 +28,41 @@ class HeatCurrent(MDSample):
    """
 
    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
-      MDSample.__init__(self, traj=j, DT_FS=DT_FS)
+
+
+      #check if we have a multicomponent fluid, then initialize other MDSample objects needed to make the work
+      if len(j[0].shape)==2:
+         print "Using multicomponent code."
+         MDSample.__init__(self, traj=j[0], DT_FS=DT_FS)
+         self.multicomponent=True
+         self.otherMD=[]
+         for js in j[1:]:
+            self.otherMD.append(MDSample(traj = js,DT_FS=DT_FS))
+      else:
+         self.multicomponent=False
+         MDSample.__init__(self, traj=j, DT_FS=DT_FS)
+
       self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
 
       if self.traj is not None:
          if PSD_FILTER_W is None:
-            self.compute_psd()
+            if not self.multicomponent:
+               self.compute_psd()
+            else:
+               self.compute_kappa_multi(others=self.otherMD)
          else:
             if (freq_units == 'thz') or (freq_units == 'THz'):
-               self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
+               if not self.multicomponent:
+                  self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
+               else:
+                  self.compute_kappa_multi(self.otherMD,freq_THz_to_red(PSD_FILTER_W, DT_FS))
             elif (freq_units == 'red'):
-               self.compute_psd(PSD_FILTER_W)
+               if not self.multicomponent:
+                  self.compute_psd(PSD_FILTER_W)
+               else:
+                  self.compute_kappa_multi(self.otherMD,PSD_FILTER_W)
             else:
-               raise ValueError('Units not valid.')
+               raise ValueError('Freq units not valid.')
          self.initialize_cepstral_parameters()
       else:
          print "Warning: trajectory not initialized. You should manually initialize what you need."
@@ -74,8 +96,15 @@ class HeatCurrent(MDSample):
       """
       Defines the parameters of the theoretical distribution of the cepstrum.
       """
-      self.ck_THEORY_var, self.psd_THEORY_mean = \
-          md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.N_COMPONENTS)
+      if not self.multicomponent:
+         self.ck_THEORY_var, self.psd_THEORY_mean = \
+             md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.N_COMPONENTS)
+      else:
+         if self.ndf_chi is None:
+             raise ValueError('self.ndf_chi cannot be None.')
+         self.ck_THEORY_var, self.psd_THEORY_mean = \
+             md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
+
       return
 
 
@@ -92,7 +121,12 @@ class HeatCurrent(MDSample):
       Returns a matplotlib.axes.Axes object.
       """
       if self.psd is None:
-         self.compute_psd()
+         if not self.multicomponent:
+            self.compute_psd()
+         else:
+            if self.otherMD is None:
+               raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
+            self.compute_kappa_multi(others=self.otherMD)
       if PSD_FILTER_W is None:
          if self.FILTER_WINDOW_WIDTH is None:
             self.filter_psd(0.)
@@ -175,6 +209,9 @@ class HeatCurrent(MDSample):
       axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau - self.dct.logtau_THEORY_std, '--', c=color)
       axes.axvline(x = self.dct.aic_Kmin + 1, ls='--', c=color)
       axes.set_xlim([0, 3*self.dct.aic_Kmin])
+      max_y=np.amax((self.dct.logtau+self.dct.logtau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      min_y=np.amin((self.dct.logtau-self.dct.logtau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      axes.set_ylim([min_y*0.8,max_y*1.2])
       axes.set_xlabel(r'$P^*$')
       axes.set_ylabel(r'$L_0(P*)$')
       return axes
@@ -190,6 +227,9 @@ class HeatCurrent(MDSample):
       axes.axvline(x = self.dct.aic_Kmin + 1, ls='--', c=color)
       axes.axhline(y = self.kappa_Kmin, ls='--', c=color)
       axes.set_xlim([0, 3*self.dct.aic_Kmin])
+      max_y=np.amax(self.kappa_scale * 0.5 * (self.dct.tau + self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      min_y=np.amin(self.kappa_scale * 0.5 * (self.dct.tau - self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      axes.set_ylim([min_y*0.8,max_y*1.2])
       axes.set_xlabel(r'$P^*$')
       axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
       return axes
@@ -220,22 +260,24 @@ class HeatCurrent(MDSample):
        axes[1].grid()
        return axes
 
-   def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None):
-      """Multi-component kappa calculation."""
-      print "HeatCurrent.compute_kappa_multi"
-      if FILTER_WINDOW_WIDTH is None:
-         FILTER_WINDOW_WIDTH = self.FILTER_WINDOW_WIDTH
-      multi_mdsample = super(HeatCurrent, self).compute_kappa_multi(others, FILTER_WINDOW_WIDTH, DT_FS=self.DT_FS, call_other=True)
-      multi_hc = HeatCurrent(None, self.units, self.DT_FS, self.TEMPERATURE, self.VOLUME, FILTER_WINDOW_WIDTH, 'red')
-      ### CHECK THAT PSD IS NOT INITIALIZED by the HC constructor
-      ### We'd actually need a HC constructor from a MDSample object
-      ### NEED TO CHANGE FILTER_WINDOW_WIDTH into PSD_FILTER_W and check freq_units (for now = 'red')
-      multi_hc.initialize_psd(psd=multi_mdsample.psd, freqs=multi_mdsample.freqs)
-      multi_hc.filter_psd(FILTER_WINDOW_WIDTH)
-      multi_hc.covarALL = multi_mdsample.covarALL
-      multi_hc.ndf_chi = multi_mdsample.ndf_chi
-      multi_hc.cospectrum = multi_mdsample.cospectrum
-      return multi_hc
+
+#is this function needed?
+#   def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None):
+#      """Multi-component kappa calculation."""
+#      print "HeatCurrent.compute_kappa_multi"
+#      if FILTER_WINDOW_WIDTH is None:
+#         FILTER_WINDOW_WIDTH = self.FILTER_WINDOW_WIDTH
+#      multi_mdsample = super(HeatCurrent, self).compute_kappa_multi(others, FILTER_WINDOW_WIDTH, DT_FS=self.DT_FS, call_other=True)
+#      multi_hc = HeatCurrent(None, self.units, self.DT_FS, self.TEMPERATURE, self.VOLUME, FILTER_WINDOW_WIDTH, 'red')
+#      ### CHECK THAT PSD IS NOT INITIALIZED by the HC constructor
+#      ### We'd actually need a HC constructor from a MDSample object
+#      ### NEED TO CHANGE FILTER_WINDOW_WIDTH into PSD_FILTER_W and check freq_units (for now = 'red')
+#      multi_hc.initialize_psd(psd=multi_mdsample.psd, freqs=multi_mdsample.freqs)
+#      multi_hc.filter_psd(FILTER_WINDOW_WIDTH)
+#      multi_hc.covarALL = multi_mdsample.covarALL
+#      multi_hc.ndf_chi = multi_mdsample.ndf_chi
+#      multi_hc.cospectrum = multi_mdsample.cospectrum
+#      return multi_hc
 
 ################################################################################
 
@@ -271,7 +313,18 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
    if FILTER_W is None:
       FILTER_W = TSKIP
    trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
-   xf = HeatCurrent(trajf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
+   yf=[]
+   if x.multicomponent:
+      if x.otherMD is None:
+         raise ValueError('x.otherMD cannot be none (wrong/missing initialization?)')
+      #filter_and_sample also other trajectories
+      yf.append(trajf)
+      for y in x.otherMD:
+         tmp=md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
+         yf.append(tmp)
+      xf = HeatCurrent(yf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
+   else:
+      xf = HeatCurrent(trajf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
    if plot:
       if (freq_units == 'thz') or (freq_units == 'THz'):
          xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*1000./x.DT_FS, 'thz', TSKIP, axes)

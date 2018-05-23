@@ -5,7 +5,7 @@
 ################################################################################
 
 import numpy as np
-from thermocepstrum.io import __path__
+from thermocepstrum.i_o import __path__
 from subprocess import check_output
 
 
