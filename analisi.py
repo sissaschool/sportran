@@ -30,9 +30,14 @@ Output files (content of the columns):
   [output].resampled_periodogram:
       freqs in THz, resampled periodogram, resampled log(periodogram)
   [output].cepstral:
-      jf.dct.logpsdK,jf.dct.logpsdK_THEORY_std,jf.dct.logtau,jf.dct.logtau_THEORY_std,jf.dct.tau*jf.kappa_scale * 0.5,jf.dct.tau_THEORY_std*jf.kappa_scale * 0.5
+      jf.dct.logpsdK,jf.dct.logpsdK_THEORY_std,jf.dct.logtau,jf.dct.logtau_THEORY_std, value of heat coefficient (SI units), theoretical error on heat coefficient (SI units)
+      the line number is the number of cepstral coefficients used. The final result is in the aic_Kmin-th line.
   [output].cepstrum_filtered_periodogram:
       freqs in THz, cepstral filtered periodogram, cepstral filtered log(periodogram) 
+  [output].kappa_scale
+      single number: conversion factor from selected units to SI units
+  [output].aic_Kmin
+      single integer number: selected value for the number of cepstral coefficients
 
 Enjoy it!
 
@@ -80,19 +85,33 @@ command_file=open(output+'.command','w')
 command_file.write(' '.join(sys.argv))
 command_file.close()
 
+conv_fact=open(output+'.kappa_scale','w')
+
+if units=='metal':
+    print 'kappa_scale = {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
+    conv_fact.write('{}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
+elif units=='real':
+    print 'kappa_scale = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
+    conv_fact.write('{}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
+else:
+    print 'WARNING: unexpected units {}'.format(units)
+
+conv_fact.close()
+
 j = tc.heatcurrent.HeatCurrent(currents,units,DT_FS,temperature,volume)
+
 
 with PdfPages(output+"_all.pdf") as pdf:
    j.plot_periodogram(PSD_FILTER_W=0.5)
-   np.savetxt(output+".periodogram",np.c_[j.freqs_THz,j.fpsd,j.flogpsd])
-   pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0,0 , 100, 50])
+   np.savetxt(output+".periodogram",np.c_[j.freqs_THz,j.fpsd,j.flogpsd,j.psd,j.logpsd])
+   pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
    pdf.savefig()
    plt.close()
 
    jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR_THZ, plot=True, freq_units='thz')
    plt.xlim([0, 2.5*FSTAR_THZ])
    ax[1].set_xlim()
-   np.savetxt(output+".resampled_periodogram",np.c_[jf.freqs_THz,jf.fpsd,jf.flogpsd])
+   np.savetxt(output+".resampled_periodogram",np.c_[jf.freqs_THz,jf.fpsd,jf.flogpsd,jf.psd,jf.logpsd])
    pdf.savefig()
    plt.close()
 
@@ -115,6 +134,11 @@ with PdfPages(output+"_all.pdf") as pdf:
    ax.set_xlim([0,10*jf.dct.aic_Kmin])
    pdf.savefig()
    plt.close()
+
+   #save K_aicMin
+   kappa_aicMin=open(output+'.aic_Kmin','w')
+   kappa_aicMin.write('{}'.format(jf.dct.aic_Kmin))
+   kappa_aicMin.close()
  
    ax = jf.plot_kappa_Pstar()
    ax.set_xlim([0,10*jf.dct.aic_Kmin])
