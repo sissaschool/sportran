@@ -19,6 +19,7 @@ usage:
   {} input_data output units Volume DT_FS F_CUT_THz corr_factor heat_flux_key [other_fluxes ...]
 
 do the cepstral analysis. It outputs some results in the stdout, and some pictures in a pdf called [output].pdf.
+If outputs terminates with '.bin', the data will be in numpy binary format.
 The input must be a column-formatted text file, with a header in the same format of LAMMPS. The name of the lammps compute can start with c_ and end with [#some_number], the code will understand automatically if it is a vector, and it will read automatically the correct number of components. In this case you have to provide only the name of the compute (the header without the initial c_ and the final [*]).
 There must be a column with the temperature with header 'Temp'. The code computes automatically the mean temperature. The output is in SI units.
 You must provide the name of the heat flux compute in the last arguments. The code will understand from the number of the headers that you provide the number of the components, and select the correct procedure. Note that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.
@@ -64,6 +65,11 @@ if units != 'real' and units != 'metal':
    print 'units must be metal or real'
    exit(-1)
 
+txt=True
+if len(output)>3:
+   if output[-4:]==".bin":
+      print 'Using numpy binary format for outputs.'
+      txt=False
 
 selected_keys= sys.argv[8:]
 selected_keys.append('Temp')
@@ -103,7 +109,10 @@ j = tc.heatcurrent.HeatCurrent(currents,units,DT_FS,temperature,volume)
 
 with PdfPages(output+"_all.pdf") as pdf:
    j.plot_periodogram(PSD_FILTER_W=0.5)
-   np.savetxt(output+".periodogram",np.c_[j.freqs_THz,j.fpsd,j.flogpsd,j.psd,j.logpsd])
+   if txt:
+       np.savetxt(output+".periodogram",np.c_[j.freqs_THz,j.fpsd,j.flogpsd,j.psd,j.logpsd])
+   else:
+       np.save(output+".periodogram",np.array([j.freqs_THz,j.fpsd,j.flogpsd,j.psd,j.logpsd]), allow_pickle=False)
    pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
    pdf.savefig()
    plt.close()
@@ -111,7 +120,11 @@ with PdfPages(output+"_all.pdf") as pdf:
    jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR_THZ, plot=True, freq_units='thz')
    plt.xlim([0, 2.5*FSTAR_THZ])
    ax[1].set_xlim()
-   np.savetxt(output+".resampled_periodogram",np.c_[jf.freqs_THz,jf.fpsd,jf.flogpsd,jf.psd,jf.logpsd])
+   if txt:
+      np.savetxt(output+".resampled_periodogram",np.c_[jf.freqs_THz,jf.fpsd,jf.flogpsd,jf.psd,jf.logpsd])
+   else:
+      np.save(output+".resampled_periodogram",np.array([jf.freqs_THz,jf.fpsd,jf.flogpsd,jf.psd,jf.logpsd]),allow_pickle=False)
+
    pdf.savefig()
    plt.close()
 
@@ -144,7 +157,10 @@ with PdfPages(output+"_all.pdf") as pdf:
    ax.set_xlim([0,10*jf.dct.aic_Kmin])
    pdf.savefig()
    plt.close()
-   np.savetxt(output+".cepstral",np.c_[jf.dct.logpsdK,jf.dct.logpsdK_THEORY_std,jf.dct.logtau,jf.dct.logtau_THEORY_std,jf.dct.tau*jf.kappa_scale * 0.5,jf.dct.tau_THEORY_std*jf.kappa_scale * 0.5])
+   if txt:
+      np.savetxt(output+".cepstral",np.c_[jf.dct.logpsdK,jf.dct.logpsdK_THEORY_std,jf.dct.logtau,jf.dct.logtau_THEORY_std,jf.dct.tau*jf.kappa_scale * 0.5,jf.dct.tau_THEORY_std*jf.kappa_scale * 0.5])
+   else:
+      np.save(output+".cepstral",np.array([jf.dct.logpsdK,jf.dct.logpsdK_THEORY_std,jf.dct.logtau,jf.dct.logtau_THEORY_std,jf.dct.tau*jf.kappa_scale * 0.5,jf.dct.tau_THEORY_std*jf.kappa_scale * 0.5]),allow_pickle=False)
 
    # filtered log-PSD
    ax = j.plot_periodogram(0.5)
@@ -157,8 +173,11 @@ with PdfPages(output+"_all.pdf") as pdf:
 #   ax[1].set_ylim([12,18])
    ax[0].legend(['original', 'resampled', 'cepstrum-filtered'])
    ax[1].legend(['original', 'resampled', 'cepstrum-filtered']);
-   
-   np.savetxt(output+".cepstrum_filtered_periodogram",np.c_[jf.freqs_THz,jf.dct.psd,jf.dct.logpsd])
+
+   if txt:
+      np.savetxt(output+".cepstrum_filtered_periodogram",np.c_[jf.freqs_THz,jf.dct.psd,jf.dct.logpsd])
+   else:
+      np.save(output+".cepstrum_filtered_periodogram",np.array([jf.freqs_THz,jf.dct.psd,jf.dct.logpsd]),allow_pickle=False)
 
    print '  L_0* = {:15g} +/- {:10f}'.format(jf.dct.logtau_Kmin, jf.dct.logtau_std_Kmin)
    print '  S_0* = {:15f} +/- {:10f}'.format(jf.dct.tau_Kmin, jf.dct.tau_std_Kmin)
