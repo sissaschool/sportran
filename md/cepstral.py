@@ -34,7 +34,7 @@ def dct_coefficients(y):
 
 
 def dct_filter_psd(y, K=None):
-    # K is the maximum coefficient summed (c_k = 0 per k > K)
+    # K=P*-1 is the maximum coefficient summed (c_k = 0 for k > K)
     if (K >= y.size):
         print "! Warning:  dct_filter_psd K value ({:}) out of range.".format(K)
         return np.full(y.size, np.NaN)
@@ -46,7 +46,7 @@ def dct_filter_psd(y, K=None):
 
 
 def dct_filter_tau(y):
-    # K is the maximum coefficient summed (c_k = 0 per k > K)
+    # K=P*-1 is the maximum coefficient summed (c_k = 0 for k > K)
     yk = dct(y, type=1)/(y.size-1)
     ftau = np.zeros(y.size)
     ftau[0] = yk[0]
@@ -109,7 +109,11 @@ CEPSTRAL ANALYSIS based filtering.
 
         # subtract the mean of the distribution
         self.samplelogpsd = samplelogpsd - self.logpsd_THEORY_mean
+
+        # compute cepstral coefficients
         self.logpsdK = dct_coefficients(self.samplelogpsd)
+
+        # estimate AIC
         if (aic_type == 'aic'):
             self.aic = dct_AIC(self.logpsdK, ck_theory_var)
         elif (aic_type == 'aicc'):
@@ -122,7 +126,8 @@ CEPSTRAL ANALYSIS based filtering.
         self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
         if (self.aic_Kmin >= NF):
             print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
-        
+
+        # set theoretical errors
         if ck_theory_var is None:
             # by default the THEORETICAL variances are the one component ones:
             # ck THEORY variances:

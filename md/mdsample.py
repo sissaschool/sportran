@@ -283,7 +283,7 @@ class MDSample(object):
 
 
         self.ndf_chi = ndf_chi
-        self.psd=multi_psd
+        self.psd = multi_psd
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
         self.psd_power = np.trapz(self.psd)  # one-side PSD power

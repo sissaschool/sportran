@@ -19,6 +19,7 @@ class HeatCurrent(MDSample):
 
    INPUT:
       - j             the heat current time series (N * N_COMPONENTS array)
+        For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
       - units         the units of current ('metal', 'real')
       - DT_FS         MD time step [fs]
       - TEMPERATURE   average temperature [K]
@@ -29,17 +30,27 @@ class HeatCurrent(MDSample):
 
    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
 
+      # check if we have a multicomponent fluid
+      j = np.array(j, dtype=float)
+      if (len(j.shape) == 3):
+         if (j.shape[0] == 1):
+             self.multicomponent = False
+             j = np.squeeze(j, axis=0)
+         else:
+             self.multicomponent = True
+      elif (len(j.shape) <= 2):
+         self.multicomponent = False
+      else:
+         raise ValueError("Shape of j not valid.")
 
-      #check if we have a multicomponent fluid, then initialize other MDSample objects needed to make the work
-      if len(j[0].shape)==2:
+      if self.multicomponent:
          print "Using multicomponent code."
          MDSample.__init__(self, traj=j[0], DT_FS=DT_FS)
-         self.multicomponent=True
-         self.otherMD=[]
+         # initialize other MDSample objects needed to make the work
+         self.otherMD = []
          for js in j[1:]:
-            self.otherMD.append(MDSample(traj = js,DT_FS=DT_FS))
+            self.otherMD.append(MDSample(traj=js, DT_FS=DT_FS))
       else:
-         self.multicomponent=False
          MDSample.__init__(self, traj=j, DT_FS=DT_FS)
 
       self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
@@ -55,23 +66,26 @@ class HeatCurrent(MDSample):
                if not self.multicomponent:
                   self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
                else:
-                  self.compute_kappa_multi(self.otherMD,freq_THz_to_red(PSD_FILTER_W, DT_FS))
+                  self.compute_kappa_multi(self.otherMD, freq_THz_to_red(PSD_FILTER_W, DT_FS))
             elif (freq_units == 'red'):
                if not self.multicomponent:
                   self.compute_psd(PSD_FILTER_W)
                else:
-                  self.compute_kappa_multi(self.otherMD,PSD_FILTER_W)
+                  self.compute_kappa_multi(self.otherMD, PSD_FILTER_W)
             else:
                raise ValueError('Freq units not valid.')
          self.initialize_cepstral_parameters()
       else:
          print "Warning: trajectory not initialized. You should manually initialize what you need."
+
+      self.dct = None
       return
 
 
    def __repr__(self):
-      msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__() \
-                             + self.dct.__repr__()
+      msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__()
+      if self.dct is not None:
+         msd += self.dct.__repr__()
       return msg
 
 
@@ -101,12 +115,44 @@ class HeatCurrent(MDSample):
              md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.N_COMPONENTS)
       else:
          if self.ndf_chi is None:
-             raise ValueError('self.ndf_chi cannot be None.')
+             raise RuntimeError('self.ndf_chi cannot be None.')
          self.ck_THEORY_var, self.psd_THEORY_mean = \
              md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
-
       return
 
+
+   def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0):
+      """
+      Performs Cepstral Analysis on the heat current trajectory.
+         aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
+         Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
+
+      Resulting conductivity:
+          kappa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
+      """
+      
+      self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
+          psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
+      self.dct.scan_filter_tau()
+      self.kappa_Kmin     = self.dct.tau_Kmin     * self.kappa_scale * 0.5
+      self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.kappa_scale * 0.5
+
+      self.cepstral_log = '-----------------------------------------------------\n' +\
+            '  CEPSTRAL ANALYSIS\n' +\
+            '-----------------------------------------------------\n' +\
+            '  AIC_Kmin  = {:d}  (P* = {:d}, corr_factor = {:4f})\n'.format(self.dct.aic_Kmin, self.dct.aic_Kmin + 1, self.dct.Kmin_corrfactor) +\
+            '  L_0*   = {:18f} +/- {:10f}\n'.format(self.dct.logtau_Kmin, self.dct.logtau_std_Kmin) +\
+            '  S_0*   = {:18f} +/- {:10f}\n'.format(self.dct.tau_Kmin, self.dct.tau_std_Kmin) +\
+            '-----------------------------------------------------\n' +\
+            '  kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.kappa_Kmin, self.kappa_Kmin_std) +\
+            '-----------------------------------------------------\n'
+      print self.cepstral_log
+      return
+
+
+   ###################################
+   ###  PLOT METHODS
+   ###################################
 
    def plot_periodogram(self, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axes=None, FIGSIZE=None, **plot_kwargs):
       """
@@ -163,30 +209,6 @@ class HeatCurrent(MDSample):
       return axes
 
 
-   def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0):
-      """
-      Performs Cepstral Analysis on the heat current trajectory.
-         aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
-         Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
-
-      Resulting conductivity:
-          kappa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
-      """
-      
-      self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
-          psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
-      self.dct.scan_filter_tau()
-      self.kappa_Kmin     = self.dct.tau_Kmin     * self.kappa_scale * 0.5
-      self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.kappa_scale * 0.5
-      print '  AIC_Kmin  = {:d}  (P* = {:d})'.format(self.dct.aic_Kmin, self.dct.aic_Kmin + 1)
-      print '  L_0*   = {:15f} +/- {:10f}'.format(self.dct.logtau_Kmin, self.dct.logtau_std_Kmin)
-      print '  S_0*   = {:15f} +/- {:10f}'.format(self.dct.tau_Kmin, self.dct.tau_std_Kmin)
-      print '-------------------------------------------------'
-      print '  kappa* = {:15f} +/- {:10f}  W/mK'.format(self.kappa_Kmin, self.kappa_Kmin_std)
-      print '-------------------------------------------------'
-      return
-
-
    def plot_ck(self, axes=None, label=None, FIGSIZE=None):
       if axes is None:
          figure, axes = plt.subplots(1, figsize=FIGSIZE)
@@ -209,8 +231,8 @@ class HeatCurrent(MDSample):
       axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau - self.dct.logtau_THEORY_std, '--', c=color)
       axes.axvline(x = self.dct.aic_Kmin + 1, ls='--', c=color)
       axes.set_xlim([0, 3*self.dct.aic_Kmin])
-      max_y=np.amax((self.dct.logtau+self.dct.logtau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
-      min_y=np.amin((self.dct.logtau-self.dct.logtau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      max_y = np.amax((self.dct.logtau+self.dct.logtau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      min_y = np.amin((self.dct.logtau-self.dct.logtau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
       axes.set_ylim([min_y*0.8,max_y*1.2])
       axes.set_xlabel(r'$P^*$')
       axes.set_ylabel(r'$L_0(P*)$')
@@ -227,8 +249,8 @@ class HeatCurrent(MDSample):
       axes.axvline(x = self.dct.aic_Kmin + 1, ls='--', c=color)
       axes.axhline(y = self.kappa_Kmin, ls='--', c=color)
       axes.set_xlim([0, 3*self.dct.aic_Kmin])
-      max_y=np.amax(self.kappa_scale * 0.5 * (self.dct.tau + self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
-      min_y=np.amin(self.kappa_scale * 0.5 * (self.dct.tau - self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      max_y = np.amax(self.kappa_scale*0.5*(self.dct.tau + self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
+      min_y = np.amin(self.kappa_scale*0.5*(self.dct.tau - self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3*self.dct.aic_Kmin])
       axes.set_ylim([min_y*0.8,max_y*1.2])
       axes.set_xlabel(r'$P^*$')
       axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
@@ -313,18 +335,18 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
    if FILTER_W is None:
       FILTER_W = TSKIP
    trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
-   yf=[]
-   if x.multicomponent:
+   if not x.multicomponent:
+      xf = HeatCurrent(trajf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
+   else:
       if x.otherMD is None:
          raise ValueError('x.otherMD cannot be none (wrong/missing initialization?)')
-      #filter_and_sample also other trajectories
+      # filter_and_sample also other trajectories
+      yf = []
       yf.append(trajf)
       for y in x.otherMD:
-         tmp=md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
+         tmp = md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
          yf.append(tmp)
       xf = HeatCurrent(yf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
-   else:
-      xf = HeatCurrent(trajf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
    if plot:
       if (freq_units == 'thz') or (freq_units == 'THz'):
          xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*1000./x.DT_FS, 'thz', TSKIP, axes)
@@ -333,19 +355,24 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
          print x.FILTER_WINDOW_WIDTH
          xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*TSKIP, 'red', TSKIP, axes)
 
-   print ' Original Nyquist freq  f_Ny =  {:12.5f} THz'.format(x.Nyquist_f_THz)
-   print ' Resampling freq          f* =  {:12.5f} THz'.format(fstar_THz)
-   print ' Sampling time         TSKIP =  {:12d} steps'.format(TSKIP)
-   print '                             =  {:12.3f} fs'.format(TSKIP * x.DT_FS)
-   print ' Original  n. of frequencies =  {:12d}'.format(x.Nfreqs)
-   print ' Resampled n. of frequencies =  {:12d}'.format(xf.Nfreqs)
-   print ' PSD      @cutoff  (pre-filter) = {:12.5f}'.format(x.fpsd[fstar_idx])
-   print '                  (post-filter) = {:12.5f}'.format(xf.fpsd[-1])
-   print ' log(PSD) @cutoff  (pre-filter) = {:12.5f}'.format(x.flogpsd[fstar_idx])
-   print '                  (post-filter) = {:12.5f}'.format(xf.flogpsd[-1])
-   print ' min(PSD)          (pre-filter) = {:12.5f}'.format(x.psd_min)
-   print ' min(PSD)         (post-filter) = {:12.5f}'.format(xf.psd_min)
-   print ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
+   xf.resample_log = '-----------------------------------------------------\n' +\
+                     '  RESAMPLE TIME SERIES\n' +\
+                     '-----------------------------------------------------\n' +\
+                     ' Original Nyquist freq  f_Ny =  {:12.5f} THz\n'.format(x.Nyquist_f_THz) +\
+                     ' Resampling freq          f* =  {:12.5f} THz\n'.format(fstar_THz) +\
+                     ' Sampling time         TSKIP =  {:12d} steps\n'.format(TSKIP) +\
+                     '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
+                     ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
+                     ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs) +\
+                     ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
+                     '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
+                     ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
+                     '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
+                     ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
+                     ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
+                     ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.) +\
+                     '-----------------------------------------------------\n'
+   print xf.resample_log
 
    if plot:
       if (freq_units == 'thz') or (freq_units == 'THz'):
