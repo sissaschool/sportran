@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 from sys import path, argv
-path.append('')
+tc_path = argv[0][:argv[0].rfind('/')]
+path.append(tc_path[:tc_path.rfind('/')])
 import thermocepstrum as tc
 
 
@@ -72,7 +73,7 @@ Contact: lercole@sissa.it
 
    parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
    parser.add_argument( 'inputfile', type=str, help='input file to read (default format: Table)' )
-   parser.add_argument( '-V', '--volume', type=float, required=True, help='Volume of the cell (Angstrom)' )
+   parser.add_argument( '-V', '--volume', type=float, help='Volume of the cell (Angstrom)' )
    parser.add_argument( '-t', '--timestep', type=float, required=True, help='Time step of the printed data (fs)' )
    parser.add_argument( '-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux' )
    parser.add_argument( '-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)' )
@@ -82,7 +83,7 @@ Contact: lercole@sissa.it
    outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
    outarg.add_argument( '-O', '--bin-output', type=str, help='prefix of the output files (use binary file)' )
 
-   parser.add_argument( '--input-format', default='table', type=str, choices=['table'], help='format of the input file' )
+   parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict'], help='format of the input file' )
    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real'], help='LAMMPS units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
 
@@ -120,8 +121,9 @@ Contact: lercole@sissa.it
    j2_keys = args.add_currents
    psd_filter_w = args.psd_filterw
 
-   if (volume <= 0.):
-      raise ValueError('volume must be positive')
+   if volume is not None:
+      if (volume <= 0.):
+         raise ValueError('volume must be positive')
    if (DT_FS <= 0.):
       raise ValueError('timestep must be positive')
    if (NSTEPS < 0):
@@ -157,28 +159,47 @@ Contact: lercole@sissa.it
    if temperature is None:
       selected_keys.append('Temp')
 
-   jfile = None
+   jdata = None
    if (input_format == 'table'):
       jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
       jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
+      jdata = jfile.data
+   elif (input_format == 'dict'):
+      jdata = np.load(inputfile)
    else:
       raise NotImplemented('input format not implemented.')
 
    if temperature is None:
-      temperature = np.mean(jfile.data['Temp'])
-      selected_keys.remove('Temp')
-      print ' Mean Temperature (computed):  {} K'.format(temperature)
-      logfile.write(' Mean Temperature (computed):  {} K\n'.format(temperature))
+      if 'Temp' in jdata:
+         temperature = np.mean(jdata['Temp'])
+         selected_keys.remove('Temp')
+         print ' Mean Temperature (computed):  {} K'.format(temperature)
+         logfile.write(' Mean Temperature (computed):  {} K\n'.format(temperature))
+      elif 'Temp_ave' in jdata:
+         temperature = jdata['Temp_ave']
+         print ' Mean Temperature (file):      {} K'.format(temperature)
+         logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
+      else:
+         raise RuntimeError('No Temp key found')
    else:
       print ' Mean Temperature (input):  {} K'.format(temperature)
       logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
 
-   print ' Volume (input):  {} A^3'.format(volume)
-   logfile.write(' Volume (input):  {} A^3\n'.format(volume))
+   if volume is None:
+      if 'Volume' in jdata:
+         volume = jdata['Volume']
+         print ' Volume (file):    {} A^3'.format(volume)
+         logfile.write(' Volume (file):    {} A^3\n'.format(volume))
+      else:
+         raise RuntimeError('No Volume key found')
+   else:
+       print ' Volume (input):  {} A^3'.format(volume)
+       logfile.write(' Volume (input):  {} A^3\n'.format(volume))
+
    print ' Time step (input):  {} fs'.format(DT_FS)
    logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
-   currents = np.array([jfile.data[key] for key in selected_keys])
+   currents = np.array([jdata[key] for key in selected_keys])
 
    # create HeatCurrent object
    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
