@@ -60,6 +60,7 @@ if [[ ( (-z "$LOG_FILE") ) ]]; then
    exit 1
 fi
 
+echo " Reading file:  "${LOG_FILE} > "/dev/stderr"
 echo " DUMP RUN key:  "${DUMP_RUN_KEY} > "/dev/stderr"
 
 awk -vDUMPKEY=${DUMP_RUN_KEY} -vVERB=${VERBOSITY} -vSTART_TIME=${START_TIME} -vSTART_STEP=${START_STEP} -vSKIP_FIRST=${SKIP_FIRST} -vLAST_STEP=${LAST_STEP} '

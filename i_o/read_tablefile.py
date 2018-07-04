@@ -43,7 +43,6 @@ def is_string( string ):
       return True
    return False
 
-
 def is_vector_variable( string ):
    bracket = string.rfind('[')
    if (bracket == -1):
@@ -270,7 +269,7 @@ class TableFile(object):
          if ( (step+1)%progbar_step == 0 ):
             if self._GUI:
                progbar.value = float(step+1)/NSTEPS*100.;
-               progbar.description = "%g %%" % progbar.value
+               progbar.description = "{:6.2f}%".format(progbar.value)
             else:
                print "    step = {:9d} - {:6.2f}% completed".format(step+1, float(step+1)/NSTEPS*100.)
 

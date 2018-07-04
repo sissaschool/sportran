@@ -42,7 +42,7 @@ def filter_and_sample( y_big, W, DT, window='rectangular', even_NSTEPS=True, det
         if (window == 'rectangular'):
             y_f = lfilter( (1./W)*np.ones(W), 1., y_big, axis=0 );
         else:
-            raise NotImplemented('Not implemented window type.')
+            raise NotImplementedError('Not implemented window type.')
         
         # drop first W steps (initial conditions)
         if drop_first:
@@ -81,7 +81,7 @@ def logtau_to_tau(logtau, logtau_mean, logtau_var, correct_mean=True):
         tau = np.exp(logtau)
         tau_std = np.sqrt(tau * logtau_var)
     else:
-        raise NotImplemented()
+        raise NotImplementedError()
     return tau, tau_std
 
 
@@ -99,6 +99,6 @@ def resample_psd(freqs, psd, cutfrequency):
         newfreqs = freqs[:cutidx+1]
         #print cutidx, DT, freqs[cutidx], newpsd.size
     else:
-        raise NotImplemented('Not implemented.')
+        raise NotImplementedError('Not implemented.')
     return newfreqs, newpsd
 
