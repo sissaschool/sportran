@@ -78,17 +78,18 @@ Contact: lercole@sissa.it
    parser.add_argument( '-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux' )
    parser.add_argument( '-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)' )
    parser.add_argument( '-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)' )
+   parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict'], help='format of the input file' )
+   parser.add_argument( '--cindex', nargs='*', type=float, help='column indexes of the heatflux to read (0,1,2,...)' )
 
    outarg = parser.add_mutually_exclusive_group()
    outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
    outarg.add_argument( '-O', '--bin-output', type=str, help='prefix of the output files (use binary file)' )
 
-   parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict'], help='format of the input file' )
    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real'], help='LAMMPS units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
 
    parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FCUT' )
-   resamplearg = parser.add_mutually_exclusive_group(required=True)
+   resamplearg = parser.add_mutually_exclusive_group()
    resamplearg.add_argument( '--TSKIP', type=int, help='resampling time period (steps)' )
    resamplearg.add_argument( '--FSTAR', type=float, help='resampling target Nyquist frequency (THz)' )
    parser.add_argument( '-c', '--corr-factor', type=float, default=1.0, help='correction factor to the AIC' )
@@ -103,6 +104,8 @@ Contact: lercole@sissa.it
    j1_key = args.heatfluxkey
    NSTEPS = args.nsteps
    START_STEP = args.start_step
+   input_format = args.input_format
+   jindex = args.cindex
    
    if args.bin_output is not None:
       binout = True
@@ -111,7 +114,6 @@ Contact: lercole@sissa.it
       binout = False
       output = args.output
 
-   input_format = args.input_format
    units = args.units
    temperature = args.temperature
    resample = args.resample
@@ -156,11 +158,11 @@ Contact: lercole@sissa.it
 
    selected_keys = [j1_key]
    selected_keys.extend(j2_keys)
-   if temperature is None:
-      selected_keys.append('Temp')
 
    jdata = None
    if (input_format == 'table'):
+      if temperature is None:
+         selected_keys.append('Temp')
       jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
       jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
       jdata = jfile.data
@@ -199,7 +201,14 @@ Contact: lercole@sissa.it
    print ' Time step (input):  {} fs'.format(DT_FS)
    logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
-   currents = np.array([jdata[key] for key in selected_keys])
+   if jindex is None:
+      currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),:] for key in selected_keys])
+   else:
+      currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),jindex] for key in selected_keys])
+   print '  currents shape is {}'.format(currents.shape)
+   logfile.write('  currents shape is {}\n'.format(currents.shape))
+   print 'snippet:'
+   print currents
 
    # create HeatCurrent object
    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
@@ -213,7 +222,7 @@ Contact: lercole@sissa.it
    print ' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz)
    logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
-   with PdfPages(output + "_plots.pdf") as pdf:
+   with PdfPages(output + ".plots.pdf") as pdf:
 
       # plot periodogram
       j.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
