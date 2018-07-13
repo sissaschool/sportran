@@ -204,7 +204,7 @@ class LAMMPSLogFile(object):
                   key = values[i]
                   if (key[:2] == 'c_'):    # remove 'c_' if present
                      key = key[2:]
-                  self.all_ckeys[key] = [i]
+                  self.all_ckeys[key] = np.array([i])
                else:                  # the variable is a vector
                   key = values[i][:bracket]       # name of vector
                   if (key[:2] == 'c_'):    # remove 'c_' if present
@@ -220,6 +220,7 @@ class LAMMPSLogFile(object):
             self._start_byte = self.file.tell()
             self.MAX_NSTEPS -= nlines
             break
+      self.NALLCKEYS = np.concatenate(self.all_ckeys.values()).size
       print ' #####################################'
       print '  all_ckeys = ', self.all_ckeys
       print ' #####################################'
@@ -303,13 +304,17 @@ class LAMMPSLogFile(object):
       progbar_step = max(100000, int(0.005*NSTEPS))
       for step in range(NSTEPS):
          line = self.file.readline()
-         if len(line) == 0:  # EOF
+         if (len(line) == 0):  # EOF
             print "Warning:  reached EOF."
             break
          if self.endrun_keyword in line:  # end-of-run keyword
             print "  endrun_keyword found."
             break
          values = np.array(line.split())
+         if (values.size != self.NALLCKEYS):
+            print "Warning:  line with wrong number of columns found. Stopping here..."
+            print line
+            break
          for key, idx in self.ckey.iteritems():  # save the selected columns
             self.data[key][step,:] = np.array(map(float, values[idx]))
          if ( (step+1)%progbar_step == 0 ):
