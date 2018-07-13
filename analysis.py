@@ -79,7 +79,7 @@ Contact: lercole@sissa.it
    parser.add_argument( '-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)' )
    parser.add_argument( '-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)' )
    parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict'], help='format of the input file' )
-   parser.add_argument( '--cindex', nargs='*', type=float, help='column indexes of the heatflux to read (0,1,2,...)' )
+   parser.add_argument( '--cindex', nargs='*', type=int, help='column indexes of the heatflux to read (0,1,2,...)' )
 
    outarg = parser.add_mutually_exclusive_group()
    outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
@@ -201,6 +201,7 @@ Contact: lercole@sissa.it
    print ' Time step (input):  {} fs'.format(DT_FS)
    logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
+   print selected_keys, jindex
    if jindex is None:
       currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),:] for key in selected_keys])
    else:
