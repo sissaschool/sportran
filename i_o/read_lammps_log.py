@@ -374,6 +374,7 @@ def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilena
    if 'Temp' not in lammpslogfile.ckey:
       raise RuntimeError('Temp not found.')
    dic['Temp_ave'] = np.mean(lammpslogfile.data['Temp'])
+   dic['Temp_std'] = np.std(lammpslogfile.data['Temp'])
 
    for key in select_ckeys:
       if key in lammpslogfile.ckey:

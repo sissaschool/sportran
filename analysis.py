@@ -174,13 +174,19 @@ Contact: lercole@sissa.it
    if temperature is None:
       if 'Temp' in jdata:
          temperature = np.mean(jdata['Temp'])
+         temperature_std = np.std(jdata['Temp'])
          selected_keys.remove('Temp')
-         print ' Mean Temperature (computed):  {} K'.format(temperature)
-         logfile.write(' Mean Temperature (computed):  {} K\n'.format(temperature))
+         print ' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std)
+         logfile.write(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
       elif 'Temp_ave' in jdata:
          temperature = jdata['Temp_ave']
-         print ' Mean Temperature (file):      {} K'.format(temperature)
-         logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
+         if 'Temp_std' in jdata:
+            temperature_std = jdata['Temp_std']
+            print ' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std)
+            logfile.write(' Mean Temperature (file):      {} K  +/-  {}\n'.format(temperature, temperature_std))
+         else:
+            print ' Mean Temperature (file):      {} K'.format(temperature)
+            logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
       else:
          raise RuntimeError('No Temp key found')
    else:
