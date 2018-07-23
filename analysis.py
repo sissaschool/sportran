@@ -13,12 +13,19 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+plt.rcParams['figure.figsize'] = (16, 9)
+plt.style.reload_library()
+plt.style.use('grafici_belli.mplstyle')
+plt.rc('text', usetex=True)
+c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
+from matplotlib.ticker import MultipleLocator
+
 
 from sys import path, argv
 tc_path = argv[0][:argv[0].rfind('/')]
 path.append(tc_path[:tc_path.rfind('/')])
 import thermocepstrum as tc
-
+import math
 
 def main():
    """
@@ -278,9 +285,18 @@ Contact: lercole@sissa.it
       else:
          jf = j
 
+      plt_psd(j)
+      pdf.savefig()
+      plt.close()
+      plt_psd(jf)
+      pdf.savefig()
+      plt.close()
+
       # cepstral analysis
       jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor)
       logfile.write(jf.cepstral_log)
+
+      
 
       # plot cepstral coefficients
       ax = jf.plot_ck()
@@ -297,8 +313,9 @@ Contact: lercole@sissa.it
       plt.close()
    
       # plot kappa(Pstar)
-      ax = jf.plot_kappa_Pstar()
-      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
+#      ax = jf.plot_kappa_Pstar()
+#      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
+      plt_cepstral_conv(jf)
       pdf.savefig()
       plt.close()
 
@@ -336,6 +353,67 @@ Contact: lercole@sissa.it
    logfile.close()
    return 0
 
+
+def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
+    if pstar_max==None:
+       pstar_max=(jf.dct.aic_Kmin+1)*10*1.618
+    if k_SI_max==None:
+       k_SI_max=jf.dct.tau[jf.dct.aic_Kmin]*jf.kappa_scale
+
+    f, (ax2) = plt.subplots(1,1,figsize=(3.8,2.3))
+    ax2.axvline(x=jf.dct.aic_Kmin+1, ls='--', c='k', dashes=(1.4,0.6), zorder=-3)
+    ax2.fill_between(np.arange(jf.dct.logtau.shape[0])+1,\
+                     (jf.dct.tau-jf.dct.tau_THEORY_std)*jf.kappa_scale*.5,\
+                     (jf.dct.tau+jf.dct.tau_THEORY_std)*jf.kappa_scale*.5,alpha=.3,color=c[4],zorder=-3)#'#3c8da8')
+    ax2.plot(np.arange(jf.dct.logtau.shape[0])+1, jf.dct.tau*jf.kappa_scale*.5,\
+             label=r'Cepstral method',marker='o',c=c[4],zorder=-3)#'#3c8da8')
+    ax2.set_xlabel('$P^*$')
+    ax2.set_ylabel('$\kappa$ (W/mK)')
+    ax2.set_xlim([0,pstar_max])
+    ax2.set_ylim([0, k_SI_max])
+#    ax2.grid()
+    ax2.legend()
+    dx1,dx2=n_tick_in_range(0,pstar_max,5)
+    dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+
+    ax2.xaxis.set_major_locator(MultipleLocator(dx1))
+    ax2.xaxis.set_minor_locator(MultipleLocator(dx2))
+    ax2.yaxis.set_major_locator(MultipleLocator(dy1))
+    ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
+
+def plt_psd(jf,f_THz_max=None, k_SI_max=None):
+
+    if f_THz_max==None:
+       f_THz_max=jf.Nyquist_f_THz*10*1.618
+       if f_THz_max>jf.freqs_THz[-1]:
+           f_THz_max=jf.freqs_THz[-1]
+
+    if k_SI_max==None:
+       k_SI_max=np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*.5) *1.618
+
+    plt.figure(figsize=(3.8,2.3))
+    plt.plot(jf.freqs_THz,jf.psd*jf.kappa_scale*.5,lw=0.2,c='0.8')
+    plt.plot(jf.freqs_THz,jf.fpsd*jf.kappa_scale*.5,c=c[0])
+    plt.axvline(jf.Nyquist_f_THz,ls='--', c='k', dashes=(1.4,0.6), zorder=3)
+    #plt.plot(jf.freqs_THz,jf.dct.psd*jf.kappa_scale*.5,c=c[1])
+    plt.ylim([0,k_SI_max])
+    plt.xlim([0,f_THz_max])
+    plt.xlabel('$\omega/2\pi$ (THz)')
+    plt.ylabel('${}^{\ell}\hat{\underline{S}}_{\,k}$ (W/mK)')
+    
+    dx1,dx2=n_tick_in_range(0,f_THz_max,5)
+    dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+
+    plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
+    plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
+    plt.axes().yaxis.set_major_locator(MultipleLocator(dy1))
+    plt.axes().yaxis.set_minor_locator(MultipleLocator(dy2))
+
+def n_tick_in_range(beg,end,n):
+    size=end-beg
+    n_cifre=math.floor(math.log(size/n,10.0))
+    delta=math.ceil((size/n)/10**n_cifre)*10**n_cifre
+    return delta,delta/2
 
 if __name__ == "__main__":
    main()
