@@ -88,12 +88,12 @@ Contact: lercole@sissa.it
    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real'], help='LAMMPS units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
 
-   parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FCUT' )
+   parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR' )
    resamplearg = parser.add_mutually_exclusive_group()
    resamplearg.add_argument( '--TSKIP', type=int, help='resampling time period (steps)' )
    resamplearg.add_argument( '--FSTAR', type=float, help='resampling target Nyquist frequency (THz)' )
    parser.add_argument( '-c', '--corr-factor', type=float, default=1.0, help='correction factor to the AIC' )
-   parser.add_argument( '-j', '--add-currents', type=float, default=[], action='append', help='additional current for multi-component fluids' )
+   parser.add_argument( '-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids' )
 
    parser.add_argument( '-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)' )
    args = parser.parse_args()
@@ -170,6 +170,9 @@ Contact: lercole@sissa.it
       jdata = np.load(inputfile)
    else:
       raise NotImplemented('input format not implemented.')
+
+   if NSTEPS==0:
+      NSTEPS=jdata[jdata.keys()[0]].shape[0]
 
    if temperature is None:
       if 'Temp' in jdata:
