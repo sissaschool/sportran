@@ -285,7 +285,7 @@ Contact: lercole@sissa.it
       else:
          jf = j
 
-      plt_psd(j)
+      plt_psd(j,jf)
       pdf.savefig()
       plt.close()
       plt_psd(jf)
@@ -296,6 +296,9 @@ Contact: lercole@sissa.it
       jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor)
       logfile.write(jf.cepstral_log)
 
+      plt_psd(jf,jf,jf)
+      pdf.savefig()
+      plt.close()
       
 
       # plot cepstral coefficients
@@ -348,7 +351,20 @@ Contact: lercole@sissa.it
          outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
          outfile.write('freqs_THz  cepf_psd cepf_logpsd\n')
          np.savetxt(outfile, outarray)
-         outfile.close()
+
+      conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
+      
+      if units=='metal':
+          print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
+          conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
+      elif units=='real':
+          print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
+          conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
+      conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))      
+
+      conv_fact.close()
+      
+
 
    logfile.close()
    return 0
@@ -356,7 +372,7 @@ Contact: lercole@sissa.it
 
 def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
     if pstar_max==None:
-       pstar_max=(jf.dct.aic_Kmin+1)*10*1.618
+       pstar_max=(jf.dct.aic_Kmin+1)*1.618
     if k_SI_max==None:
        k_SI_max=jf.dct.tau[jf.dct.aic_Kmin]*jf.kappa_scale
 
@@ -381,21 +397,23 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
     ax2.yaxis.set_major_locator(MultipleLocator(dy1))
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-def plt_psd(jf,f_THz_max=None, k_SI_max=None):
+def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None):
 
     if f_THz_max==None:
-       f_THz_max=jf.Nyquist_f_THz*10*1.618
-       if f_THz_max>jf.freqs_THz[-1]:
-           f_THz_max=jf.freqs_THz[-1]
+       idx_max=index_cumsum(jf.psd,0.95)
+       f_THz_max=jf.freqs_THz[idx_max]
 
     if k_SI_max==None:
-       k_SI_max=np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*.5) *1.618
+       k_SI_max=np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*.5) *1.3
 
     plt.figure(figsize=(3.8,2.3))
     plt.plot(jf.freqs_THz,jf.psd*jf.kappa_scale*.5,lw=0.2,c='0.8')
     plt.plot(jf.freqs_THz,jf.fpsd*jf.kappa_scale*.5,c=c[0])
-    plt.axvline(jf.Nyquist_f_THz,ls='--', c='k', dashes=(1.4,0.6), zorder=3)
-    #plt.plot(jf.freqs_THz,jf.dct.psd*jf.kappa_scale*.5,c=c[1])
+    if j2 != None:
+        plt.axvline(x=j2.Nyquist_f_THz,ls='--', c='k', dashes=(1.4,0.6), zorder=3)
+    if j2pl != None:
+       plt.plot(j2pl.freqs_THz,j2pl.dct.psd*j2pl.kappa_scale*.5,c=c[1])
+
     plt.ylim([0,k_SI_max])
     plt.xlim([0,f_THz_max])
     plt.xlabel('$\omega/2\pi$ (THz)')
@@ -414,6 +432,16 @@ def n_tick_in_range(beg,end,n):
     n_cifre=math.floor(math.log(size/n,10.0))
     delta=math.ceil((size/n)/10**n_cifre)*10**n_cifre
     return delta,delta/2
+
+def index_cumsum(arr,p):
+    if (p>1 or p<0):
+        raise ValueError('p must be between 0 and 1')
+    arr_int=np.cumsum(arr)
+    arr_int=arr_int/arr_int[-1]
+    idx=0
+    while arr_int[idx]<p:
+        idx=idx+1
+    return idx
 
 if __name__ == "__main__":
    main()
