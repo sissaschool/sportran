@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Needed modules:
 #  numpy
@@ -6,23 +6,30 @@
 #  matplotlib
 #  argparse
 
+
+
+#add to path the application directory
+from sys import path, argv
+import os
+abs_path = os.path.abspath(argv[0])
+tc_path = abs_path[:abs_path.rfind('/')]
+path.append(tc_path[:tc_path.rfind('/')])
+
 import argparse
 import numpy as np
-import scipy as sp
+#import scipy as sp
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 plt.rcParams['figure.figsize'] = (16, 9)
 plt.style.reload_library()
+plt.style.use(tc_path+'/grafici_belli.mplstyle')
 #plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 from matplotlib.ticker import MultipleLocator
 
 
-from sys import path, argv
-tc_path = argv[0][:argv[0].rfind('/')]
-path.append(tc_path[:tc_path.rfind('/')])
 import thermocepstrum as tc
 plt.style.use(tc_path+'/grafici_belli.mplstyle')
 import math
@@ -107,6 +114,9 @@ Contact: lercole@sissa.it
    parser.add_argument( '-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids' )
 
    parser.add_argument( '-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)' )
+   parser.add_argument('--plot-conv-max-pstar',type=int,help='max number of P* in the kappa(P*) plot')
+   parser.add_argument('--plot-conv-pstar-tick-interval',type=int,help='tick interval on the x-axis for the kappa(P*) plot')
+   parser.add_argument('--plot-psd-max-THz',type=float, help='max frequency in THz for the psd plot')
    args = parser.parse_args()
 
    inputfile = args.inputfile
@@ -284,7 +294,7 @@ Contact: lercole@sissa.it
 
       # plot periodogram
       j.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
-      pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
+      #pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
       pdf.savefig()
       plt.close()
 
@@ -377,7 +387,8 @@ Contact: lercole@sissa.it
       # plot kappa(Pstar)
 #      ax = jf.plot_kappa_Pstar()
 #      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
-      plt_cepstral_conv(jf)
+
+      plt_cepstral_conv(jf,pstar_max=args.plot_conv_max_pstar,pstar_tick=args.plot_conv_pstar_tick_interval)
       pdf.savefig()
       plt.close()
 
@@ -438,7 +449,7 @@ Contact: lercole@sissa.it
 
 #################################
 
-def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
+def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None):
     if pstar_max==None:
        pstar_max=(jf.dct.aic_Kmin+1)*2.5
     if k_SI_max==None:
@@ -457,7 +468,13 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
     ax2.set_ylim([0, k_SI_max])
 #    ax2.grid()
     ax2.legend()
-    dx1,dx2=n_tick_in_range(0,pstar_max,5)
+    
+    if pstar_tick==None:
+       dx1,dx2=n_tick_in_range(0,pstar_max,5)
+    else:
+       dx1=pstar_tick
+       dx2=dx1/2
+
     dy1,dy2=n_tick_in_range(0,k_SI_max,5)
 
     ax2.xaxis.set_major_locator(MultipleLocator(dx1))
