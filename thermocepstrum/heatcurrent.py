@@ -121,7 +121,7 @@ class HeatCurrent(MDSample):
       return
 
 
-   def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0):
+   def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0,min_value_AIC=0):
       """
       Performs Cepstral Analysis on the heat current trajectory.
          aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
@@ -132,7 +132,7 @@ class HeatCurrent(MDSample):
       """
       
       self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
-          psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
+          psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor,min_value_AIC=min_value_AIC)
       self.dct.scan_filter_tau()
       self.kappa_Kmin     = self.dct.tau_Kmin     * self.kappa_scale * 0.5
       self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.kappa_scale * 0.5

@@ -91,8 +91,9 @@ CEPSTRAL ANALYSIS based filtering.
   p_aic... = Bayesian AIC weighting stuff
     """
 
-    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0):
+    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0,min_value_AIC=0):
 
+        self.min_value_AIC=min_value_AIC
         NF = samplelogpsd.size
         N = 2*(NF-1)
 
@@ -124,6 +125,8 @@ CEPSTRAL ANALYSIS based filtering.
         self.aic_min = np.min(self.aic)
         self.Kmin_corrfactor = Kmin_corrfactor
         self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
+        if self.aic_Kmin < self.min_value_AIC:
+            self.aic_Kmin = self.min_value_AIC
         if (self.aic_Kmin >= NF):
             print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
 

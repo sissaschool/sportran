@@ -55,6 +55,8 @@ OUTPUT files:
 OUTPUT DATA files (can be text ".dat" or binary ".npy"):
   [output].psd
       freqs [THz], original periodogram, original log(periodogram)
+  [output].cospectrum (if any)
+      freqs [THz], full matrix cospectrum
   [output].resampled_psd
       freqs [THz], resampled periodogram, resampled log(periodogram)
   [output].cepstral
@@ -259,12 +261,22 @@ Contact: lercole@sissa.it
       if binout:
          outarray = np.array([j.freqs_THz, j.fpsd, j.flogpsd, j.psd, j.logpsd])
          np.save(output + ".psd.npy", outarray, allow_pickle=False)
+         if j.multicomponent:
+            outarray = np.array([j.freqs_THz,j.cospectrum])
+            print "saving cospectrum", j.cospectrum.shape
+            np.save(output + ".cospectrum.npy", outarray, allow_pickle=True)
       else:
          outfile = open(output + '.psd.dat', 'w')
          outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
          outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
          np.savetxt(outfile, outarray)
          outfile.close()
+         if j.multicomponent:                                                
+            outfile = open(output + '.cospectrum.dat', 'w')
+            outarray = np.c_[j.freqs_THz,j.cospectrum.transpose((2,0,1))]
+            np.savetxt(outfile, outarray)
+            outfile.close()
+
   
       # resample and plot
       if resample:
@@ -302,7 +314,7 @@ Contact: lercole@sissa.it
       plt.close()
 
       # cepstral analysis
-      jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor)
+      jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor,min_value_AIC=2)
       logfile.write(jf.cepstral_log)
 
       plt_psd(jf,jf,jf)
