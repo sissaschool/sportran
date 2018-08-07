@@ -260,11 +260,18 @@ Contact: lercole@sissa.it
 
       if binout:
          outarray = np.array([j.freqs_THz, j.fpsd, j.flogpsd, j.psd, j.logpsd])
-         np.save(output + ".psd.npy", outarray, allow_pickle=False)
+         try:
+           np.save(output + ".psd.npy", outarray, allow_pickle=False)
+         except TypeError:
+           np.save(output + ".psd.npy", outarray)
+
          if j.multicomponent:
             outarray = np.array([j.freqs_THz,j.cospectrum])
             print "saving cospectrum", j.cospectrum.shape
-            np.save(output + ".cospectrum.npy", outarray, allow_pickle=True)
+            try:
+               np.save(output + ".cospectrum.npy", outarray, allow_pickle=True)
+            except TypeError:
+               np.save(output + ".cospectrum.npy", outarray)
       else:
          outfile = open(output + '.psd.dat', 'w')
          outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
@@ -273,7 +280,7 @@ Contact: lercole@sissa.it
          outfile.close()
          if j.multicomponent:                                                
             outfile = open(output + '.cospectrum.dat', 'w')
-            outarray = np.c_[j.freqs_THz,j.cospectrum.transpose((2,0,1))]
+            outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
             np.savetxt(outfile, outarray)
             outfile.close()
 
@@ -296,7 +303,10 @@ Contact: lercole@sissa.it
 
          if binout:
             outarray = np.array([jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd])
-            np.save(output + ".resampled_psd.npy", outarray, allow_pickle=False)
+            try:
+               np.save(output + ".resampled_psd.npy", outarray, allow_pickle=False)
+            except TypeError:
+               np.save(output + ".resampled_psd.npy", outarray)
          else:
             outfile = open(output + '.resampled_psd.dat', 'w')
             outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
@@ -346,7 +356,10 @@ Contact: lercole@sissa.it
 
       if binout:
          outarray = np.array([jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5])
-         np.save(output + '.cepstral', outarray, allow_pickle=False)
+         try:
+           np.save(output + '.cepstral', outarray, allow_pickle=False)
+         except TypeError:
+           np.save(output + '.cepstral', outarray)
       else:
          outfile = open(output + '.cepstral.dat', 'w')
          outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
@@ -367,7 +380,10 @@ Contact: lercole@sissa.it
    
       if binout:
          outarray = np.array([jf.freqs_THz, jf.dct.psd, jf.dct.logpsd])
-         np.save(output+".cepstrumfiltered_psd", outarray, allow_pickle=False)
+         try:
+            np.save(output+".cepstrumfiltered_psd", outarray, allow_pickle=False)
+         except TypeError:
+            np.save(output+".cepstrumfiltered_psd", outarray)
       else:
          outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
          outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
