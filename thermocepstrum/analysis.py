@@ -111,9 +111,14 @@ Contact: lercole@sissa.it
    parser.add_argument( '-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids' )
 
    parser.add_argument( '-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)' )
-   parser.add_argument('--plot-conv-max-pstar',type=int,help='max number of P* in the kappa(P*) plot')
+   parser.add_argument('--plot-conv-max-pstar',type=int,help='max number of P* in the kappa(P*) plot (x)')
+   parser.add_argument('--plot-conv-max-kappa',type=float,help='max kappa in the kappa(P*) plot (y)')
    parser.add_argument('--plot-conv-pstar-tick-interval',type=int,help='tick interval on the x-axis for the kappa(P*) plot')
-   parser.add_argument('--plot-psd-max-THz',type=float, help='max frequency in THz for the psd plot')
+   parser.add_argument('--plot-conv-kappa-tick-interval',type=float,help='tick interval on the y-axis for the kappa(P*) plot')
+   parser.add_argument('--plot-psd-max-THz',type=float, help='max frequency in THz for the psd plot (x)')
+   parser.add_argument('--plot-psd-max-kappa',type=float, help='max kappa in W/mK for the psd plot (y)')
+   parser.add_argument('--plot-psd-THz-tick-interval',type=float, help='tick interval on the x-axis for the psd plot')
+   parser.add_argument('--plot-psd-kappa-tick-interval',type=float, help='tick interval on the y-axis for the psd plot')
    args = parser.parse_args()
 
    inputfile = args.inputfile
@@ -275,7 +280,7 @@ Contact: lercole@sissa.it
       else:
          outfile = open(output + '.psd.dat', 'w')
          outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
-         outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+         outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
          np.savetxt(outfile, outarray)
          outfile.close()
          if j.multicomponent:                                                
@@ -310,16 +315,24 @@ Contact: lercole@sissa.it
          else:
             outfile = open(output + '.resampled_psd.dat', 'w')
             outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
-            outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+            outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
             np.savetxt(outfile, outarray)
             outfile.close()
       else:
          jf = j
 
-      plt_psd(j,jf)
+      plt_psd(j,jf,\
+                f_THz_max=args.plot_psd_max_THz,\
+                k_SI_max=args.plot_psd_max_kappa,\
+                k_tick=args.plot_psd_kappa_tick_interval,\
+                f_tick=args.plot_psd_THz_tick_interval)
       pdf.savefig()
       plt.close()
-      plt_psd(jf)
+      plt_psd(jf,\
+              f_THz_max=args.plot_psd_max_THz,\
+              k_SI_max=args.plot_psd_max_kappa,\
+              k_tick=args.plot_psd_kappa_tick_interval,\
+              f_tick=args.plot_psd_THz_tick_interval)   
       pdf.savefig()
       plt.close()
 
@@ -327,7 +340,11 @@ Contact: lercole@sissa.it
       jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor,min_value_AIC=2)
       logfile.write(jf.cepstral_log)
 
-      plt_psd(jf,jf,jf)
+      plt_psd(jf,jf,jf,\
+              f_THz_max=args.plot_psd_max_THz,\
+              k_SI_max=args.plot_psd_max_kappa,\
+              k_tick=args.plot_psd_kappa_tick_interval,\
+              f_tick=args.plot_psd_THz_tick_interval)
       pdf.savefig()
       plt.close()
       
@@ -350,7 +367,11 @@ Contact: lercole@sissa.it
 #      ax = jf.plot_kappa_Pstar()
 #      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
 
-      plt_cepstral_conv(jf,pstar_max=args.plot_conv_max_pstar,pstar_tick=args.plot_conv_pstar_tick_interval)
+      plt_cepstral_conv(jf,\
+                        pstar_max=args.plot_conv_max_pstar,\
+                        pstar_tick=args.plot_conv_pstar_tick_interval,\
+                        k_SI_max=args.plot_conv_max_kappa,\
+                        kappa_tick=args.plot_conv_kappa_tick_interval)
       pdf.savefig()
       plt.close()
 
@@ -363,7 +384,7 @@ Contact: lercole@sissa.it
       else:
          outfile = open(output + '.cepstral.dat', 'w')
          outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
-         outfile.write('ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
+         outfile.write('#ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
          np.savetxt(outfile, outarray)
          outfile.close()
    
@@ -387,7 +408,7 @@ Contact: lercole@sissa.it
       else:
          outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
          outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
-         outfile.write('freqs_THz  cepf_psd cepf_logpsd\n')
+         outfile.write('#freqs_THz  cepf_psd cepf_logpsd\n')
          np.savetxt(outfile, outarray)
 
       conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
@@ -408,7 +429,7 @@ Contact: lercole@sissa.it
    return 0
 
 
-def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None):
+def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None,kappa_tick=None):
     if pstar_max==None:
        pstar_max=(jf.dct.aic_Kmin+1)*5
     if k_SI_max==None:
@@ -433,38 +454,59 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None):
     else:
        dx1=pstar_tick
        dx2=dx1/2
-
-    dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+    if kappa_tick==None:
+       dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+    else:
+       dy1=kappa_tick
+       dy2=dy1/2
 
     ax2.xaxis.set_major_locator(MultipleLocator(dx1))
     ax2.xaxis.set_minor_locator(MultipleLocator(dx2))
     ax2.yaxis.set_major_locator(MultipleLocator(dy1))
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None):
+def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_tick=None,f_tick=None):
 
     if f_THz_max==None:
        idx_max=index_cumsum(jf.psd,0.95)
        f_THz_max=jf.freqs_THz[idx_max]
+    else:
+       maxT=jf.freqs_THz[-1]
+       if j2 != None:
+          if j2.freqs_THz[-1] > maxT:
+             maxT=j2.freqs_THz[-1]
+       if j2pl != None:
+          if j2pl.freqs_THz[-1] > maxT:
+             maxT=j2pl.freqs_THz[-1]
+       if maxT< f_THz_max:
+          f_THz_max=maxT
 
     if k_SI_max==None:
        k_SI_max=np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*.5) *1.3
 
     plt.figure(figsize=(3.8,2.3))
-    plt.plot(jf.freqs_THz,jf.psd*jf.kappa_scale*.5,lw=0.2,c='0.8')
-    plt.plot(jf.freqs_THz,jf.fpsd*jf.kappa_scale*.5,c=c[0])
+    plt.plot(jf.freqs_THz,jf.psd*jf.kappa_scale*.5,lw=0.2,c='0.8',zorder=0)
+    plt.plot(jf.freqs_THz,jf.fpsd*jf.kappa_scale*.5,c=c[0],zorder=2)
     if j2 != None:
         plt.axvline(x=j2.Nyquist_f_THz,ls='--', c='k', dashes=(1.4,0.6), zorder=3)
     if j2pl != None:
-       plt.plot(j2pl.freqs_THz,j2pl.dct.psd*j2pl.kappa_scale*.5,c=c[1])
+       plt.plot(j2pl.freqs_THz,j2pl.dct.psd*j2pl.kappa_scale*.5,c=c[1],zorder=1)
 
     plt.ylim([0,k_SI_max])
     plt.xlim([0,f_THz_max])
     plt.xlabel('$\omega/2\pi$ (THz)')
     plt.ylabel('${}^{\ell}\hat{\underline{S}}_{\,k}$ (W/mK)')
     
-    dx1,dx2=n_tick_in_range(0,f_THz_max,5)
-    dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+    if f_tick==None:
+       dx1,dx2=n_tick_in_range(0,f_THz_max,5)
+    else:
+       dx1=f_tick
+       dx2=dx1/2
+    if k_tick==None:
+       dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+    else:
+       dy1=k_tick
+       dy2=dy1/2
 
     plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
     plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
