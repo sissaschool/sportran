@@ -101,6 +101,8 @@ class HeatCurrent(MDSample):
          self.kappa_scale = md.units.scale_kappa_METALtoSI(TEMPERATURE, VOLUME, 1.0) # timestep is already included in the PSD definition
       elif (self.units == 'real'):
          self.kappa_scale = md.units.scale_kappa_REALtoSI(TEMPERATURE, VOLUME, 1.0)
+      elif (self.units == 'qepw'):
+         self.kappa_scale = md.units.scale_kappa_QEPWtoSI(TEMPERATURE, VOLUME, 1.0)
       else:
          raise ValueError('Units not supported.')
       return
