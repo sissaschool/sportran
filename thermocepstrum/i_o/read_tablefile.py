@@ -4,13 +4,13 @@
 ###
 ################################################################################
 ###
-###  a package that reads a table-style file and organizes it into a dictionary according to the column headers. 
-###  LAMMPS-style vector variables header are grouped together (only if group_vector = True). 
-###  If the name starts with "c_" or "v_", this is stripped away. 
+###  a package that reads a table-style file and organizes it into a dictionary according to the column headers.
+###  LAMMPS-style vector variables header are grouped together (only if group_vector = True).
+###  If the name starts with "c_" or "v_", this is stripped away.
 ###    e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux0' key
-###  Comments lines are ignored. 
+###  Comments lines are ignored.
 ###
-###  Lines are read SEQUENTIALLY with the method read_datalines. 
+###  Lines are read SEQUENTIALLY with the method read_datalines.
 ###  If a start_step is not specified the file is read from the current position.
 ###  This allows one to read the file in blocks.
 ###
@@ -22,11 +22,11 @@
 ###  # COMMENT LINE
 ###  Step Temp TotEng Press c_flux[1] c_flux[2] c_flux[3] c_stress[1] c_stress[2]
 ###  0 257.6477 -1085.7346 -1944.803 -129.20254 124.70804 -200.42864 -64.236389 -134.0399
-###  1 247.37505 -1085.734 -1909.333 -133.77141 124.25897 -103.27461 -61.022597 -83.17237 
+###  1 247.37505 -1085.734 -1909.333 -133.77141 124.25897 -103.27461 -61.022597 -83.17237
 ###  2 238.37359 -1087.9214 -1874.56 -138.58616 115.84038 -5.7728078 -58.471318 -74.51758
 ###  etc.
 ###
-################################################################################ 
+################################################################################
 ###   example:
 ###      current = TableFile(filename)
 ###      current.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
@@ -76,21 +76,21 @@ class TableFile(object):
       current.read_datalines(NSTEPS=100, select_ckeys=['Step', 'Temp', 'flux'])
       print current.data
 
-   Variables (columns) are organized into a dictionary according to the column headers. 
-   LAMMPS-style vector variables header are grouped together (only if group_vector = True). 
-   If the name starts with "c_" or "v_", this is stripped away. 
+   Variables (columns) are organized into a dictionary according to the column headers.
+   LAMMPS-style vector variables header are grouped together (only if group_vector = True).
+   If the name starts with "c_" or "v_", this is stripped away.
      e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux0' key
-   Comments lines are ignored. 
- 
+   Comments lines are ignored.
+
    #############################################################################
    The input file should look like this:
- 
+
    # COMMENT LINE
    # COMMENT LINE
    # COMMENT LINE
    Step Temp TotEng Press c_flux[1] c_flux[2] c_flux[3] c_stress[1] c_stress[2]
    0 257.6477 -1085.7346 -1944.803 -129.20254 124.70804 -200.42864 -64.236389 -134.0399
-   1 247.37505 -1085.734 -1909.333 -133.77141 124.25897 -103.27461 -61.022597 -83.17237 
+   1 247.37505 -1085.734 -1909.333 -133.77141 124.25897 -103.27461 -61.022597 -83.17237
    2 238.37359 -1087.9214 -1874.56 -138.58616 115.84038 -5.7728078 -58.471318 -74.51758
    etc.
    """
@@ -111,11 +111,12 @@ class TableFile(object):
          from ipywidgets import FloatProgress
          from IPython.display import display
          global FloatProgress, display
-      
+
       self._open_file()
       self._read_ckeys(group_vectors)
       self.ckey = None
       self.MAX_NSTEPS = data_length(self.filename)
+      self._read_comments()
       print "Data length = ", self.MAX_NSTEPS
       return
 
@@ -128,7 +129,7 @@ class TableFile(object):
             '  start pos:     {}\n'.format(self._start_byte) + \
             '  current pos:   {}\n'.format(self.file.tell())
       return msg
-      
+
    def _open_file(self):
       """Open the file."""
       try:
@@ -182,6 +183,50 @@ class TableFile(object):
       print ' #####################################'
       return
 
+   def _read_comments(self):
+      """Read the thermodynamic parameters written in the comments"""
+      self.file.seek(0)
+      #print self.file.readline()
+      self.thermo = {}
+      keywords_num = ("Energy", "energy",\
+                  "Temperature", "temperature", "Temp", "temp",\
+                  "Pressure", "pressure", "Pres", "pres",\
+                  "Volume", "Vol", "volume", "vol",\
+                  "Timestep", "tstep", "timestep", "dt", "DT", "DT_FS",\
+                  "Density", "density", "rho", "Rho")
+      keywords_unit = ("Units", "units", "Unit", "unit")
+      
+      while True:
+         line_in = self.file.readline()
+         if line_in[0] != '#':
+            return    
+         else:
+            line = line_in[1:].split()
+            for index, boolean in enumerate(i in keywords_num+tuple([x+':' for x in keywords_num])+tuple([x+'=' for x in keywords_num]) for i in line):
+               if boolean:
+                  for next_word in line[index+1:]:
+                     try:
+                        float(next_word)
+                        self.thermo[line[index]] = np.float64(next_word)
+                        break
+                     except ValueError:
+                        pass
+            for index, boolean in enumerate(i in keywords_unit+tuple([x+':' for x in keywords_unit])+tuple([x+'=' for x in keywords_unit]) for i in line):
+               if boolean:
+                  for next_word in line[index+1:]:
+                     try:
+                        next_word in units_list
+                        self.thermo['Units'] = next_word
+                        break
+                     except (ValueError, TypeError):
+                        pass
+      if not self.thermo:
+         return
+      else:
+         print ' #####################################'
+         print '  Parameters = ', self.thermo
+         print ' #####################################'
+      return
 
    def _set_ckey(self, select_ckeys=None, max_vector_dim=None):
       """Set the ckeys that have been selected, checking the available ones."""
@@ -231,7 +276,7 @@ class TableFile(object):
             self.file.readline()
       return
 
-   
+
    def read_datalines(self, NSTEPS=0, start_step=-1, select_ckeys=None, max_vector_dim=None, even_NSTEPS=True):
       """Read NSTEPS steps of file, starting from start_step, and store only
       the selected ckeys.
@@ -255,7 +300,7 @@ class TableFile(object):
       self._set_ckey(select_ckeys, max_vector_dim)  # set the ckeys to read
       self._initialize_dic(NSTEPS)  # allocate dictionary
       self.gotostep(start_step)    # jump to the starting step
-      
+
       # read NSTEPS of the file
       progbar_step = max(100000, int(0.005*NSTEPS))
       for step in range(NSTEPS):
@@ -292,5 +337,3 @@ class TableFile(object):
       self.NSTEPS = NSTEPS
       print "DONE.  Elapsed time: ", time()-start_time, "seconds"
       return self.data
-
-

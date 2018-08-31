@@ -91,7 +91,7 @@ CEPSTRAL ANALYSIS based filtering.
   p_aic... = Bayesian AIC weighting stuff
     """
 
-    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0,min_value_AIC=0):
+    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0,min_value_AIC=0,chosenP=None):
 
         self.min_value_AIC=min_value_AIC
         NF = samplelogpsd.size
@@ -115,20 +115,30 @@ CEPSTRAL ANALYSIS based filtering.
         self.logpsdK = dct_coefficients(self.samplelogpsd)
 
         # estimate AIC
-        if (aic_type == 'aic'):
-            self.aic = dct_AIC(self.logpsdK, ck_theory_var)
-        elif (aic_type == 'aicc'):
-            self.aic = dct_AICc(self.logpsdK, ck_theory_var)
+        if (aic_type == 'fixed'):
+            if (chosenP == None):
+                raise ValueError("You must provide the chosen value of P* if aic_type='fixed'")
+            self.aic_type = aic_type
+            self.aic_min = None
+            self.Kmin_corrfactor = Kmin_corrfactor
+            self.aic_Kmin = int(round((chosenP-1) * Kmin_corrfactor))
         else:
-            raise ValueError('AIC type not valid.')
-        self.aic_type = aic_type
-        self.aic_min = np.min(self.aic)
-        self.Kmin_corrfactor = Kmin_corrfactor
-        self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
-        if self.aic_Kmin < self.min_value_AIC:
-            self.aic_Kmin = self.min_value_AIC
-        if (self.aic_Kmin >= NF):
-            print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
+            if (chosenP != None):
+                raise ValueError("chosenP must be None if aic_type is not 'fixed'")
+            if (aic_type == 'aic'):
+                self.aic = dct_AIC(self.logpsdK, ck_theory_var)
+            elif (aic_type == 'aicc'):
+                self.aic = dct_AICc(self.logpsdK, ck_theory_var)
+            else:
+                raise ValueError('AIC type not valid.')
+            self.aic_type = aic_type
+            self.aic_min = np.min(self.aic)
+            self.Kmin_corrfactor = Kmin_corrfactor
+            self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
+            if self.aic_Kmin < self.min_value_AIC:
+                self.aic_Kmin = self.min_value_AIC
+            if (self.aic_Kmin >= NF):
+                print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
 
         # set theoretical errors
         if ck_theory_var is None:

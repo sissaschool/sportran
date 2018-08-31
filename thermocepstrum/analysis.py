@@ -41,11 +41,24 @@ def main():
 This script performs the cepstral analysis. It outputs some results in the stdout and log file, and plots in pdf format.
 
 INPUT:
-For now the input must be a column-formatted text file, with a header in the same format of LAMMPS. The name of the lammps compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
-The average temperature is computed if a column with the header 'Temp' is found; otherwise you have to specify it.
-You must provide the name of the heat flux compute. You can also provide additional currents if your system is a multi-component fluid. 
-(Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
-Units can be metal or real (see LAMMPS documentation at http://lammps.sandia.gov/doc/units.html )
+The input must be a column-formatted text file with a header to identify the current's components, e.g.:
+
+	flux1[1] flux1[2] flux1[3] flux2[1] flux2[2] flux2[3] ...
+	0.434    8.2564   -7.152   23.798   -8.9638  -0.74516 ...
+
+The header's name can have a prefix "c_", e.g. "c_flux1", to allow compatibility with LAMMPS format.
+Other columns are allowed, e.g. for the instantaneous temperature of the system. 
+The average temperature must be provided to compute the heat conductivity. There are currently three ways to do it:
+
+	- The average temperature is computed on-the-fly if a column with the header 'Temp' is found;
+	- It can be included as a comment at the beginning of the file with the format: "# Temperature = 300 K";
+	- Otherwise you have to specify it as an option "-T 300.0" from the command line. 
+
+(Hint: If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
+Units can be 
+
+	- LAMMPS "metal" or "real" (see LAMMPS documentation at http://lammps.sandia.gov/doc/units.html )
+	- DLPOLY "dlpoly", "charge" or "vel" (see thermocepstrum/md/units.py)
 
 OUTPUT files:
   [output].logfile
@@ -55,7 +68,7 @@ OUTPUT files:
 OUTPUT DATA files (can be text ".dat" or binary ".npy"):
   [output].psd
       freqs [THz], original periodogram, original log(periodogram)
-  [output].cospectrum (if any)
+  [output].cospectrum (if multi-component)
       freqs [THz], full matrix cospectrum
   [output].resampled_psd
       freqs [THz], resampled periodogram, resampled log(periodogram)
@@ -100,7 +113,7 @@ Contact: lercole@sissa.it
    outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
    outarg.add_argument( '-O', '--bin-output', type=str, help='prefix of the output files (use binary file)' )
 
-   parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real'], help='LAMMPS units (default: metal)' )
+   parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'dlpoly', 'charge', 'vel'], help='LAMMPS and DLPOLY units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
 
    parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR' )
@@ -111,6 +124,7 @@ Contact: lercole@sissa.it
    parser.add_argument( '-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids' )
 
    parser.add_argument( '-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)' )
+   parser.add_argument( '--chosen-P', type=int, default=None, help='Choose a value of P* without using the AIC criterion')
    parser.add_argument('--plot-conv-max-pstar',type=int,help='max number of P* in the kappa(P*) plot (x)')
    parser.add_argument('--plot-conv-max-kappa',type=float,help='max kappa in the kappa(P*) plot (y)')
    parser.add_argument('--plot-conv-pstar-tick-interval',type=int,help='tick interval on the x-axis for the kappa(P*) plot')
@@ -129,7 +143,7 @@ Contact: lercole@sissa.it
    START_STEP = args.start_step
    input_format = args.input_format
    jindex = args.cindex
-   
+   chosenP = args.chosen_P
    if args.bin_output is not None:
       binout = True
       output = args.bin_output
@@ -153,8 +167,8 @@ Contact: lercole@sissa.it
       raise ValueError('timestep must be positive')
    if (NSTEPS < 0):
       raise ValueError('nsteps must be positive')
-   if ((units != 'real') and (units != 'metal')):
-      raise ValueError('units must be metal or real')
+   if ((units != 'real') and (units != 'metal') and (units != 'dlpoly') and (units != 'charge') and (units != 'vel')):
+      raise ValueError('units must be LAMMPS metal or real, or DLPOLY dlpoly, charge or vel')
    if temperature is not None:
       if (temperature <= 0.):
          raise ValueError('temperature must be positive')
@@ -184,9 +198,12 @@ Contact: lercole@sissa.it
 
    jdata = None
    if (input_format == 'table'):
-      if temperature is None:
-         selected_keys.append('Temp')
       jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+      if temperature is None:
+         if 'Temperature' in jfile.thermo:
+            temperature = jfile.thermo['Temperature']
+         else:
+            selected_keys.append('Temp')
       jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
       jdata = jfile.data
    elif (input_format == 'dict'):
@@ -214,7 +231,7 @@ Contact: lercole@sissa.it
             print ' Mean Temperature (file):      {} K'.format(temperature)
             logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
       else:
-         raise RuntimeError('No Temp key found')
+         raise RuntimeError('Neither "Temp" key found nor "Temperature" provided in the header comments.')
    else:
       print ' Mean Temperature (input):  {} K'.format(temperature)
       logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
@@ -224,8 +241,12 @@ Contact: lercole@sissa.it
          volume = jdata['Volume']
          print ' Volume (file):    {} A^3'.format(volume)
          logfile.write(' Volume (file):    {} A^3\n'.format(volume))
+      elif 'Volume' in jfile.thermo:
+         volume = jfile.thermo['Volume']
+         print ' Volume (file):    {} A^3'.format(volume)
+         logfile.write(' Volume (file):    {} A^3\n'.format(volume))
       else:
-         raise RuntimeError('No Volume key found')
+         raise RuntimeError('Neither "Volume" key found nor "Volume" provided in the header comments.')
    else:
        print ' Volume (input):  {} A^3'.format(volume)
        logfile.write(' Volume (input):  {} A^3\n'.format(volume))
@@ -247,7 +268,7 @@ Contact: lercole@sissa.it
    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
 
    print ' Number of currents = {}'.format(ncurrents)
-   logfile.write(' Number of currrents = {}\n'.format(ncurrents))
+   logfile.write(' Number of currents = {}\n'.format(ncurrents))
    print ' Number of components = {}'.format(j.N_COMPONENTS)
    logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
    print ' kappa_scale = {}'.format(j.kappa_scale)
@@ -283,13 +304,12 @@ Contact: lercole@sissa.it
          outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
          np.savetxt(outfile, outarray)
          outfile.close()
-         if j.multicomponent:                                                
+         if j.multicomponent:
             outfile = open(output + '.cospectrum.dat', 'w')
             outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
             np.savetxt(outfile, outarray)
             outfile.close()
 
-  
       # resample and plot
       if resample:
          if TSKIP is not None:
@@ -337,8 +357,12 @@ Contact: lercole@sissa.it
       plt.close()
 
       # cepstral analysis
-      jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor,min_value_AIC=2)
-      logfile.write(jf.cepstral_log)
+      if chosenP is None:
+         jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor,min_value_AIC=2)
+         logfile.write(jf.cepstral_log)
+      else:
+         jf.cepstral_analysis(aic_type='fixed', Kmin_corrfactor=corr_factor,min_value_AIC=2, chosenP=chosenP)
+         logfile.write(jf.cepstral_log)
 
       plt_psd(jf,jf,jf,\
               f_THz_max=args.plot_psd_max_THz,\
@@ -398,7 +422,6 @@ Contact: lercole@sissa.it
       #ax[1].set_ylim([12,18])
       #ax[0].legend(['original', 'resampled', 'cepstrum-filtered'])
       #ax[1].legend(['original', 'resampled', 'cepstrum-filtered']);
-   
       if binout:
          outarray = np.array([jf.freqs_THz, jf.dct.psd, jf.dct.logpsd])
          try:
@@ -412,18 +435,19 @@ Contact: lercole@sissa.it
          np.savetxt(outfile, outarray)
 
       conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
-      
+
       if units=='metal':
           print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
           conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
       elif units=='real':
           print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
           conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
-      conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))      
+      elif units=='dlpoly':
+          print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS))
+          conv_fact.write('{}\n'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS)))
+      conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
 
       conv_fact.close()
-      
-
 
    logfile.close()
    return 0
@@ -448,7 +472,6 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None,kappa_tic
     ax2.set_ylim([0, k_SI_max])
 #    ax2.grid()
     ax2.legend()
-    
     if pstar_tick==None:
        dx1,dx2=n_tick_in_range(0,pstar_max,5)
     else:
