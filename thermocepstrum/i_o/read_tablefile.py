@@ -195,7 +195,7 @@ class TableFile(object):
                   "Timestep", "tstep", "timestep", "dt", "DT", "DT_FS",\
                   "Density", "density", "rho", "Rho")
       keywords_unit = ("Units", "units", "Unit", "unit")
-      
+      units_list = ("real","metal","dlpoly","charge","vel") 
       while True:
          line_in = self.file.readline()
          if line_in[0] != '#':
