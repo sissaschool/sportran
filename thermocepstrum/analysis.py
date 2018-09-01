@@ -292,13 +292,13 @@ Contact: lercole@sissa.it
                  chosenP=chosenP, corr_factor=corr_factor, blocks=True, firsttime=firsttime,label=str(iblock),TOTAL_STEPS=TOTAL_STEPS))
       #
       with PdfPages(output+'.kappa_convergence.pdf') as pdf:
-         plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, TOTAL_STEPS)
+         plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, TOTAL_STEPS, DT_FS)
          pdf.savefig()
          plt.close()
          
          np.savetxt(output+'.kappa_convergence.dat', \
-                    np.trnspose(np.array([np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
-                              np.transpose(kappas)[0], np.transpose(kappas)[1])), header='n_steps    kappa    kappa_std')
+                    np.transpose(np.array([DT_FS*np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+                              np.transpose(kappas)[0], np.transpose(kappas)[1]])), header='time[fs]    kappa[W/mK]    kappa_std[W/mK]')
    else:
       analyze(jindex=jindex, selected_keys=selected_keys, jdata=jdata, START_STEP=START_STEP, NSTEPS=NSTEPS, logfile=logfile,\
                  units=units, DT_FS=DT_FS, temperature=temperature, volume=volume, psd_filter_w=psd_filter_w,\
@@ -345,12 +345,12 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None,kappa_tic
     ax2.yaxis.set_major_locator(MultipleLocator(dy1))
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-def plt_kappa_convergence(kappas, std_kappas, NBLOCKS, NSTEPS):
+def plt_kappa_convergence(kappas, std_kappas, NBLOCKS, NSTEPS, DT_FS):
     plt.fill_between(np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
                      kappas - std_kappas, kappas + std_kappas, alpha=.3, color=c[4]);
-    plt.plot(np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
-             kappas, label=r'Kappa VS number of steps', marker='o', c=c[4]);
-    plt.xlabel(r'Number of steps');
+    plt.plot(DT_FS*np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+             kappas, label=r'Kappa VS time', marker='o', c=c[4]);
+    plt.xlabel(r'Time (fs)');
     plt.ylabel('$\kappa$ (W/mK)');
     plt.xlim([0.95*(NSTEPS // NBLOCKS), 1.05*((NSTEPS // NBLOCKS)*NBLOCKS)]);
 
