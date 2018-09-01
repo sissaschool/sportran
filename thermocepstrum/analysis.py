@@ -295,6 +295,10 @@ Contact: lercole@sissa.it
          plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, TOTAL_STEPS)
          pdf.savefig()
          plt.close()
+         
+         np.savetxt(output+'.kappa_convergence.dat', \
+                    np.trnspose(np.array([np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+                              np.transpose(kappas)[0], np.transpose(kappas)[1])), header='n_steps    kappa    kappa_std')
    else:
       analyze(jindex=jindex, selected_keys=selected_keys, jdata=jdata, START_STEP=START_STEP, NSTEPS=NSTEPS, logfile=logfile,\
                  units=units, DT_FS=DT_FS, temperature=temperature, volume=volume, psd_filter_w=psd_filter_w,\
@@ -348,7 +352,7 @@ def plt_kappa_convergence(kappas, std_kappas, NBLOCKS, NSTEPS):
              kappas, label=r'Kappa VS number of steps', marker='o', c=c[4]);
     plt.xlabel(r'Number of steps');
     plt.ylabel('$\kappa$ (W/mK)');
-    plt.xlim([0.8*(NSTEPS // NBLOCKS), 1.2*((NSTEPS // NBLOCKS)*NBLOCKS)]);
+    plt.xlim([0.95*(NSTEPS // NBLOCKS), 1.05*((NSTEPS // NBLOCKS)*NBLOCKS)]);
 
 def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_tick=None,f_tick=None):
 
