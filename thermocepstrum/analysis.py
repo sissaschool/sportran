@@ -271,186 +271,6 @@ Contact: lercole@sissa.it
 #
 #   Beginning of analysis
 #
-   
-#   if jindex is None:
-#      currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),:] for key in selected_keys])
-#   else:
-#      currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),jindex] for key in selected_keys])
-#   print '  currents shape is {}'.format(currents.shape)
-#   logfile.write('  currents shape is {}\n'.format(currents.shape))
-#   print 'snippet:'
-#   print currents
-#
-#   # create HeatCurrent object
-#   j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
-#
-#   print ' Number of currents = {}'.format(ncurrents)
-#   logfile.write(' Number of currents = {}\n'.format(ncurrents))
-#   print ' Number of components = {}'.format(j.N_COMPONENTS)
-#   logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
-#   print ' kappa_scale = {}'.format(j.kappa_scale)
-#   logfile.write(' kappa_scale = {}\n'.format(j.kappa_scale))
-#   print ' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz)
-#   logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
-#
-#   with PdfPages(output + ".plots.pdf") as pdf:
-#
-#      # plot periodogram
-#      j.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
-#      #pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
-#      pdf.savefig()
-#      plt.close()
-#
-#      if binout:
-#         outarray = np.array([j.freqs_THz, j.fpsd, j.flogpsd, j.psd, j.logpsd])
-#         try:
-#           np.save(output + ".psd.npy", outarray, allow_pickle=False)
-#         except TypeError:
-#           np.save(output + ".psd.npy", outarray)
-#
-#         if j.multicomponent:
-#            outarray = np.array([j.freqs_THz,j.cospectrum])
-#            print "saving cospectrum", j.cospectrum.shape
-#            try:
-#               np.save(output + ".cospectrum.npy", outarray, allow_pickle=True)
-#            except TypeError:
-#               np.save(output + ".cospectrum.npy", outarray)
-#      else:
-#         outfile = open(output + '.psd.dat', 'w')
-#         outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
-#         outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-#         np.savetxt(outfile, outarray)
-#         outfile.close()
-#         if j.multicomponent:
-#            outfile = open(output + '.cospectrum.dat', 'w')
-#            outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
-#            np.savetxt(outfile, outarray)
-#            outfile.close()
-#
-#      # resample and plot
-#      if resample:
-#         if TSKIP is not None:
-#            jf, ax = tc.heatcurrent.resample_current(j, TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
-#         else:
-#            jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
-#         ax[0].set_xlim([0, 2.5*FSTAR])
-#         pdf.savefig()
-#         plt.close()
-#         logfile.write(jf.resample_log)
-#
-#         # plot resampled periodogram
-#         ax = jf.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
-#         pdf.savefig()
-#         plt.close()
-#
-#         if binout:
-#            outarray = np.array([jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd])
-#            try:
-#               np.save(output + ".resampled_psd.npy", outarray, allow_pickle=False)
-#            except TypeError:
-#               np.save(output + ".resampled_psd.npy", outarray)
-#         else:
-#            outfile = open(output + '.resampled_psd.dat', 'w')
-#            outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
-#            outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-#            np.savetxt(outfile, outarray)
-#            outfile.close()
-#      else:
-#         jf = j
-#
-#      plt_psd(j,jf,\
-#                f_THz_max=args.plot_psd_max_THz,\
-#                k_SI_max=args.plot_psd_max_kappa,\
-#                k_tick=args.plot_psd_kappa_tick_interval,\
-#                f_tick=args.plot_psd_THz_tick_interval)
-#      pdf.savefig()
-#      plt.close()
-#      plt_psd(jf,\
-#              f_THz_max=args.plot_psd_max_THz,\
-#              k_SI_max=args.plot_psd_max_kappa,\
-#              k_tick=args.plot_psd_kappa_tick_interval,\
-#              f_tick=args.plot_psd_THz_tick_interval)   
-#      pdf.savefig()
-#      plt.close()
-#
-#      # cepstral analysis
-#      if chosenP is None:
-#         jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor,min_value_AIC=2)
-#         logfile.write(jf.cepstral_log)
-#      else:
-#         jf.cepstral_analysis(aic_type='fixed', Kmin_corrfactor=corr_factor,min_value_AIC=2, chosenP=chosenP)
-#         logfile.write(jf.cepstral_log)
-#
-#      plt_psd(jf,jf,jf,\
-#              f_THz_max=args.plot_psd_max_THz,\
-#              k_SI_max=args.plot_psd_max_kappa,\
-#              k_tick=args.plot_psd_kappa_tick_interval,\
-#              f_tick=args.plot_psd_THz_tick_interval)
-#      pdf.savefig()
-#      plt.close()
-#      
-#
-#      # plot cepstral coefficients
-#      ax = jf.plot_ck()
-#      ax.set_xlim([0, 5*jf.dct.aic_Kmin])
-#   #  ax.set_ylim([-0.5, 0.5])
-#      ax.grid();
-#      pdf.savefig()
-#      plt.close()
-#
-#      # plot L0(Pstar)
-#      ax = jf.plot_L0_Pstar()
-#      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
-#      pdf.savefig()
-#      plt.close()
-#   
-#      # plot kappa(Pstar)
-##      ax = jf.plot_kappa_Pstar()
-##      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
-#
-#      plt_cepstral_conv(jf,\
-#                        pstar_max=args.plot_conv_max_pstar,\
-#                        pstar_tick=args.plot_conv_pstar_tick_interval,\
-#                        k_SI_max=args.plot_conv_max_kappa,\
-#                        kappa_tick=args.plot_conv_kappa_tick_interval)
-#      pdf.savefig()
-#      plt.close()
-#
-#      if binout:
-#         outarray = np.array([jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5])
-#         try:
-#           np.save(output + '.cepstral', outarray, allow_pickle=False)
-#         except TypeError:
-#           np.save(output + '.cepstral', outarray)
-#      else:
-#         outfile = open(output + '.cepstral.dat', 'w')
-#         outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
-#         outfile.write('#ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
-#         np.savetxt(outfile, outarray)
-#         outfile.close()
-#   
-#      # plot cepstral log-PSD
-#      #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
-#      ax = jf.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
-#      jf.plot_cepstral_spectrum(axes=ax, label='cepstrum-filtered')
-#      ax[0].axvline(x = jf.Nyquist_f_THz, ls='--', c='r')
-#      ax[1].axvline(x = jf.Nyquist_f_THz, ls='--', c='r')
-#      #ax[0].set_xlim([0., 2.5*FSTAR_THZ])
-#      #ax[1].set_ylim([12,18])
-#      #ax[0].legend(['original', 'resampled', 'cepstrum-filtered'])
-#      #ax[1].legend(['original', 'resampled', 'cepstrum-filtered']);
-#      if binout:
-#         outarray = np.array([jf.freqs_THz, jf.dct.psd, jf.dct.logpsd])
-#         try:
-#            np.save(output+".cepstrumfiltered_psd", outarray, allow_pickle=False)
-#         except TypeError:
-#            np.save(output+".cepstrumfiltered_psd", outarray)
-#      else:
-#         outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
-#         outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
-#         outfile.write('#freqs_THz  cepf_psd cepf_logpsd\n')
-#         np.savetxt(outfile, outarray)
-#
    print ' Number of currents = {}'.format(ncurrents)
    logfile.write(' Number of currents = {}\n'.format(ncurrents))  
    
@@ -470,27 +290,17 @@ Contact: lercole@sissa.it
                  units=units, DT_FS=DT_FS, temperature=temperature, volume=volume, psd_filter_w=psd_filter_w,\
                  ncurrents=ncurrents, output=output, binout=binout, resample=resample, TSKIP=TSKIP, FSTAR=FSTAR, args=args,\
                  chosenP=chosenP, corr_factor=corr_factor, blocks=True, firsttime=firsttime,label=str(iblock),TOTAL_STEPS=TOTAL_STEPS))
-         
+      #
+      with PdfPages('kappa_convergence.pdf') as pdf:
+         plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, TOTAL_STEPS)
+         pdf.savefig()
+         plt.close()
    else:
       analyze(jindex=jindex, selected_keys=selected_keys, jdata=jdata, START_STEP=START_STEP, NSTEPS=NSTEPS, logfile=logfile,\
                  units=units, DT_FS=DT_FS, temperature=temperature, volume=volume, psd_filter_w=psd_filter_w,\
                  ncurrents=ncurrents, output=output, binout=binout, resample=resample, TSKIP=TSKIP, FSTAR=FSTAR, args=args,\
                  chosenP=chosenP, corr_factor=corr_factor)
       
-#      conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
-#
-#      if units=='metal':
-#          print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
-#          conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
-#      elif units=='real':
-#          print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
-#          conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
-#      elif units=='dlpoly':
-#          print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS))
-#          conv_fact.write('{}\n'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS)))
-#      conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
-#
-#      conv_fact.close()
 
    logfile.close()
    return 0
@@ -530,6 +340,15 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None,kappa_tic
     ax2.xaxis.set_minor_locator(MultipleLocator(dx2))
     ax2.yaxis.set_major_locator(MultipleLocator(dy1))
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
+
+def plt_kappa_convergence(kappas, std_kappas, NBLOCKS, NSTEPS):
+    plt.fill_between(np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+                     kappas - std_kappas, kappas + std_kappas, alpha=.3, color=c[4]);
+    plt.plot(np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+             kappas, label=r'Kappa VS number of steps', marker='o', c=c[4]);
+    plt.xlabel(r'Number of steps');
+    plt.ylabel('$\kappa$ (W/mK)');
+    plt.xlim([0.8*(NSTEPS // NBLOCKS), 1.2*((NSTEPS // NBLOCKS)*NBLOCKS)]);
 
 def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_tick=None,f_tick=None):
 
@@ -778,6 +597,7 @@ def analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT
       #ax[1].set_ylim([12,18])
       #ax[0].legend(['original', 'resampled', 'cepstrum-filtered'])
       #ax[1].legend(['original', 'resampled', 'cepstrum-filtered']);
+      plt.close()
       if binout:
          outarray = np.array([jf.freqs_THz, jf.dct.psd, jf.dct.logpsd])
          try:
@@ -809,9 +629,10 @@ def analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT
    # append kappa +/- kappa_std
    #
    if blocks:
+      kappas=np.array([jf.kappa_Kmin, jf.kappa_Kmin_std], dtype = np.float64)
       return kappas
    else:
       return
-
+# ------------------------------------------------------------------------------
 if __name__ == "__main__":
    main()
