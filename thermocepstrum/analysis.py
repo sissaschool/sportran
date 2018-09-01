@@ -291,7 +291,7 @@ Contact: lercole@sissa.it
                  ncurrents=ncurrents, output=output, binout=binout, resample=resample, TSKIP=TSKIP, FSTAR=FSTAR, args=args,\
                  chosenP=chosenP, corr_factor=corr_factor, blocks=True, firsttime=firsttime,label=str(iblock),TOTAL_STEPS=TOTAL_STEPS))
       #
-      with PdfPages('kappa_convergence.pdf') as pdf:
+      with PdfPages(output+'.kappa_convergence.pdf') as pdf:
          plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, TOTAL_STEPS)
          pdf.savefig()
          plt.close()
