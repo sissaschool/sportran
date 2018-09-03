@@ -111,7 +111,7 @@ Contact: lercole@sissa.it
 
    parser.add_argument( '-B', '--blocks', type=int, default=1, help='Convergence test for kappa: for n in [length/B, 2*length/B...] do cepstral analysis up to n')
 
-   parg.add_argument( '--chosen-P', type=int, default=None, help='Choose a value of P* without using the AIC criterion')
+   parser.add_argument( '--chosen-P', type=int, default=None, help='Choose a value of P* without using the AIC criterion')
 
    outarg = parser.add_mutually_exclusive_group()
    outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
