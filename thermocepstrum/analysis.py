@@ -117,7 +117,7 @@ Contact: lercole@sissa.it
    outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
    outarg.add_argument( '-O', '--bin-output', type=str, help='prefix of the output files (use binary file)' )
 
-   parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'dlpoly', 'charge', 'vel'], help='LAMMPS and DLPOLY units (default: metal)' )
+   parser.add_argument( '-u', '--units', type=str,  choices=['metal', 'real', 'dlpoly', 'charge', 'vel'], help='LAMMPS and DLPOLY units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
 
    parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR' )
@@ -174,8 +174,8 @@ Contact: lercole@sissa.it
       raise ValueError('timestep must be positive')
    if (NSTEPS < 0):
       raise ValueError('nsteps must be positive')
-   if ((units != 'real') and (units != 'metal') and (units != 'dlpoly') and (units != 'charge') and (units != 'vel')):
-      raise ValueError('units must be LAMMPS metal or real, or DLPOLY dlpoly, charge or vel')
+   #if ((units != 'real') and (units != 'metal') and (units != 'dlpoly') and (units != 'charge') and (units != 'vel')):
+   #   raise ValueError('units must be LAMMPS metal or real, or DLPOLY dlpoly, charge or vel')
    if temperature is not None:
       if (temperature <= 0.):
          raise ValueError('temperature must be positive')
@@ -261,7 +261,20 @@ Contact: lercole@sissa.it
    print ' Time step (input):  {} fs'.format(DT_FS)
    logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
-   print selected_keys, jindex
+   if units is None:
+      if 'Units' in jfile.thermo:
+         units = jfile.thermo['Units']
+         print(' Units (file):    {}'.format(units))
+         logfile.write(' Units (file):    {}'.format(units))
+      else:
+         print(' Units not provided. I will assume the units are LAMMPS REAL')
+         units='real'
+   else:
+      print((' Units (input):    {}'.format(units)))
+
+   print(selected_keys, jindex)
+   print(jfile.thermo)
+   logfile.write('{}\n'.format(jfile.thermo))
 #
 #   Beginning of analysis
 #
