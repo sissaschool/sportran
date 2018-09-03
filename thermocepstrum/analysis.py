@@ -111,9 +111,7 @@ Contact: lercole@sissa.it
 
    parser.add_argument( '-B', '--blocks', type=int, default=1, help='Convergence test for kappa: for n in [length/B, 2*length/B...] do cepstral analysis up to n')
 
-   parg = parser.add_mutually_exclusive_group() 
    parg.add_argument( '--chosen-P', type=int, default=None, help='Choose a value of P* without using the AIC criterion')
-   parg.add_argument( '--convergence-P', type=int, nargs=2, help='Convergence with respect to the value of P*')
 
    outarg = parser.add_mutually_exclusive_group()
    outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
@@ -151,10 +149,6 @@ Contact: lercole@sissa.it
 
    block_number = args.blocks
    
-   convergence_P = False
-   if args.convergence_P is not None:
-      convergence_P = True
-      Pmin, Pmax =  args.convergence_P
    chosenP = args.chosen_P
 
    if args.bin_output is not None:
@@ -292,12 +286,12 @@ Contact: lercole@sissa.it
                  chosenP=chosenP, corr_factor=corr_factor, blocks=True, firsttime=firsttime,label=str(iblock),TOTAL_STEPS=TOTAL_STEPS))
       #
       with PdfPages(output+'.kappa_convergence.pdf') as pdf:
-         plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, TOTAL_STEPS, DT_FS)
+         plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, block_length, DT_FS)
          pdf.savefig()
          plt.close()
          
          np.savetxt(output+'.kappa_convergence.dat', \
-                    np.transpose(np.array([DT_FS*np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+                    np.transpose(np.array([DT_FS*np.arange(block_length, block_length*block_number+1, block_length), \
                               np.transpose(kappas)[0], np.transpose(kappas)[1]])), header='time[fs]    kappa[W/mK]    kappa_std[W/mK]')
    else:
       analyze(jindex=jindex, selected_keys=selected_keys, jdata=jdata, START_STEP=START_STEP, NSTEPS=NSTEPS, logfile=logfile,\
@@ -345,14 +339,14 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None,kappa_tic
     ax2.yaxis.set_major_locator(MultipleLocator(dy1))
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-def plt_kappa_convergence(kappas, std_kappas, NBLOCKS, NSTEPS, DT_FS):
-    plt.fill_between(np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+def plt_kappa_convergence(kappas, std_kappas, block_number, block_length, DT_FS):
+    plt.fill_between(DT_FS*np.arange(block_length, block_length*block_number+1, block_length), \
                      kappas - std_kappas, kappas + std_kappas, alpha=.3, color=c[4]);
-    plt.plot(DT_FS*np.arange(NSTEPS // NBLOCKS, (NSTEPS // NBLOCKS)*NBLOCKS+1, NSTEPS // NBLOCKS), \
+    plt.plot(DT_FS*np.arange(block_length, block_length*block_number+1, block_length), \
              kappas, label=r'Kappa VS time', marker='o', c=c[4]);
     plt.xlabel(r'Time (fs)');
-    plt.ylabel('$\kappa$ (W/mK)');
-    plt.xlim([0.95*(NSTEPS // NBLOCKS), 1.05*((NSTEPS // NBLOCKS)*NBLOCKS)]);
+    plt.ylabel(r'$\kappa$ (W/mK)');
+    plt.xlim([0.9*block_length*DT_FS, 1.05*DT_FS*block_length*block_number]);
 
 def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_tick=None,f_tick=None):
 
