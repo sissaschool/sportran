@@ -396,7 +396,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
       return xf
 
 
-def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None, **plot_kwargs):
+def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None, in_analysis=False, **plot_kwargs):
    """
    Simulate the resampling of x.
      TSKIP        = sampling time [steps]
@@ -415,8 +415,12 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
    for TSKIP in TSKIP_LIST:
       print 'TSKIP =  {:d}'.format(TSKIP)
       xff = resample_current(x, TSKIP, plot=False)
-      xff.cepstral_analysis(aic_type, Kmin_corrfactor)
+      if not in_analysis:
+         xff.cepstral_analysis(aic_type, Kmin_corrfactor)
       xf.append( xff )
+   if in_analysis:
+      return xf
+
    FSTAR_THZ_LIST = [ xff.Nyquist_f_THz for xff in xf ]
 
    if plot:
