@@ -315,10 +315,9 @@ Contact: lercole@sissa.it
             firsttime = True
          else:
             firsttime = False
-         kappas.append(analyze(jindex=jindex, selected_keys=selected_keys, jdata=jdata, START_STEP=START_STEP, NSTEPS=i_NSTEPS, logfile=logfile,\
-                 units=units, DT_FS=DT_FS, temperature=temperature, volume=volume, psd_filter_w=psd_filter_w,\
-                 ncurrents=ncurrents, output=output, binout=binout, args=args, chosenP=chosenP, aic_type=aic_type, corr_factor=corr_factor,\
-                 label=str(iblock), blocks=True, firsttime=firsttime,TOTAL_STEPS=TOTAL_STEPS, resample=resample, TSKIP=TSKIP, FSTAR=FSTAR))
+         kappas.append(analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
+            ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample, TSKIP=TSKIP, FSTAR=FSTAR,\
+            label='_'+str(iblock), blocks=True, firsttime=firsttime,TOTAL_STEPS=TOTAL_STEPS))
       #
       with PdfPages(output+'.kappa_convergence.pdf') as pdf:
          plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, block_length, DT_FS)
@@ -328,20 +327,28 @@ Contact: lercole@sissa.it
          np.savetxt(output+'.kappa_convergence.dat', \
                     np.transpose(np.array([DT_FS*np.arange(block_length, block_length*block_number+1, block_length), \
                               np.transpose(kappas)[0], np.transpose(kappas)[1]])), header='time[fs]    kappa[W/mK]    kappa_std[W/mK]')
-
 #  FSTAR analysis
    elif FSTAR_analysis:
-      analyze(jindex=jindex, selected_keys=selected_keys, jdata=jdata, START_STEP=START_STEP, NSTEPS=NSTEPS, logfile=logfile,\
-                 units=units, DT_FS=DT_FS, temperature=temperature, volume=volume, psd_filter_w=psd_filter_w,\
-                 ncurrents=ncurrents, output=output, binout=binout, args=args, chosenP=chosenP, aic_type=aic_type, corr_factor=corr_factor,\
-                 resample=resample, TSKIP=None, FSTAR=None, FSTAR_LIST=FSTAR_LIST) 
-   
+      kappas = []
+      for i_f, FSTAR in enumerate(FSTAR_LIST):
+         if i_f == 0:
+            firsttime = True
+         else:
+            firsttime = False
+         kappas.append(analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
+            ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample,\
+            TSKIP=TSKIP, FSTAR=FSTAR, FSTAR_analysis=True, label='_'+str(FSTAR), firsttime=firsttime))
+
+      with PdfPages(output+'.FSTAR_convergence.pdf') as pdf:
+         plt_FSTAR_analysis(np.transpose(kappas)[0], np.transpose(kappas)[1], FSTAR_LIST, pdf)
+
+         np.savetxt(output+'.FSTAR_convergence.dat', \
+                    np.transpose(np.array([FSTAR_LIST, np.transpose(kappas)[0], np.transpose(kappas)[1]], dtype = np.float64)),\
+                    header='FSTAR[THz]    kappa[W/mK]    kappa_std[W/mK]')
 #  Normal analysis
    else:
-      analyze(jindex=jindex, selected_keys=selected_keys, jdata=jdata, START_STEP=START_STEP, NSTEPS=NSTEPS, logfile=logfile,\
-                 units=units, DT_FS=DT_FS, temperature=temperature, volume=volume, psd_filter_w=psd_filter_w,\
-                 ncurrents=ncurrents, output=output, binout=binout, args=args, chosenP=chosenP, aic_type=aic_type, corr_factor=corr_factor,\
-                 resample=resample, TSKIP=TSKIP, FSTAR=FSTAR)    
+      analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
+            ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample, TSKIP=TSKIP, FSTAR=FSTAR)
 
    logfile.close()
    return 0
@@ -386,11 +393,30 @@ def plt_kappa_convergence(kappas, std_kappas, block_number, block_length, DT_FS)
     plt.fill_between(DT_FS*np.arange(block_length, block_length*block_number+1, block_length), \
                      kappas - std_kappas, kappas + std_kappas, alpha=.3, color=c[4]);
     plt.plot(DT_FS*np.arange(block_length, block_length*block_number+1, block_length), \
-             kappas, label=r'Kappa VS time', marker='o', c=c[4]);
+             kappas, marker='o', color=c[4]);
     plt.xlabel(r'Time (fs)');
     plt.ylabel(r'$\kappa$ (W/mK)');
-    plt.xlim([0.9*block_length*DT_FS, 1.05*DT_FS*block_length*block_number]);
+    plt.xlim([0, 1.02*DT_FS*block_length*block_number]);
 
+def plt_FSTAR_analysis(kappas, std_kappas, FSTAR_LIST, pdf):
+    plt.fill_between(FSTAR_LIST, kappas-std_kappas, kappas+std_kappas, alpha=.3, color=c[4]);
+    plt.plot(FSTAR_LIST, kappas, marker = 'o', color=c[4]);
+    plt.xlabel(r'$f^*$ (THz)')
+    plt.ylabel(r'$\kappa$ (W/mK)')
+    plt.xlim([0.95*np.min(FSTAR_LIST), 1.05*np.max(FSTAR_LIST)])
+    plt.ylim([0.95*np.min(kappas-std_kappas), 1.05*np.max(kappas+std_kappas)])
+    pdf.savefig()
+    plt.close()
+    #
+    plt.plot(FSTAR_LIST, std_kappas, marker = 'o', color=c[4]);
+    plt.xlabel(r'$f^*$ (THz)')
+    plt.ylabel(r'$\varepsilon_\kappa$ (W/mK)')
+    plt.xlim([0.95*np.min(FSTAR_LIST), 1.05*np.max(FSTAR_LIST)])
+    plt.ylim([0.95*np.min(std_kappas), 1.05*np.max(std_kappas)])
+    pdf.savefig()
+    plt.close()
+    #
+    
 def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_tick=None,f_tick=None):
 
     if f_THz_max==None:
@@ -410,18 +436,18 @@ def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_tick=None,f_tic
     if k_SI_max==None:
        k_SI_max=np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*.5) *1.3
 
-    plt.figure(figsize=(3.8,2.3))
+    #plt.figure(figsize=(3.8,2.3))
     plt.plot(jf.freqs_THz,jf.psd*jf.kappa_scale*.5,lw=0.2,c='0.8',zorder=0)
-    plt.plot(jf.freqs_THz,jf.fpsd*jf.kappa_scale*.5,c=c[0],zorder=2)
+    plt.plot(jf.freqs_THz,jf.fpsd*jf.kappa_scale*.5,c=c[0],zorder=1)
     if j2 != None:
         plt.axvline(x=j2.Nyquist_f_THz,ls='--', c='k', dashes=(1.4,0.6), zorder=3)
     if j2pl != None:
-       plt.plot(j2pl.freqs_THz,j2pl.dct.psd*j2pl.kappa_scale*.5,c=c[1],zorder=1)
+       plt.plot(j2pl.freqs_THz,j2pl.dct.psd*j2pl.kappa_scale*.5,c=c[1],zorder=2)
 
     plt.ylim([0,k_SI_max])
     plt.xlim([0,f_THz_max])
-    plt.xlabel('$\omega/2\pi$ (THz)')
-    plt.ylabel('${}^{\ell}\hat{\underline{S}}_{\,k}$ (W/mK)')
+    plt.xlabel(r'$\omega/2\pi$ (THz)')
+    plt.ylabel(r'${}^{\ell}\hat{\underline{S}}_{\,k}$ (W/mK)')
     
     if f_tick==None:
        dx1,dx2=n_tick_in_range(0,f_THz_max,5)
@@ -458,17 +484,8 @@ def index_cumsum(arr,p):
 ######################################################################################################################
 
 def analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
-            ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample, TSKIP=None, FSTAR=None, FSTAR_LIST=None,\
+            ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample, TSKIP=None, FSTAR=None, FSTAR_analysis=False,\
             label='', blocks=False, firsttime=False, kappas=None,TOTAL_STEPS=None):
-
-   if (TSKIP is None and FSTAR is None and FSTAR_LIST is None):
-      raise ValueError('No TSKIP, FSTAR nor FSTAR_LIST in function "analyze".')
-   elif (FSTAR_LIST is not None and (FSTAR is not None or TSKIP is not None)):
-      raise ValueError('You must specify either FSTAR_LIST or one between TSKIP and FSTAR.')
-   elif (FSTAR_LIST is not None and (FSTAR is None and TSKIP is None)):
-      FSTAR_analysis = True
-   else:
-      FSTAR_analysis = False
 
    if jindex is None:
       currents = np.array([jdata[key][START_STEP:START_STEP+NSTEPS,:] for key in selected_keys])
@@ -483,7 +500,7 @@ def analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT
    # create HeatCurrent object
    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
 
-   if (not blocks) or firsttime:
+   if (not blocks) or firsttime or (not FSTAR_analysis):
       print( ' Number of components = {}'.format(j.N_COMPONENTS))
       logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
       print( ' kappa_scale = {}'.format(j.kappa_scale))
@@ -500,193 +517,198 @@ def analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT
       print(' Steps from {} to {} of {}\n'.format(START_STEP,START_STEP+NSTEPS,TOTAL_STEPS)) 
       logfile.write(' Analyze block number {}: \n'.format(int(label)+1))
       logfile.write(' Steps from {} to {} of {}\n'.format(START_STEP,START_STEP+NSTEPS,TOTAL_STEPS))
+
+   if FSTAR_analysis:
+      print('\n')
+      print(' Resampling frequency = {}:\n'.format(FSTAR))
+      logfile.write('\n')
+      logfile.write(' Resampling frequency = {}:\n'.format(FSTAR))
    
    with PdfPages(output + ".plots.pdf") as pdf:
 
-      # plot periodogram
-      j.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
-      #pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
-      pdf.savefig()
-      plt.close()
-
-      if binout:
-         outarray = np.array([j.freqs_THz, j.fpsd, j.flogpsd, j.psd, j.logpsd])
-         try:
-           np.save(output + ".psd.npy", outarray, allow_pickle=False)
-         except TypeError:
-           np.save(output + ".psd.npy", outarray)
-
-         if j.multicomponent:
-            outarray = np.array([j.freqs_THz,j.cospectrum])
-            print "saving cospectrum", j.cospectrum.shape
-            try:
-               np.save(output + ".cospectrum.npy", outarray, allow_pickle=True)
-            except TypeError:
-               np.save(output + ".cospectrum.npy", outarray)
-      else:
-         outfile = open(output + '.psd.dat', 'w')
-         outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
-         outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-         np.savetxt(outfile, outarray)
-         outfile.close()
-         if j.multicomponent:
-            outfile = open(output + '.cospectrum.dat', 'w')
-            outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
-            np.savetxt(outfile, outarray)
-            outfile.close()
-      # resample and plot
-      if resample:
+      if ((not FSTAR_analysis) or (FSTAR_analysis and firsttime)):
          if FSTAR_analysis:
-            TSKIP_LIST = [int(round(j.Nyquist_f_THz/f)) for f in FSTAR_LIST]
-            jf_list = tc.heatcurrent.fstar_analysis(j, TSKIP_LIST, aic_type=aic_type, Kmin_corrfactor=1.0, in_analysis=True) 
-         else:
-            if TSKIP is not None:
-               jf, ax = tc.heatcurrent.resample_current(j, TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
-            elif FSTAR is not None:
-               jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
-            ax[0].set_xlim([0, 2.5*FSTAR])
-            pdf.savefig()
-            plt.close()
-            logfile.write(jf.resample_log)
-
-            # plot resampled periodogram
-            ax = jf.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
-            pdf.savefig()
-            plt.close()
-
-            if binout:
-               outarray = np.array([jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd])
-               try:
-                  np.save(output + ".resampled_psd.npy", outarray, allow_pickle=False)
-               except TypeError:
-                  np.save(output + ".resampled_psd.npy", outarray)
-            else:
-               outfile = open(output + '.resampled_psd.dat', 'w')
-               outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
-               outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-               np.savetxt(outfile, outarray)
-               outfile.close()
-            ax_list=[ax]
-            jf_list = [jf]
-      else:
-         ax_list = []
-         jf_list = [j]
-
-      for i_list, jf in enumerate(jf_list):
-         plt_psd(j,jf,\
-                   f_THz_max=args.plot_psd_max_THz,\
-                   k_SI_max=args.plot_psd_max_kappa,\
-                   k_tick=args.plot_psd_kappa_tick_interval,\
-                   f_tick=args.plot_psd_THz_tick_interval)
+            output_tmp = output
+            output = output_master       # only one output, for now
+         # plot periodogram
+         j.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
+         #pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
          pdf.savefig()
          plt.close()
-         plt_psd(jf,\
+
+         if binout:
+            outarray = np.array([j.freqs_THz, j.fpsd, j.flogpsd, j.psd, j.logpsd])
+            try:
+              np.save(output + ".psd.npy", outarray, allow_pickle=False)
+            except TypeError:
+              np.save(output + ".psd.npy", outarray)
+
+            if j.multicomponent:
+               outarray = np.array([j.freqs_THz,j.cospectrum])
+               print "saving cospectrum", j.cospectrum.shape
+               try:
+                  np.save(output + ".cospectrum.npy", outarray, allow_pickle=True)
+               except TypeError:
+                  np.save(output + ".cospectrum.npy", outarray)
+         else:
+            outfile = open(output + '.psd.dat', 'w')
+            outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
+            outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+            np.savetxt(outfile, outarray)
+            outfile.close()
+            if j.multicomponent:
+               outfile = open(output + '.cospectrum.dat', 'w')
+               outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
+               np.savetxt(outfile, outarray)
+               outfile.close()
+      
+      if FSTAR_analysis and firsttime: 
+         output = output_tmp          # restore the correct output label
+
+      # resample and plot
+      if resample:
+         if TSKIP is not None:
+            jf, ax = tc.heatcurrent.resample_current(j, TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
+         elif FSTAR is not None:
+            jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
+         ax[0].set_xlim([0, 2.5*FSTAR])
+         pdf.savefig()
+         plt.close()
+         logfile.write(jf.resample_log)
+
+         # plot resampled periodogram
+         ax = jf.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
+         pdf.savefig()
+         plt.close()
+
+         if binout:
+            outarray = np.array([jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd])
+            try:
+               np.save(output + ".resampled_psd.npy", outarray, allow_pickle=False)
+            except TypeError:
+               np.save(output + ".resampled_psd.npy", outarray)
+         else:
+            outfile = open(output + '.resampled_psd.dat', 'w')
+            outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
+            outfile.write('#freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+            np.savetxt(outfile, outarray)
+            outfile.close()
+      else:
+         jf = j
+
+      plt_psd(j,jf,\
               f_THz_max=args.plot_psd_max_THz,\
               k_SI_max=args.plot_psd_max_kappa,\
               k_tick=args.plot_psd_kappa_tick_interval,\
               f_tick=args.plot_psd_THz_tick_interval)
-         pdf.savefig()
-         plt.close()
+      pdf.savefig()
+      plt.close()
+      plt_psd(jf,\
+              f_THz_max=args.plot_psd_max_THz,\
+              k_SI_max=args.plot_psd_max_kappa,\
+              k_tick=args.plot_psd_kappa_tick_interval,\
+              f_tick=args.plot_psd_THz_tick_interval)
+      pdf.savefig()
+      plt.close()
 
-         # cepstral analysis
-         if chosenP is None:
-            jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor,min_value_AIC=2)
-            logfile.write(jf.cepstral_log)
-         else:
-            jf.cepstral_analysis(aic_type='fixed', Kmin_corrfactor=corr_factor,min_value_AIC=2, chosenP=chosenP)
-            logfile.write(jf.cepstral_log)
-
-
-
-         plt_psd(jf,jf,jf,\
-                 f_THz_max=args.plot_psd_max_THz,\
-                 k_SI_max=args.plot_psd_max_kappa,\
-                 k_tick=args.plot_psd_kappa_tick_interval,\
-                 f_tick=args.plot_psd_THz_tick_interval)
-         pdf.savefig()
-         plt.close()
+      # cepstral analysis
+      if chosenP is None:
+         jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor,min_value_AIC=2)
+         logfile.write(jf.cepstral_log)
+      else:
+         jf.cepstral_analysis(aic_type='fixed', Kmin_corrfactor=corr_factor,min_value_AIC=2, chosenP=chosenP)
+         logfile.write(jf.cepstral_log)
 
 
-         # plot cepstral coefficients
-         ax = jf.plot_ck()
-         ax.set_xlim([0, 5*jf.dct.aic_Kmin])
-   #     ax.set_ylim([-0.5, 0.5])
-         ax.grid();
-         pdf.savefig()
-         plt.close()
 
-         # plot L0(Pstar)
-         ax = jf.plot_L0_Pstar()
-         ax.set_xlim([0, 10*jf.dct.aic_Kmin])
-         pdf.savefig()
-         plt.close()
+      plt_psd(jf,jf,jf,\
+              f_THz_max=args.plot_psd_max_THz,\
+              k_SI_max=args.plot_psd_max_kappa,\
+              k_tick=args.plot_psd_kappa_tick_interval,\
+              f_tick=args.plot_psd_THz_tick_interval)
+      pdf.savefig()
+      plt.close()
 
-         # plot kappa(Pstar)
-#         ax = jf.plot_kappa_Pstar()
-#         ax.set_xlim([0, 10*jf.dct.aic_Kmin])
 
-         plt_cepstral_conv(jf,\
-                           pstar_max=args.plot_conv_max_pstar,\
-                           pstar_tick=args.plot_conv_pstar_tick_interval,\
-                           k_SI_max=args.plot_conv_max_kappa,\
-                           kappa_tick=args.plot_conv_kappa_tick_interval)
-         pdf.savefig()
-         plt.close()
-         if binout:
-            outarray = np.array([jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5])
-            try:
-              np.save(output + '.cepstral', outarray, allow_pickle=False)
-            except TypeError:
-              np.save(output + '.cepstral', outarray)
-         else:
-            outfile = open(output + '.cepstral.dat', 'w')
-            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
-            outfile.write('#ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
-            np.savetxt(outfile, outarray)
-            outfile.close()
+      # plot cepstral coefficients
+      ax = jf.plot_ck()
+      ax.set_xlim([0, 5*jf.dct.aic_Kmin])
+#     ax.set_ylim([-0.5, 0.5])
+      ax.grid();
+      pdf.savefig()
+      plt.close()
 
-         # plot cepstral log-PSD
-         #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
-         ax = jf.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
-         jf.plot_cepstral_spectrum(axes=ax, label='cepstrum-filtered')
-         ax[0].axvline(x = jf.Nyquist_f_THz, ls='--', c='r')
-         ax[1].axvline(x = jf.Nyquist_f_THz, ls='--', c='r')
-         #ax[0].set_xlim([0., 2.5*FSTAR_THZ])
-         #ax[1].set_ylim([12,18])
-         #ax[0].legend(['original', 'resampled', 'cepstrum-filtered'])
-         #ax[1].legend(['original', 'resampled', 'cepstrum-filtered']);
-         plt.close()
-         if binout:
-            outarray = np.array([jf.freqs_THz, jf.dct.psd, jf.dct.logpsd])
-            try:
-               np.save(output+".cepstrumfiltered_psd", outarray, allow_pickle=False)
-            except TypeError:
-               np.save(output+".cepstrumfiltered_psd", outarray)
-         else:
-            outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
-            outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
-            outfile.write('#freqs_THz  cepf_psd cepf_logpsd\n')
-            np.savetxt(outfile, outarray)
+      # plot L0(Pstar)
+      ax = jf.plot_L0_Pstar()
+      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
+      pdf.savefig()
+      plt.close()
 
-         if (not blocks) or firsttime:
-            conv_fact=open(output_master +'.kappa_scale_aicKmin.dat','w')
+      # plot kappa(Pstar)
+#     ax = jf.plot_kappa_Pstar()
+#     ax.set_xlim([0, 10*jf.dct.aic_Kmin])
 
-            if units=='metal':
-                print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
-                conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
-            elif units=='real':
-                print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
-                conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
-            elif units=='dlpoly':
-                print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS))
-                conv_fact.write('{}\n'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS)))
-            conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
+      plt_cepstral_conv(jf,\
+                        pstar_max=args.plot_conv_max_pstar,\
+                        pstar_tick=args.plot_conv_pstar_tick_interval,\
+                        k_SI_max=args.plot_conv_max_kappa,\
+                        kappa_tick=args.plot_conv_kappa_tick_interval)
+      pdf.savefig()
+      plt.close()
+      if binout:
+         outarray = np.array([jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5])
+         try:
+           np.save(output + '.cepstral', outarray, allow_pickle=False)
+         except TypeError:
+           np.save(output + '.cepstral', outarray)
+      else:
+         outfile = open(output + '.cepstral.dat', 'w')
+         outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
+         outfile.write('#ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
+         np.savetxt(outfile, outarray)
+         outfile.close()
 
-            conv_fact.close()
+      # plot cepstral log-PSD
+      #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
+      ax = jf.plot_periodogram()  #PSD_FILTER_W=psd_filter_w)
+      jf.plot_cepstral_spectrum(axes=ax, label='cepstrum-filtered')
+      ax[0].axvline(x = jf.Nyquist_f_THz, ls='--', c='r')
+      ax[1].axvline(x = jf.Nyquist_f_THz, ls='--', c='r')
+      #ax[0].set_xlim([0., 2.5*FSTAR_THZ])
+      #ax[1].set_ylim([12,18])
+      #ax[0].legend(['original', 'resampled', 'cepstrum-filtered'])
+      #ax[1].legend(['original', 'resampled', 'cepstrum-filtered']);
+      plt.close()
+      if binout:
+         outarray = np.array([jf.freqs_THz, jf.dct.psd, jf.dct.logpsd])
+         try:
+            np.save(output+".cepstrumfiltered_psd", outarray, allow_pickle=False)
+         except TypeError:
+            np.save(output+".cepstrumfiltered_psd", outarray)
+      else:
+         outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
+         outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
+         outfile.write('#freqs_THz  cepf_psd cepf_logpsd\n')
+         np.savetxt(outfile, outarray)
+
+      if ((not blocks) and (not FSTAR_analysis)) or firsttime:
+         conv_fact=open(output_master +'.kappa_scale_aicKmin.dat','w')
+         if units=='metal':
+            print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
+            conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
+         elif units=='real':
+            print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
+            conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
+         elif units=='dlpoly':
+            print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS))
+            conv_fact.write('{}\n'.format(tc.md.scale_kappa_DLPOLYtoSI(temperature,volume,DT_FS)))
+            
+         conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
+         conv_fact.close()
    #
    # append kappa +/- kappa_std
    #
-   if blocks:
+   if blocks or FSTAR_analysis:
       kappas=np.array([jf.kappa_Kmin, jf.kappa_Kmin_std], dtype = np.float64)
       return kappas
    else:
