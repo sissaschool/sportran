@@ -5,7 +5,7 @@
 #  scipy
 #  matplotlib
 #  argparse
-
+#  pyWavelet
 
 
 #add to path the application directory
@@ -17,6 +17,8 @@ path.append(tc_path[:tc_path.rfind('/')])
 
 import argparse
 import numpy as np
+from scipy.special import polygamma
+import pywt
 #import scipy as sp
 import matplotlib
 matplotlib.use('Agg')
@@ -435,6 +437,7 @@ def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_tick=None,f_tic
 
     if k_SI_max==None:
        k_SI_max=np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*.5) *1.3
+    
 
     #plt.figure(figsize=(3.8,2.3))
     plt.plot(jf.freqs_THz,jf.psd*jf.kappa_scale*.5,lw=0.2,c='0.8',zorder=0)
