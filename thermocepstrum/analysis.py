@@ -18,7 +18,7 @@ path.append(tc_path[:tc_path.rfind('/')])
 import argparse
 import numpy as np
 from scipy.special import polygamma
-import pywt
+#import pywt
 #import scipy as sp
 import matplotlib
 matplotlib.use('Agg')
@@ -317,9 +317,9 @@ Contact: lercole@sissa.it
             firsttime = True
          else:
             firsttime = False
-         kappas.append(analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
+         kappas.append(analyze(jindex, selected_keys, jdata, START_STEP, i_NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
             ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample, TSKIP=TSKIP, FSTAR=FSTAR,\
-            label='_'+str(iblock), blocks=True, firsttime=firsttime,TOTAL_STEPS=TOTAL_STEPS))
+            label=str(iblock), blocks=True, firsttime=firsttime,TOTAL_STEPS=TOTAL_STEPS))
       #
       with PdfPages(output+'.kappa_convergence.pdf') as pdf:
          plt_kappa_convergence(np.transpose(kappas)[0], np.transpose(kappas)[1], block_number, block_length, DT_FS)
@@ -339,7 +339,7 @@ Contact: lercole@sissa.it
             firsttime = False
          kappas.append(analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
             ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample,\
-            TSKIP=TSKIP, FSTAR=FSTAR, FSTAR_analysis=True, label='_'+str(FSTAR), firsttime=firsttime))
+            TSKIP=TSKIP, FSTAR=FSTAR, FSTAR_analysis=True, label=str(FSTAR), firsttime=firsttime))
 
       with PdfPages(output+'.FSTAR_convergence.pdf') as pdf:
          plt_FSTAR_analysis(np.transpose(kappas)[0], np.transpose(kappas)[1], FSTAR_LIST, pdf)
@@ -488,7 +488,7 @@ def index_cumsum(arr,p):
 
 def analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT_FS, temperature, volume, psd_filter_w,\
             ncurrents, output, binout, args, chosenP, aic_type, corr_factor, resample, TSKIP=None, FSTAR=None, FSTAR_analysis=False,\
-            label='', blocks=False, firsttime=False, kappas=None,TOTAL_STEPS=None):
+            label='', blocks=False, firsttime=False, kappas=None, TOTAL_STEPS=None):
 
    if jindex is None:
       currents = np.array([jdata[key][START_STEP:START_STEP+NSTEPS,:] for key in selected_keys])
@@ -512,7 +512,8 @@ def analyze(jindex, selected_keys, jdata, START_STEP, NSTEPS, logfile, units, DT
       logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))    
    
    output_master = output
-   output += label
+   if label!='':
+      output += "_"+label
    
    if blocks:
       print('\n')
