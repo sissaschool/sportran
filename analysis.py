@@ -15,8 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 plt.rcParams['figure.figsize'] = (16, 9)
 plt.style.reload_library()
-plt.style.use('grafici_belli.mplstyle')
-plt.rc('text', usetex=True)
+#plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 from matplotlib.ticker import MultipleLocator
 
@@ -25,6 +24,7 @@ from sys import path, argv
 tc_path = argv[0][:argv[0].rfind('/')]
 path.append(tc_path[:tc_path.rfind('/')])
 import thermocepstrum as tc
+plt.style.use(tc_path+'/grafici_belli.mplstyle')
 import math
 
 def main():
@@ -88,9 +88,8 @@ Contact: lercole@sissa.it
    parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict'], help='format of the input file' )
    parser.add_argument( '--cindex', nargs='*', type=int, help='column indexes of the heatflux to read (0,1,2,...)' )
 
-   outarg = parser.add_mutually_exclusive_group()
-   outarg.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
-   outarg.add_argument( '-O', '--bin-output', type=str, help='prefix of the output files (use binary file)' )
+   parser.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
+   parser.add_argument( '-O', '--bin-output', action='store_true', help='save also binary files' )
 
    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real'], help='LAMMPS units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
@@ -114,12 +113,8 @@ Contact: lercole@sissa.it
    input_format = args.input_format
    jindex = args.cindex
    
-   if args.bin_output is not None:
-      binout = True
-      output = args.bin_output
-   else:
-      binout = False
-      output = args.output
+   output = args.output
+   binout = args.bin_output
 
    units = args.units
    temperature = args.temperature
@@ -239,6 +234,11 @@ Contact: lercole@sissa.it
    print ' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz)
    logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
+
+   if binout:
+      binoutobj = TCOutput()
+
+
    with PdfPages(output + ".plots.pdf") as pdf:
 
       # plot periodogram
@@ -248,14 +248,16 @@ Contact: lercole@sissa.it
       plt.close()
 
       if binout:
-         outarray = np.array([j.freqs_THz, j.fpsd, j.flogpsd, j.psd, j.logpsd])
-         np.save(output + ".psd.npy", outarray, allow_pickle=False)
-      else:
-         outfile = open(output + '.psd.dat', 'w')
-         outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
-         outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-         np.savetxt(outfile, outarray)
-         outfile.close()
+         binoutobj.j_freqs_THz = j.freqs_THz
+         binoutobj.j_fpsd      = j.fpsd
+         binoutobj.j_flogpsd   = j.flogpsd
+         binoutobj.j_psd       = j.psd
+         binoutobj.j_logpsd    = j.logpsd
+      outfile = open(output + '.psd.dat', 'w')
+      outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
+      outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+      np.savetxt(outfile, outarray)
+      outfile.close()
   
       # resample and plot
       if resample:
@@ -274,14 +276,16 @@ Contact: lercole@sissa.it
          plt.close()
 
          if binout:
-            outarray = np.array([jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd])
-            np.save(output + ".resampled_psd.npy", outarray, allow_pickle=False)
-         else:
-            outfile = open(output + '.resampled_psd.dat', 'w')
-            outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
-            outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-            np.savetxt(outfile, outarray)
-            outfile.close()
+            binoutobj.jf_freqs_THz = jf.freqs_THz
+            binoutobj.jf_fpsd      = jf.fpsd
+            binoutobj.jf_flogpsd   = jf.flogpsd
+            binoutobj.jf_psd       = jf.psd
+            binoutobj.jf_logpsd    = jf.logpsd
+         outfile = open(output + '.resampled_psd.dat', 'w')
+         outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
+         outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+         np.savetxt(outfile, outarray)
+         outfile.close()
       else:
          jf = j
 
@@ -323,14 +327,17 @@ Contact: lercole@sissa.it
       plt.close()
 
       if binout:
-         outarray = np.array([jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5])
-         np.save(output + '.cepstral', outarray, allow_pickle=False)
-      else:
-         outfile = open(output + '.cepstral.dat', 'w')
-         outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
-         outfile.write('ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
-         np.savetxt(outfile, outarray)
-         outfile.close()
+         binoutobj.jf_dct_logpsdK             = jf.dct.logpsdK
+         binoutobj.jf_dct_logpsdK_THEORY_std  = jf.dct.logpsdK_THEORY_std
+         binoutobj.jf_dct_logtau              = jf.dct.logtau
+         binoutobj.jf_dct_logtau_THEORY_std   = jf.dct.logtau_THEORY_std
+         binoutobj.jf_dct_kappa               = jf.dct.tau*jf.kappa_scale*0.5
+         binoutobj.jf_dct_kappa_THEORY_std    = jf.dct.tau_THEORY_std*jf.kappa_scale*0.5
+      outfile = open(output + '.cepstral.dat', 'w')
+      outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
+      outfile.write('ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
+      np.savetxt(outfile, outarray)
+      outfile.close()
    
       # plot cepstral log-PSD
       #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
@@ -344,31 +351,35 @@ Contact: lercole@sissa.it
       #ax[1].legend(['original', 'resampled', 'cepstrum-filtered']);
    
       if binout:
-         outarray = np.array([jf.freqs_THz, jf.dct.psd, jf.dct.logpsd])
-         np.save(output+".cepstrumfiltered_psd", outarray, allow_pickle=False)
-      else:
-         outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
-         outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
-         outfile.write('freqs_THz  cepf_psd cepf_logpsd\n')
-         np.savetxt(outfile, outarray)
+         binoutobj.jf_dct_psd                 = jf.dct.psd
+         binoutobj.jf_dct_logpsd              = jf.dct.logpsd
+      outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
+      outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
+      outfile.write('freqs_THz  cepf_psd cepf_logpsd\n')
+      np.savetxt(outfile, outarray,)
+      outfile.close()
 
-      conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
-      
-      if units=='metal':
-          print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
-          conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
-      elif units=='real':
-          print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
-          conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
-      conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))      
+      #conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
+      #
+      #if units=='metal':
+      #    print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
+      #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
+      #elif units=='real':
+      #    print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
+      #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
+      #conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))      
 
-      conv_fact.close()
-      
-
+      #conv_fact.close()
 
    logfile.close()
+
+   # write binary output
+   if binout:
+     np.save(output, binoutobj)
+
    return 0
 
+#################################
 
 def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
     if pstar_max==None:
@@ -383,8 +394,8 @@ def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
                      (jf.dct.tau+jf.dct.tau_THEORY_std)*jf.kappa_scale*.5,alpha=.3,color=c[4],zorder=-3)#'#3c8da8')
     ax2.plot(np.arange(jf.dct.logtau.shape[0])+1, jf.dct.tau*jf.kappa_scale*.5,\
              label=r'Cepstral method',marker='o',c=c[4],zorder=-3)#'#3c8da8')
-    ax2.set_xlabel('$P^*$')
-    ax2.set_ylabel('$\kappa$ (W/mK)')
+    ax2.set_xlabel(r'$P^*$')
+    ax2.set_ylabel(r'$\kappa$ (W/mK)')
     ax2.set_xlim([0,pstar_max])
     ax2.set_ylim([0, k_SI_max])
 #    ax2.grid()
@@ -416,8 +427,8 @@ def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None):
 
     plt.ylim([0,k_SI_max])
     plt.xlim([0,f_THz_max])
-    plt.xlabel('$\omega/2\pi$ (THz)')
-    plt.ylabel('${}^{\ell}\hat{\underline{S}}_{\,k}$ (W/mK)')
+    plt.xlabel(r'$\omega/2\pi$ (THz)')
+    plt.ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
     
     dx1,dx2=n_tick_in_range(0,f_THz_max,5)
     dy1,dy2=n_tick_in_range(0,k_SI_max,5)
@@ -442,6 +453,30 @@ def index_cumsum(arr,p):
     while arr_int[idx]<p:
         idx=idx+1
     return idx
+
+class TCOutput(object):
+   def __init__(self):
+      # TO BE COMPLETED WIHT ALL PARAMETERS
+      self.j_freqs_THz                = None
+      self.j_fpsd                     = None
+      self.j_flogpsd                  = None
+      self.j_psd                      = None
+      self.j_logpsd                   = None
+
+      self.jf_freqs_THz               = None
+      self.jf_fpsd                    = None
+      self.jf_flogpsd                 = None
+      self.jf_psd                     = None
+      self.jf_logpsd                  = None
+
+      self.jf_dct_logpsdK             = None
+      self.jf_dct_logpsdK_THEORY_std  = None
+      self.jf_dct_logtau              = None
+      self.jf_dct_logtau_THEORY_std   = None
+      self.jf_dct_kappa               = None
+      self.jf_dct_kappa_THEORY_std    = None
+      self.jf_dct_psd                 = None
+      self.jf_dct_logpsd              = None
 
 if __name__ == "__main__":
    main()
