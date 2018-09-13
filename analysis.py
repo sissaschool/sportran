@@ -192,7 +192,8 @@ Contact: lercole@sissa.it
       if 'Temp' in jdata:
          temperature = np.mean(jdata['Temp'])
          temperature_std = np.std(jdata['Temp'])
-         selected_keys.remove('Temp')
+         if 'Temp' in selected_keys:
+            selected_keys.remove('Temp')
          print ' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std)
          logfile.write(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
       elif 'Temp_ave' in jdata:
@@ -214,6 +215,7 @@ Contact: lercole@sissa.it
       if structurefile is not None:
          _, volume= tc.i_o.read_lammps_datafile.get_box(structurefile)
          print ' Volume (structure file):    {} A^3'.format(volume)
+         logfile.write(' Volume (structure file):    {} A^3'.format(volume))
       elif 'Volume' in jdata:
          volume = jdata['Volume']
          print ' Volume (file):    {} A^3'.format(volume)
@@ -263,11 +265,14 @@ Contact: lercole@sissa.it
       plt.close()
 
       if binout:
+         binoutobj.j_DT_FS     = j.DT_FS
          binoutobj.j_freqs_THz = j.freqs_THz
          binoutobj.j_fpsd      = j.fpsd
          binoutobj.j_flogpsd   = j.flogpsd
          binoutobj.j_psd       = j.psd
          binoutobj.j_logpsd    = j.logpsd
+         binoutobj.j_Nyquist_f_THz = j.Nyquist_f_THz
+         binoutobj.j_PSD_FILTER_W_THz = psd_filter_w
       outfile = open(output + '.psd.dat', 'w')
       outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
       outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
@@ -291,11 +296,14 @@ Contact: lercole@sissa.it
          plt.close()
 
          if binout:
+            binoutobj.jf_DT_FS     = jf.DT_FS
             binoutobj.jf_freqs_THz = jf.freqs_THz
             binoutobj.jf_fpsd      = jf.fpsd
             binoutobj.jf_flogpsd   = jf.flogpsd
             binoutobj.jf_psd       = jf.psd
             binoutobj.jf_logpsd    = jf.logpsd
+            binoutobj.jf_Nyquist_f_THz = jf.Nyquist_f_THz
+            binoutobj.jf_resample_log = jf.resample_log
          outfile = open(output + '.resampled_psd.dat', 'w')
          outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
          outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
@@ -314,6 +322,14 @@ Contact: lercole@sissa.it
       # cepstral analysis
       jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor)
       logfile.write(jf.cepstral_log)
+      if binout:
+         binoutobj.kappa_Kmin      = jf.kappa_Kmin
+         binoutobj.kappa_Kmin_std  = jf.kappa_Kmin_std
+         binoutobj.cepstral_log    = jf.cepstral_log
+         binoutobj.units           = jf.units
+         binoutobj.kappa_scale     = jf.kappa_scale
+         binoutobj.TEMPERATURE     = temperature
+         binoutobj.VOLUME          = volume
 
       plt_psd(jf,jf,jf)
       pdf.savefig()
@@ -348,6 +364,8 @@ Contact: lercole@sissa.it
          binoutobj.jf_dct_logtau_THEORY_std   = jf.dct.logtau_THEORY_std
          binoutobj.jf_dct_kappa               = jf.dct.tau*jf.kappa_scale*0.5
          binoutobj.jf_dct_kappa_THEORY_std    = jf.dct.tau_THEORY_std*jf.kappa_scale*0.5
+         binoutobj.jf_dct_aic_Kmin            = jf.dct.aic_Kmin
+         binoutobj.jf_dct_Kmin_corrfactor     = jf.dct.Kmin_corrfactor
       outfile = open(output + '.cepstral.dat', 'w')
       outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
       outfile.write('ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
@@ -472,17 +490,23 @@ def index_cumsum(arr,p):
 class TCOutput(object):
    def __init__(self):
       # TO BE COMPLETED WIHT ALL PARAMETERS
+      self.j_DT_FS                    = None
       self.j_freqs_THz                = None
       self.j_fpsd                     = None
       self.j_flogpsd                  = None
       self.j_psd                      = None
       self.j_logpsd                   = None
+      self.j_Nyquist_f_THz            = None
+      self.j_PSD_FILTER_W_THz         = None
 
+      self.jf_DT_FS                   = None
       self.jf_freqs_THz               = None
       self.jf_fpsd                    = None
       self.jf_flogpsd                 = None
       self.jf_psd                     = None
       self.jf_logpsd                  = None
+      self.jf_Nyquist_f_THz           = None
+      self.jf_resample_log            = None
 
       self.jf_dct_logpsdK             = None
       self.jf_dct_logpsdK_THEORY_std  = None
@@ -492,6 +516,17 @@ class TCOutput(object):
       self.jf_dct_kappa_THEORY_std    = None
       self.jf_dct_psd                 = None
       self.jf_dct_logpsd              = None
+      self.jf_dct_aic_Kmin            = None
+      self.jf_dct_Kmin_corrfactor     = None
+
+      self.kappa_Kmin      = None
+      self.kappa_Kmin_std  = None
+      self.cepstral_log    = None
+      self.units           = None
+      self.kappa_scale     = None
+      self.TEMPERATURE     = None
+      self.VOLUME          = None
+      self.TSKIP           = None
 
 if __name__ == "__main__":
    main()
