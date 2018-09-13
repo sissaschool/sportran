@@ -102,11 +102,11 @@ class HeatCurrent(MDSample):
       elif (self.units == 'real'):
          self.kappa_scale = md.units.scale_kappa_REALtoSI(TEMPERATURE, VOLUME, 1.0)
       elif (self.units == 'dlpoly'):
-        self.kappa_scale = md.units.scale_kappa_DLPOLYtoSI(TEMPERATURE, VOLUME, 1.0)
+         self.kappa_scale = md.units.scale_kappa_DLPOLYtoSI(TEMPERATURE, VOLUME, 1.0)
       elif (self.units == 'charge'):
-        self.kappa_scale = md.units.scale_kappa_CHARGEtoSI(TEMPERATURE, VOLUME, 1.0)
+         self.kappa_scale = md.units.scale_kappa_CHARGEtoSI(TEMPERATURE, VOLUME, 1.0)
       elif (self.units == 'vel'):
-        self.kappa_scale = md.units.scale_kappa_VELtoSI(TEMPERATURE, VOLUME, 1.0)
+         self.kappa_scale = md.units.scale_kappa_VELtoSI(TEMPERATURE, VOLUME, 1.0)
       else:
          raise ValueError('Units not supported.')
       return
@@ -455,5 +455,3 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
 
 
 ################################################################################
-
-

@@ -1,8 +1,10 @@
 
 import numpy as np
+import pywt
 import matplotlib.pyplot as plt
 from .tools import integrate_acf, runavefilter
 from scipy.signal import periodogram
+from scipy.special import polygamma
 from .acf import acovf
 
 class MDSample(object):
@@ -442,3 +444,22 @@ class MDSample(object):
         plt.xticks(np.linspace(0.,0.5,11))
         plt.legend()
         return
+
+    def wavelet_analysis(self, wave, threshold=1.0):
+        '''' Performs Wavelet Denoising on the HeatCurrent Log-Spectrum. '''
+        def denoise(data,wavelet,factor):
+           ''' Discrete Wavelet Transform denoising on dataset. Threshold value given by
+           the Universal Threshold (Donoho & Johnston, Biometrika, 81(3), 1994)'''
+           levels = pywt.dwt_max_level(len(data), pywt.Wavelet(wavelet))
+           WC = pywt.wavedec(data,wavelet,level=levels)
+           threshold=factor*np.sqrt(2*np.log2(len(data)))
+           NWC = list(map(lambda x: pywt.threshold(x,threshold,'hard'), WC))
+           all_coeff = [item for sublist in WC[1:] for item in sublist]
+           err = np.sqrt(np.var(all_coeff)-factor**2)
+           return pywt.waverec(NWC, wavelet), err
+        self.DWT_filtered, self.kappa_std = denoise(self.logpsd, wave, np.sqrt(threshold))
+        self.DWT_filtered -= (polygamma(0,3) - np.log(3))
+        self.kappa_wavelet = np.exp(self.DWT_filtered[0]) 
+        self.kappa_std *= self.kappa_wavelet/self.DWT_filtered[0] * self.DWT_filtered[1]
+        return
+
