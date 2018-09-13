@@ -34,8 +34,10 @@ def main():
 --------------------------------------------------------------------------------
 This script performs the cepstral analysis. It outputs some results in the stdout and log file, and plots in pdf format.
 
-INPUT:
-For now the input must be a column-formatted text file, with a header in the same format of LAMMPS. The name of the lammps compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
+INPUT FORMAT:
+ - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the lammps compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
+ - dict   : a Numpy binary file containing a dictionary (e.g. obtained from the script i_o/read_lammps_log.py)
+ - lammps : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
 The average temperature is computed if a column with the header 'Temp' is found; otherwise you have to specify it.
 You must provide the name of the heat flux compute. You can also provide additional currents if your system is a multi-component fluid. 
 (Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
@@ -80,16 +82,18 @@ Contact: lercole@sissa.it
 
    parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
    parser.add_argument( 'inputfile', type=str, help='input file to read (default format: Table)' )
-   parser.add_argument( '-V', '--volume', type=float, help='Volume of the cell (Angstrom)' )
    parser.add_argument( '-t', '--timestep', type=float, required=True, help='Time step of the printed data (fs)' )
    parser.add_argument( '-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux' )
    parser.add_argument( '-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)' )
    parser.add_argument( '-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)' )
-   parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict'], help='format of the input file' )
-   parser.add_argument( '--cindex', nargs='*', type=int, help='column indexes of the heatflux to read (0,1,2,...)' )
+   parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict','lammps'], help='Format of the input file' )
+   parser.add_argument( '--cindex', nargs='*', type=int, help='Column indexes of the heatflux to read (0,1,2,...)' )
+   parser.add_argument( '--run-keyword', type=str, help='Keyword that identifies the run to be read (only for "lammps" format)' )
 
    parser.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
    parser.add_argument( '-O', '--bin-output', action='store_true', help='save also binary files' )
+   parser.add_argument( '-V', '--volume', type=float, help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile.' )
+   parser.add_argument( '--structure', type=str, help='LAMMPS data file containing the structure. Read to get Volume.' )
 
    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real'], help='LAMMPS units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
@@ -105,19 +109,21 @@ Contact: lercole@sissa.it
    args = parser.parse_args()
 
    inputfile = args.inputfile
-   volume = args.volume
    DT_FS = args.timestep
    j1_key = args.heatfluxkey
    NSTEPS = args.nsteps
    START_STEP = args.start_step
    input_format = args.input_format
    jindex = args.cindex
+   run_keyword = args.run_keyword
    
    output = args.output
    binout = args.bin_output
 
    units = args.units
    temperature = args.temperature
+   volume = args.volume
+   structurefile = args.structure
    resample = args.resample
    TSKIP = args.TSKIP
    FSTAR = args.FSTAR
@@ -170,6 +176,12 @@ Contact: lercole@sissa.it
       jdata = jfile.data
    elif (input_format == 'dict'):
       jdata = np.load(inputfile)
+   elif (input_format == 'lammps'):
+      jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
+      if temperature is None:
+         selected_keys.append('Temp')
+      jfile.read_datalines(NSTEPS, select_ckeys=selected_keys)
+      jdata = jfile.data
    else:
       raise NotImplemented('input format not implemented.')
 
@@ -193,18 +205,21 @@ Contact: lercole@sissa.it
             print ' Mean Temperature (file):      {} K'.format(temperature)
             logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
       else:
-         raise RuntimeError('No Temp key found')
+         raise RuntimeError('No Temp key found. Please provide Temperature (-T).')
    else:
       print ' Mean Temperature (input):  {} K'.format(temperature)
       logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
 
    if volume is None:
-      if 'Volume' in jdata:
+      if structurefile is not None:
+         _, volume= tc.i_o.read_lammps_datafile.get_box(structurefile)
+         print ' Volume (structure file):    {} A^3'.format(volume)
+      elif 'Volume' in jdata:
          volume = jdata['Volume']
          print ' Volume (file):    {} A^3'.format(volume)
          logfile.write(' Volume (file):    {} A^3\n'.format(volume))
       else:
-         raise RuntimeError('No Volume key found')
+         raise RuntimeError('No Volume key found. Please provide Volume (-V) of structure file (--structure).')
    else:
        print ' Volume (input):  {} A^3'.format(volume)
        logfile.write(' Volume (input):  {} A^3\n'.format(volume))
