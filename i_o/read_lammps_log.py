@@ -309,6 +309,7 @@ class LAMMPSLogFile(object):
             break
          if self.endrun_keyword in line:  # end-of-run keyword
             print "  endrun_keyword found."
+            step -= 1
             break
          values = np.array(line.split())
          if (values.size != self.NALLCKEYS):
@@ -339,6 +340,7 @@ class LAMMPSLogFile(object):
       if even_NSTEPS:
          if (NSTEPS%2 == 1):
             NSTEPS = NSTEPS - 1
+            print "  Retaining an even number of steps (even_NSTEPS=True)."
       for key, idx in self.ckey.iteritems():  # free the memory not used
          self.data[key] = self.data[key][:NSTEPS,:]
       print "  ( %d ) steps read." % (NSTEPS)
