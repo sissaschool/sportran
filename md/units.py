@@ -39,7 +39,7 @@ def scale_kappa_QEPWtoSI ( temp, volume, timestep ):
   return (charge/temp)**2/kB/volume*timestep*10000.*J_PWtoMETAL**2
 
 def scale_kappa_GPUMDtoSI ( temp, volume, timestep ):
-  """Conversion factor for the thermal conductivity from Quantum Espresso PW/HARTRIS units to SI units.
+  """Conversion factor for the thermal conductivity from GPUMD units to SI units.
   INPUT:    temp      =  temperature [ K ]
             volume    =  cell volume [ A^3 ]
             timestep  =  integration time step [ fs ]"""
@@ -49,4 +49,13 @@ def scale_kappa_GPUMDtoSI ( temp, volume, timestep ):
   massunit = 1.660538921
   charge = 1.6021765;
   return (charge)**3/(temp)**2/massunit/kB/volume*timestep*1.0e8
+
+def scale_kappa_DLPOLYtoSI ( temp, volume, timestep ):
+  """Conversion factor for the thermal conductivity from DL_POLY units to SI units.
+  INPUT:    temp      =  temperature [ K ]
+            volume    =  cell volume [ A^3 ]
+            timestep  =  integration time step [ fs ]"""
+  kB = 1.3806504
+  NA = 6.022140857;
+  return (1.0/NA/temp)**2/kB/volume*timestep*1e10
 
