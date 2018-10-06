@@ -5,6 +5,8 @@ from scipy.fftpack import dct
 from .tools import logtau_to_tau
 from .aic import *
 
+EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992  # Euler-Mascheroni constant
+
 ################################################################################
 
 def multicomp_cepstral_parameters( NF, N_COMPONENTS ):
