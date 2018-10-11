@@ -4,7 +4,6 @@
 figure.facecolor : 1.0
 figure.autolayout : False
 figure.figsize : 3.8, 2.3
-#figure.figsize : 3.2, 1.7
 figure.dpi : 300
 
 #text.usetex : True
@@ -42,6 +41,6 @@ ytick.minor.size : 2
 #grid.linestyle: :
 grid.linewidth: 0.1
 
-savefig.dpi : 300.0
+savefig.dpi : 300
 savefig.format : 'pdf'
 savefig.bbox : tight

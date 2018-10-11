@@ -88,6 +88,7 @@ Contact: lercole@sissa.it
    parser.add_argument( '-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)' )
    parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict','lammps'], help='Format of the input file' )
    parser.add_argument( '--cindex', nargs='*', type=int, help='Column indexes of the heatflux to read (0,1,2,...)' )
+   parser.add_argument( '--sindex', nargs='*', type=int, help='Column indexes of the heatflux to substract from the flux read with --cindex (3,4,5,...)' )
    parser.add_argument( '--run-keyword', type=str, help='Keyword that identifies the run to be read (only for "lammps" format)' )
 
    parser.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
@@ -115,6 +116,7 @@ Contact: lercole@sissa.it
    START_STEP = args.start_step
    input_format = args.input_format
    jindex = args.cindex
+   sindex = args.sindex
    run_keyword = args.run_keyword
    
    output = args.output
@@ -167,10 +169,14 @@ Contact: lercole@sissa.it
    selected_keys = [j1_key]
    selected_keys.extend(j2_keys)
 
+
+   ## Read data
    jdata = None
    if (input_format == 'table'):
       if temperature is None:
          selected_keys.append('Temp')
+#      if 'Press' in jfile.ckey:
+#         selected_keys.append('Press')
       jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
       jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
       jdata = jfile.data
@@ -180,6 +186,8 @@ Contact: lercole@sissa.it
       jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
       if temperature is None:
          selected_keys.append('Temp')
+#      if 'Press' in jfile.ckey:
+#         selected_keys.append('Press')
       jfile.read_datalines(NSTEPS, select_ckeys=selected_keys)
       jdata = jfile.data
    else:
@@ -188,10 +196,12 @@ Contact: lercole@sissa.it
    if NSTEPS==0:
       NSTEPS=jdata[jdata.keys()[0]].shape[0]
 
+
+   ## Define Temperature
    if temperature is None:
       if 'Temp' in jdata:
          temperature = np.mean(jdata['Temp'])
-         temperature_std = np.std(jdata['Temp'])
+         temperature_std = np.std(jdata['Temp'])  # this is wrong (needs block average)
          if 'Temp' in selected_keys:
             selected_keys.remove('Temp')
          print ' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std)
@@ -211,6 +221,8 @@ Contact: lercole@sissa.it
       print ' Mean Temperature (input):  {} K'.format(temperature)
       logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
 
+
+   ## Define Volume
    if volume is None:
       if structurefile is not None:
          _, volume= tc.i_o.read_lammps_datafile.get_box(structurefile)
@@ -229,11 +241,23 @@ Contact: lercole@sissa.it
    print ' Time step (input):  {} fs'.format(DT_FS)
    logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
+
+   ### Compute Pressure (optional)
+   #if 'Press' in jdata:
+   #   pressure = np.mean(jdata['Press'])
+   #   print ' Mean Pressure (computed):  {} K'.format(pressure)
+   #   logfile.write(' Mean Pressure (computed):  {} K'.format(pressure))
+
+
+   ## Define currents
    print selected_keys, jindex
    if jindex is None:
       currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),:] for key in selected_keys])
    else:
-      currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),jindex] for key in selected_keys])
+      if sindex is None:
+         currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),jindex] for key in selected_keys])
+      else:
+         currents = np.array([jdata[key][START_STEP:(START_STEP+NSTEPS),jindex]-jdata[key][START_STEP:(START_STEP+NSTEPS),sindex] for key in selected_keys])
    print '  currents shape is {}'.format(currents.shape)
    logfile.write('  currents shape is {}\n'.format(currents.shape))
    print 'snippet:'
@@ -416,7 +440,7 @@ Contact: lercole@sissa.it
 
 def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None):
     if pstar_max==None:
-       pstar_max=(jf.dct.aic_Kmin+1)*1.618
+       pstar_max=(jf.dct.aic_Kmin+1)*2.5
     if k_SI_max==None:
        k_SI_max=jf.dct.tau[jf.dct.aic_Kmin]*jf.kappa_scale
 
