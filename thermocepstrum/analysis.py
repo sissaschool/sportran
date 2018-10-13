@@ -31,7 +31,6 @@ from matplotlib.ticker import MultipleLocator
 
 
 import thermocepstrum as tc
-plt.style.use(tc_path+'/grafici_belli.mplstyle')
 import math
 
 def main():
@@ -99,15 +98,17 @@ Contact: lercole@sissa.it
    parser.add_argument( '--cindex', nargs='*', type=int, help='Column indexes of the heatflux to read (0,1,2,...)' )
    parser.add_argument( '--sindex', nargs='*', type=int, help='Column indexes of the heatflux to substract from the flux read with --cindex (3,4,5,...)' )
    parser.add_argument( '--run-keyword', type=str, help='Keyword that identifies the run to be read (only for "lammps" format)' )
-   parser.add_argument('--split', type=int, default=1, help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m.')
+   parser.add_argument( '--split', type=int, default=1, help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m.')
 
    parser.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
    parser.add_argument( '-O', '--bin-output', action='store_true', help='save also binary files' )
+   parser.add_argument( '--no-text-output', action='store_true', help='do not save text files' )
+   parser.add_argument( '--bin-output-old', action='store_true', help='use old format for binary files (compatibility)' )
+
    parser.add_argument( '-V', '--volume', type=float, help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile.' )
    parser.add_argument( '--structure', type=str, help='LAMMPS data file containing the structure. Read to get Volume.' )
-
-   parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'], help='LAMMPS units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
+   parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'], help='LAMMPS units (default: metal)' )
 
    parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR' )
    resamplearg = parser.add_mutually_exclusive_group()
@@ -140,6 +141,8 @@ Contact: lercole@sissa.it
    
    output = args.output
    binout = args.bin_output
+   binout_old = args.bin_output_old
+   no_text_out = args.no_text_output
 
    units = args.units
    temperature = args.temperature
@@ -338,20 +341,22 @@ Contact: lercole@sissa.it
          if j.multicomponent:
             binoutobj.j_cospectrum = j.cospectrum
             binoutobj.j_fcospectrum = j.fcospectrum
-      outfile = open(output + '.psd.dat', 'w')
-      outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
-      outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-      np.savetxt(outfile, outarray)
-      outfile.close()
-      if j.multicomponent:
-         outfile = open(output + '.cospectrum.dat', 'w')
-         outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
-         np.savetxt(outfile, outarray)
-         outfile.close()
-         outfile = open(output + '.cospectrum.filt.dat', 'w')
-         outarray = np.c_[j.freqs_THz,j.fcospectrum.reshape((j.fcospectrum.shape[0]*j.fcospectrum.shape[1],j.fcospectrum.shape[2])).transpose()]
-         np.savetxt(outfile, outarray)
-         outfile.close()
+      #TODO: move all output in one place?
+      if not no_text_out:
+        outfile = open(output + '.psd.dat', 'w')
+        outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
+        outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+        np.savetxt(outfile, outarray)
+        outfile.close()
+        if j.multicomponent:
+           outfile = open(output + '.cospectrum.dat', 'w')
+           outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
+           np.savetxt(outfile, outarray)
+           outfile.close()
+           outfile = open(output + '.cospectrum.filt.dat', 'w')
+           outarray = np.c_[j.freqs_THz,j.fcospectrum.reshape((j.fcospectrum.shape[0]*j.fcospectrum.shape[1],j.fcospectrum.shape[2])).transpose()]
+           np.savetxt(outfile, outarray)
+           outfile.close()
   
       # resample and plot
       if resample:
@@ -378,11 +383,12 @@ Contact: lercole@sissa.it
             binoutobj.jf_logpsd    = jf.logpsd
             binoutobj.jf_Nyquist_f_THz = jf.Nyquist_f_THz
             binoutobj.jf_resample_log = jf.resample_log
-         outfile = open(output + '.resampled_psd.dat', 'w')
-         outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
-         outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-         np.savetxt(outfile, outarray)
-         outfile.close()
+         if not no_text_out:
+            outfile = open(output + '.resampled_psd.dat', 'w')
+            outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
+            outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
+            np.savetxt(outfile, outarray)
+            outfile.close()
       else:
          jf = j
 
@@ -465,11 +471,12 @@ Contact: lercole@sissa.it
          binoutobj.jf_dct_kappa_THEORY_std    = jf.dct.tau_THEORY_std*jf.kappa_scale*0.5
          binoutobj.jf_dct_aic_Kmin            = jf.dct.aic_Kmin
          binoutobj.jf_dct_Kmin_corrfactor     = jf.dct.Kmin_corrfactor
-      outfile = open(output + '.cepstral.dat', 'w')
-      outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
-      outfile.write('ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
-      np.savetxt(outfile, outarray)
-      outfile.close()
+      if not no_text_out:
+         outfile = open(output + '.cepstral.dat', 'w')
+         outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
+         outfile.write('ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
+         np.savetxt(outfile, outarray)
+         outfile.close()
    
       # plot cepstral log-PSD
       #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
@@ -485,11 +492,12 @@ Contact: lercole@sissa.it
       if binout:
          binoutobj.jf_dct_psd                 = jf.dct.psd
          binoutobj.jf_dct_logpsd              = jf.dct.logpsd
-      outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
-      outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
-      outfile.write('freqs_THz  cepf_psd cepf_logpsd\n')
-      np.savetxt(outfile, outarray,)
-      outfile.close()
+      if not no_text_out:
+         outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
+         outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
+         outfile.write('freqs_THz  cepf_psd cepf_logpsd\n')
+         np.savetxt(outfile, outarray,)
+         outfile.close()
 
       #conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
       #
@@ -507,7 +515,10 @@ Contact: lercole@sissa.it
 
    # write binary output
    if binout:
-     np.save(output, binoutobj)
+     if binout_old:
+         binoutobj.write_old_binary(output)
+     else:
+         np.save(output, binoutobj)
 
    return 0
 
@@ -701,6 +712,29 @@ class TCOutput(object):
       self.TEMPERATURE     = None
       self.VOLUME          = None
       self.TSKIP           = None
+
+   def write_old_binary(self,output):
+      """Write old binary format."""
+      outarray = np.array([self.j_freqs_THz, self.j_fpsd, self.j_flogpsd, self.j_psd, self.j_logpsd])
+      np.save(output + ".psd.npy", outarray)
+
+      if self.j_cospectrum is not None:
+         outarray = np.array([self.j_freqs_THz, self.j_cospectrum])
+         np.save(output + ".cospectrum.npy", outarray)
+
+      if self.j_fcospectrum is not None:
+         outarray = np.array([self.j_freqs_THz, self.j_fcospectrum])
+         np.save(output + ".cospectrum.filt.npy", outarray)
+
+      outarray = np.array([self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd])
+      np.save(output + ".resampled_psd.npy", outarray)
+
+      outarray = np.array([self.jf_dct_logpsdK, self.jf_dct_logpsdK_THEORY_std, self.jf_dct_logtau, self.jf_dct_logtau_THEORY_std, self.jf_dct_kappa, self.jf_dct_kappa_THEORY_std])
+      np.save(output + '.cepstral', outarray)
+
+      outarray = np.array([self.jf_freqs_THz, self.jf_dct_psd, self.jf_dct_logpsd])
+      np.save(output + ".cepstrumfiltered_psd", outarray)
+
 
 if __name__ == "__main__":
    main()
