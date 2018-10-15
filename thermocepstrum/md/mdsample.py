@@ -262,6 +262,7 @@ class MDSample(object):
         ndf_chi = covarALL.shape[3]- len(other_spectrALL)
 
         # compute the sum over the last axis (x,y,z components):
+        self.L = covarALL.shape[3]   ## isn't is == to N_CURRENTS?
         self.cospectrum = covarALL.sum(axis=3)
 
         # compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
@@ -280,7 +281,6 @@ class MDSample(object):
         #multi_mdsample.ndf_chi = ndf_chi
         #multi_mdsample.cospectrum = cospectrum
         #return multi_mdsample
-
 
         self.ndf_chi = ndf_chi
         self.psd = multi_psd
@@ -342,6 +342,16 @@ class MDSample(object):
             raise ValueError('Filter window width not defined.')
         if (window_type == 'rectangular'):
             self.fpsd = runavefilter(self.psd, self.FILTER_WF)
+            try:  ## THIS IS HORRIBLE -- find another method to check its definition
+               self.fcospectrum = []
+               for i in xrange(self.cospectrum.shape[0]):
+                  self.fcospectrum.append([])
+                  for j in xrange(self.cospectrum.shape[1]):
+                     ffpsd = runavefilter(self.cospectrum[i,j], self.FILTER_WF)
+                     self.fcospectrum[i].append(ffpsd/self.L)
+               self.fcospectrum = np.asarray(self.fcospectrum)
+            except AttributeError:
+               pass
             if logpsd_filter_type == 1:
                self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
             else:

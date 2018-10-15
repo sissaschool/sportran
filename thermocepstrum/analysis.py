@@ -316,6 +316,7 @@ Contact: lercole@sissa.it
          binoutobj.j_PSD_FILTER_W_THz = psd_filter_w
          if j.multicomponent:
             binoutobj.j_cospectrum = j.cospectrum
+            binoutobj.j_fcospectrum = j.fcospectrum
       outfile = open(output + '.psd.dat', 'w')
       outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
       outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
@@ -323,7 +324,11 @@ Contact: lercole@sissa.it
       outfile.close()
       if j.multicomponent:
          outfile = open(output + '.cospectrum.dat', 'w')
-         outarray = np.c_[j.freqs_THz,j.cospectrum.transpose((2,0,1))]
+         outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
+         np.savetxt(outfile, outarray)
+         outfile.close()
+         outfile = open(output + '.cospectrum.filt.dat', 'w')
+         outarray = np.c_[j.freqs_THz,j.fcospectrum.reshape((j.fcospectrum.shape[0]*j.fcospectrum.shape[1],j.fcospectrum.shape[2])).transpose()]
          np.savetxt(outfile, outarray)
          outfile.close()
   
@@ -394,7 +399,15 @@ Contact: lercole@sissa.it
               f_tick=args.plot_psd_THz_tick_interval)
       pdf.savefig()
       plt.close()
-      
+
+      try:
+         for idx1 in range(ncurrents):
+            for idx2 in range(idx1, ncurrents):
+               plt_other(j, idx1, idx2)
+               pdf.savefig()
+               plt.close()
+      except:
+         pass
 
       # plot cepstral coefficients
       ax = jf.plot_ck()
@@ -516,9 +529,49 @@ def plt_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
 
+def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_tick=None, f_tick=None):
+    if f_THz_max is None:
+       idx_max = index_cumsum(np.abs(jf.fcospectrum[idx1][idx2]), 0.95)
+       f_THz_max = jf.freqs_THz[idx_max]
+    else:
+       maxT = jf.freqs_THz[-1]
+       if (maxT < f_THz_max):
+          f_THz_max = maxT
+
+    if k_SI_max is None:
+       k_SI_max = np.max(np.abs(jf.fcospectrum[idx1][idx2])[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*0.5)*1.3
+    if k_SI_min is None:
+       k_SI_min = -k_SI_max
+
+    plt.figure(figsize=(3.8,2.3))
+    plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2])*jf.kappa_scale*0.5, c=c[3], lw=1.0, zorder=1)
+    plt.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2])*jf.kappa_scale*0.5, c=c[2], lw=1.0, zorder=1)
+
+    plt.ylim([k_SI_min, k_SI_max])
+    plt.xlim([0, f_THz_max])
+    plt.xlabel(r'$\omega/2\pi$ (THz)')
+    plt.ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
+
+    if f_tick is None:
+       dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
+    else:
+       dx1 = f_tick
+       dx2 = dx1/2
+    if k_tick is None:
+       dy1, dy2 = n_tick_in_range(0, k_SI_max, 5)
+    else:
+       dy1 = k_tick
+       dy2 = dy1/2
+
+    plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
+    plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
+    plt.axes().yaxis.set_major_locator(MultipleLocator(dy1))
+    plt.axes().yaxis.set_minor_locator(MultipleLocator(dy2))
+
+
 def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
     if f_THz_max is None:
-       idx_max = index_cumsum(j is psd,0.95)
+       idx_max = index_cumsum(jf.psd, 0.95)
        f_THz_max = jf.freqs_THz[idx_max]
     else:
        maxT = jf.freqs_THz[-1]
@@ -532,7 +585,7 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
           f_THz_max=maxT
 
     if k_SI_max is None:
-       k_SI_max = np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*0.5) *1.3
+       k_SI_max = np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*0.5)*1.3
 
     plt.figure(figsize=(3.8,2.3))
     plt.plot(jf.freqs_THz, jf.psd*jf.kappa_scale*0.5, lw=0.2, c='0.8', zorder=0)
@@ -541,11 +594,15 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
         plt.axvline(x=j2.Nyquist_f_THz, ls='--', c='k', dashes=(1.4,0.6), zorder=3)
     if j2pl is not None:
        plt.plot(j2pl.freqs_THz, j2pl.dct.psd*j2pl.kappa_scale*0.5, c=c[1], zorder=1)
+    try:
+       plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[0][0])*jf.kappa_scale*0.5, c=c[3], lw=1.0, zorder=1)
+    except:
+       pass
 
     plt.ylim([0, k_SI_max])
     plt.xlim([0, f_THz_max])
     plt.xlabel(r'$\omega/2\pi$ (THz)')
-    plt.ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
+    plt.ylabel(r'${}^{\ell}\hat{\underline{S}}_{\,k}$ (W/mK)')
     
     if f_tick is None:
        dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
