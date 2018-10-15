@@ -116,9 +116,14 @@ Contact: lercole@sissa.it
    parser.add_argument( '-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids' )
 
    parser.add_argument( '-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)' )
-   parser.add_argument('--plot-conv-max-pstar',type=int,help='max number of P* in the kappa(P*) plot')
+   parser.add_argument('--plot-conv-max-pstar',type=int,help='max number of P* in the kappa(P*) plot (x)')
+   parser.add_argument('--plot-conv-max-kappa',type=float,help='max kappa in the kappa(P*) plot (y)')
    parser.add_argument('--plot-conv-pstar-tick-interval',type=int,help='tick interval on the x-axis for the kappa(P*) plot')
-   parser.add_argument('--plot-psd-max-THz',type=float, help='max frequency in THz for the psd plot')
+   parser.add_argument('--plot-conv-kappa-tick-interval',type=float,help='tick interval on the y-axis for the kappa(P*) plot')
+   parser.add_argument('--plot-psd-max-THz',type=float, help='max frequency in THz for the psd plot (x)')
+   parser.add_argument('--plot-psd-max-kappa',type=float, help='max kappa in W/mK for the psd plot (y)')
+   parser.add_argument('--plot-psd-THz-tick-interval',type=float, help='tick interval on the x-axis for the psd plot')
+   parser.add_argument('--plot-psd-kappa-tick-interval',type=float, help='tick interval on the y-axis for the psd plot')
    args = parser.parse_args()
 
    inputfile = args.inputfile
@@ -355,10 +360,18 @@ Contact: lercole@sissa.it
       else:
          jf = j
 
-      plt_psd(j,jf)
+      plt_psd(j, jf,\
+                f_THz_max=args.plot_psd_max_THz,\
+                k_SI_max=args.plot_psd_max_kappa,\
+                k_tick=args.plot_psd_kappa_tick_interval,\
+                f_tick=args.plot_psd_THz_tick_interval)
       pdf.savefig()
       plt.close()
-      plt_psd(jf)
+      plt_psd(jf,\
+              f_THz_max=args.plot_psd_max_THz,\
+              k_SI_max=args.plot_psd_max_kappa,\
+              k_tick=args.plot_psd_kappa_tick_interval,\
+              f_tick=args.plot_psd_THz_tick_interval)
       pdf.savefig()
       plt.close()
 
@@ -374,7 +387,11 @@ Contact: lercole@sissa.it
          binoutobj.TEMPERATURE     = temperature
          binoutobj.VOLUME          = volume
 
-      plt_psd(jf,jf,jf)
+      plt_psd(jf, jf, jf,\
+              f_THz_max=args.plot_psd_max_THz,\
+              k_SI_max=args.plot_psd_max_kappa,\
+              k_tick=args.plot_psd_kappa_tick_interval,\
+              f_tick=args.plot_psd_THz_tick_interval)
       pdf.savefig()
       plt.close()
       
@@ -397,7 +414,11 @@ Contact: lercole@sissa.it
 #      ax = jf.plot_kappa_Pstar()
 #      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
 
-      plt_cepstral_conv(jf,pstar_max=args.plot_conv_max_pstar,pstar_tick=args.plot_conv_pstar_tick_interval)
+      plt_cepstral_conv(jf,\
+                        pstar_max=args.plot_conv_max_pstar,\
+                        pstar_tick=args.plot_conv_pstar_tick_interval,\
+                        k_SI_max=args.plot_conv_max_kappa,\
+                        kappa_tick=args.plot_conv_kappa_tick_interval)
       pdf.savefig()
       plt.close()
 
@@ -458,84 +479,108 @@ Contact: lercole@sissa.it
 
 #################################
 
-def plt_cepstral_conv(jf,pstar_max=None, k_SI_max=None,pstar_tick=None):
-    if pstar_max==None:
-       pstar_max=(jf.dct.aic_Kmin+1)*2.5
-    if k_SI_max==None:
-       k_SI_max=jf.dct.tau[jf.dct.aic_Kmin]*jf.kappa_scale
+def plt_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_tick=None):
+    if pstar_max is None:
+       pstar_max = (jf.dct.aic_Kmin+1)*2.5
+    if k_SI_max is None:
+       k_SI_max = jf.dct.tau[jf.dct.aic_Kmin]*jf.kappa_scale
 
-    f, (ax2) = plt.subplots(1,1,figsize=(3.8,2.3))
+    f, (ax2) = plt.subplots(1, 1, figsize=(3.8,2.3))
     ax2.axvline(x=jf.dct.aic_Kmin+1, ls='--', c='k', dashes=(1.4,0.6), zorder=-3)
     ax2.fill_between(np.arange(jf.dct.logtau.shape[0])+1,\
-                     (jf.dct.tau-jf.dct.tau_THEORY_std)*jf.kappa_scale*.5,\
-                     (jf.dct.tau+jf.dct.tau_THEORY_std)*jf.kappa_scale*.5,alpha=.3,color=c[4],zorder=-3)#'#3c8da8')
-    ax2.plot(np.arange(jf.dct.logtau.shape[0])+1, jf.dct.tau*jf.kappa_scale*.5,\
-             label=r'Cepstral method',marker='o',c=c[4],zorder=-3)#'#3c8da8')
+                     (jf.dct.tau-jf.dct.tau_THEORY_std)*jf.kappa_scale*0.5,\
+                     (jf.dct.tau+jf.dct.tau_THEORY_std)*jf.kappa_scale*0.5,\
+                     alpha=.3, color=c[4], zorder=-3)
+    ax2.plot(np.arange(jf.dct.logtau.shape[0])+1, jf.dct.tau*jf.kappa_scale*0.5,\
+             label=r'Cepstral method', marker='o', c=c[4], zorder=-3)
     ax2.set_xlabel(r'$P^*$')
     ax2.set_ylabel(r'$\kappa$ (W/mK)')
-    ax2.set_xlim([0,pstar_max])
+    ax2.set_xlim([0, pstar_max])
     ax2.set_ylim([0, k_SI_max])
 #    ax2.grid()
     ax2.legend()
     
-    if pstar_tick==None:
-       dx1,dx2=n_tick_in_range(0,pstar_max,5)
+    if pstar_tick is None:
+       dx1, dx2 = n_tick_in_range(0, pstar_max, 5)
     else:
-       dx1=pstar_tick
-       dx2=dx1/2
-
-    dy1,dy2=n_tick_in_range(0,k_SI_max,5)
-
+       dx1 = pstar_tick
+       dx2 = dx1/2
+    if kappa_tick is None:
+       dy1, dy2 = n_tick_in_range(0, k_SI_max, 5)
+    else:
+       dy1 = kappa_tick
+       dy2 = dy1/2
     ax2.xaxis.set_major_locator(MultipleLocator(dx1))
     ax2.xaxis.set_minor_locator(MultipleLocator(dx2))
     ax2.yaxis.set_major_locator(MultipleLocator(dy1))
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None):
 
-    if f_THz_max==None:
-       idx_max=index_cumsum(jf.psd,0.95)
-       f_THz_max=jf.freqs_THz[idx_max]
+def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
+    if f_THz_max is None:
+       idx_max = index_cumsum(j is psd,0.95)
+       f_THz_max = jf.freqs_THz[idx_max]
+    else:
+       maxT = jf.freqs_THz[-1]
+       if j2 is not None:
+          if j2.freqs_THz[-1] > maxT:
+             maxT=j2.freqs_THz[-1]
+       if j2pl is not None:
+          if j2pl.freqs_THz[-1] > maxT:
+             maxT=j2pl.freqs_THz[-1]
+       if maxT< f_THz_max:
+          f_THz_max=maxT
 
-    if k_SI_max==None:
-       k_SI_max=np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*.5) *1.3
+    if k_SI_max is None:
+       k_SI_max = np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*0.5) *1.3
 
     plt.figure(figsize=(3.8,2.3))
-    plt.plot(jf.freqs_THz,jf.psd*jf.kappa_scale*.5,lw=0.2,c='0.8')
-    plt.plot(jf.freqs_THz,jf.fpsd*jf.kappa_scale*.5,c=c[0])
-    if j2 != None:
-        plt.axvline(x=j2.Nyquist_f_THz,ls='--', c='k', dashes=(1.4,0.6), zorder=3)
-    if j2pl != None:
-       plt.plot(j2pl.freqs_THz,j2pl.dct.psd*j2pl.kappa_scale*.5,c=c[1])
+    plt.plot(jf.freqs_THz, jf.psd*jf.kappa_scale*0.5, lw=0.2, c='0.8', zorder=0)
+    plt.plot(jf.freqs_THz, jf.fpsd*jf.kappa_scale*0.5, c=c[0], zorder=2)
+    if j2 is not None:
+        plt.axvline(x=j2.Nyquist_f_THz, ls='--', c='k', dashes=(1.4,0.6), zorder=3)
+    if j2pl is not None:
+       plt.plot(j2pl.freqs_THz, j2pl.dct.psd*j2pl.kappa_scale*0.5, c=c[1], zorder=1)
 
-    plt.ylim([0,k_SI_max])
-    plt.xlim([0,f_THz_max])
+    plt.ylim([0, k_SI_max])
+    plt.xlim([0, f_THz_max])
     plt.xlabel(r'$\omega/2\pi$ (THz)')
     plt.ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
     
-    dx1,dx2=n_tick_in_range(0,f_THz_max,5)
-    dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+    if f_tick is None:
+       dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
+    else:
+       dx1 = f_tick
+       dx2 = dx1/2
+    if k_tick is None:
+       dy1, dy2 = n_tick_in_range(0, k_SI_max, 5)
+    else:
+       dy1 = k_tick
+       dy2 = dy1/2
 
     plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
     plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
     plt.axes().yaxis.set_major_locator(MultipleLocator(dy1))
     plt.axes().yaxis.set_minor_locator(MultipleLocator(dy2))
 
-def n_tick_in_range(beg,end,n):
-    size=end-beg
-    n_cifre=math.floor(math.log(size/n,10.0))
-    delta=math.ceil((size/n)/10**n_cifre)*10**n_cifre
-    return delta,delta/2
 
-def index_cumsum(arr,p):
-    if (p>1 or p<0):
+def n_tick_in_range(beg, end, n):
+    size = end-beg
+    n_cifre = math.floor(math.log(size/n,10.0))
+    delta = math.ceil((size/n)/10**n_cifre)*10**n_cifre
+    return delta, delta/2
+
+
+def index_cumsum(arr, p):
+    if (p > 1 or p < 0):
         raise ValueError('p must be between 0 and 1')
-    arr_int=np.cumsum(arr)
-    arr_int=arr_int/arr_int[-1]
-    idx=0
-    while arr_int[idx]<p:
-        idx=idx+1
+    arr_int = np.cumsum(arr)
+    arr_int = arr_int/arr_int[-1]
+    idx = 0
+    while (arr_int[idx] < p):
+        idx = idx+1
     return idx
+
 
 class TCOutput(object):
    def __init__(self):
@@ -548,6 +593,7 @@ class TCOutput(object):
       self.j_logpsd                   = None
       self.j_Nyquist_f_THz            = None
       self.j_PSD_FILTER_W_THz         = None
+      self.j_cospectrum               = None
 
       self.jf_DT_FS                   = None
       self.jf_freqs_THz               = None
