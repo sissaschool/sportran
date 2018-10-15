@@ -58,6 +58,8 @@ OUTPUT files:
 OUTPUT DATA files (can be text ".dat" or binary ".npy"):
   [output].psd
       freqs [THz], original periodogram, original log(periodogram)
+  [output].cospectrum (if any)
+      freqs [THz], full matrix cospectrum
   [output].resampled_psd
       freqs [THz], resampled periodogram, resampled log(periodogram)
   [output].cepstral
@@ -307,11 +309,18 @@ Contact: lercole@sissa.it
          binoutobj.j_logpsd    = j.logpsd
          binoutobj.j_Nyquist_f_THz = j.Nyquist_f_THz
          binoutobj.j_PSD_FILTER_W_THz = psd_filter_w
+         if j.multicomponent:
+            binoutobj.j_cospectrum = j.cospectrum
       outfile = open(output + '.psd.dat', 'w')
       outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
       outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
       np.savetxt(outfile, outarray)
       outfile.close()
+      if j.multicomponent:
+         outfile = open(output + '.cospectrum.dat', 'w')
+         outarray = np.c_[j.freqs_THz,j.cospectrum.transpose((2,0,1))]
+         np.savetxt(outfile, outarray)
+         outfile.close()
   
       # resample and plot
       if resample:

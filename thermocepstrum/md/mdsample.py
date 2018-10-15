@@ -262,11 +262,11 @@ class MDSample(object):
         ndf_chi = covarALL.shape[3]- len(other_spectrALL)
 
         # compute the sum over the last axis (x,y,z components):
-        cospectrum = covarALL.sum(axis=3)
+        self.cospectrum = covarALL.sum(axis=3)
 
         # compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
         # the diagonal elements of the inverse have very convenient statistical properties 
-        multi_psd = (np.linalg.inv(cospectrum.transpose((2,0,1)))[:,0,0]**-1).real / ndf_chi
+        multi_psd = (np.linalg.inv(self.cospectrum.transpose((2,0,1)))[:,0,0]**-1).real / ndf_chi
 
         if normalize:
             multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
