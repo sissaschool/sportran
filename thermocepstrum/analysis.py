@@ -99,6 +99,7 @@ Contact: lercole@sissa.it
    parser.add_argument( '--cindex', nargs='*', type=int, help='Column indexes of the heatflux to read (0,1,2,...)' )
    parser.add_argument( '--sindex', nargs='*', type=int, help='Column indexes of the heatflux to substract from the flux read with --cindex (3,4,5,...)' )
    parser.add_argument( '--run-keyword', type=str, help='Keyword that identifies the run to be read (only for "lammps" format)' )
+   parser.add_argument('--split', type=int, default=1, help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m.')
 
    parser.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
    parser.add_argument( '-O', '--bin-output', action='store_true', help='save also binary files' )
@@ -135,6 +136,7 @@ Contact: lercole@sissa.it
    jindex = args.cindex
    sindex = args.sindex
    run_keyword = args.run_keyword
+   NSPLIT = args.split
    
    output = args.output
    binout = args.bin_output
@@ -172,11 +174,13 @@ Contact: lercole@sissa.it
       else:
          raise ValueError('resampling: you should specify either TSKIP or FSTAR')
    elif (TSKIP is not None):
-      raise ValueError('Use flag -r to resample. TSKIP will be ignored.')
+      raise ValueError('Use flag -r to resample. TSKIP will be ignored')
    elif (FSTAR is not None):
-      raise ValueError('Use flag -r to resample. FSTAR will be ignored.')
+      raise ValueError('Use flag -r to resample. FSTAR will be ignored')
    if (corr_factor <= 0.):
       raise ValueError('the correction factor must be positive')
+   if (NSPLIT < 1):
+      raise ValueError('The number of splits must be a positive number')
 
    ncurrents = len(j2_keys) + 1
    
@@ -209,6 +213,26 @@ Contact: lercole@sissa.it
       jdata = jfile.data
    else:
       raise NotImplemented('input format not implemented.')
+
+<<<<<<< a9205c6c78ad3be789f8983d335e022721ad0602
+   if (NSPLIT > 1):
+      print 'Splitting input data time series into {:d} segments...'.format(NSPLIT)
+      data_size = jdata[selected_keys[0]].shape[0]
+      n_proc = 1
+      try:  ## HORRIBLE
+         n_proc = jdata[selected_keys[0]].shape[1]
+      except:
+         pass
+      rm = data_size%NSPLIT
+      steps_start = data_size - rm
+      steps_end = data_size/NSPLIT
+      if (steps_end%2 == 1):
+         steps_end = steps_end - 1
+      for key, value in jdata.iteritems():
+         if key != 'Temp':
+            newdata = value[:steps_start].reshape((NSPLIT,data_size/NSPLIT,n_proc)).transpose((1,0,2)).reshape((data_size/NSPLIT,NSPLIT*n_proc))
+            jdata[key] = newdata[:steps_end]
+      print 'New shape of input data: ', jdata[selected_keys[0]].shape
 
    if NSTEPS==0:
       NSTEPS=jdata[jdata.keys()[0]].shape[0]

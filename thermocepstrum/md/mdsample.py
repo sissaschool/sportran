@@ -296,6 +296,11 @@ class MDSample(object):
         """Computes the periodogram from the trajectory or the spectrum. 
         If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
         The PSD is multiplied by DT_FS at the end."""
+        if self.multicomponent:
+            if self.otherMD is None:
+                raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
+            self.compute_kappa_multi(self.otherMD, FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
+            return
         if DT_FS is not None:
             self.DT_FS = DT_FS
         if (method == 'trajectory'):

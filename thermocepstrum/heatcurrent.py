@@ -41,7 +41,7 @@ class HeatCurrent(MDSample):
       elif (len(j.shape) <= 2):
          self.multicomponent = False
       else:
-         raise ValueError("Shape of j not valid.")
+         raise ValueError("Shape of j {} not valid.".format(j.shape))
 
       if self.multicomponent:
          print "Using multicomponent code."
