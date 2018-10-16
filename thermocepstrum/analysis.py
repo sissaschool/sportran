@@ -106,7 +106,7 @@ Contact: lercole@sissa.it
    parser.add_argument( '-V', '--volume', type=float, help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile.' )
    parser.add_argument( '--structure', type=str, help='LAMMPS data file containing the structure. Read to get Volume.' )
 
-   parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real'], help='LAMMPS units (default: metal)' )
+   parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'], help='LAMMPS units (default: metal)' )
    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
 
    parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR' )
@@ -159,8 +159,6 @@ Contact: lercole@sissa.it
       raise ValueError('timestep must be positive')
    if (NSTEPS < 0):
       raise ValueError('nsteps must be positive')
-   if ((units != 'real') and (units != 'metal')):
-      raise ValueError('units must be metal or real')
    if temperature is not None:
       if (temperature <= 0.):
          raise ValueError('temperature must be positive')
@@ -214,7 +212,6 @@ Contact: lercole@sissa.it
    else:
       raise NotImplemented('input format not implemented.')
 
-<<<<<<< a9205c6c78ad3be789f8983d335e022721ad0602
    if (NSPLIT > 1):
       print 'Splitting input data time series into {:d} segments...'.format(NSPLIT)
       data_size = jdata[selected_keys[0]].shape[0]
@@ -626,7 +623,7 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
     plt.ylim([0, k_SI_max])
     plt.xlim([0, f_THz_max])
     plt.xlabel(r'$\omega/2\pi$ (THz)')
-    plt.ylabel(r'${}^{\ell}\hat{\underline{S}}_{\,k}$ (W/mK)')
+    plt.ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
     
     if f_tick is None:
        dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
