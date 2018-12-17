@@ -191,6 +191,13 @@ Contact: lercole@sissa.it
    selected_keys = [j1_key]
    selected_keys.extend(j2_keys)
 
+   # Write some parameters
+   print ' Input file ({}):      {}'.format(input_format, inputfile)
+   logfile.write(' Input file ({}):      {}\n'.format(input_format, inputfile))
+   print ' Units:      {}'.format(units)
+   logfile.write(' Units:      {}\n'.format(units))
+   print ' Time step:      {} fs'.format(DT_FS)
+   logfile.write(' Time step:      {} fs\n'.format(DT_FS))
 
    ## Read data
    jdata = None
@@ -217,6 +224,7 @@ Contact: lercole@sissa.it
 
    if (NSPLIT > 1):
       print 'Splitting input data time series into {:d} segments...'.format(NSPLIT)
+      logfile.write('Splitting input data time series into {:d} segments...\n'.format(NSPLIT))
       data_size = jdata[selected_keys[0]].shape[0]
       n_proc = 1
       try:  ## HORRIBLE
@@ -232,7 +240,8 @@ Contact: lercole@sissa.it
          if key != 'Temp':
             newdata = value[:steps_start].reshape((NSPLIT,data_size/NSPLIT,n_proc)).transpose((1,0,2)).reshape((data_size/NSPLIT,NSPLIT*n_proc))
             jdata[key] = newdata[:steps_end]
-      print 'New shape of input data: ', jdata[selected_keys[0]].shape
+      print 'New shape of input data: {}'.format(jdata[selected_keys[0]].shape)
+      logfile.write('New shape of input data: {}\n'.format(jdata[selected_keys[0]].shape))
 
    if NSTEPS==0:
       NSTEPS=jdata[jdata.keys()[0]].shape[0]
@@ -317,9 +326,10 @@ Contact: lercole@sissa.it
    logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
 
+   ################################
+   ## OUTPUT SECTION   ## TODO: isolate output from computation
    if binout:
       binoutobj = TCOutput()
-
 
    with PdfPages(output + ".plots.pdf") as pdf:
 
@@ -350,11 +360,11 @@ Contact: lercole@sissa.it
         outfile.close()
         if j.multicomponent:
            outfile = open(output + '.cospectrum.dat', 'w')
-           outarray = np.c_[j.freqs_THz,j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1],j.cospectrum.shape[2])).transpose()]
+           outarray = np.c_[j.freqs_THz, j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1], j.cospectrum.shape[2])).transpose()]
            np.savetxt(outfile, outarray)
            outfile.close()
            outfile = open(output + '.cospectrum.filt.dat', 'w')
-           outarray = np.c_[j.freqs_THz,j.fcospectrum.reshape((j.fcospectrum.shape[0]*j.fcospectrum.shape[1],j.fcospectrum.shape[2])).transpose()]
+           outarray = np.c_[j.freqs_THz, j.fcospectrum.reshape((j.fcospectrum.shape[0]*j.fcospectrum.shape[1], j.fcospectrum.shape[2])).transpose()]
            np.savetxt(outfile, outarray)
            outfile.close()
   
@@ -526,17 +536,17 @@ Contact: lercole@sissa.it
 
 def plt_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_tick=None):
     if pstar_max is None:
-       pstar_max = (jf.dct.aic_Kmin+1)*2.5
+       pstar_max = (jf.dct.aic_Kmin+1) * 2.5
     if k_SI_max is None:
-       k_SI_max = jf.dct.tau[jf.dct.aic_Kmin]*jf.kappa_scale
+       k_SI_max = jf.dct.tau[jf.dct.aic_Kmin] * jf.kappa_scale
 
     f, (ax2) = plt.subplots(1, 1, figsize=(3.8,2.3))
-    ax2.axvline(x=jf.dct.aic_Kmin+1, ls='--', c='k', dashes=(1.4,0.6), zorder=-3)
-    ax2.fill_between(np.arange(jf.dct.logtau.shape[0])+1,\
-                     (jf.dct.tau-jf.dct.tau_THEORY_std)*jf.kappa_scale*0.5,\
-                     (jf.dct.tau+jf.dct.tau_THEORY_std)*jf.kappa_scale*0.5,\
+    ax2.axvline(x=jf.dct.aic_Kmin + 1, ls='--', c='k', dashes=(1.4,0.6), zorder=-3)
+    ax2.fill_between(np.arange(jf.dct.logtau.shape[0]) + 1,\
+                     (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,\
+                     (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,\
                      alpha=.3, color=c[4], zorder=-3)
-    ax2.plot(np.arange(jf.dct.logtau.shape[0])+1, jf.dct.tau*jf.kappa_scale*0.5,\
+    ax2.plot(np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.kappa_scale * 0.5,\
              label=r'Cepstral method', marker='o', c=c[4], zorder=-3)
     ax2.set_xlabel(r'$P^*$')
     ax2.set_ylabel(r'$\kappa$ (W/mK)')
@@ -549,12 +559,12 @@ def plt_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_
        dx1, dx2 = n_tick_in_range(0, pstar_max, 5)
     else:
        dx1 = pstar_tick
-       dx2 = dx1/2
+       dx2 = dx1 / 2
     if kappa_tick is None:
        dy1, dy2 = n_tick_in_range(0, k_SI_max, 5)
     else:
        dy1 = kappa_tick
-       dy2 = dy1/2
+       dy2 = dy1 / 2
     ax2.xaxis.set_major_locator(MultipleLocator(dx1))
     ax2.xaxis.set_minor_locator(MultipleLocator(dx2))
     ax2.yaxis.set_major_locator(MultipleLocator(dy1))
@@ -588,12 +598,12 @@ def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_ti
        dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
     else:
        dx1 = f_tick
-       dx2 = dx1/2
+       dx2 = dx1 / 2
     if k_tick is None:
        dy1, dy2 = n_tick_in_range(0, k_SI_max, 5)
     else:
        dy1 = k_tick
-       dy2 = dy1/2
+       dy2 = dy1 / 2
 
     plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
     plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
@@ -609,12 +619,12 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
        maxT = jf.freqs_THz[-1]
        if j2 is not None:
           if j2.freqs_THz[-1] > maxT:
-             maxT=j2.freqs_THz[-1]
+             maxT = j2.freqs_THz[-1]
        if j2pl is not None:
           if j2pl.freqs_THz[-1] > maxT:
-             maxT=j2pl.freqs_THz[-1]
-       if maxT< f_THz_max:
-          f_THz_max=maxT
+             maxT = j2pl.freqs_THz[-1]
+       if maxT < f_THz_max:
+          f_THz_max = maxT
 
     if k_SI_max is None:
        k_SI_max = np.max(jf.fpsd[:int(jf.freqs_THz.shape[0]*f_THz_max/jf.freqs_THz[-1])]*jf.kappa_scale*0.5)*1.3
@@ -640,12 +650,12 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
        dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
     else:
        dx1 = f_tick
-       dx2 = dx1/2
+       dx2 = dx1 / 2
     if k_tick is None:
        dy1, dy2 = n_tick_in_range(0, k_SI_max, 5)
     else:
        dy1 = k_tick
-       dy2 = dy1/2
+       dy2 = dy1 / 2
 
     plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
     plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
@@ -657,17 +667,17 @@ def n_tick_in_range(beg, end, n):
     size = end-beg
     n_cifre = math.floor(math.log(size/n,10.0))
     delta = math.ceil((size/n)/10**n_cifre)*10**n_cifre
-    return delta, delta/2
+    return delta, delta / 2
 
 
 def index_cumsum(arr, p):
     if (p > 1 or p < 0):
         raise ValueError('p must be between 0 and 1')
     arr_int = np.cumsum(arr)
-    arr_int = arr_int/arr_int[-1]
+    arr_int = arr_int / arr_int[-1]
     idx = 0
     while (arr_int[idx] < p):
-        idx = idx+1
+        idx = idx + 1
     return idx
 
 
