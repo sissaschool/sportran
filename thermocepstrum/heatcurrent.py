@@ -85,7 +85,7 @@ class HeatCurrent(MDSample):
    def __repr__(self):
       msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__()
       if self.dct is not None:
-         msd += self.dct.__repr__()
+         msg += self.dct.__repr__()
       return msg
 
 
