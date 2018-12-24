@@ -160,7 +160,7 @@ class HeatCurrent(MDSample):
    ###  PLOT METHODS
    ###################################
 
-   def plot_periodogram(self, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axes=None, FIGSIZE=None, **plot_kwargs):
+   def plot_periodogram(self, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=False, FIGSIZE=None, **plot_kwargs):
       """
       Plot the periodogram.
         PSD_FILTER_W  = width of the filtering window
@@ -190,17 +190,21 @@ class HeatCurrent(MDSample):
          else:
             raise ValueError('Units not valid.')
 
+      if kappa_units:
+         psd_scale = 0.5 * self.kappa_scale
+      else:
+         psd_scale = 1.0
       if axes is None:
          figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
       plt.subplots_adjust(hspace = 0.1)
       if (freq_units == 'thz') or (freq_units == 'THz'):
-         axes[0].plot(self.freqs_THz, self.fpsd,    **plot_kwargs)
-         axes[1].plot(self.freqs_THz, self.flogpsd, **plot_kwargs)
+         axes[0].plot(self.freqs_THz, psd_scale * self.fpsd,    **plot_kwargs)
+         axes[1].plot(self.freqs_THz, psd_scale * self.flogpsd, **plot_kwargs)
          axes[0].set_xlim([0., self.Nyquist_f_THz])
          axes[1].set_xlim([0., self.Nyquist_f_THz])
       elif (freq_units == 'red'):
-         axes[0].plot(self.freqs/freq_scale, self.fpsd,    **plot_kwargs)
-         axes[1].plot(self.freqs/freq_scale, self.flogpsd, **plot_kwargs)
+         axes[0].plot(self.freqs/freq_scale, psd_scale * self.fpsd,    **plot_kwargs)
+         axes[1].plot(self.freqs/freq_scale, psd_scale * self.flogpsd, **plot_kwargs)
          axes[0].set_xlim([0., 0.5/freq_scale])
          axes[1].set_xlim([0., 0.5/freq_scale])
       else:
@@ -263,17 +267,21 @@ class HeatCurrent(MDSample):
       return axes
 
 
-   def plot_cepstral_spectrum(self, freq_units='thz', freq_scale=1.0, axes=None, FIGSIZE=None, **plot_kwargs):
+   def plot_cepstral_spectrum(self, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, **plot_kwargs):
        if axes is None:
           figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
        plt.subplots_adjust(hspace = 0.1)
+       if kappa_units:
+          psd_scale = 0.5 * self.kappa_scale
+       else:
+          psd_scale = 1.0
        if (freq_units == 'thz') or (freq_units == 'THz'):
-          axes[0].plot(self.freqs_THz, self.dct.psd,    **plot_kwargs)
+          axes[0].plot(self.freqs_THz, self.dct.psd * psd_scale,    **plot_kwargs)
           axes[1].plot(self.freqs_THz, self.dct.logpsd, **plot_kwargs)
           axes[0].set_xlim([0., self.Nyquist_f_THz])
           axes[1].set_xlim([0., self.Nyquist_f_THz])
        elif (freq_units == 'red'):
-          axes[0].plot(self.freqs/freq_scale, self.dct.psd,    **plot_kwargs)
+          axes[0].plot(self.freqs/freq_scale, self.dct.psd * psd_scale,    **plot_kwargs)
           axes[1].plot(self.freqs/freq_scale, self.dct.logpsd, **plot_kwargs)
           axes[0].set_xlim([0., 0.5/freq_scale])
           axes[1].set_xlim([0., 0.5/freq_scale])
@@ -333,7 +341,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
          TSKIP = int(round(x.Nyquist_f_THz/fstar_THz))
    if plot:
       figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-      axes = x.plot_periodogram(PSD_FILTER_W, freq_units, 1.0, axes)
+      axes = x.plot_periodogram(PSD_FILTER_W, freq_units, 1.0, axes=axes)
    fstar_THz = x.Nyquist_f_THz / TSKIP
    fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
 
@@ -355,11 +363,11 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
       xf = HeatCurrent(yf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
    if plot:
       if (freq_units == 'thz') or (freq_units == 'THz'):
-         xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*1000./x.DT_FS, 'thz', TSKIP, axes)
+         xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*1000./x.DT_FS, 'thz', TSKIP, axes=axes)
       elif (freq_units == 'red'):
          print PSD_FILTER_W
          print x.FILTER_WINDOW_WIDTH
-         xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*TSKIP, 'red', TSKIP, axes)
+         xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*TSKIP, 'red', TSKIP, axes=axes)
 
    xf.resample_log = '-----------------------------------------------------\n' +\
                      '  RESAMPLE TIME SERIES\n' +\
