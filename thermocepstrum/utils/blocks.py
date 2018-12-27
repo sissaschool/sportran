@@ -339,9 +339,18 @@ def plt_hist_single_psd(data1,dof,nbins=None):
 def plt_psd_with_zoom(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=False,nyq=None,inset_maxTHz=None,inset_maxk=None):
     #plt.axes([0,1,0,1])
     fig_r,ax0=plt_psd(jf,j2,j2pl,f_THz_max,k_SI_max,k_00,nyq)
-    ax=fig_r.add_axes([0.2,0.52,0.3,0.3])
+    coord_f=[0.2,0.55,0.3,0.3]
+    ax=fig_r.add_axes(coord_f)
+    inv=fig_r.transFigure # + ax0.transData.inverted()
+    f_x=0.73
+    f_x2=1.3
+    f_y=0.87
+    f_y2=1.35
+    print inv.transform((coord_f[0]*f_x,coord_f[1]*f_y))
+    ax0.add_patch(matplotlib.patches.Rectangle((coord_f[0]*f_x,coord_f[1]*f_y),coord_f[2]*f_x2,coord_f[3]*f_y2,fill=True ,color='White',visible=True,transform=inv))
+    #plt.box()
     plt_psd(jf,j2,j2pl,inset_maxTHz,inset_maxk,k_00,nyq,False,axes=ax)
-
+    
 def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=False,nyq=None,plt_figure=True,axes=None):
 
     if f_THz_max==None:
@@ -387,8 +396,11 @@ def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=False,nyq=No
                     xytext=(nyq, (k_SI_max-jf.fpsd[idxnyq]*jf.kappa_scale*.5)/7+jf.fpsd[idxnyq]*jf.kappa_scale*.5+k_SI_max/7.0), \
                     arrowprops={'width': 1.0, 'headwidth': 3.0, 'headlength': 7, 'color': 'k'})
 
-    dx1,dx2=n_tick_in_range(0,f_THz_max,5)
-    dy1,dy2=n_tick_in_range(0,k_SI_max,5)
+    ntick=5
+    if axes is not None:
+       ntick=3
+    dx1,dx2=n_tick_in_range(0,f_THz_max,ntick)
+    dy1,dy2=n_tick_in_range(0,k_SI_max, ntick)
     #dx1=10
     #dx2=5
     axes.xaxis.set_major_locator(MultipleLocator(dx1))
