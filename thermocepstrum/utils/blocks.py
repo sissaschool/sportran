@@ -79,11 +79,14 @@ def main():
          freqs=np.loadtxt(sys.argv[ff]+'.psd.dat',usecols=(0,),unpack=True)
      cont=0
      for fname in sys.argv[ff:]:
-         print fname
          if os.path.isfile(fname+'.psd.npy'):
              periodograms.append(np.load(fname+'.psd.npy')[3:5])
          else:
              periodograms.append(np.loadtxt(fname+'.psd.dat',usecols=(3,4),unpack=True))
+         if periodograms[-1].shape != periodograms[0].shape:
+             print fname , " not used (inconsistent shape with firts element)", periodograms[-1].shape, periodograms[0].shape
+             del periodograms[-1]
+             continue
          if os.path.isfile(fname+'.cepstral.npy'):
              cepstrals.append(np.load(fname+'.cepstral.npy')[[4,5,2,3]])
          else:
@@ -107,6 +110,7 @@ def main():
          kappas_Kmin_std[cont]=cepstrals[cont][1,aic_Kmin] 
          l0s[cont]=cepstrals[cont][2,aic_Kmin]
          l0s_std[cont]=cepstrals[cont][3,aic_Kmin]
+         print fname, periodograms[cont].shape, cepstrals[cont].shape
          cont+=1
          
      aic_KminM=np.mean(aic_Kmins)
@@ -117,9 +121,17 @@ def main():
 
      
      #resizing and creating a big numpy array.
-     for periodogram,cepstral in zip(periodograms,cepstrals):
-         periodogram.resize(periodograms[0].shape)
-         cepstral.resize(cepstrals[0].shape)
+     #for periodogram,cepstral in zip(periodograms,cepstrals):
+     for i in range(1,len(periodograms)):
+         periodograms[i].resize(periodograms[0].shape)
+         cepstrals[i].resize(cepstrals[0].shape)
+     # *this does not work when using a lot of data
+     #import pdb; pdb.set_trace() 
+     #print periodograms[0].shape 
+     #for i in range(1,len(periodograms)):
+     #    print i
+     #    periodograms[i]=np.resize(periodograms[i],periodograms[0].shape)
+     #    cepstrals[i]=np.resize(cepstrals[i],cepstrals[0].shape)
      
      cepstrals=np.array(cepstrals,copy=False)
      periodograms=np.array(periodograms,copy=False)
@@ -189,26 +201,35 @@ def main():
          plt.fill_between(freqs,mean_periodogram[0]-std_periodogram[0],mean_periodogram[0]+std_periodogram[0])
          plt.plot(freqs,mean_periodogram[0])
          plt.title('Original PSD')
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
          plt.close()
 
          class Psd:
             psd=None
+            mpsd=None
             fpsd=None
             freqs_THz=None
             kappa_scale=None
             cospectrum=None
+            mcospectrum=None
+            ucospectrum=None
             DT_FS=None
-            def ffpsd(self,w):
+            def ffpsd(self,w,single=False):
                 WF=int(round(w/1000.*self.DT_FS*len(self.freqs_THz)*2.))
                 print 'filtering: ',WF
-                ffpsd=tc.md.tools.runavefilter(self.fpsd, WF)
+                if not single:
+                 ffpsd=tc.md.tools.runavefilter(self.mpsd, WF)
+                else:
+                 ffpsd=tc.md.tools.runavefilter(self.psd, WF)
                 self.fpsd=ffpsd
                 try:
-                 for i in range(self.cospectrum.shape[0]):
-                  for j in range(self.cospectrum.shape[1]):
-                   ffpsd=tc.md.tools.runavefilter(self.cospectrum[i,j], WF)
-                   self.cospectrum[i,j]=ffpsd
+                 for i in range(self.ucospectrum.shape[0]):
+                  for j in range(self.ucospectrum.shape[1]):
+                   if not single:
+                    ffc=tc.md.tools.runavefilter(self.mcospectrum[i,j], WF)
+                   else:
+                    ffc=tc.md.tools.runavefilter(self.ucospectrum[i,j], WF)
+                   self.cospectrum[i,j]=ffc
                 except AttributeError:
                  pass
                  
@@ -217,31 +238,77 @@ def main():
 
          psd.DT_FS=DT_FS
          psd.kappa_scale=np.mean(kappa_scales)/DT_FS
-         psd.psd=periodograms[0,0,:]
-         psd.fpsd=mean_periodogram[0,:]
          psd.freqs_THz=freqs
-         psd.cospectrum=mean_cospectrum
-         psd.ffpsd(0.2)
+         plot_idx=2
+         psd.psd=periodograms       [plot_idx,0,:]
+         psd.mpsd=mean_periodogram  [0,:]
+         psd.fpsd=np.copy(mean_periodogram  [0,:])
+         psd.ucospectrum=cospectrums[plot_idx]
+         psd.mcospectrum=mean_cospectrum
+         psd.cospectrum=np.copy(mean_cospectrum)
 
          plt_psd(psd,k_00=True,f_THz_max=max_THz,nyq=nyq,k_SI_max=k_SI_max)
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
          plt.close()
 
          plt_psd_with_zoom(psd,k_00=True,f_THz_max=max_THz,nyq=nyq,k_SI_max=k_SI_max,inset_maxTHz=zmax_THz,inset_maxk=zk_SI_max)
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
          plt.close()
     
          plt.xlim([0,max_THz])
 
          plt.plot(psd.freqs_THz,np.real(psd.cospectrum[1,0]))
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
          plt.close()
          plt.xlim([0,max_THz])
  
          plt.plot(psd.freqs_THz,psd.cospectrum[1,1])
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
          plt.close()
  
+         psd.ffpsd(0.5,single=True)
+
+         plt_psd(psd,k_00=True,f_THz_max=max_THz,nyq=nyq,k_SI_max=k_SI_max)
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+
+         plt_psd_with_zoom(psd,k_00=True,f_THz_max=max_THz,nyq=nyq,k_SI_max=k_SI_max,inset_maxTHz=zmax_THz,inset_maxk=zk_SI_max)
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+
+         plt.xlim([0,max_THz])
+
+         plt.plot(psd.freqs_THz,np.real(psd.cospectrum[1,0]))
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+         plt.xlim([0,max_THz])
+ 
+         plt.plot(psd.freqs_THz,psd.cospectrum[1,1])
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+
+
+         psd.ffpsd(0.2,single=False)
+         
+         plt_psd(psd,k_00=True,f_THz_max=max_THz,nyq=nyq,k_SI_max=k_SI_max)
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+
+         plt_psd_with_zoom(psd,k_00=True,f_THz_max=max_THz,nyq=nyq,k_SI_max=k_SI_max,inset_maxTHz=zmax_THz,inset_maxk=zk_SI_max)
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+    
+         plt.xlim([0,max_THz])
+
+         plt.plot(psd.freqs_THz,np.real(psd.cospectrum[1,0]))
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+         plt.xlim([0,max_THz])
+ 
+         plt.plot(psd.freqs_THz,psd.cospectrum[1,1])
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
+         plt.close()
+
          #make histogram for component 0 and 1 of psd
         
          #compute means without i-th element
@@ -252,18 +319,18 @@ def main():
  
          plt.hist(kappas_Kmin)
          plt.title('kappa(aic-Kmin)') 
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
          plt.close()
         
          data1=periodograms[:,0,0]/independent_mean[:,0]    
         
          ks__0=plt_hist_single_psd(data1,dof)
-         pdf.savefig() 
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0) 
          plt.close()
      
          data2=periodograms[:,0,1]/independent_mean[:,1]  
          ks__1=plt_hist_single_psd(data2,dof*2)
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)
          plt.close()
      
          #ks_1=sp.stats.kstest(data2*2*dof,sp.stats.chi2(2*dof).cdf)
@@ -275,7 +342,7 @@ def main():
              all_normalized[i*len(selection_not_zero):(i+1)*len(selection_not_zero)]=periodograms[i,0,selection_not_zero]/independent_mean[i,selection_not_zero]
      
          ks_all=plt_hist_single_psd(all_normalized,dof*2,nbins=100)
-         pdf.savefig()                       
+         pdf.savefig(bbox_inches='tight',pad_inches=0.0)                       
          plt.close()
      
 #         np.savetxt(output+'.histogram_all',np.c_[(intervals[1:]+intervals[:-1])/2.0,histogram/np.sum(histogram)])
@@ -297,7 +364,7 @@ def main():
          plt.ylim([min_y*0.8,max_y*1.2])
              
      
-         pdf.savefig()
+         pdf.savefig(bbox_inches='tight')
          plt.close()  
 
 def plt_hist_single_psd(data1,dof,nbins=None):
@@ -391,7 +458,7 @@ def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=False,nyq=No
   #     axes.set_ylabel('$^{\ell M}\widehat{S}\'_{\,k}$ (W/mK)')
         axes.set_ylabel('(W/mK)')
     idxnyq=int(nyq/jf.freqs_THz[-1]*jf.freqs_THz.size)
-    if nyq != None:
+    if nyq != None and nyq < f_THz_max:
        axes.annotate("", xy=(nyq, (k_SI_max-jf.fpsd[idxnyq]*jf.kappa_scale*.5)/7+jf.fpsd[idxnyq]*jf.kappa_scale*.5), \
                     xytext=(nyq, (k_SI_max-jf.fpsd[idxnyq]*jf.kappa_scale*.5)/7+jf.fpsd[idxnyq]*jf.kappa_scale*.5+k_SI_max/7.0), \
                     arrowprops={'width': 1.0, 'headwidth': 3.0, 'headlength': 7, 'color': 'k'})
