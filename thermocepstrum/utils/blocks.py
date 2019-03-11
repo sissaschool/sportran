@@ -15,10 +15,13 @@ import matplotlib
 matplotlib.use('Agg')                                 
 import matplotlib.pyplot as plt                       
 from matplotlib.backends.backend_pdf import PdfPages  
-plt.rcParams['figure.figsize'] = (16, 9)
+#plt.rcParams['figure.figsize'] = (16, 9)
 plt.style.reload_library()
-plt.style.use(tc_path+'/grafici_belli.mplstyle')
-plt.rc('text', usetex=True)
+try:
+   plt.style.use('./grafici_belli.mplstyle')
+except:
+   plt.style.use(tc_path+'/grafici_belli.mplstyle')
+#plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 from matplotlib.ticker import MultipleLocator
 import math
@@ -406,11 +409,11 @@ def plt_hist_single_psd(data1,dof,nbins=None):
 def plt_psd_with_zoom(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=False,nyq=None,inset_maxTHz=None,inset_maxk=None):
     #plt.axes([0,1,0,1])
     fig_r,ax0=plt_psd(jf,j2,j2pl,f_THz_max,k_SI_max,k_00,nyq)
-    coord_f=[0.2,0.55,0.3,0.3]
+    coord_f=[0.23,0.55,0.3,0.3]
     ax=fig_r.add_axes(coord_f)
     inv=fig_r.transFigure # + ax0.transData.inverted()
-    f_x=0.73
-    f_x2=1.3
+    f_x=0.72
+    f_x2=1.25
     f_y=0.87
     f_y2=1.35
     print inv.transform((coord_f[0]*f_x,coord_f[1]*f_y))
@@ -436,7 +439,7 @@ def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=False,nyq=No
 
     fig_r=None
     if plt_figure:
-        fig_r=plt.figure(figsize=(3.8,2.3))
+        fig_r=plt.figure(figsize=(3.4,2.0))
     if axes is None:
         axes = plt.gca()
 
@@ -454,9 +457,9 @@ def plt_psd(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=False,nyq=No
     axes.set_ylim(0,k_SI_max)
     axes.set_xlim(0,f_THz_max)
     if plt_figure:
-        axes.set_xlabel('$\omega/2\pi$ (THz)')
+        axes.set_xlabel(r'$\omega/2\pi$ (THz)')
   #     axes.set_ylabel('$^{\ell M}\widehat{S}\'_{\,k}$ (W/mK)')
-        axes.set_ylabel('(W/mK)')
+        axes.set_ylabel(r'W/(m$\,$K)')
     idxnyq=int(nyq/jf.freqs_THz[-1]*jf.freqs_THz.size)
     if nyq != None and nyq < f_THz_max:
        axes.annotate("", xy=(nyq, (k_SI_max-jf.fpsd[idxnyq]*jf.kappa_scale*.5)/7+jf.fpsd[idxnyq]*jf.kappa_scale*.5), \
