@@ -172,12 +172,13 @@ class HeatCurrent(MDSample):
 
       Returns a matplotlib.axes.Axes object.
       """
+      # recompute PSD if needed
       if self.psd is None:
          if not self.multicomponent:
             self.compute_psd()
          else:
             if self.otherMD is None:
-               raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
+               raise ValueError('self.otherMD cannot be None (missing initialization?)')
             self.compute_kappa_multi(others=self.otherMD)
       if PSD_FILTER_W is None:
          if self.FILTER_WINDOW_WIDTH is None:
@@ -191,6 +192,7 @@ class HeatCurrent(MDSample):
             raise ValueError('Units not valid.')
 
       if kappa_units:
+         # plot psd in units of kappa - the log(psd) is not converted
          psd_scale = 0.5 * self.kappa_scale
       else:
          psd_scale = 1.0
@@ -199,18 +201,21 @@ class HeatCurrent(MDSample):
       plt.subplots_adjust(hspace = 0.1)
       if (freq_units == 'thz') or (freq_units == 'THz'):
          axes[0].plot(self.freqs_THz, psd_scale * self.fpsd,    **plot_kwargs)
-         axes[1].plot(self.freqs_THz, psd_scale * self.flogpsd, **plot_kwargs)
+         axes[1].plot(self.freqs_THz, self.flogpsd, **plot_kwargs)
          axes[0].set_xlim([0., self.Nyquist_f_THz])
          axes[1].set_xlim([0., self.Nyquist_f_THz])
       elif (freq_units == 'red'):
          axes[0].plot(self.freqs/freq_scale, psd_scale * self.fpsd,    **plot_kwargs)
-         axes[1].plot(self.freqs/freq_scale, psd_scale * self.flogpsd, **plot_kwargs)
+         axes[1].plot(self.freqs/freq_scale, self.flogpsd, **plot_kwargs)
          axes[0].set_xlim([0., 0.5/freq_scale])
          axes[1].set_xlim([0., 0.5/freq_scale])
       else:
          raise ValueError('Units not valid.')
       axes[0].xaxis.set_ticks_position('top')
-      axes[0].set_ylabel(r'PSD')
+      if kappa_units:
+         axes[0].set_ylabel(r'PSD [W/mK]')
+      else:
+         axes[0].set_ylabel(r'PSD')
       axes[0].grid()
       axes[1].xaxis.set_ticks_position('bottom')
       axes[1].set_xlabel(r'$f$ [THz]')
@@ -268,33 +273,37 @@ class HeatCurrent(MDSample):
 
 
    def plot_cepstral_spectrum(self, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, **plot_kwargs):
-       if axes is None:
-          figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-       plt.subplots_adjust(hspace = 0.1)
-       if kappa_units:
-          psd_scale = 0.5 * self.kappa_scale
-       else:
-          psd_scale = 1.0
-       if (freq_units == 'thz') or (freq_units == 'THz'):
-          axes[0].plot(self.freqs_THz, self.dct.psd * psd_scale,    **plot_kwargs)
-          axes[1].plot(self.freqs_THz, self.dct.logpsd, **plot_kwargs)
-          axes[0].set_xlim([0., self.Nyquist_f_THz])
-          axes[1].set_xlim([0., self.Nyquist_f_THz])
-       elif (freq_units == 'red'):
-          axes[0].plot(self.freqs/freq_scale, self.dct.psd * psd_scale,    **plot_kwargs)
-          axes[1].plot(self.freqs/freq_scale, self.dct.logpsd, **plot_kwargs)
-          axes[0].set_xlim([0., 0.5/freq_scale])
-          axes[1].set_xlim([0., 0.5/freq_scale])
-       else:
-          raise ValueError('Units not valid.')
-       axes[0].xaxis.set_ticks_position('top')
-       axes[0].set_ylabel(r'PSD')
-       axes[0].grid()
-       axes[1].xaxis.set_ticks_position('bottom')
-       axes[1].set_xlabel(r'$f$ [THz]')
-       axes[1].set_ylabel(r'log(PSD)')
-       axes[1].grid()
-       return axes
+      if axes is None:
+         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+      plt.subplots_adjust(hspace = 0.1)
+      if kappa_units:
+         psd_scale = 0.5 * self.kappa_scale
+      else:
+         psd_scale = 1.0
+      if (freq_units == 'thz') or (freq_units == 'THz'):
+         axes[0].plot(self.freqs_THz, self.dct.psd * psd_scale,    **plot_kwargs)
+         axes[1].plot(self.freqs_THz, self.dct.logpsd, **plot_kwargs)
+         axes[0].set_xlim([0., self.Nyquist_f_THz])
+         axes[1].set_xlim([0., self.Nyquist_f_THz])
+      elif (freq_units == 'red'):
+         axes[0].plot(self.freqs/freq_scale, self.dct.psd * psd_scale,    **plot_kwargs)
+         axes[1].plot(self.freqs/freq_scale, self.dct.logpsd, **plot_kwargs)
+         axes[0].set_xlim([0., 0.5/freq_scale])
+         axes[1].set_xlim([0., 0.5/freq_scale])
+      else:
+         raise ValueError('Units not valid.')
+      axes[0].xaxis.set_ticks_position('top')
+      axes[0].set_ylabel(r'PSD')
+      if kappa_units:
+         axes[0].set_ylabel(r'PSD [W/mK]')
+      else:
+         axes[0].set_ylabel(r'PSD')
+      axes[0].grid()
+      axes[1].xaxis.set_ticks_position('bottom')
+      axes[1].set_xlabel(r'$f$ [THz]')
+      axes[1].set_ylabel(r'log(PSD)')
+      axes[1].grid()
+      return axes
 
 
 #is this function needed?
