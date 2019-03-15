@@ -11,9 +11,9 @@
 #add to path the application directory
 from sys import path, argv
 import os
-abs_path = os.path.abspath(argv[0])
-tc_path = abs_path[:abs_path.rfind('/')]
-path.append(tc_path[:tc_path.rfind('/')])
+
+
+
 
 import argparse
 import numpy as np
@@ -24,7 +24,27 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 plt.rcParams['figure.figsize'] = (16, 9)
 plt.style.reload_library()
-plt.style.use(tc_path+'/grafici_belli.mplstyle')
+
+
+#try to import plotstyle (not fundamental)
+try:
+   import pkg_resources
+   pltstyle_filename=pkg_resources.resource_filename(__name__,'grafici_belli.mplstyle')
+except:
+   #fallback (maybe it is not installed ...)
+   try:
+      abs_path = os.path.abspath(__file__)
+      tc_path = abs_path[:abs_path.rfind('/')]
+      path.append(tc_path[:tc_path.rfind('/')])
+   except:
+      abs_path = ''
+   pltstyle_filename=tc_path+'/grafici_belli.mplstyle'
+
+try:
+   plt.style.use(pltstyle_filename)
+except:
+   pass
+
 #plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 from matplotlib.ticker import MultipleLocator

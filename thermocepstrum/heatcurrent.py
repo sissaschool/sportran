@@ -5,8 +5,9 @@
 import numpy as np
 import md
 from md.mdsample import MDSample
-import matplotlib.pyplot as plt
 
+#import matplotlib.pyplot as plt
+from thermocepstrum.utils import loadAfterPlt
 
 def freq_THz_to_red(f, DT_FS):
    return f/1000.*DT_FS
