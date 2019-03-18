@@ -2,14 +2,15 @@
 
 set -x
 
-cp -v LICENSE thermocepstrum/
-cp -v README.md thermocepstrum/ 
-python3 -m pip install --user --upgrade setuptools wheel
+python -m pip install --user --upgrade setuptools wheel
 
 cd thermocepstrum
-python3 setup.py sdist bdist_wheel
+python setup.py sdist bdist_wheel
 
-python3 -m pip install --user --upgrade twine
-python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+# to test on this machin
+# python -m pip install dist/dokr-0.1-py3-none-any.whl
+
+python -m pip install --user --upgrade twine
+python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 
