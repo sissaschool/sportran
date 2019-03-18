@@ -1,6 +1,9 @@
 
 import numpy as np
-import matplotlib.pyplot as plt
+
+#import matplotlib.pyplot as plt
+from thermocepstrum.utils import loadAfterPlt
+
 from .tools import integrate_acf, runavefilter
 from scipy.signal import periodogram
 from .acf import acovf
@@ -262,11 +265,12 @@ class MDSample(object):
         ndf_chi = covarALL.shape[3]- len(other_spectrALL)
 
         # compute the sum over the last axis (x,y,z components):
-        cospectrum = covarALL.sum(axis=3)
+        self.L = covarALL.shape[3]   ## isn't is == to N_CURRENTS?
+        self.cospectrum = covarALL.sum(axis=3)
 
         # compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
         # the diagonal elements of the inverse have very convenient statistical properties 
-        multi_psd = (np.linalg.inv(cospectrum.transpose((2,0,1)))[:,0,0]**-1).real / ndf_chi
+        multi_psd = (np.linalg.inv(self.cospectrum.transpose((2,0,1)))[:,0,0]**-1).real / ndf_chi
 
         if normalize:
             multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
@@ -280,7 +284,6 @@ class MDSample(object):
         #multi_mdsample.ndf_chi = ndf_chi
         #multi_mdsample.cospectrum = cospectrum
         #return multi_mdsample
-
 
         self.ndf_chi = ndf_chi
         self.psd = multi_psd
@@ -296,6 +299,11 @@ class MDSample(object):
         """Computes the periodogram from the trajectory or the spectrum. 
         If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
         The PSD is multiplied by DT_FS at the end."""
+        if self.multicomponent:
+            if self.otherMD is None:
+                raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
+            self.compute_kappa_multi(self.otherMD, FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
+            return
         if DT_FS is not None:
             self.DT_FS = DT_FS
         if (method == 'trajectory'):
@@ -342,6 +350,16 @@ class MDSample(object):
             raise ValueError('Filter window width not defined.')
         if (window_type == 'rectangular'):
             self.fpsd = runavefilter(self.psd, self.FILTER_WF)
+            try:  ## THIS IS HORRIBLE -- find another method to check its definition
+               self.fcospectrum = []
+               for i in xrange(self.cospectrum.shape[0]):
+                  self.fcospectrum.append([])
+                  for j in xrange(self.cospectrum.shape[1]):
+                     ffpsd = runavefilter(self.cospectrum[i,j], self.FILTER_WF)
+                     self.fcospectrum[i].append(ffpsd/self.L)
+               self.fcospectrum = np.asarray(self.fcospectrum)
+            except AttributeError:
+               pass
             if logpsd_filter_type == 1:
                self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
             else:
