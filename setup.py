@@ -8,15 +8,17 @@ setuptools.setup(
     version="0.1",
     author="Loris Ercole, Riccardo Bertossa",
     author_email="loris.ercole@epfl.ch",
-    description="Cepstral Data Analysis for Green-Kubo transport coefficients",
+    description="Cepstral Data Analysis of current time series for Green-Kubo transport coefficients",
+    license="GPL 3",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/lorisercole/thermocepstrum",
     keywords="cepstral data analysis thermal conductivity transport coefficients physics green-kubo",
     install_requires=['numpy','scipy','matplotlib'],
+    python_requires='>=2.6',
     packages=setuptools.find_packages(),
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 2.7",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
@@ -25,7 +27,15 @@ setuptools.setup(
         "Natural Language :: English",
         "Topic :: Scientific/Engineering :: Physics",
         "Environment :: Console"
-    ]
+    ],
+    package_data={
+	 '' : ["grafici_belli.mplstyle"],
+ 	},
+    entry_points={
+        'console_scripts': [
+            'thermocepstrum-analysis = thermocepstrum.analysis:main'
+        ],
+    },
 )
 # scripts=['thermocepstrum']  --> analysis.sh
 # OR BETTER: entry_points

@@ -1,6 +1,9 @@
 
 import numpy as np
-import matplotlib.pyplot as plt
+
+#import matplotlib.pyplot as plt
+from thermocepstrum.utils import loadAfterPlt
+
 from .tools import integrate_acf, runavefilter
 from scipy.signal import periodogram
 from .acf import acovf
