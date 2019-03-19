@@ -1,39 +1,40 @@
 # Command line example
 
-In this example we perform the same analysis that we have done in the jupyter notebook in a much simpler way.
-Symply run, after installing the package, the following command
+In this example we perform the same analysis that is perfomed in the `example_cepstrum_doublecomp_NaCl.ipynb` jupyter notebook in a much straightforward way.
+Symply run, after installing the package, the following command (see `command.sh`)
 
 ```
-thermocepstrum-analysis ../data/NaCl.dat -k flusso -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r
+thermocepstrum-analysis ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r
 ```
+If the package is not installed you can run this instead:
+`../../thermocepstrum/analysis.py ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r`
+
 The options have the following meaning:
-
-* ```-k flusso``` use as the energy current the current with header 'flusso'
-* ```-j 'vcm[1]``` use as the convective current the current with header 'vcm[1]'
-* ```-t 5.0``` set the timestep to 5.0 fs
-* ```-V 65013.301261``` set the volume of the system to 65013.301261 A^3
-* ```-w 0.1``` the width of the moving average used only for visualization purposes is 0.1THz
-* ```--FSTAR 14.0``` Nyquist frequency is 14.0 THz
-* ```-r``` resample according to the falue of the Nyquist frequency specified with ```--FSTAR```
+* `-k flux` use the columns with header `flux` as the energy flux
+* `-j 'vcm[1]` use the columns with header `vcm[1]` as the convective flux
+* `-t 5.0` set the timestep to 5.0 fs
+* `-V 65013.301261` set the volume of the system to 65013.301261 A^3
+* `-w 0.1` the width of the moving average filter used only to visualize the spectrum is 0.1 THz
+* `--FSTAR 14.0` set the $f^*$ cutoff frequency to 14.0 THz
+* `-r` resample according to the value of $f^*$ specified with `--FSTAR`
 
 The output of the program in the terminal is:
-
 ```
  Input file (table):      ../data/NaCl.dat
  Units:      metal
  Time step:      5.0 fs
-Temp    c_flusso[1] c_flusso[2] c_flusso[3] c_vcm[1][1] c_vcm[1][2] c_vcm[1][3]
+Temp    c_flux[1] c_flux[2] c_flux[3] c_vcm[1][1] c_vcm[1][2] c_vcm[1][3]
  #####################################
-  all_ckeys =  {'flusso': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6]), 'Temp': [0]}
+  all_ckeys =  {'flux': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6]), 'Temp': [0]}
  #####################################
 Data length =  20000
-  ckey =  {'flusso': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6]), 'Temp': [0]}
+  ckey =  {'flux': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6]), 'Temp': [0]}
   ( 20000 ) steps read.
-DONE.  Elapsed time:  0.161334037781 seconds
+DONE.  Elapsed time:  0.205617904663 seconds
  Mean Temperature (computed):  1399.3477812 K  +/-  19.3187858209
  Volume (input):  65013.301261 A^3
  Time step (input):  5.0 fs
-['flusso', 'vcm[1]'] None
+['flux', 'vcm[1]'] None
   currents shape is (2, 20000, 3)
 snippet:
 [[[ 2.5086549e+02  2.0619423e+01  2.0011500e+02]
@@ -86,5 +87,4 @@ Using multicomponent code.
 -----------------------------------------------------
 ```
 
-The program outputs raw data and some pdf plots. In this example the output files have a name that starts with "output".
-
+The program outputs raw data and some pdf plots. In this example the output files are called `output.*`.
