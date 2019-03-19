@@ -4,7 +4,6 @@
 python -m pip install --user --upgrade setuptools wheel
 python -m pip install --user --upgrade twine
 
-cd thermocepstrum
 python setup.py sdist bdist_wheel
 
 echo
