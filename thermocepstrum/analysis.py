@@ -47,7 +47,9 @@ from matplotlib.ticker import MultipleLocator
 try:
    import thermocepstrum as tc
 except ImportError:
-   path.append('..')
+   abs_path = os.path.abspath(__file__)
+   tc_path = abs_path[:abs_path.rfind('/')]
+   path.append(tc_path[:tc_path.rfind('/')])
    try:
       import thermocepstrum as tc
    except ImportError:
