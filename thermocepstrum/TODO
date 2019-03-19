@@ -2,7 +2,7 @@
 TODO FOR v0.3 RELEASE:
 - write standard setup.py and package info files
 - i/o example
-- move grafici_belli to utils
+x move grafici_belli to utils
 
 
 TODO IN FUTURE RELEASES:
@@ -10,6 +10,8 @@ TODO IN FUTURE RELEASES:
 - plot class
 - there should be one single compute_periodogram method (either for single and multi component)
 - uniform indentations of 4 spaces, etc.
+- translate all comments to English
+- renew plot style
 - in plot functions, always return (figure, axes)
 - i/o: when reading a text file, the program should save a binary file (unless otherwise stated). If it finds the binary file it does not read the text one (making it clear to the user)
 

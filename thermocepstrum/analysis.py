@@ -24,7 +24,7 @@ plt.style.reload_library()
 #try to import plotstyle (not fundamental)
 try:
    import pkg_resources
-   pltstyle_filename = pkg_resources.resource_filename(__name__,'grafici_belli.mplstyle')
+   pltstyle_filename = pkg_resources.resource_filename(__name__,'plot_style.mplstyle')
 except:
    #fallback (maybe it is not installed ...)
    try:
@@ -33,7 +33,7 @@ except:
       path.append(tc_path[:tc_path.rfind('/')])
    except:
       abs_path = ''
-   pltstyle_filename = tc_path + '/grafici_belli.mplstyle'
+   pltstyle_filename = tc_path + '/plot_style.mplstyle'
 
 try:
    plt.style.use(pltstyle_filename)
