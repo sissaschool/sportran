@@ -19,3 +19,9 @@ See help (python analysis.py --help) for more informations.
  - Scipy
  - Matplotlib
 
+### Installation
+  1. Clone this repository ```git clone https://github.com/lorisercole/thermocepstrum.git```
+  2. Select the branch that you want, for example ```cd thermocepstrum; git checkout beta```
+  3. Run the script ```./pack.sh```. You will find in the ```dist``` directory the python package.
+  4. Install with pip: for example ```pip install --user dist/thermocepstrum-0.1-py2-none-any.whl```. Dependencies will be automatically downloaded
+  5. You are done! Check that the installation is working by trying the command ```thermocepstrum-analysis```. If it is not working, maybe you have to add the folder where you python package are installed (on my system is ```~/.local/bin```) to your ```PATH```. Remember to read the examples in the ```examples``` directory!
