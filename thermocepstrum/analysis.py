@@ -44,8 +44,15 @@ except:
 c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 from matplotlib.ticker import MultipleLocator
 
+try:
+   import thermocepstrum as tc
+except ImportError:
+   path.append('..')
+   try:
+      import thermocepstrum as tc
+   except ImportError:
+      raise ImportError('Cannot locate thermocepstrum.')
 
-import thermocepstrum as tc
 import math
 
 def main():
