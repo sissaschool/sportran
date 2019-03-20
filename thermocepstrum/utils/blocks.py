@@ -18,9 +18,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 #plt.rcParams['figure.figsize'] = (16, 9)
 plt.style.reload_library()
 try:
-   plt.style.use('./grafici_belli.mplstyle')
+   plt.style.use('./plot_style.mplstyle')
 except:
-   plt.style.use(tc_path+'/grafici_belli.mplstyle')
+   plt.style.use(tc_path+'utils/plot_style.mplstyle')
 #plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 from matplotlib.ticker import MultipleLocator

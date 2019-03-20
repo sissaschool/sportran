@@ -7,11 +7,11 @@ Code to compute thermal conductivity through cepstral analysis of heat flux time
 
 ### Usage
 The code can be used as a **library**, for example in a Jupyter notebook. 
-In the "example" folder you can find some examples. 
+In the `examples` folder you can find some examples. 
 
-Alternatively, you can run the code "analysis.py" from the **command line**.
-It can execute most of the cepstral analysis routines, writing the result in a series of data files and PDF plots.
-See help (python analysis.py --help) for more informations.
+Alternatively, you can run the code `analysis.py` from the **command line**.
+It can execute most of the cepstral analysis routines, returning the results in a series of data files and PDF plots.
+See the `examples` folder and the help (`python analysis.py --help`) for more information.
 
 ### Requirements
  - Python 2.7
@@ -19,3 +19,11 @@ See help (python analysis.py --help) for more informations.
  - Scipy
  - Matplotlib
 
+### Installation
+  1. Clone this repository `git clone https://github.com/lorisercole/thermocepstrum.git`
+  2. Install the package with pip (dependencies will be automatically downloaded). For example:
+```
+cd thermocepstrum
+pip install .
+```
+  3. You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.

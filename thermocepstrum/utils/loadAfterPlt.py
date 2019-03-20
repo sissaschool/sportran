@@ -6,21 +6,21 @@
 
 def loadRedefineGlobalPlt():
     global plt
-    import matplotlib.pyplot as plt2
-    plt=plt2
+    import matplotlib.pyplot as plt2_
+    plt=plt2_
 
 class Plt():
     def plot(self,*args, **kwargs):
         loadRedefineGlobalPlt()
-        return plt2.plot(*args,**kwargs)
+        return plt.plot(*args,**kwargs)
 
     def subplots(self,*args, **kwargs):
         loadRedefineGlobalPlt()
-        return plt2.subplots(*args,**kwargs)
+        return plt.subplots(*args,**kwargs)
 
     def subplots_adjust(self,*args, **kwargs):
         loadRedefineGlobalPlt()
-        return plt2.subplots_adjust(*args,**kwargs)
+        return plt.subplots_adjust(*args,**kwargs)
 
 
 try:
