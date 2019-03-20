@@ -7,7 +7,12 @@ import md
 from md.mdsample import MDSample
 
 #import matplotlib.pyplot as plt
-from thermocepstrum.utils import loadAfterPlt
+from thermocepstrum.utils.loadAfterPlt import plt
+
+try:
+    plt
+except:
+    print "Warning: plt undefined"
 
 def freq_THz_to_red(f, DT_FS):
    return f/1000.*DT_FS

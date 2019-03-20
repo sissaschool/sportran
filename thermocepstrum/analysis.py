@@ -1,15 +1,7 @@
 #!/usr/bin/env python
 
-# Needed modules:
-#  numpy
-#  scipy
-#  matplotlib
-#  argparse
-
-#add to path the application directory
-from sys import path, argv
 import os
-
+from sys import path, argv
 import argparse
 import numpy as np
 #import scipy as sp
@@ -17,36 +9,39 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-plt.rcParams['figure.figsize'] = (16, 9)
-plt.style.reload_library()
+from matplotlib.ticker import MultipleLocator
 
+try:
+   import thermocepstrum as tc
+except ImportError:
+   abs_path = os.path.abspath(__file__)
+   tc_path = abs_path[:abs_path.rfind('/')]
+   path.append(tc_path[:tc_path.rfind('/')])
+   try:
+      import thermocepstrum as tc
+   except ImportError:
+      raise ImportError('Cannot locate thermocepstrum.')
 
 #try to import plotstyle (not fundamental)
 try:
    import pkg_resources
-   pltstyle_filename = pkg_resources.resource_filename(__name__,'grafici_belli.mplstyle')
+   pltstyle_filename = pkg_resources.resource_filename('thermocepstrum.utils', 'plot_style.mplstyle')
 except:
-   #fallback (maybe it is not installed ...)
+   # fallback (maybe it is not installed...)
    try:
       abs_path = os.path.abspath(__file__)
       tc_path = abs_path[:abs_path.rfind('/')]
       path.append(tc_path[:tc_path.rfind('/')])
    except:
-      abs_path = ''
-   pltstyle_filename = tc_path + '/grafici_belli.mplstyle'
-
+      abs_path = '.'
+   pltstyle_filename = tc_path + '/utils/plot_style.mplstyle'
 try:
    plt.style.use(pltstyle_filename)
 except:
    pass
 
-#plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
-from matplotlib.ticker import MultipleLocator
 
-
-import thermocepstrum as tc
-import math
 
 def main():
    """
@@ -679,6 +674,7 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
 
 
 def n_tick_in_range(beg, end, n):
+    import math
     size = end-beg
     n_cifre = math.floor(math.log(size/n,10.0))
     delta = math.ceil((size/n)/10**n_cifre)*10**n_cifre
