@@ -20,10 +20,14 @@ See the `examples` folder and the help (`python analysis.py --help`) for more in
  - Matplotlib
 
 ### Installation
-  1. Clone this repository `git clone https://github.com/lorisercole/thermocepstrum.git`
+  You can simply pip-install thermocepstrum with `pip install thermocepstrum`.
+
+  Alternatively:
+  1. Clone this repository: `git clone https://github.com/lorisercole/thermocepstrum.git`
   2. Install the package with pip (dependencies will be automatically downloaded). For example:
 ```
 cd thermocepstrum
 pip install .
 ```
-  3. You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
+
+  You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
