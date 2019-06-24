@@ -1,0 +1,36 @@
+# Install pre-commit hooks via
+# pre-commit install
+
+# modernizer: make sure our code-base is Python 3 ready
+- repo: https://github.com/python-modernize/python-modernize.git
+  sha: a234ce4e185cf77a55632888f1811d83b4ad9ef2
+  hooks:
+  - id: python-modernize
+    exclude: ^docs/
+    args:
+      - --write
+      - --nobackups
+
+- repo: local
+  hooks:
+  # yapf = yet another python formatter
+  - id: yapf
+    name: yapf
+    entry: yapf
+    language: system
+    types: [python]
+    args: ["-i"]
+
+#  # prospector: collection of linters
+#  - id: prospector
+#    language: system
+#    types: [file, python]
+#    name: prospector
+#    description: "This hook runs Prospector: https://github.com/landscapeio/prospector"
+#    entry: prospector
+#
+#  - id: version-number
+#    name: Check version numbers
+#    entry: python ./.travis-data/check_version.py
+#    language: system
+#    files: '^(setup.json)|(aiida_diff/__init__.py)'
