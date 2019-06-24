@@ -3,8 +3,8 @@
 ################################################################################
 
 import numpy as np
-import md
-from md.mdsample import MDSample
+from . import md
+from .md.mdsample import MDSample
 
 #import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
@@ -12,7 +12,7 @@ from thermocepstrum.utils.loadAfterPlt import plt
 try:
     plt
 except:
-    print "Warning: plt undefined"
+    print("Warning: plt undefined")
 
 def freq_THz_to_red(f, DT_FS):
    return f/1000.*DT_FS
@@ -50,7 +50,7 @@ class HeatCurrent(MDSample):
          raise ValueError("Shape of j {} not valid.".format(j.shape))
 
       if self.multicomponent:
-         print "Using multicomponent code."
+         print("Using multicomponent code.")
          MDSample.__init__(self, traj=j[0], DT_FS=DT_FS)
          # initialize other MDSample objects needed to make the work
          self.otherMD = []
@@ -82,7 +82,7 @@ class HeatCurrent(MDSample):
                raise ValueError('Freq units not valid.')
          self.initialize_cepstral_parameters()
       else:
-         print "Warning: trajectory not initialized. You should manually initialize what you need."
+         print("Warning: trajectory not initialized. You should manually initialize what you need.")
 
       self.dct = None
       return
@@ -158,7 +158,7 @@ class HeatCurrent(MDSample):
             '-----------------------------------------------------\n' +\
             '  kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.kappa_Kmin, self.kappa_Kmin_std) +\
             '-----------------------------------------------------\n'
-      print self.cepstral_log
+      print(self.cepstral_log)
       return
 
 
@@ -380,8 +380,8 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
       if (freq_units == 'thz') or (freq_units == 'THz'):
          xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*1000./x.DT_FS, 'thz', TSKIP, axes=axes)
       elif (freq_units == 'red'):
-         print PSD_FILTER_W
-         print x.FILTER_WINDOW_WIDTH
+         print(PSD_FILTER_W)
+         print(x.FILTER_WINDOW_WIDTH)
          xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*TSKIP, 'red', TSKIP, axes=axes)
 
    xf.resample_log = '-----------------------------------------------------\n' +\
@@ -401,7 +401,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
                      ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
                      ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.) +\
                      '-----------------------------------------------------\n'
-   print xf.resample_log
+   print(xf.resample_log)
 
    if plot:
       if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -436,7 +436,7 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
 
    xf = []
    for TSKIP in TSKIP_LIST:
-      print 'TSKIP =  {:d}'.format(TSKIP)
+      print('TSKIP =  {:d}'.format(TSKIP))
       xff = resample_current(x, TSKIP, plot=False)
       xff.cepstral_analysis(aic_type, Kmin_corrfactor)
       xf.append( xff )

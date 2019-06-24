@@ -42,9 +42,9 @@ def get_volume( filename ):
   line = f.readline()
   while( line ):
     if "BOX BOUNDS" in line:
-      xlo, xhi = map(float, f.readline().split())
-      ylo, yhi = map(float, f.readline().split())
-      zlo, zhi = map(float, f.readline().split())
+      xlo, xhi = list(map(float, f.readline().split()))
+      ylo, yhi = list(map(float, f.readline().split()))
+      zlo, zhi = list(map(float, f.readline().split()))
       break
     line = f.readline()
   f.close()
@@ -152,7 +152,7 @@ class LAMMPS_Dump(object):
                zbox = self.file.readline().split()
                self.BOX_BOUNDS = np.array([xbox, ybox, zbox], dtype='float')
             elif (values[1] == 'ATOMS'):
-               for i in xrange(2, len(values)):
+               for i in range(2, len(values)):
                   if group_vectors:
                      bracket = is_vector_variable( values[i] )  # get position of left square bracket
                   else:
@@ -194,7 +194,7 @@ class LAMMPS_Dump(object):
          self.TOT_TIMESTEPS = len(self.all_timesteps)
          self.all_timesteps = np.array(self.all_timesteps)
       else:
-         print " ** No timesteps pre-loaded. Be careful in the selection. **"
+         print(" ** No timesteps pre-loaded. Be careful in the selection. **")
          # get the first 2 timesteps
          while (len(self.all_timesteps) < 2):
             line = self.file.readline()
@@ -213,12 +213,12 @@ class LAMMPS_Dump(object):
       # go back to the first timestep
       self.gototimestep(0)  # compute_first = True
       self._start_byte = 0
-      print '  all_ckeys      = ', self.all_ckeys
-      print '  TOT_TIMESTEPS  = ', self.TOT_TIMESTEPS
-      print '  FIRST_TIMESTEP = ', self.FIRST_TIMESTEP
-      print '  DELTA_TIMESTEP = ', self.DELTA_TIMESTEP
-      print '  LAST_TIMESTEP  = ', self.LAST_TIMESTEP
-      print '  all_timesteps  = ', self.all_timesteps
+      print('  all_ckeys      = ', self.all_ckeys)
+      print('  TOT_TIMESTEPS  = ', self.TOT_TIMESTEPS)
+      print('  FIRST_TIMESTEP = ', self.FIRST_TIMESTEP)
+      print('  DELTA_TIMESTEP = ', self.DELTA_TIMESTEP)
+      print('  LAST_TIMESTEP  = ', self.LAST_TIMESTEP)
+      print('  all_timesteps  = ', self.all_timesteps)
       return
 
 
@@ -237,12 +237,12 @@ class LAMMPS_Dump(object):
             if value is not None:
                self.ckey[key] = value[:]  # copy all indexes (up to max dimension for vectors)
             else:
-               print "Warning: ", key, "key not found."
+               print("Warning: ", key, "key not found.")
       if (len(self.ckey) == 0):
          raise KeyError("No ckey set. Check selected keys.")
       else:
          if not self._quiet:
-            print "  ckey = ", self.ckey
+            print("  ckey = ", self.ckey)
       return
 
 
@@ -275,7 +275,7 @@ class LAMMPS_Dump(object):
       if step is None:
          step = self.DELTA_TIMESTEP
       elif (step%self.DELTA_TIMESTEP != 0):
-         print "Warning: step is not a multiple of the detected DELTA_TIMESTEP. You may get errors."
+         print("Warning: step is not a multiple of the detected DELTA_TIMESTEP. You may get errors.")
       if (first%step != 0):
          first += step - first%step  # round first step to the next in the list
 
@@ -286,7 +286,7 @@ class LAMMPS_Dump(object):
             if step in self.all_timesteps:
                self.timestep.append(step)    # make list of available selected-timesteps
             else:
-               print "Warning: timestep # {:d} not found.".format(step)
+               print("Warning: timestep # {:d} not found.".format(step))
       else:
          self.timestep = self.select_timesteps   # use all the selected (be careful)
       self.nsteps = len(self.timestep)    # number of available steps
@@ -294,8 +294,8 @@ class LAMMPS_Dump(object):
          raise ValueError("No timestep set. Check selected timesteps.")
       else:
          if not self._quiet:
-            print "  nsteps   = ", self.nsteps
-            print "  timestep = ", self.timestep
+            print("  nsteps   = ", self.nsteps)
+            print("  timestep = ", self.timestep)
       return
 
 
@@ -305,9 +305,9 @@ class LAMMPS_Dump(object):
          raise ValueError('ckey not set.')
       if self.timestep is None:
          raise ValueError('timestep not set.')
-      self.data = [dict() for i in xrange(self.nsteps)]
-      for istep in xrange(self.nsteps):
-         for key, idx in self.ckey.iteritems():
+      self.data = [dict() for i in range(self.nsteps)]
+      for istep in range(self.nsteps):
+         for key, idx in self.ckey.items():
             if (key == 'element'):   # this should be improved
               self.data[istep][key] = np.zeros( (self.NATOMS, len(idx)), dtype='S8' )
             else:
@@ -383,36 +383,36 @@ class LAMMPS_Dump(object):
       for istep,step in enumerate(self.timestep):
          self._gototimestep(step, fast_check)    # jump to the desired step, 
          self.data[istep]['TIMESTEP'] = step
-         for nat in xrange(self.NATOMS):           # read data (may be unsorted)
+         for nat in range(self.NATOMS):           # read data (may be unsorted)
             line = self.file.readline()
             if len(line) == 0:   # EOF
                raise EOFError("Warning:  reached EOF.")
             values = np.array(line.split())
-            for key, idx in self.ckey.iteritems():   # save the selected columns
+            for key, idx in self.ckey.items():   # save the selected columns
                atomid = int(values[atomid_col]) - 1  # current atom index (in LAMMPS it starts from 1)
                if (key == 'element'):   # this should be improved
-                  self.data[istep][key][atomid,:] = np.array(map(str, values[idx]))
+                  self.data[istep][key][atomid,:] = np.array(list(map(str, values[idx])))
                else:
-                  self.data[istep][key][atomid,:] = np.array(map(float, values[idx]))
+                  self.data[istep][key][atomid,:] = np.array(list(map(float, values[idx])))
          if ( (istep+1)%progbar_step == 0 ):
             if self._GUI:
                progbar.value = float(istep+1)/self.nsteps*100.;
                progbar.description = "%g %%" % progbar.value
             else:
-               print "    step = {:9d} - {:6.2f}% completed".format(istep+1, float(istep+1)/self.nsteps*100.)
+               print("    step = {:9d} - {:6.2f}% completed".format(istep+1, float(istep+1)/self.nsteps*100.))
       if self._GUI:
          progbar.close()
       # check number of steps read, keep an even number of steps
       if (istep + 1 < self.nsteps):      # (should never happen)
          if (istep == 0):
-            print "WARNING:  no step read."
+            print("WARNING:  no step read.")
             return
          else:
-            print "Warning:  less steps read."
+            print("Warning:  less steps read.")
             self.nsteps = istep + 1
       if not self._quiet:
-         print "  ( %d ) steps read." % (self.nsteps)
-         print "DONE.  Elapsed time: ", time()-start_time, "seconds"
+         print("  ( %d ) steps read." % (self.nsteps))
+         print("DONE.  Elapsed time: ", time()-start_time, "seconds")
       self._compute_current_step = False  # next time do not compute the current_step
       return self.data
 

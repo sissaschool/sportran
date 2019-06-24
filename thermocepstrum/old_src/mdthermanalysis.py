@@ -262,7 +262,7 @@ class MDSample(object):
         """Computes the autocovariance function of the trajectory."""
         self.NLAGS = NLAGS
         self.acf = np.zeros((self.NLAGS+1, self.N_COMPONENTS))
-        for d in xrange(self.N_COMPONENTS):
+        for d in range(self.N_COMPONENTS):
             self.acf[:,d] = acf(self.traj[:,d], nlags=NLAGS, unbiased=True, \
                                        fft=True) * np.var(self.traj[:,d])
         self.acfm = np.mean(self.acf, axis=1)  # average acf
@@ -635,7 +635,7 @@ class CosFilter(object):
         self.aic_min = np.min(self.aic)
         self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
         if (self.aic_Kmin >= NF):
-            print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
+            print("! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin))
         
         if ck_theory_var is None:
             # by default the THEORETICAL variances are the one component ones:
@@ -654,7 +654,7 @@ class CosFilter(object):
             self.logpsdK_THEORY_std = np.sqrt(self.logpsdK_THEORY_var)
             self.logtau_THEORY_var = np.zeros(NF)
             self.logtau_THEORY_var[0] = self.logpsdK_THEORY_var[0]
-            for K in xrange(1, NF-1):
+            for K in range(1, NF-1):
                 self.logtau_THEORY_var[K] = self.logtau_THEORY_var[K-1] + 4.*self.logpsdK_THEORY_var[K]
             self.logtau_THEORY_var[-1] = self.logtau_THEORY_var[-2] + self.logpsdK_THEORY_var[-1]
             self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
@@ -829,7 +829,7 @@ def dct_aic_ab(yk, theory_var, A=1.0, B=2.0):
 def dct_filter_psd(y, K=None):
     # K is the maximum coefficient summed (c_k = 0 per k > K)
     if (K >= y.size):
-        print "! Warning:  dct_filter_psd K value ({:}) out of range.".format(K)
+        print("! Warning:  dct_filter_psd K value ({:}) out of range.".format(K))
         return np.full(y.size, np.NaN)
     yk = dct(y, type=1)
     if K is not None:
@@ -1042,7 +1042,7 @@ class LowPassFilter(object):
             elif (0.5 <= self.freqs[i] < 1.):
                 lf[i] = np.exp( -(np.abs(self.freqs[i]-1.)/self.f0)**self.alpha )*(1.0 - self.minatt) + self.minatt
             else:
-                print "ERROR: frequency out of range!"
+                print("ERROR: frequency out of range!")
         return lf
 
     
