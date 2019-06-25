@@ -14,6 +14,7 @@ try:
 except:
     print("Warning: plt undefined")
 
+
 def freq_THz_to_red(f, DT_FS):
    return f/1000.*DT_FS
 
@@ -87,13 +88,11 @@ class HeatCurrent(MDSample):
       self.dct = None
       return
 
-
    def __repr__(self):
       msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__()
       if self.dct is not None:
          msg += self.dct.__repr__()
       return msg
-
 
    def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
       """
@@ -117,7 +116,6 @@ class HeatCurrent(MDSample):
          raise ValueError('Units not supported.')
       return
 
-
    def initialize_cepstral_parameters(self):
       """
       Defines the parameters of the theoretical distribution of the cepstrum.
@@ -131,7 +129,6 @@ class HeatCurrent(MDSample):
          self.ck_THEORY_var, self.psd_THEORY_mean = \
              md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
       return
-
 
    def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0):
       """
@@ -229,7 +226,6 @@ class HeatCurrent(MDSample):
       axes[1].grid()
       return axes
 
-
    def plot_ck(self, axes=None, label=None, FIGSIZE=None):
       if axes is None:
          figure, axes = plt.subplots(1, figsize=FIGSIZE)
@@ -241,7 +237,6 @@ class HeatCurrent(MDSample):
       axes.set_xlabel(r'$k$')
       axes.set_ylabel(r'$c_k$')
       return axes
-
 
    def plot_L0_Pstar(self, axes=None, label=None, FIGSIZE=None):
       if axes is None:
@@ -259,7 +254,6 @@ class HeatCurrent(MDSample):
       axes.set_ylabel(r'$L_0(P*)$')
       return axes
 
-
    def plot_kappa_Pstar(self, axes=None, label=None, FIGSIZE=None):
       if axes is None:
          figure, axes = plt.subplots(1, figsize=FIGSIZE)
@@ -276,7 +270,6 @@ class HeatCurrent(MDSample):
       axes.set_xlabel(r'$P^*$')
       axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
       return axes
-
 
    def plot_cepstral_spectrum(self, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, **plot_kwargs):
       if axes is None:
@@ -449,8 +442,8 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
          ax = axes
       ax[0].errorbar( FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr = [xff.kappa_Kmin_std for xff in xf], **plot_kwargs )
       ax[1].errorbar( FSTAR_THZ_LIST, [xff.dct.logtau_Kmin for xff in xf], yerr = [xff.dct.logtau_std_Kmin for xff in xf], **plot_kwargs )
-      #ax[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
-      #ax[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
+      # ax[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
+      # ax[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
       ax[0].xaxis.set_ticks_position('top')
       ax[0].set_ylabel(r'PSD')
       ax[0].grid()
