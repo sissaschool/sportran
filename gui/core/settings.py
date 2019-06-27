@@ -24,7 +24,7 @@ FILE_EXTENSIONS = ['.dat', '.log', '.txt', '.bin']
 
 # -------- GUI SETTINGS --------
 
-STATUS = ['Loading', 'Configuring', 'Calculating', 'Waiting', 'Sleep']
+STATUS = ['Loading', 'Configuring', 'Calculating', 'Idle', 'Sleep']
 STATUS_NOW = STATUS[0]
 
 # LANGUAGE = 'en-EN'
@@ -33,7 +33,7 @@ X_RESIZE = True
 Y_RESIZE = True
 
 X_SIZE = 1024
-Y_SIZE = 768
+Y_SIZE = 450
 
 X_SPACING = 300
 Y_SPACING = 200
