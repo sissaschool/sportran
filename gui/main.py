@@ -14,14 +14,19 @@ This file contains the GUI of the Thermocepstrum project developed at SISSA
 # todo: Put an accurate description of the project?
 
 import os
-import glob
-import matplotlib.pyplot as plt
+
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+
 from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import Separator, Progressbar
 from tkinter import messagebox as msg
 import tkinter.filedialog as dialog
 from tkinter.font import Font
+
 from core import settings
 import core.control_unit as cu
 import core.gui_functions as guif
@@ -70,7 +75,7 @@ class ThermocepstrumGUI(Tk):
             self.frames[F] = ThermocepstrumGUI.frame
             ThermocepstrumGUI.frame.grid(row=0, column=0, sticky='nsew')
 
-        self.show_frame(FileManager)
+        self.show_frame(Cutter)
 
     def show_frame(self, frame):
         ThermocepstrumGUI.frame = self.frames[frame]
@@ -121,19 +126,18 @@ class StatusFrame(Frame):
         Frame.__init__(self, parent)
 
         status_frame = Frame(controller)
-        status_frame.pack(fill='x')
+        status_frame.pack(fill='x', side=BOTTOM)
 
         self.status = Label(status_frame, text=('Status: ' + settings.STATUS_NOW))
         self.status.pack(side=LEFT, padx=4, pady=2)
 
 
 class FileManager(Frame):
-
+    # todo: add a function to update the file manager
     SortDir = True
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-
         TopBar(parent, controller)
 
         file_manager = Frame(self, width=400)
@@ -157,23 +161,22 @@ class FileManager(Frame):
         self._start_file_manager(file_manager)
         self._parse_files()
 
-        StatusFrame(parent, controller)
+        StatusFrame(controller, self)
 
     def _start_file_manager(self, parent):
-        inner_frame = ttk.Frame(parent)
-        inner_frame.pack(side=TOP, fill=BOTH, expand=Y)
+        inner_frame = parent
 
         # create the tree and scrollbars
         self.headers = ('File name', 'File type', 'Size')
-        self.file_list = ttk.Treeview(columns=self.headers,
+        self.file_list = ttk.Treeview(inner_frame, columns=self.headers,
                                       show='headings')
 
-        ysb = ttk.Scrollbar(orient=VERTICAL, command=self.file_list.yview)
+        ysb = ttk.Scrollbar(inner_frame, orient=VERTICAL, command=self.file_list.yview)
         self.file_list['yscroll'] = ysb.set
 
         # add scrollbars to frame
-        self.file_list.grid(row=0, column=0, sticky=NSEW, in_=inner_frame)
-        ysb.grid(row=0, column=1, sticky='ns', in_=inner_frame)
+        self.file_list.grid(row=0, column=0, sticky=NSEW)
+        ysb.grid(row=0, column=1, sticky='ns')
 
         self.file_list.bind('<<TreeviewSelect>>', self._select_file)
         # set frame resize priorities
@@ -252,6 +255,20 @@ class Cutter(Frame):
         Frame.__init__(self, parent)
 
         TopBar(parent, controller)
+
+        # todo: create an individual widget for the graphs
+        f = Figure(figsize=(4, 4), dpi=100)
+        a = f.add_subplot(111)
+        a.plot([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 4, 9, 16, 25, 36, 49, 64, 81])
+
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=TOP)
+        StatusFrame(controller, self)
+
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=TOP)
 
 
 class PStar(Frame):
