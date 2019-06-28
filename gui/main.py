@@ -132,6 +132,35 @@ class StatusFrame(Frame):
         self.status.pack(side=LEFT, padx=4, pady=2)
 
 
+class GraphWidget(Frame):
+
+    def __init__(self, parent, controller, size=(4, 4), type=111, toolbar=False):
+        Frame.__init__(self, parent)
+
+        self.title = ''
+        self.size = size
+        self.type = type
+
+        graph_frame = Frame(controller)
+        graph_frame.pack(side=TOP, anchor='w')
+
+        f = Figure(figsize=self.size, dpi=100)
+        a = f.add_subplot(self.type)
+        a.plot([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 4, 9, 16, 25, 36, 49, 64, 81])
+
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=TOP)
+
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=TOP)
+
+
+
+
+
+
 class FileManager(Frame):
     # todo: add a function to update the file manager
     SortDir = True
@@ -256,20 +285,7 @@ class Cutter(Frame):
 
         TopBar(parent, controller)
 
-        # todo: create an individual widget for the graphs
-        f = Figure(figsize=(4, 4), dpi=100)
-        a = f.add_subplot(111)
-        a.plot([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 4, 9, 16, 25, 36, 49, 64, 81])
-
-        canvas = FigureCanvasTkAgg(f, self)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=TOP)
-        StatusFrame(controller, self)
-
-        toolbar = NavigationToolbar2Tk(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=TOP)
-
+        GraphWidget(parent, controller)
 
 class PStar(Frame):
 
