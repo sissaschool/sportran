@@ -1,4 +1,4 @@
 
-__all__ = ['control_unit', 'gui_functions', 'settings']
+__all__ = ['control_unit', 'settings']
 
 from . import *

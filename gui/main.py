@@ -19,6 +19,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
+import matplotlib.patches as patches
 
 from tkinter import *
 from tkinter import ttk
@@ -29,7 +30,6 @@ from tkinter.font import Font
 
 from core import settings
 import core.control_unit as cu
-import core.gui_functions as guif
 
 
 # Main app
@@ -141,25 +141,67 @@ class GraphWidget(Frame):
         self.size = size
         self.type = type
 
-        graph_frame = Frame(controller)
-        graph_frame.pack(side=TOP, anchor='w')
+        self.cut_line = 0
+        self.data_x = []
+        self.data_y = []
 
-        f = Figure(figsize=self.size, dpi=100)
-        a = f.add_subplot(self.type)
-        a.plot([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 4, 9, 16, 25, 36, 49, 64, 81])
+        self.f = Figure(figsize=self.size, dpi=100)
+        self.graph = self.f.add_subplot(self.type)
 
-        canvas = FigureCanvasTkAgg(f, self)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=TOP)
+        self.canvas = FigureCanvasTkAgg(self.f, controller)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10)
 
-        toolbar = NavigationToolbar2Tk(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=TOP)
+        self.slider = None
+
+        if toolbar:
+            toolbar = NavigationToolbar2Tk(self.canvas, controller)
+            toolbar.update()
+            self.canvas._tkcanvas.pack(side=TOP)
+
+    def set_title(self, title):
+        self.f.suptitle(title)
+
+    def get_max_x(self):
+        return max(self.data_x)
+
+    def get_max_y(self):
+        return max(self.data_y)
+
+    def plot(self, x, y):
+        self.data_x = x
+        self.data_y = y
+        self.graph.plot(x, y)
+        if self.slider:
+            self.slider.config(to_=self.get_max_x())
+
+    def update_cut(self, val):
+        if self.slider:
+            self.cut_line = self.slider.get()
+
+            self.graph.clear()
+            rect = patches.Rectangle((0, 0), self.cut_line, self.get_max_y(), linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
+            self.graph.plot(self.data_x, self.data_y)
+            self.graph.plot([self.cut_line, self.cut_line], [0, self.get_max_y()])
+            self.graph.add_patch(rect)
+            self.canvas.draw()
+
+    def attach_slider(self, slider):
+        self.slider = slider
+        self.slider.config(command=self.update_cut, to_=self.get_max_x())
 
 
+class TextWidget(Frame):
 
+    def __init__(self, parent, controller, title, height):
+        Frame.__init__(self, parent, controller)
 
+        log_frame = LabelFrame(controller, text=title, bg=settings.BG_COLOR)
+        log_frame.pack(side=TOP)
 
+        self.text_box = Text(log_frame, height=height)
+        self.text_box.pack()
+    
 
 class FileManager(Frame):
     # todo: add a function to update the file manager
@@ -184,6 +226,10 @@ class FileManager(Frame):
                                   command=lambda: self._select_file_with_manager())
         self.find_button.grid(row=0, column=2, padx=4)
 
+        Label(selection_frame, text='Input format: ', bg=settings.BG_COLOR).grid(row=0, column=3, padx=5)
+        self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly')
+        self.input_selector.current(0)
+        self.input_selector.grid(row=0, column=4)
         self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1)
         self.start_button.grid(row=1, column=0, pady=20)
 
@@ -285,7 +331,39 @@ class Cutter(Frame):
 
         TopBar(parent, controller)
 
-        GraphWidget(parent, controller)
+        sections = Frame(self, bg=settings.BG_COLOR)
+        sections.pack(side=LEFT, anchor='n')
+        self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=False)
+        self.graph.plot([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 4, 9, 16, 25, 36, 49, 64, 81])
+
+        self.slider_locked = False
+
+        slider_frame = Frame(sections, bg=settings.BG_COLOR)
+        slider_frame.pack(side=TOP, anchor='w', padx=115)
+
+        self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1, length=520)
+        self.slider.grid(row=0, column=0)
+
+        lock_slider = Button(slider_frame, command=lambda: self._lock_unlock_slider(),
+                             bg=settings.BG_COLOR, bd=1, relief=SOLID)
+        lock_slider.grid(row=0, column=1, padx=2)
+        self.graph.attach_slider(self.slider)
+
+        info_section = Frame(self, bg=settings.BG_COLOR)
+        info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
+
+        self.logs = TextWidget(parent, info_section, 'Logs', 15)
+        self.info = TextWidget(parent, info_section, 'Info', 10)
+        StatusFrame(parent, controller)
+
+    def _lock_unlock_slider(self):
+        if self.slider_locked:
+            self.slider_locked = False
+            self.slider.state(['!disabled'])
+        else:
+            self.slider_locked = True
+            self.slider.state(['disabled'])
+
 
 class PStar(Frame):
 
