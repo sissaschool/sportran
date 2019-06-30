@@ -21,6 +21,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import matplotlib.patches as patches
 
+import numpy as np
+
 from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import Separator, Progressbar
@@ -35,6 +37,7 @@ import core.control_unit as cu
 # Main app
 class ThermocepstrumGUI(Tk):
     open_windows = []
+    frames = []
     frame = None
 
     def __init__(self, version, dev_state, last_release, *args, **kwargs):
@@ -66,19 +69,20 @@ class ThermocepstrumGUI(Tk):
 
         # Setting up multiple window system
 
-        self.frames = {}
+        ThermocepstrumGUI.frames = {}
 
         for F in (FileManager, Cutter, PStar, Output):
             ThermocepstrumGUI.frame = F(container, self)
             ThermocepstrumGUI.frame.configure(bg=settings.BG_COLOR)
 
-            self.frames[F] = ThermocepstrumGUI.frame
+            ThermocepstrumGUI.frames[F] = ThermocepstrumGUI.frame
             ThermocepstrumGUI.frame.grid(row=0, column=0, sticky='nsew')
 
-        self.show_frame(Cutter)
+        self.show_frame(FileManager)
 
-    def show_frame(self, frame):
-        ThermocepstrumGUI.frame = self.frames[frame]
+    @staticmethod
+    def show_frame(frame):
+        ThermocepstrumGUI.frame = ThermocepstrumGUI.frames[frame]
         ThermocepstrumGUI.frame.tkraise()
         ThermocepstrumGUI.frame.update()
 
@@ -153,6 +157,8 @@ class GraphWidget(Frame):
         self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10)
 
         self.slider = None
+        self.entry = None
+        self.line2D = None
 
         if toolbar:
             toolbar = NavigationToolbar2Tk(self.canvas, controller)
@@ -171,13 +177,15 @@ class GraphWidget(Frame):
     def plot(self, x, y):
         self.data_x = x
         self.data_y = y
-        self.graph.plot(x, y)
+        self.line2D = self.graph.plot(x, y)
         if self.slider:
             self.slider.config(to_=self.get_max_x())
 
-    def update_cut(self, val):
+    def update_cut(self):
         if self.slider:
-            self.cut_line = self.slider.get()
+            if self.entry:
+                self.entry.delete(0, END)
+                self.entry.insert(0, self.cut_line)
 
             self.graph.clear()
             rect = patches.Rectangle((0, 0), self.cut_line, self.get_max_y(), linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
@@ -188,7 +196,39 @@ class GraphWidget(Frame):
 
     def attach_slider(self, slider):
         self.slider = slider
-        self.slider.config(command=self.update_cut, to_=self.get_max_x())
+        self.slider.config(command=self._on_slider_change, to_=self.get_max_x())
+
+    def attach_entry(self, entry):
+        self.entry = entry
+        self.entry.bind('<Key-Return>', self._on_entry_change)
+        self.entry.delete(0, END)
+        self.entry.insert(0, self.cut_line)
+
+    def _on_entry_change(self, ev):
+        self.cut_line = float(self.entry.get())
+        self.update_cut()
+
+    def _on_slider_change(self, ev):
+        self.cut_line = self.slider.get()
+        self.update_cut()
+
+    def get_value_by_x(self, x):
+
+        x_values = self.line2D[0].get_xdata()
+        y_values = self.line2D[0].get_ydata()
+
+        idx = np.where(x_values == x_values[x])
+
+        return y_values[idx]
+
+    def get_value_by_y(self, y):
+
+        x_values = self.line2D[0].get_xdata()
+        y_values = self.line2D[0].get_ydata()
+
+        idy = np.where(y_values == y_values[y])
+
+        return x_values[idy]
 
 
 class TextWidget(Frame):
@@ -196,12 +236,12 @@ class TextWidget(Frame):
     def __init__(self, parent, controller, title, height):
         Frame.__init__(self, parent, controller)
 
-        log_frame = LabelFrame(controller, text=title, bg=settings.BG_COLOR)
-        log_frame.pack(side=TOP)
+        text_frame = LabelFrame(controller, text=title, bg=settings.BG_COLOR, bd=1, relief=SOLID)
+        text_frame.pack(side=TOP)
 
-        self.text_box = Text(log_frame, height=height)
-        self.text_box.pack()
-    
+        self.text_box = Text(text_frame, height=height, bd=0)
+        self.text_box.pack(padx=4, pady=4)
+
 
 class FileManager(Frame):
     # todo: add a function to update the file manager
@@ -219,8 +259,8 @@ class FileManager(Frame):
 
         Label(selection_frame, text='Selected: ', bg=settings.BG_COLOR).grid(row=0, column=0)
 
-        self.selected_label = Entry(selection_frame, width=80, relief=SOLID, bd=1)
-        self.selected_label.grid(row=0, column=1, ipadx=1, ipady=1)
+        self.selected = Entry(selection_frame, width=80, relief=SOLID, bd=1)
+        self.selected.grid(row=0, column=1, ipadx=1, ipady=1)
 
         self.find_button = Button(selection_frame, text='...', relief=SOLID, bd=1,
                                   command=lambda: self._select_file_with_manager())
@@ -230,7 +270,8 @@ class FileManager(Frame):
         self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly')
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4)
-        self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1)
+        self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1,
+                                   command=self._start_analysis)
         self.start_button.grid(row=1, column=0, pady=20)
 
         self._start_file_manager(file_manager)
@@ -306,10 +347,10 @@ class FileManager(Frame):
         This function is called when a file in the listbox is selected.
         This function set the value of the entry to the path of the file.
         '''
-        self.selected_label.delete(0, END)
+        self.selected.delete(0, END)
         name = '.'.join(el for el in self.file_list.item(self.file_list.selection())['values'][:2])
         path = os.path.join(settings.DATA_PATH, name)
-        self.selected_label.insert(0, path)
+        self.selected.insert(0, path)
 
     def _select_file_with_manager(self):
         '''
@@ -320,8 +361,21 @@ class FileManager(Frame):
                                   title="Select file",
                                   filetypes=(("all files", "*.*"), ))
 
-        self.selected_label.delete(0, END)
-        self.selected_label.insert(0, path.name)
+        self.selected.delete(0, END)
+        self.selected.insert(0, path.name)
+
+    def _start_analysis(self):
+        if self.selected.get():
+            if os.path.exists(self.selected.get()):
+                if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
+                    cu.CURRENT_FILE = self.selected.get()
+                    ThermocepstrumGUI.show_frame(Cutter)
+                else:
+                    msg.showerror('Invalid format!', 'The file that you have selected has an invalid format!')
+            else:
+                msg.showerror('File doesn\'t exists!', 'The file that you have selected doesn\'t exists!')
+        else:
+            msg.showerror('No file selected!', 'You must select a data file!')
 
 
 class Cutter(Frame):
@@ -349,8 +403,26 @@ class Cutter(Frame):
         lock_slider.grid(row=0, column=1, padx=2)
         self.graph.attach_slider(self.slider)
 
+        value_frame = Frame(sections, bg=settings.BG_COLOR)
+        value_frame.pack(side=TOP)
+
+        Label(value_frame, text='Selected value:', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
+        self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
+        self.value_entry.pack()
+        self.graph.attach_entry(self.value_entry)
+
+        button_frame = Frame(sections, bg=settings.BG_COLOR)
+        button_frame.pack(pady=20)
+
+        back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
+        back_button.grid(row=0, column=0, sticky='w', padx=5)
+
+        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID)
+        next_button.grid(row=0, column=1, sticky='w', padx=5)
+
         info_section = Frame(self, bg=settings.BG_COLOR)
         info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
+
 
         self.logs = TextWidget(parent, info_section, 'Logs', 15)
         self.info = TextWidget(parent, info_section, 'Info', 10)
@@ -360,10 +432,21 @@ class Cutter(Frame):
         if self.slider_locked:
             self.slider_locked = False
             self.slider.state(['!disabled'])
+            self.value_entry.config(state=NORMAL)
         else:
             self.slider_locked = True
             self.slider.state(['disabled'])
+            self.value_entry.config(state=DISABLED)
 
+    def back(self):
+        response = msg.askyesnocancel('Back to file manager?', "Save changes?\nIf reopen the same file \nthe values that you chosed will not be deleted!")
+
+        if response:
+            pass
+        elif response == False:
+            ThermocepstrumGUI.show_frame(FileManager)
+        else:
+            pass
 
 class PStar(Frame):
 
