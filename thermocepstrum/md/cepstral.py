@@ -38,7 +38,7 @@ def dct_coefficients(y):
 def dct_filter_psd(y, K=None):
     # K=P*-1 is the maximum coefficient summed (c_k = 0 for k > K)
     if (K >= y.size):
-        print "! Warning:  dct_filter_psd K value ({:}) out of range.".format(K)
+        print("! Warning:  dct_filter_psd K value ({:}) out of range.".format(K))
         return np.full(y.size, np.NaN)
     yk = dct(y, type=1)
     if K is not None:
@@ -127,7 +127,7 @@ CEPSTRAL ANALYSIS based filtering.
         self.Kmin_corrfactor = Kmin_corrfactor
         self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
         if (self.aic_Kmin >= NF):
-            print "! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin)
+            print("! Warning:  aic_Kmin ({:}) is out of range.".format(self.aic_Kmin))
 
         # set theoretical errors
         if ck_theory_var is None:
@@ -147,7 +147,7 @@ CEPSTRAL ANALYSIS based filtering.
             self.logpsdK_THEORY_std = np.sqrt(self.logpsdK_THEORY_var)
             self.logtau_THEORY_var = np.zeros(NF)
             self.logtau_THEORY_var[0] = self.logpsdK_THEORY_var[0]
-            for K in xrange(1, NF-1):
+            for K in range(1, NF-1):
                 self.logtau_THEORY_var[K] = self.logtau_THEORY_var[K-1] + 4.*self.logpsdK_THEORY_var[K]
             self.logtau_THEORY_var[-1] = self.logtau_THEORY_var[-2] + self.logpsdK_THEORY_var[-1]
             self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)

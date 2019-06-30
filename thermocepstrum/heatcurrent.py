@@ -3,8 +3,8 @@
 ################################################################################
 
 import numpy as np
-import md
-from md.mdsample import MDSample
+from . import md
+from .md.mdsample import MDSample
 
 #import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
@@ -12,7 +12,8 @@ from thermocepstrum.utils.loadAfterPlt import plt
 try:
     plt
 except:
-    print "Warning: plt undefined"
+    print("Warning: plt undefined")
+
 
 def freq_THz_to_red(f, DT_FS):
    return f/1000.*DT_FS
@@ -50,7 +51,7 @@ class HeatCurrent(MDSample):
          raise ValueError("Shape of j {} not valid.".format(j.shape))
 
       if self.multicomponent:
-         print "Using multicomponent code."
+         print("Using multicomponent code.")
          MDSample.__init__(self, traj=j[0], DT_FS=DT_FS)
          # initialize other MDSample objects needed to make the work
          self.otherMD = []
@@ -82,18 +83,16 @@ class HeatCurrent(MDSample):
                raise ValueError('Freq units not valid.')
          self.initialize_cepstral_parameters()
       else:
-         print "Warning: trajectory not initialized. You should manually initialize what you need."
+         print("Warning: trajectory not initialized. You should manually initialize what you need.")
 
       self.dct = None
       return
-
 
    def __repr__(self):
       msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__()
       if self.dct is not None:
          msg += self.dct.__repr__()
       return msg
-
 
    def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
       """
@@ -117,7 +116,6 @@ class HeatCurrent(MDSample):
          raise ValueError('Units not supported.')
       return
 
-
    def initialize_cepstral_parameters(self):
       """
       Defines the parameters of the theoretical distribution of the cepstrum.
@@ -131,7 +129,6 @@ class HeatCurrent(MDSample):
          self.ck_THEORY_var, self.psd_THEORY_mean = \
              md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
       return
-
 
    def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0):
       """
@@ -158,7 +155,7 @@ class HeatCurrent(MDSample):
             '-----------------------------------------------------\n' +\
             '  kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.kappa_Kmin, self.kappa_Kmin_std) +\
             '-----------------------------------------------------\n'
-      print self.cepstral_log
+      print(self.cepstral_log)
       return
 
 
@@ -229,7 +226,6 @@ class HeatCurrent(MDSample):
       axes[1].grid()
       return axes
 
-
    def plot_ck(self, axes=None, label=None, FIGSIZE=None):
       if axes is None:
          figure, axes = plt.subplots(1, figsize=FIGSIZE)
@@ -241,7 +237,6 @@ class HeatCurrent(MDSample):
       axes.set_xlabel(r'$k$')
       axes.set_ylabel(r'$c_k$')
       return axes
-
 
    def plot_L0_Pstar(self, axes=None, label=None, FIGSIZE=None):
       if axes is None:
@@ -259,7 +254,6 @@ class HeatCurrent(MDSample):
       axes.set_ylabel(r'$L_0(P*)$')
       return axes
 
-
    def plot_kappa_Pstar(self, axes=None, label=None, FIGSIZE=None):
       if axes is None:
          figure, axes = plt.subplots(1, figsize=FIGSIZE)
@@ -276,7 +270,6 @@ class HeatCurrent(MDSample):
       axes.set_xlabel(r'$P^*$')
       axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
       return axes
-
 
    def plot_cepstral_spectrum(self, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, **plot_kwargs):
       if axes is None:
@@ -365,7 +358,10 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
       FILTER_W = TSKIP
    trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
    if not x.multicomponent:
-      xf = HeatCurrent(trajf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
+      if x.FILTER_WINDOW_WIDTH is not None:
+         xf = HeatCurrent(trajf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
+      else:
+         xf = HeatCurrent(trajf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME)
    else:
       if x.otherMD is None:
          raise ValueError('x.otherMD cannot be none (wrong/missing initialization?)')
@@ -375,13 +371,16 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
       for y in x.otherMD:
          tmp = md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
          yf.append(tmp)
-      xf = HeatCurrent(yf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
+      if x.FILTER_WINDOW_WIDTH is not None:
+         xf = HeatCurrent(yf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH*TSKIP)
+      else:
+         xf = HeatCurrent(yf, x.units, x.DT_FS*TSKIP, x.TEMPERATURE, x.VOLUME)
    if plot:
       if (freq_units == 'thz') or (freq_units == 'THz'):
          xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*1000./x.DT_FS, 'thz', TSKIP, axes=axes)
       elif (freq_units == 'red'):
-         print PSD_FILTER_W
-         print x.FILTER_WINDOW_WIDTH
+         print(PSD_FILTER_W)
+         print(x.FILTER_WINDOW_WIDTH)
          xf.plot_periodogram(x.FILTER_WINDOW_WIDTH*TSKIP, 'red', TSKIP, axes=axes)
 
    xf.resample_log = '-----------------------------------------------------\n' +\
@@ -392,16 +391,20 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
                      ' Sampling time         TSKIP =  {:12d} steps\n'.format(TSKIP) +\
                      '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
                      ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
-                     ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs) +\
-                     ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
-                     '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
-                     ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
-                     '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
-                     ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
-                     ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
-                     ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.) +\
-                     '-----------------------------------------------------\n'
-   print xf.resample_log
+                     ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
+   if x.fpsd is not None:
+       xf.resample_log=xf.resample_log + ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
+                                         '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
+                                         ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
+                                         '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
+                                         ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
+                                         ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
+                                         ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
+   else:
+       xf.resample_log=xf.resample_log + ' fPSD not calculated before resampling!\n '
+
+   xf.resample_log=xf.resample_log +                                 '-----------------------------------------------------\n'
+   print(xf.resample_log)
 
    if plot:
       if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -436,7 +439,7 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
 
    xf = []
    for TSKIP in TSKIP_LIST:
-      print 'TSKIP =  {:d}'.format(TSKIP)
+      print('TSKIP =  {:d}'.format(TSKIP))
       xff = resample_current(x, TSKIP, plot=False)
       xff.cepstral_analysis(aic_type, Kmin_corrfactor)
       xf.append( xff )
@@ -449,8 +452,8 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
          ax = axes
       ax[0].errorbar( FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr = [xff.kappa_Kmin_std for xff in xf], **plot_kwargs )
       ax[1].errorbar( FSTAR_THZ_LIST, [xff.dct.logtau_Kmin for xff in xf], yerr = [xff.dct.logtau_std_Kmin for xff in xf], **plot_kwargs )
-      #ax[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
-      #ax[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
+      # ax[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
+      # ax[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
       ax[0].xaxis.set_ticks_position('top')
       ax[0].set_ylabel(r'PSD')
       ax[0].grid()

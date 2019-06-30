@@ -58,16 +58,16 @@ def Read_LAMMPSlogfile(filename, DUMP_RUN='DUMP_RUN', group_vectors=True, even_N
             else:               # if it is not, define a vector
                all_ckeys[key] = np.array( [0]*vecidx )
                all_ckeys[key][-1] = i
-      print ' #####################################'
-      print '  all_ckeys = ', all_ckeys
-      print ' #####################################'
+      print(' #####################################')
+      print('  all_ckeys = ', all_ckeys)
+      print(' #####################################')
       return all_ckeys
 
 
    def initialize_dic(NSTEPS, ckey):
       """Initialize the data dictionary once the ckeys have been set."""
       data = {}
-      for key, idx in ckey.iteritems():
+      for key, idx in ckey.items():
          data[key] = np.zeros( (NSTEPS, len(idx)) )
       return data
 
@@ -82,33 +82,33 @@ def Read_LAMMPSlogfile(filename, DUMP_RUN='DUMP_RUN', group_vectors=True, even_N
       progbar_step = max(100000, int(0.005*NSTEPS))
       for step, line in enumerate(filedata[1:]):
          if len(line) == 0:  # EOF
-            print "Warning:  reached EOF."
+            print("Warning:  reached EOF.")
             break
          values = np.array(line.split())
-         for key, idx in ckey.iteritems():  # save the selected columns
-            data[key][step,:] = np.array(map(float, values[idx]))
+         for key, idx in ckey.items():  # save the selected columns
+            data[key][step,:] = np.array(list(map(float, values[idx])))
          if ( (step+1)%progbar_step == 0 ):
             if GUI:
                progbar.value = float(step+1)/NSTEPS*100.;
                progbar.description = "{:6.2f}%".format(progbar.value)
             else:
-               print "    step = {:9d} - {:6.2f}% completed".format(step+1, float(step+1)/NSTEPS*100.)
+               print("    step = {:9d} - {:6.2f}% completed".format(step+1, float(step+1)/NSTEPS*100.))
       if GUI:
          progbar.close()
       # check number of steps read, keep an even number of steps
       if (step + 1 < NSTEPS):
          if (step == 0):
-            print "WARNING:  no step read."
+            print("WARNING:  no step read.")
             return
          else:
-            print "Warning:  less steps read."
+            print("Warning:  less steps read.")
             NSTEPS = step + 1
       if even_NSTEPS:
          if (NSTEPS%2 == 1):
             NSTEPS = NSTEPS - 1
-      for key, idx in ckey.iteritems():  # free memory not used
+      for key, idx in ckey.items():  # free memory not used
          data[key] = data[key][:NSTEPS,:]
-      print "  ( %d ) steps read." % (NSTEPS)
+      print("  ( %d ) steps read." % (NSTEPS))
       return data
 
 

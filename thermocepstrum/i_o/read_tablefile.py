@@ -116,7 +116,7 @@ class TableFile(object):
       self._read_ckeys(group_vectors)
       self.ckey = None
       self.MAX_NSTEPS = data_length(self.filename)
-      print "Data length = ", self.MAX_NSTEPS
+      print("Data length = ", self.MAX_NSTEPS)
       return
 
    def __repr__(self):
@@ -176,10 +176,10 @@ class TableFile(object):
             break
          else:
             self.header += line
-      print self.header
-      print ' #####################################'
-      print '  all_ckeys = ', self.all_ckeys
-      print ' #####################################'
+      print(self.header)
+      print(' #####################################')
+      print('  all_ckeys = ', self.all_ckeys)
+      print(' #####################################')
       return
 
 
@@ -196,11 +196,11 @@ class TableFile(object):
             if value is not None:
                self.ckey[key] = value[:max_vector_dim]  # copy all indexes (up to max dimension for vectors)
             else:
-               print "Warning: ", key, "key not found."
+               print("Warning: ", key, "key not found.")
       if (len(self.ckey) == 0):
          raise KeyError("No ckey set. Check selected keys.")
       else:
-         print "  ckey = ", self.ckey
+         print("  ckey = ", self.ckey)
       return
 
 
@@ -215,7 +215,7 @@ class TableFile(object):
          self.dic_allocated = True
       self.NSTEPS = 0
       self.data = {}
-      for key, idx in self.ckey.iteritems():
+      for key, idx in self.ckey.items():
          self.data[key] = np.zeros( (NSTEPS, len(idx)) )
       return
 
@@ -261,36 +261,36 @@ class TableFile(object):
       for step in range(NSTEPS):
          line = self.file.readline()
          if len(line) == 0:  # EOF
-            print "Warning:  reached EOF."
+            print("Warning:  reached EOF.")
             break
          values = np.array(line.split())
-         for key, idx in self.ckey.iteritems():  # save the selected columns
-            self.data[key][step,:] = np.array(map(float, values[idx]))
+         for key, idx in self.ckey.items():  # save the selected columns
+            self.data[key][step,:] = np.array(list(map(float, values[idx])))
          if ( (step+1)%progbar_step == 0 ):
             if self._GUI:
                progbar.value = float(step+1)/NSTEPS*100.;
                progbar.description = "{:6.2f}%".format(progbar.value)
             else:
-               print "    step = {:9d} - {:6.2f}% completed".format(step+1, float(step+1)/NSTEPS*100.)
+               print("    step = {:9d} - {:6.2f}% completed".format(step+1, float(step+1)/NSTEPS*100.))
 
       if self._GUI:
          progbar.close()
       # check number of steps read, keep an even number of steps
       if (step + 1 < self.NSTEPS):
          if (step == 0):
-            print "WARNING:  no step read."
+            print("WARNING:  no step read.")
             return
          else:
-            print "Warning:  less steps read."
+            print("Warning:  less steps read.")
             self.NSTEPS = step + 1
       if even_NSTEPS:
          if (NSTEPS%2 == 1):
             NSTEPS = NSTEPS - 1
-      for key, idx in self.ckey.iteritems():  # free memory not used
+      for key, idx in self.ckey.items():  # free memory not used
          self.data[key] = self.data[key][:NSTEPS,:]
-      print "  ( %d ) steps read." % (NSTEPS)
+      print("  ( %d ) steps read." % (NSTEPS))
       self.NSTEPS = NSTEPS
-      print "DONE.  Elapsed time: ", time()-start_time, "seconds"
+      print("DONE.  Elapsed time: ", time()-start_time, "seconds")
       return self.data
 
 

@@ -6,7 +6,7 @@ abs_path=os.path.abspath(sys.argv[0])
 tc_path = abs_path[:abs_path.rfind('/')] 
 tc_path = tc_path[:tc_path.rfind('/')]
 sys.path.append(tc_path[:tc_path.rfind('/')])
-print tc_path
+print(tc_path)
                                         
 import numpy as np                                    
 import scipy as sp                                    
@@ -31,7 +31,7 @@ import thermocepstrum as tc
 try:
    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 except:
-   print "Error: cannot import inset_axes (will not be able to plot some parts of the plots)"
+   print("Error: cannot import inset_axes (will not be able to plot some parts of the plots)")
 
 def main():
      usage="""usage: {} output N_currents N_processes DT_FS max_THz nyquist k_SI_max zoom_max_THz zoom_k_SI_max input1 input2 ... inputN
@@ -49,14 +49,14 @@ def main():
      all_cut=1500
      
      if len(sys.argv) < 8:
-          print usage
+          print(usage)
           exit(-1)
      
      output=sys.argv[1]
      M=int(sys.argv[2])
      L=int(sys.argv[3])
      dof=L-M+1
-     print dof, ' degrees of freedom for the chi2 distribution'
+     print(dof, ' degrees of freedom for the chi2 distribution')
      DT_FS=float(sys.argv[4])
      max_THz=float(sys.argv[5])
      nyq=float(sys.argv[6])
@@ -66,7 +66,7 @@ def main():
      ff=10
      ndata=len(sys.argv)-ff
      
-     print "Number of inputs: {}\n reading...".format(ndata)
+     print("Number of inputs: {}\n reading...".format(ndata))
      periodograms=[]
      cospectrums=[]
      cepstrals=[]
@@ -87,7 +87,7 @@ def main():
          else:
              periodograms.append(np.loadtxt(fname+'.psd.dat',usecols=(3,4),unpack=True))
          if periodograms[-1].shape != periodograms[0].shape:
-             print fname , " not used (inconsistent shape with firts element)", periodograms[-1].shape, periodograms[0].shape
+             print(fname , " not used (inconsistent shape with firts element)", periodograms[-1].shape, periodograms[0].shape)
              del periodograms[-1]
              continue
          if os.path.isfile(fname+'.cepstral.npy'):
@@ -113,12 +113,12 @@ def main():
          kappas_Kmin_std[cont]=cepstrals[cont][1,aic_Kmin] 
          l0s[cont]=cepstrals[cont][2,aic_Kmin]
          l0s_std[cont]=cepstrals[cont][3,aic_Kmin]
-         print fname, periodograms[cont].shape, cepstrals[cont].shape
+         print(fname, periodograms[cont].shape, cepstrals[cont].shape)
          cont+=1
          
      aic_KminM=np.mean(aic_Kmins)
      aic_Kmin=int(aic_KminM)
-     print 'Reading done.'
+     print('Reading done.')
      
 
 
@@ -168,15 +168,15 @@ def main():
      if cospectrums!=None:
          mean_cospectrum=np.mean(cospectrums,axis=0)
      mean_cepstral=np.mean(cepstrals,axis=0)
-     print mean_cepstral.shape
-     print mean_periodogram.shape
+     print(mean_cepstral.shape)
+     print(mean_periodogram.shape)
      np.savetxt(output+'.mean_periodogram',np.c_[freqs,mean_periodogram[0],std_periodogram[0],mean_periodogram[1],std_periodogram[1]])
      np.savetxt(output+'.mean_cepstral',np.c_[mean_cepstral[0],std_cepstral[0],mean_cepstral[1],std_cepstral[1]])
      
      
-     print 'Mean values and standard deviations done.'
+     print('Mean values and standard deviations done.')
      
-     print 'Computing index of .40 psd power...'
+     print('Computing index of .40 psd power...')
      psd_int=np.cumsum(mean_periodogram[0])
      psd_int=psd_int/psd_int[-1]
      p95=0
@@ -192,12 +192,12 @@ def main():
      for i in range(all_cut):
          if mean_periodogram[0,i]>zero:
              selection_not_zero.append(i)
-     print 'Number of components > {}: {}. Last is {}'.format(zero,len(selection_not_zero),selection_not_zero[-1])
+     print('Number of components > {}: {}. Last is {}'.format(zero,len(selection_not_zero),selection_not_zero[-1]))
 #     print selection_not_zero
 
-     print 'Index = {} , {} THz'.format(p95,freqs[p95])
+     print('Index = {} , {} THz'.format(p95,freqs[p95]))
      
-     print 'Some plots...'
+     print('Some plots...')
      #make some plots and histograms
      
      with PdfPages(output+"_all.pdf") as pdf:
@@ -219,7 +219,7 @@ def main():
             DT_FS=None
             def ffpsd(self,w,single=False):
                 WF=int(round(w/1000.*self.DT_FS*len(self.freqs_THz)*2.))
-                print 'filtering: ',WF
+                print('filtering: ',WF)
                 if not single:
                  ffpsd=tc.md.tools.runavefilter(self.mpsd, WF)
                 else:
@@ -352,7 +352,7 @@ def main():
 #         print 'Histogram bin width: {}'.format(intervals[1]-intervals[0])
      
 #         np.savetxt(output+'.kolmogorov_smirnov',[ks_0,ks_1,ks_all])
-         print 'Statistical test results (psd(0), psd(1), psd(all but 0)): {}'.format([ks__0,ks__1,ks_all])
+         print('Statistical test results (psd(0), psd(1), psd(all but 0)): {}'.format([ks__0,ks__1,ks_all]))
      
          #make graphs of mean of theoretical and statistical error of the final result
          plt.fill_between(np.arange(mean_cepstral.shape[1]),mean_cepstral[0]-std_cepstral[0],mean_cepstral[0]+std_cepstral[0])
@@ -416,7 +416,7 @@ def plt_psd_with_zoom(jf,j2=None,j2pl=None,f_THz_max=None, k_SI_max=None,k_00=Fa
     f_x2=1.25
     f_y=0.87
     f_y2=1.35
-    print inv.transform((coord_f[0]*f_x,coord_f[1]*f_y))
+    print(inv.transform((coord_f[0]*f_x,coord_f[1]*f_y)))
     ax0.add_patch(matplotlib.patches.Rectangle((coord_f[0]*f_x,coord_f[1]*f_y),coord_f[2]*f_x2,coord_f[3]*f_y2,fill=True ,color='White',visible=True,transform=inv))
     #plt.box()
     plt_psd(jf,j2,j2pl,inset_maxTHz,inset_maxk,k_00,nyq,False,axes=ax)

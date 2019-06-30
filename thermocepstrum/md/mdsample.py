@@ -352,9 +352,9 @@ class MDSample(object):
             self.fpsd = runavefilter(self.psd, self.FILTER_WF)
             try:  ## THIS IS HORRIBLE -- find another method to check its definition
                self.fcospectrum = []
-               for i in xrange(self.cospectrum.shape[0]):
+               for i in range(self.cospectrum.shape[0]):
                   self.fcospectrum.append([])
-                  for j in xrange(self.cospectrum.shape[1]):
+                  for j in range(self.cospectrum.shape[1]):
                      ffpsd = runavefilter(self.cospectrum[i,j], self.FILTER_WF)
                      self.fcospectrum[i].append(ffpsd/self.L)
                self.fcospectrum = np.asarray(self.fcospectrum)
@@ -376,7 +376,7 @@ class MDSample(object):
         else:
             self.NLAGS = self.N
         self.acf = np.zeros((self.NLAGS, self.N_COMPONENTS))
-        for d in xrange(self.N_COMPONENTS):
+        for d in range(self.N_COMPONENTS):
             self.acf[:,d] = acovf(self.traj[:,d],  unbiased=True, fft=True)[:NLAGS]
         self.acfm = np.mean(self.acf, axis=1)  # average acf
         return

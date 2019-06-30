@@ -55,6 +55,6 @@ class LowPassFilter(object):
             elif (0.5 <= self.freqs[i] < 1.):
                 lf[i] = np.exp( -(np.abs(self.freqs[i]-1.)/self.f0)**self.alpha )*(1.0 - self.minatt) + self.minatt
             else:
-                print "ERROR: frequency out of range!"
+                print("ERROR: frequency out of range!")
         return lf
 

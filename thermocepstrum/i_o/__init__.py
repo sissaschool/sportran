@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 __all__ = [ 'read_tablefile', 'read_lammps_dump', 'read_lammps_log', 'read_lammps_datafile' ]
 
