@@ -84,7 +84,6 @@ class ThermocepstrumGUI(Tk):
     def show_frame(frame):
         ThermocepstrumGUI.frame = ThermocepstrumGUI.frames[frame]
         ThermocepstrumGUI.frame.tkraise()
-        ThermocepstrumGUI.frame.update()
 
 
 class TopBar(Frame):
@@ -146,8 +145,8 @@ class GraphWidget(Frame):
         self.type = type
 
         self.cut_line = 0
-        self.data_x = []
-        self.data_y = []
+        self.max_x = 1
+        self.max_y = 1
 
         self.f = Figure(figsize=self.size, dpi=100)
         self.graph = self.f.add_subplot(self.type)
@@ -156,9 +155,13 @@ class GraphWidget(Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10)
 
+        self.func = None
+
         self.slider = None
         self.entry = None
         self.line2D = None
+        self.plot_call = None
+        self.plot_call_kwargs = None
 
         if toolbar:
             toolbar = NavigationToolbar2Tk(self.canvas, controller)
@@ -169,30 +172,46 @@ class GraphWidget(Frame):
         self.f.suptitle(title)
 
     def get_max_x(self):
-        return max(self.data_x)
+        if self.graph:
+            return self.graph.get_xlim()[1]
+        else:
+            return 1.0
 
     def get_max_y(self):
-        return max(self.data_y)
+        if self.graph:
+            return self.graph.get_ylim()[1]
+        else:
+            return 1.0
 
-    def plot(self, x, y):
-        self.data_x = x
-        self.data_y = y
-        self.line2D = self.graph.plot(x, y)
-        if self.slider:
-            self.slider.config(to_=self.get_max_x())
+    def show(self, func):
+        self.func = func
+        # todo: add kwargs
+        cu.set_graph(self.graph, func)
+        self.max_x = self.get_max_x()
+        self.max_y = self.get_max_y()
+        self.slider.config(to_=self.max_x)
+        self.update_cut()
 
     def update_cut(self):
-        if self.slider:
-            if self.entry:
-                self.entry.delete(0, END)
-                self.entry.insert(0, self.cut_line)
+        if self.graph:
+            if self.slider:
+                if self.entry:
+                    self.entry.delete(0, END)
+                    self.entry.insert(0, self.cut_line)
 
-            self.graph.clear()
-            rect = patches.Rectangle((0, 0), self.cut_line, self.get_max_y(), linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
-            self.graph.plot(self.data_x, self.data_y)
-            self.graph.plot([self.cut_line, self.cut_line], [0, self.get_max_y()])
-            self.graph.add_patch(rect)
-            self.canvas.draw()
+                self.graph.clear()
+                cu.set_graph(self.graph, self.func)
+                rect = patches.Rectangle((0, 0), self.cut_line, self.max_y, linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
+                self.graph.plot([self.cut_line, self.cut_line], [0, self.max_y])
+                self.graph.add_patch(rect)
+        self.canvas.draw()
+
+    def get_graph(self):
+        return self.graph
+
+    def set_plot_call(self, f, **f_args):
+        self.plot_call = f
+        self.plot_call_kwargs = f_args
 
     def attach_slider(self, slider):
         self.slider = slider
@@ -369,7 +388,9 @@ class FileManager(Frame):
             if os.path.exists(self.selected.get()):
                 if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
                     cu.CURRENT_FILE = self.selected.get()
+                    cu.load_data(self.selected.get(), self.input_selector.get(),['flux1'],temperature=1000.0,units='metal',volume=30000.0,psd_filter_w=1.0,DT_FS=5.0)
                     ThermocepstrumGUI.show_frame(Cutter)
+                    ThermocepstrumGUI.frame.update()
                 else:
                     msg.showerror('Invalid format!', 'The file that you have selected has an invalid format!')
             else:
@@ -387,8 +408,7 @@ class Cutter(Frame):
 
         sections = Frame(self, bg=settings.BG_COLOR)
         sections.pack(side=LEFT, anchor='n')
-        self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=False)
-        self.graph.plot([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 4, 9, 16, 25, 36, 49, 64, 81])
+        self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
 
         self.slider_locked = False
 
@@ -447,6 +467,10 @@ class Cutter(Frame):
             ThermocepstrumGUI.show_frame(FileManager)
         else:
             pass
+
+    def update(self):
+        self.graph.show(cu.gm.plot_periodogram)
+
 
 class PStar(Frame):
 

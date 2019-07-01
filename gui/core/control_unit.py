@@ -12,8 +12,68 @@ multithread operations and to make requests to the thermocepstrum calculus unit.
 import os
 from . import settings
 
+import thermocepstrum as tc
+import numpy as np
+from utils import Graph
+
 
 CURRENT_FILE = ''
+jdata = None
+j = None
+axis = None
+gm = Graph.GraphManager()
+
+
+def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None):
+    global jdata, j, axis
+    if input_format == 'table':
+        if temperature is None:
+            selected_keys.append('Temp')
+        #      if 'Press' in jfile.ckey:
+        #         selected_keys.append('Press')
+        jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+        jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
+        jdata = jfile.data
+    elif input_format == 'dict':
+        jdata = np.load(inputfile)
+    elif input_format == 'lammps':
+        jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
+        if temperature is None:
+            selected_keys.append('Temp')
+        #      if 'Press' in jfile.ckey:
+        #         selected_keys.append('Press')
+        jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
+        jdata = jfile.data
+    else:
+        raise NotImplemented('input format not implemented.')
+
+        ## Define currents
+#    print(selected_keys, jindex)
+
+    if NSTEPS == 0:
+        NSTEPS = jdata[list(jdata.keys())[0]].shape[0]
+    if True: #jindex is None:
+        currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in selected_keys])
+    else:
+        pass
+        # if sindex is None:
+        #     currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] for key in selected_keys])
+        # else:
+        #     currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - jdata[key][START_STEP:(
+        #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
+    print('  currents shape is {}'.format(currents.shape))
+    #logfile.write('  currents shape is {}\n'.format(currents.shape))
+    print('snippet:')
+    print(currents)
+
+    # create HeatCurrent object
+    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
+
+
+def set_graph(axis_, func, **kwargs):
+    gm.initialize(j)
+    axis = func(axis=axis_, **kwargs)
+    return axis
 
 
 def secure_exit(main_window):
