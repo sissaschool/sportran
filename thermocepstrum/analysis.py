@@ -219,6 +219,7 @@ Contact: lercole@sissa.it
       jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
       jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
       jdata = jfile.data
+      START_STEP = 0  # reset to zero, as later we will need to read all of jdata
    elif (input_format == 'dict'):
       jdata = np.load(inputfile)
    elif (input_format == 'lammps'):
