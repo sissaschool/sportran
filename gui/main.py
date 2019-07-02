@@ -84,6 +84,7 @@ class ThermocepstrumGUI(Tk):
     def show_frame(frame):
         ThermocepstrumGUI.frame = ThermocepstrumGUI.frames[frame]
         ThermocepstrumGUI.frame.tkraise()
+        ThermocepstrumGUI.frame.update()
 
 
 class TopBar(Frame):
@@ -261,6 +262,9 @@ class TextWidget(Frame):
         self.text_box = Text(text_frame, height=height, bd=0)
         self.text_box.pack(padx=4, pady=4)
 
+    def write(self, text):
+        self.text_box.insert(INSERT, str(text)+'\n')
+
 
 class FileManager(Frame):
     # todo: add a function to update the file manager
@@ -296,7 +300,7 @@ class FileManager(Frame):
         self._start_file_manager(file_manager)
         self._parse_files()
 
-        StatusFrame(controller, self)
+        # StatusFrame(controller, self)
 
     def _start_file_manager(self, parent):
         inner_frame = parent
@@ -327,13 +331,10 @@ class FileManager(Frame):
         # Get the info of each file
         for file in files:
             file_name, file_type = file.split('.')
-            file_size = os.path.getsize(os.path.join(settings.DATA_PATH, file))
-            if file_size >= 1000000:
-                file_size //= 1000000
-                self.loaded_files.append((file_name, file_type, f"{file_size} MB"))
-            else:
-                file_size //= 1000
-                self.loaded_files.append((file_name, file_type, f"{file_size} KB"))
+            file_size = cu.get_file_size(os.path.join(settings.DATA_PATH, file))
+
+
+            self.loaded_files.append((file_name, file_type, file_size))
 
         # Set column header
         for header in self.headers:
@@ -388,7 +389,9 @@ class FileManager(Frame):
             if os.path.exists(self.selected.get()):
                 if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
                     cu.CURRENT_FILE = self.selected.get()
-                    cu.load_data(self.selected.get(), self.input_selector.get(),['flux1'],temperature=1000.0,units='metal',volume=30000.0,psd_filter_w=1.0,DT_FS=5.0)
+                    # load_process = LoadingWindow(cu.get_file_size(cu.CURRENT_FILE))
+                    if not cu.Data.loaded:
+                        cu.load_data(self.selected.get(), self.input_selector.get(), ['flux1'], temperature=1000.0, units='metal', volume=30000.0, psd_filter_w=1.0, DT_FS=5.0, logs=ThermocepstrumGUI.frames[Cutter].logs)
                     ThermocepstrumGUI.show_frame(Cutter)
                     ThermocepstrumGUI.frame.update()
                 else:
@@ -437,7 +440,7 @@ class Cutter(Frame):
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
         back_button.grid(row=0, column=0, sticky='w', padx=5)
 
-        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID)
+        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next())
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
         info_section = Frame(self, bg=settings.BG_COLOR)
@@ -446,7 +449,7 @@ class Cutter(Frame):
 
         self.logs = TextWidget(parent, info_section, 'Logs', 15)
         self.info = TextWidget(parent, info_section, 'Info', 10)
-        StatusFrame(parent, controller)
+        # StatusFrame(parent, controller)
 
     def _lock_unlock_slider(self):
         if self.slider_locked:
@@ -462,14 +465,23 @@ class Cutter(Frame):
         response = msg.askyesnocancel('Back to file manager?', "Save changes?\nIf reopen the same file \nthe values that you chosed will not be deleted!")
 
         if response:
-            pass
+            cu.Data.fstar = float(self.value_entry.get())
+            cu.Data.loaded = True
+            ThermocepstrumGUI.show_frame(FileManager)
         elif response == False:
+            cu.Data.fstar = 0.0
+            cu.Data.loaded = False
             ThermocepstrumGUI.show_frame(FileManager)
         else:
             pass
 
+    def next(self):
+        cu.Data.fstar = float(self.value_entry.get())
+        ThermocepstrumGUI.show_frame(PStar)
+
     def update(self):
         self.graph.show(cu.gm.plot_periodogram)
+        # self.graph.cut_line = cu.Data.fstar
 
 
 class PStar(Frame):
@@ -479,6 +491,32 @@ class PStar(Frame):
 
         TopBar(parent, controller)
 
+        sections = Frame(self, bg=settings.BG_COLOR)
+        sections.pack(side=LEFT, anchor='n')
+        self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
+
+        value_frame = Frame(sections, bg=settings.BG_COLOR)
+        value_frame.pack(side=TOP)
+
+        Label(value_frame, text='P*', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
+        self.value_entry = Spinbox(value_frame, bd=1, relief=SOLID)
+        self.value_entry.pack()
+
+        button_frame = Frame(sections, bg=settings.BG_COLOR)
+        button_frame.pack(pady=20)
+
+        back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
+        back_button.grid(row=0, column=0, sticky='w', padx=5)
+
+        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID)
+        next_button.grid(row=0, column=1, sticky='w', padx=5)
+
+        info_section = Frame(self, bg=settings.BG_COLOR)
+        info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
+
+        self.logs = TextWidget(parent, info_section, 'Logs', 15)
+        self.info = TextWidget(parent, info_section, 'Info', 10)
+
 
 class Output(Frame):
 
@@ -486,6 +524,29 @@ class Output(Frame):
         Frame.__init__(self, parent)
 
         TopBar(parent, controller)
+
+
+class LoadingWindow(Tk):
+
+    def __init__(self, size, *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
+
+        ThermocepstrumGUI.open_windows.insert(0, self)
+        self.protocol('WM_DELETE_WINDOW', func=lambda: self.kill())
+        frame = Frame(self, bg=settings.BG_COLOR)
+        frame.pack(fill=BOTH, expand=1)
+
+        Label(frame, text='Loading data').pack(side=TOP)
+        Label(frame, text=f'{size} to load').pack(side=TOP)
+
+        self.mainloop()
+
+    def kill(self):
+        index = ThermocepstrumGUI.open_windows.index(self)
+        del ThermocepstrumGUI.open_windows[index]
+        self.destroy()
+
+
 
 
 def run():

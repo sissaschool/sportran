@@ -17,63 +17,34 @@ import numpy as np
 from utils import Graph
 
 
-CURRENT_FILE = ''
-jdata = None
-j = None
-axis = None
+class Data:
+    CURRENT_FILE = ''
+    loaded = False
+
+    jdata = None
+    j = None
+    axis = None
+
+    fstar = 0.0
+
 gm = Graph.GraphManager()
 
 
-def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None):
-    global jdata, j, axis
-    if input_format == 'table':
-        if temperature is None:
-            selected_keys.append('Temp')
-        #      if 'Press' in jfile.ckey:
-        #         selected_keys.append('Press')
-        jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
-        jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
-        jdata = jfile.data
-    elif input_format == 'dict':
-        jdata = np.load(inputfile)
-    elif input_format == 'lammps':
-        jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
-        if temperature is None:
-            selected_keys.append('Temp')
-        #      if 'Press' in jfile.ckey:
-        #         selected_keys.append('Press')
-        jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
-        jdata = jfile.data
-    else:
-        raise NotImplemented('input format not implemented.')
-
-        ## Define currents
-#    print(selected_keys, jindex)
-
-    if NSTEPS == 0:
-        NSTEPS = jdata[list(jdata.keys())[0]].shape[0]
-    if True: #jindex is None:
-        currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in selected_keys])
-    else:
-        pass
-        # if sindex is None:
-        #     currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] for key in selected_keys])
-        # else:
-        #     currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - jdata[key][START_STEP:(
-        #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
-    print('  currents shape is {}'.format(currents.shape))
-    #logfile.write('  currents shape is {}\n'.format(currents.shape))
-    print('snippet:')
-    print(currents)
-
-    # create HeatCurrent object
-    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
-
-
 def set_graph(axis_, func, **kwargs):
-    gm.initialize(j)
+    gm.initialize(Data.j)
     axis = func(axis=axis_, **kwargs)
     return axis
+
+
+def get_file_size(path):
+    file_size = os.path.getsize(path)
+    if file_size >= 1000000:
+        file_size //= 1000000
+        return f"{file_size} KB"
+    else:
+        file_size //= 1000
+        return f"{file_size} MB"
+
 
 
 def secure_exit(main_window):
@@ -147,3 +118,55 @@ def set_defaults():
             file.write(f"{setting[0]}:{os.path.join(settings.BASE_PATH, setting[1])}\n")
 
     load_path()
+
+
+def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None, logs=None):
+
+    if input_format == 'table':
+        if temperature is None:
+            selected_keys.append('Temp')
+        #      if 'Press' in jfile.ckey:
+        #         selected_keys.append('Press')
+        jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+        jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
+        Data.jdata = jfile.data
+    elif input_format == 'dict':
+        Data.jdata = np.load(inputfile)
+    elif input_format == 'lammps':
+        jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
+        if temperature is None:
+            selected_keys.append('Temp')
+        #      if 'Press' in jfile.ckey:
+        #         selected_keys.append('Press')
+        jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
+        Data.jdata = jfile.data
+    else:
+        raise NotImplemented('input format not implemented.')
+
+        ## Define currents
+#    print(selected_keys, jindex)
+
+    if NSTEPS == 0:
+        NSTEPS = Data.jdata[list(Data.jdata.keys())[0]].shape[0]
+    if True: #jindex is None:
+        currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in selected_keys])
+    else:
+        pass
+        # if sindex is None:
+        #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] for key in selected_keys])
+        # else:
+        #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - Data.jdata[key][START_STEP:(
+        #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
+
+    if logs:
+        logs.write('currents shape is {}'.format(currents.shape))
+        logs.write('snippets')
+        logs.write(currents)
+    else:
+        print('  currents shape is {}'.format(currents.shape))
+        # logfile.write('  currents shape is {}\n'.format(currents.shape))
+        print('snippet:')
+        print(currents)
+
+    # create HeatCurrent object
+    Data.j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
