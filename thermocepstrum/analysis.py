@@ -364,20 +364,18 @@ Contact: lercole@sissa.it
             binoutobj.j_fcospectrum = j.fcospectrum
       #TODO: move all output in one place?
       if not no_text_out:
-        outfile = open(output + '.psd.dat', 'w')
+        outfile_name = output + '.psd.dat'
         outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
-        outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-        np.savetxt(outfile, outarray)
-        outfile.close()
+        outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
+        np.savetxt(outfile_name, outarray, header=outfile_header)
         if j.multicomponent:
-           outfile = open(output + '.cospectrum.dat', 'w')
+           outfile_name = output + '.cospectrum.dat'
            outarray = np.c_[j.freqs_THz, j.cospectrum.reshape((j.cospectrum.shape[0]*j.cospectrum.shape[1], j.cospectrum.shape[2])).transpose()]
-           np.savetxt(outfile, outarray)
-           outfile.close()
-           outfile = open(output + '.cospectrum.filt.dat', 'w')
+           np.savetxt(outfile_name, outarray)
+
+           outfile_name = output + '.cospectrum.filt.dat'
            outarray = np.c_[j.freqs_THz, j.fcospectrum.reshape((j.fcospectrum.shape[0]*j.fcospectrum.shape[1], j.fcospectrum.shape[2])).transpose()]
-           np.savetxt(outfile, outarray)
-           outfile.close()
+           np.savetxt(outfile_name, outarray)
   
       # resample and plot
       if resample:
@@ -405,11 +403,10 @@ Contact: lercole@sissa.it
             binoutobj.jf_Nyquist_f_THz = jf.Nyquist_f_THz
             binoutobj.jf_resample_log = jf.resample_log
          if not no_text_out:
-            outfile = open(output + '.resampled_psd.dat', 'w')
+            outfile_name = output + '.resampled_psd.dat'
             outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
-            outfile.write('freqs_THz  psd  fpsd  logpsd  flogpsd\n')
-            np.savetxt(outfile, outarray)
-            outfile.close()
+            outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
+            np.savetxt(outfile_name, outarray, header=outfile_header)
       else:
          jf = j
 
@@ -493,11 +490,10 @@ Contact: lercole@sissa.it
          binoutobj.jf_dct_aic_Kmin            = jf.dct.aic_Kmin
          binoutobj.jf_dct_Kmin_corrfactor     = jf.dct.Kmin_corrfactor
       if not no_text_out:
-         outfile = open(output + '.cepstral.dat', 'w')
+         outfile_name = output + '.cepstral.dat'
          outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std, jf.dct.tau*jf.kappa_scale*0.5, jf.dct.tau_THEORY_std*jf.kappa_scale*0.5]
-         outfile.write('ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n')
-         np.savetxt(outfile, outarray)
-         outfile.close()
+         outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
+         np.savetxt(outfile_name, outarray, header=outfile_header)
    
       # plot cepstral log-PSD
       #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
@@ -514,11 +510,10 @@ Contact: lercole@sissa.it
          binoutobj.jf_dct_psd                 = jf.dct.psd
          binoutobj.jf_dct_logpsd              = jf.dct.logpsd
       if not no_text_out:
-         outfile = open(output + '.cepstrumfiltered_psd.dat', 'w')
+         outfile_name = output + '.cepstrumfiltered_psd.dat'
          outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
-         outfile.write('freqs_THz  cepf_psd cepf_logpsd\n')
-         np.savetxt(outfile, outarray,)
-         outfile.close()
+         outfile_header = 'freqs_THz  cepf_psd cepf_logpsd\n'
+         np.savetxt(outfile_name, outarray, header=outfile_header)
 
       #conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
       #
