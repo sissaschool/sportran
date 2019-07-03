@@ -11,4 +11,3 @@ echo "==========================="
 echo "| upload file with command |"
 echo "==========================="
 echo 'python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*'
-

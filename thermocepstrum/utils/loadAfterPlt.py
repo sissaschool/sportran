@@ -25,8 +25,5 @@ class Plt:
 
 try:
     plt
-except :
+except:
     plt = Plt()
-
-
-

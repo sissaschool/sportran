@@ -38,4 +38,3 @@ Here are a few guidelines to consider when contributing.
 - [ ] Plot class that takes care of the plots from a CepstralResults object or MDSample (to discuss)
 - [ ] thermocepstrum GUI
 - [ ] there should be one single `compute_periodogram` method (either for single and multi component)
-

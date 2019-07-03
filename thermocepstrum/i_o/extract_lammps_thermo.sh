@@ -2,7 +2,7 @@
 
 function usage
 {
-   echo -e "This script extracts the thermo log from a lammps log file. 
+   echo -e "This script extracts the thermo log from a lammps log file.
 It assumes that a line such as
    dump DUMP_RUN_KEY all custom file.lammpstrj id type x y z
 or simply
@@ -138,4 +138,3 @@ END {
     printf("DONE:  %d steps of data read.\n", count) > "/dev/stderr"
 }
 ' $LOG_FILE
-

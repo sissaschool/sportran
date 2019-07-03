@@ -6,8 +6,8 @@ Code to compute thermal conductivity through cepstral analysis of heat flux time
 **Acknowledgement**  The development of this software is part of the scientific program of the EU MaX Centre of Excellence for Supercomputing Applications (Grant No. 676598) and has been partly funded through it.
 
 ### Usage
-The code can be used as a **library**, for example in a Jupyter notebook. 
-In the `examples` folder you can find some examples. 
+The code can be used as a **library**, for example in a Jupyter notebook.
+In the `examples` folder you can find some examples.
 
 Alternatively, you can run the code `analysis.py` from the **command line**.
 It can execute most of the cepstral analysis routines, returning the results in a series of data files and PDF plots.
