@@ -10,9 +10,8 @@ EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992  # Euler-Masc
 ################################################################################
 
 def multicomp_cepstral_parameters( NF, N_COMPONENTS ):
-    """This function returns the theoretical variance of the cepstral coefficients 
-    and the mean of the log(PSD) distribution, generated from a periodogram that 
-    is the average of N_COMPONENTS."""
+    """Returns the theoretical variance of the cepstral coefficients and the mean of the log(PSD) distribution,
+    generated from a periodogram that is the average of N_COMPONENTS."""
    
     N = 2*(NF-1)
 

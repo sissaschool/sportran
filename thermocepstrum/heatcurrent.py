@@ -329,6 +329,9 @@ class HeatCurrent(MDSample):
 def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz', FIGSIZE=None):
    """
    Simulate the resampling of x.
+
+   Parameters
+   ----------
      TSKIP        = sampling time [steps]
      fstar_THz    = target cutoff frequency [THz]
      FILTER_W     = pre-sampling filter window width [steps]
@@ -337,7 +340,15 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
      freq_units   = 'thz'  THz
                     'red'  omega*DT/(2*pi)
      FIGSIZE      = plot figure size
+
+   Returns
+   -------
+   xf : HeatCurrent object
+       a filtered & resampled HeatCurrent
+   ax : array_like, optional (if plot=True)
+       an array of plot axes
    """
+
    if not isinstance(x, HeatCurrent):
       raise ValueError('x must be a HeatCurrent object.')
    if (TSKIP is not None) and (fstar_THz is not None):
@@ -393,17 +404,16 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
                      ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
                      ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
    if x.fpsd is not None:
-       xf.resample_log=xf.resample_log + ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
-                                         '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
-                                         ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
-                                         '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
-                                         ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
-                                         ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
-                                         ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
+      xf.resample_log = xf.resample_log + ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
+                                        '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
+                                        ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
+                                        '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
+                                        ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
+                                        ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
+                                        ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
    else:
-       xf.resample_log=xf.resample_log + ' fPSD not calculated before resampling!\n '
-
-   xf.resample_log=xf.resample_log +                                 '-----------------------------------------------------\n'
+      xf.resample_log = xf.resample_log + ' fPSD not calculated before resampling!\n '
+   xf.resample_log = xf.resample_log + '-----------------------------------------------------\n'
    print(xf.resample_log)
 
    if plot:
@@ -424,7 +434,11 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
 
 def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None, **plot_kwargs):
    """
-   Simulate the resampling of x.
+   Perform cepstral analysis on a set of resampled time series, to study the effect of f*.
+   For each TSKIP in TSKIP_LIST, the HeatCurrent x is filtered & resampled, and then cesptral-analysed.
+
+   Parameters
+   ----------
      TSKIP        = sampling time [steps]
      fstar_THz    = target cutoff frequency [THz]
      FILTER_W     = pre-sampling filter window width [steps]
@@ -433,7 +447,17 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
      freq_units   = 'thz'  THz
                     'red'  omega*DT/(2*pi)
      FIGSIZE      = plot figure size
+
+   Returns
+   -------
+   xf : array_like
+       an array of HeatCurrents, corresponding the values of TSKIP_LIST
+   ax : array_like, optional (if plot=True)
+       array of plot axes
+   fig : figure, optional (if axes=None)
+       plot figure
    """
+
    if not isinstance(x, HeatCurrent):
       raise ValueError('x must be a HeatCurrent object.')
 

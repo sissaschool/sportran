@@ -5,10 +5,12 @@ from scipy.signal import lfilter
 ################################################################################
 
 def integrate_acf(acf):
-    """Returns the integral function of acf, i.e. its integral as a function of 
-    the upper integration limit. Supports multi-component (N, N_COMP) arrays.
+    """Returns the integral function of acf, i.e. its integral as a function of the upper integration limit. 
+    Supports multi-component (N, N_COMP) arrays.
     Trapezial integration is used.
-          tau[i] = trapz_{0}^{i} acf"""
+          tau[i] = trapz_{0}^{i} acf
+    """
+
     N = acf.shape[0]
     tau = np.zeros(acf.shape)
     for i in range(1, N):
@@ -17,13 +19,11 @@ def integrate_acf(acf):
 
 
 def runavefilter(X, WF):
-    """ Computes the running average of a numpy array over WF consecutive
-    elements (or WF+1 if WF is even):
+    """Computes the running average of a numpy array over WF consecutive elements (or WF+1 if WF is even):
             (X[i-WF/2]+...+X[i]+...+X[i+WF/2]) / WF
-    assumes elf.tau_std_Kmin = np.sqrt(self.tau_var_Kmin)
-                                                                        hat the array is "even" ( X[-i] = X[i] ) and anti-periodic
-    (X[(N-1)+i]=X[(N-1)-i]), like a ONE-SIDED PSD."""
-    
+    assumes that the array is "even" ( X[-i] = X[i] ) and anti-periodic (X[(N-1)+i]=X[(N-1)-i]), like a ONE-SIDED PSD.
+    """
+
     if (WF%2 == 0):
         WF = WF + 1
     W = int(WF/2)
@@ -37,7 +37,7 @@ def runavefilter(X, WF):
 def filter_and_sample( y_big, W, DT, window='rectangular', even_NSTEPS=True, detrend=False, drop_first=True ):
     """Filter signal with moving average window of width W and then sample it 
     with time step DT."""
-    
+
     if ( W > 1 ):
         if (window == 'rectangular'):
             y_f = lfilter( (1./W)*np.ones(W), 1., y_big, axis=0 );
