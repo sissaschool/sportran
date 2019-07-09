@@ -23,16 +23,17 @@ class Data:
 
     jdata = None
     j = None
+    xf = None
     axis = None
 
     fstar = 0.0
+
 
 gm = Graph.GraphManager()
 
 
 def set_graph(axis_, func, **kwargs):
-    gm.initialize(Data.j)
-    axis = func(axis=axis_, **kwargs)
+    axis = func(axis=axis_, external_object=Data, **kwargs)
     return axis
 
 
@@ -44,7 +45,6 @@ def get_file_size(path):
     else:
         file_size //= 1000
         return f"{file_size} MB"
-
 
 
 def secure_exit(main_window):
@@ -170,3 +170,4 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
 
     # create HeatCurrent object
     Data.j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
+    gm.initialize(Data.j)

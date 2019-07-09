@@ -158,6 +158,8 @@ class GraphWidget(Frame):
 
         self.func = None
 
+        self.other_graph = []
+
         self.slider = None
         self.entry = None
         self.line2D = None
@@ -184,27 +186,44 @@ class GraphWidget(Frame):
         else:
             return 1.0
 
-    def show(self, func):
+    def show(self, func, **kwargs):
         self.func = func
         # todo: add kwargs
-        cu.set_graph(self.graph, func)
+        cu.set_graph(self.graph, func, **kwargs)
         self.max_x = self.get_max_x()
         self.max_y = self.get_max_y()
-        self.slider.config(to_=self.max_x)
+        if self.slider:
+            self.slider.config(to_=self.max_x)
         self.update_cut()
+
+    def add_graph(self, func, name, **kwargs):
+        exist = False
+        pos = 0
+        for p, n in enumerate(self.other_graph):
+            if n[0] == name:
+                exist = True
+                pos = p
+                break
+        if not exist:
+            self.other_graph.append([name, func, kwargs])
+        else:
+            del self.other_graph[pos]
+            self.other_graph.append([name, func, kwargs])
 
     def update_cut(self):
         if self.graph:
-            if self.slider:
-                if self.entry:
-                    self.entry.delete(0, END)
-                    self.entry.insert(0, self.cut_line)
+            if self.entry:
+                self.entry.delete(0, END)
+                self.entry.insert(0, self.cut_line)
 
-                self.graph.clear()
-                cu.set_graph(self.graph, self.func)
-                rect = patches.Rectangle((0, 0), self.cut_line, self.max_y, linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
-                self.graph.plot([self.cut_line, self.cut_line], [0, self.max_y])
-                self.graph.add_patch(rect)
+            self.graph.clear()
+            cu.set_graph(self.graph, self.func)
+            for graph in self.other_graph:
+                cu.set_graph(self.graph, graph[1], **graph[2])
+
+            rect = patches.Rectangle((0, 0), self.cut_line, self.max_y, linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
+            self.graph.plot([self.cut_line, self.cut_line], [0, self.max_y])
+            self.graph.add_patch(rect)
         self.canvas.draw()
 
     def get_graph(self):
@@ -431,9 +450,11 @@ class Cutter(Frame):
 
         Label(value_frame, text='Selected value:', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
         self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
-        self.value_entry.pack()
+        self.value_entry.pack(side=LEFT)
         self.graph.attach_entry(self.value_entry)
 
+        resample_button = Button(value_frame, text='Resample', bd=1, relief=SOLID,
+                                 command=self.resample).pack(side=RIGHT, padx=10)
         button_frame = Frame(sections, bg=settings.BG_COLOR)
         button_frame.pack(pady=20)
 
@@ -460,6 +481,16 @@ class Cutter(Frame):
             self.slider_locked = True
             self.slider.state(['disabled'])
             self.value_entry.config(state=DISABLED)
+
+    def resample(self):
+        cu.Data.fstar = float(self.value_entry.get())
+
+        if cu.Data.fstar >= 1:
+            self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
+                                 PSD_FILTER_W=1.0)
+            self.graph.update_cut()
+        else:
+            msg.showwarning('Value error', 'F* can\'t be less than one')
 
     def back(self):
         response = msg.askyesnocancel('Back to file manager?', "Save changes?\nIf reopen the same file \nthe values that you chosed will not be deleted!")
@@ -498,9 +529,19 @@ class PStar(Frame):
         value_frame = Frame(sections, bg=settings.BG_COLOR)
         value_frame.pack(side=TOP)
 
-        Label(value_frame, text='P*', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
-        self.value_entry = Spinbox(value_frame, bd=1, relief=SOLID)
+        Label(value_frame, text='Correction factor', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
+        self.value_entry = Spinbox(value_frame, bd=1, relief=SOLID, increment=1)
         self.value_entry.pack()
+
+        self.increment = IntVar()
+        Label(value_frame, text='Increment by', bg=settings.BG_COLOR).pack(side=TOP, pady=4)
+        Radiobutton(value_frame, text='1', variable=self.increment, value=1,
+                    bg=settings.BG_COLOR, command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
+        Radiobutton(value_frame, text='10', variable=self.increment, value=10,
+                    bg=settings.BG_COLOR, command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
+        Radiobutton(value_frame, text='100', variable=self.increment, value=100,
+                    bg=settings.BG_COLOR, command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
+
 
         button_frame = Frame(sections, bg=settings.BG_COLOR)
         button_frame.pack(pady=20)
@@ -508,7 +549,7 @@ class PStar(Frame):
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
         back_button.grid(row=0, column=0, sticky='w', padx=5)
 
-        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID)
+        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=self._reload)
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
         info_section = Frame(self, bg=settings.BG_COLOR)
@@ -516,6 +557,33 @@ class PStar(Frame):
 
         self.logs = TextWidget(parent, info_section, 'Logs', 15)
         self.info = TextWidget(parent, info_section, 'Info', 10)
+
+    def back(self):
+        ThermocepstrumGUI.show_frame(Cutter)
+
+    def _get_pstar(self):
+        cu.Data.xf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=1.0)
+        return cu.Data.xf.dct.aic_Kmin
+
+    def _corr_factor(self):
+        self.value_entry.config(from_=1.0, to=cu.Data.xf.Nfreqs)
+        self.value_entry.delete(0, END)
+        self.value_entry.insert(0, 1)
+
+    def _change_increment(self):
+        self.value_entry.config(increment=int(self.increment.get()))
+
+    def _reload(self):
+        self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.Data.xf)
+        self.update()
+
+
+    def update(self):
+        self.graph.show(cu.gm.plot_periodogram)
+        self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
+                             PSD_FILTER_W=1.0)
+        self.graph.update_cut()
+        self._corr_factor()
 
 
 class Output(Frame):
