@@ -24,8 +24,8 @@ Here are a few guidelines to consider when contributing.
 
 ### WISH LIST FOR v1.0 RELEASE:
 #### easier stuff:
-- [ ] Python 3 migration
-- [ ] Nice formatting
+- [x] Python 3 migration
+- [x] Nice formatting
 - [ ] translate all comments to English
 - [ ] renew plot style
 - [ ] i/o: when reading a text file, the program should save a binary file (unless otherwise stated). If it finds the binary file it does not read the text one (making it clear to the user)
@@ -38,4 +38,3 @@ Here are a few guidelines to consider when contributing.
 - [ ] Plot class that takes care of the plots from a CepstralResults object or MDSample (to discuss)
 - [ ] thermocepstrum GUI
 - [ ] there should be one single `compute_periodogram` method (either for single and multi component)
-

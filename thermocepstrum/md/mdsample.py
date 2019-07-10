@@ -1,4 +1,3 @@
-
 import numpy as np
 
 #import matplotlib.pyplot as plt
@@ -8,31 +7,32 @@ from .tools import integrate_acf, runavefilter
 from scipy.signal import periodogram
 from .acf import acovf
 
+
 class MDSample(object):
     """
     An MDSample object contains all the information that represent a
-    single and unique Molecular Dynamics sample. 
+    single and unique Molecular Dynamics sample.
     For example it may contain:
      - a trajectory (any N-dim time series in real space)
      - its spectrum (the Fourier transform)
      - its Power Spectral Density (aka periodogram)
      - ...
     All the information contained in this object is always consistent,
-    i.e. it represents a single MD sample. Any operation that alters 
+    i.e. it represents a single MD sample. Any operation that alters
     any of the sample's properties should create a new MDSample object, in
     order to preserve the 1:1 correspondence among the sample's attributes.
 
     An MDSample object can be initialized from any of its main properties
     (trajectory, spectrum, periodogram), although e.g. it is not be possible to
-    uniquely define a trajectory from its periodogram, as this contains less 
+    uniquely define a trajectory from its periodogram, as this contains less
     information.
 
     ATTRIBUTES:
-       - traj       the trajectory (any n-dim real time series). 
+       - traj       the trajectory (any n-dim real time series).
                     It contains N points.
-       - spectr     the spectrum, i.e. trajectory's FFT. 
+       - spectr     the spectrum, i.e. trajectory's FFT.
                     For now it is assumed to be one sided, i.e. it contains
-                    Nfreqs = N/2+1 normalized frequencies contained 
+                    Nfreqs = N/2+1 normalized frequencies contained
                     in the interval [0, 1/(2N*DT)]
        - psd        the Power Spectral Density (periodogram), defined as
                               DT    N-1
@@ -43,9 +43,9 @@ class MDSample(object):
        - Nfreqs     number of trajectories, should be N/2+1
        - freqs      an array of frequencies, should be [0, 1/(2N*DT)]
        - freqs_THz  an array of frequencies, expressed in THz
-       
+
     """
-    
+
     def __init__(self, traj=None, spectr=None, psd=None, freqs=None, DT_FS=1.0):
         self.DT_FS = DT_FS
         self.initialize_traj(traj)
@@ -61,7 +61,6 @@ class MDSample(object):
         self.FILTER_WINDOW_WIDTH = None
         self.FILTER_WF = None
         return
-    
 
     def __repr__(self):
         msg = 'MDSample:\n' + \
@@ -77,7 +76,6 @@ class MDSample(object):
         if self.acf is not None:
             msg = msg + '  acf:    {}  lags\n'.format(self.NLAGS)
         return msg
-    
 
     #############################################
     ###################################
@@ -87,16 +85,16 @@ class MDSample(object):
 
     def initialize_traj(self, array):
         if array is not None:
-            self.traj = np.array(array, dtype=float) 
-            self.N  = self.traj.shape[0]
+            self.traj = np.array(array, dtype=float)
+            self.N = self.traj.shape[0]
             if (self.N % 2 == 1):
                 raise NotImplementedError('Trajectory has odd number of points.')
             if (len(self.traj.shape) > 1):
-               self.MULTI_COMPONENT = True
-               self.N_COMPONENTS = self.traj.shape[1]
+                self.MULTI_COMPONENT = True
+                self.N_COMPONENTS = self.traj.shape[1]
             else:
-               self.MULTI_COMPONENT = False
-               self.N_COMPONENTS = 1
+                self.MULTI_COMPONENT = False
+                self.N_COMPONENTS = 1
         else:
             self.traj = None
             self.N = None
@@ -107,7 +105,7 @@ class MDSample(object):
         if array is not None:
             self.spectr = np.array(array, dtype=complex)
             self.Nfreqs = self.spectr.size
-            self.DF = 0.5 / (self.Nfreqs-1)
+            self.DF = 0.5 / (self.Nfreqs - 1)
         else:
             self.spectr = None
             self.Nfreqs = None
@@ -131,17 +129,17 @@ class MDSample(object):
                     raise ValueError('Too many arguments.')
                 frequencies = freq_psd[0]
                 array = freq_psd[1]
-            elif (len(freq_psd) > 2):  # array used as psd or freqs
-                if psd is None:    # only psd was passed
-                   if freqs is not None:
-                      raise ValueError('Too many arguments.')
-                   frequencies = None
-                   array = freq_psd
-                else:              # freqs and psd passed separately
-                   if freqs is not None:
-                      raise ValueError('Too many arguments.')
-                   frequencies = freq_psd
-                   array = psd
+            elif (len(freq_psd) > 2):   # array used as psd or freqs
+                if psd is None:   # only psd was passed
+                    if freqs is not None:
+                        raise ValueError('Too many arguments.')
+                    frequencies = None
+                    array = freq_psd
+                else:   # freqs and psd passed separately
+                    if freqs is not None:
+                        raise ValueError('Too many arguments.')
+                    frequencies = freq_psd
+                    array = psd
             else:
                 raise ValueError('arguments not valid')
         else:   #ignore freq)psd variable
@@ -153,13 +151,13 @@ class MDSample(object):
             self.psd = None
             self.freqs = None
             return
-        self.psd    = np.array(array, dtype=float)
+        self.psd = np.array(array, dtype=float)
         self.logpsd = np.log(self.psd)
         self.logpsd_min = np.min(self.psd)
 
         # frequencies
         self.Nfreqs = self.psd.size
-        if frequencies is None:  # recompute frequencies
+        if frequencies is None:   # recompute frequencies
             self.freqs = np.linspace(0., 0.5, self.Nfreqs)
         else:
             self.freqs = np.array(frequencies, dtype=float)
@@ -169,12 +167,11 @@ class MDSample(object):
         # freqs conversions to THz
         if DT_FS is not None:
             self.DT_FS = DT_FS
-        self.freqs_THz = self.freqs/self.DT_FS*1000.
+        self.freqs_THz = self.freqs / self.DT_FS * 1000.
         self.Nyquist_f_THz = self.freqs_THz[-1]
-        self.DF = 0.5/(self.Nfreqs-1)
-        self.DF_THz = self.DF/self.DT_FS*1000.
+        self.DF = 0.5 / (self.Nfreqs - 1)
+        self.DF_THz = self.DF / self.DT_FS * 1000.
         return
-
 
     #############################################
     ###################################
@@ -185,31 +182,30 @@ class MDSample(object):
     def timeseries(self):
         return np.arange(self.N) * self.DT_FS
 
-
     def compute_trajectory(self):
         """Computes trajectory from spectrum."""
         if self.spectr is None:
             raise ValueError('Spectrum not defined.')
         full_spectr = np.append(self.spectr, self.spectr[-2:0:-1].conj())
-        self.traj = np.real( np.fft.ifft(full_spectr) )#*np.sqrt(self.Nfreqs-1)
+        self.traj = np.real(np.fft.ifft(full_spectr))   #*np.sqrt(self.Nfreqs-1)
         self.N = self.traj.size
         return
-
 
     def compute_spectrum(self):
         """Computes spectrum from trajectory."""
         if self.traj is None:
             raise ValueError('Trajectory not defined.')
         full_spectr = np.fft.fft(self.traj)
-        self.spectr = full_spectr[:self.N/2+1]
+        self.spectr = full_spectr[:self.N / 2 + 1]
         self.Nfreqs = self.spectr.size
-        self.DF = 0.5 / (self.Nfreqs-1)
+        self.DF = 0.5 / (self.Nfreqs - 1)
         return
 
-
-    def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True, normalize=False, call_other=True):
-        """Computes the real fourier transform of the temporal series, then computes the thermal conductivity coefficient obtained from the
-        cospectrum matrix. The results have almost the same statistical properties:
+    def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None,
+                            average_components=True, normalize=False, call_other=True):   # yapf: disable
+        """
+        Computes the real fourier transform of the temporal series, then computes the thermal conductivity coefficient
+        obtained from the cospectrum matrix. The results have almost the same statistical properties:
         !!!!
         !!!!  WARNING: the chi-square distribution have ndf=n-l+1, where n is the number of temporal series, l is the number of currents (stored in self.ndf_chi).
         !!!!
@@ -220,14 +216,14 @@ class MDSample(object):
         If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
         The elements of the matrix are multiplied by DT_FS at the end.
         others is a list of other object like this, with the other currents loaded.
-         
+
         example call (4 currents in total):
         j.compute_kappa_multi(others=[j1,j2,j3], FILTER_WINDOW_WIDTH=FILTER_WINDOW_WIDTH)
         """
         # check if others is an array
         if not isinstance(others, (list, tuple, np.ndarray)):
             others = [others]
-        N_CURRENTS=len(others)
+        N_CURRENTS = len(others)
         if DT_FS is not None:
             self.DT_FS = DT_FS
 
@@ -237,16 +233,17 @@ class MDSample(object):
             self.spectrALL = np.fft.rfft(self.traj, axis=0)
             self.Nfreqs = self.spectrALL.shape[0]
             self.freqs = np.linspace(0., 0.5, self.Nfreqs)
-            self.DF = 0.5 / (self.Nfreqs-1)
+            self.DF = 0.5 / (self.Nfreqs - 1)
         else:
             raise KeyError('method not understood')
-        self.freqs_THz = self.freqs/self.DT_FS*1000.
+        self.freqs_THz = self.freqs / self.DT_FS * 1000.
         self.Nyquist_f_THz = self.freqs_THz[-1]
 
         # calculate the same thing on the other trajectory
         if (call_other):
-            for other in others:  # call other.compute_kappa_multi (MDsample method)
-                MDSample.compute_kappa_multi(other, [self], FILTER_WINDOW_WIDTH, method, self.DT_FS, average_components, normalize, False)
+            for other in others:   # call other.compute_kappa_multi (MDsample method)
+                MDSample.compute_kappa_multi(other, [self], FILTER_WINDOW_WIDTH, method, self.DT_FS, average_components,
+                                             normalize, False)
         else:
             return
 
@@ -262,15 +259,15 @@ class MDSample(object):
                     np.einsum('a...,b...->ab...', np.array([self.spectrALL] + other_spectrALL), np.array([self.spectrALL] + other_spectrALL).conj())
 
         # compute number of degrees of freedom of the chi-square distribution of the psd
-        ndf_chi = covarALL.shape[3]- len(other_spectrALL)
+        ndf_chi = covarALL.shape[3] - len(other_spectrALL)
 
         # compute the sum over the last axis (x,y,z components):
         self.L = covarALL.shape[3]   ## isn't is == to N_CURRENTS?
         self.cospectrum = covarALL.sum(axis=3)
 
         # compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
-        # the diagonal elements of the inverse have very convenient statistical properties 
-        multi_psd = (np.linalg.inv(self.cospectrum.transpose((2,0,1)))[:,0,0]**-1).real / ndf_chi
+        # the diagonal elements of the inverse have very convenient statistical properties
+        multi_psd = (np.linalg.inv(self.cospectrum.transpose((2, 0, 1)))[:, 0, 0]**-1).real / ndf_chi
 
         if normalize:
             multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
@@ -289,16 +286,18 @@ class MDSample(object):
         self.psd = multi_psd
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
-        self.psd_power = np.trapz(self.psd)  # one-side PSD power
+        self.psd_power = np.trapz(self.psd)   # one-side PSD power
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
-            self.filter_psd( FILTER_WINDOW_WIDTH )
+            self.filter_psd(FILTER_WINDOW_WIDTH)
         return
 
-
-    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True, normalize=False):
-        """Computes the periodogram from the trajectory or the spectrum. 
+    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True,
+                    normalize=False):   # yapf: disable
+        """
+        Compute the periodogram from the trajectory or the spectrum.
         If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
-        The PSD is multiplied by DT_FS at the end."""
+        The PSD is multiplied by DT_FS at the end.
+        """
         if self.multicomponent:
             if self.otherMD is None:
                 raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
@@ -317,26 +316,25 @@ class MDSample(object):
             self.psd[1:-1] = self.psd[1:-1] * 0.5
             self.psd = self.DT_FS * self.psd
             self.Nfreqs = self.freqs.size
-            self.DF = 0.5 / (self.Nfreqs-1)
+            self.DF = 0.5 / (self.Nfreqs - 1)
         elif (method == 'spectrum'):
             if self.spectr is None:
                 raise ValueError('Spectrum not defined.')
-            self.psd = self.DT_FS * np.abs(self.spectr)**2 / (2*(self.Nfreqs - 1))
+            self.psd = self.DT_FS * np.abs(self.spectr)**2 / (2 * (self.Nfreqs - 1))
             #self.psd[1:-1] = self.psd[1:-1] * 2.0   # factor 2 from one-sided psd
             self.freqs = np.linspace(0., 0.5, self.Nfreqs)
         else:
             raise KeyError('method not understood')
-        self.freqs_THz = self.freqs/self.DT_FS*1000.
+        self.freqs_THz = self.freqs / self.DT_FS * 1000.
         self.Nyquist_f_THz = self.freqs_THz[-1]
         if normalize:
             self.psd = self.psd / np.trapz(self.psd) / self.N / self.DT_FS
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
-        self.psd_power = np.trapz(self.psd)  # one-side PSD power
+        self.psd_power = np.trapz(self.psd)   # one-side PSD power
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
-            self.filter_psd( FILTER_WINDOW_WIDTH )
+            self.filter_psd(FILTER_WINDOW_WIDTH)
         return
-
 
     def filter_psd(self, FILTER_WINDOW_WIDTH=None, window_type='rectangular', logpsd_filter_type=1):
         """Filters the periodogram with the given FILTER_WINDOW_WIDTH [freq units]."""
@@ -345,29 +343,28 @@ class MDSample(object):
         if FILTER_WINDOW_WIDTH is not None:   # otherwise try to use the internal value
             self.FILTER_WINDOW_WIDTH = FILTER_WINDOW_WIDTH
         if self.FILTER_WINDOW_WIDTH is not None:
-            self.FILTER_WF = int(round(self.FILTER_WINDOW_WIDTH*self.Nfreqs*2.))
+            self.FILTER_WF = int(round(self.FILTER_WINDOW_WIDTH * self.Nfreqs * 2.))
         else:
             raise ValueError('Filter window width not defined.')
         if (window_type == 'rectangular'):
             self.fpsd = runavefilter(self.psd, self.FILTER_WF)
-            try:  ## THIS IS HORRIBLE -- find another method to check its definition
-               self.fcospectrum = []
-               for i in range(self.cospectrum.shape[0]):
-                  self.fcospectrum.append([])
-                  for j in range(self.cospectrum.shape[1]):
-                     ffpsd = runavefilter(self.cospectrum[i,j], self.FILTER_WF)
-                     self.fcospectrum[i].append(ffpsd/self.L)
-               self.fcospectrum = np.asarray(self.fcospectrum)
+            try:   ## THIS IS HORRIBLE -- find another method to check its definition
+                self.fcospectrum = []
+                for i in range(self.cospectrum.shape[0]):
+                    self.fcospectrum.append([])
+                    for j in range(self.cospectrum.shape[1]):
+                        ffpsd = runavefilter(self.cospectrum[i, j], self.FILTER_WF)
+                        self.fcospectrum[i].append(ffpsd / self.L)
+                self.fcospectrum = np.asarray(self.fcospectrum)
             except AttributeError:
-               pass
+                pass
             if logpsd_filter_type == 1:
-               self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
+                self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
             else:
-               self.flogpsd = np.log(self.fpsd)
+                self.flogpsd = np.log(self.fpsd)
         else:
             raise KeyError('Window type unknown.')
         return
-
 
     def compute_acf(self, NLAGS=None):
         """Computes the autocovariance function of the trajectory."""
@@ -377,19 +374,17 @@ class MDSample(object):
             self.NLAGS = self.N
         self.acf = np.zeros((self.NLAGS, self.N_COMPONENTS))
         for d in range(self.N_COMPONENTS):
-            self.acf[:,d] = acovf(self.traj[:,d],  unbiased=True, fft=True)[:NLAGS]
-        self.acfm = np.mean(self.acf, axis=1)  # average acf
+            self.acf[:, d] = acovf(self.traj[:, d], unbiased=True, fft=True)[:NLAGS]
+        self.acfm = np.mean(self.acf, axis=1)   # average acf
         return
-
 
     def compute_gkintegral(self):
         """Compute the integral of the autocovariance function."""
         if self.acf is None:
             raise RuntimeError('Autocovariance is not defined.')
         self.tau = integrate_acf(self.acf)
-        self.taum = np.mean(self.tau, axis=1)  # average tau
+        self.taum = np.mean(self.tau, axis=1)   # average tau
         return
-
 
     ###################################
     ###  PLOT METHODS
@@ -406,57 +401,53 @@ class MDSample(object):
         plt.grid()
         plt.legend()
         return
-    
-    
+
     def plot_psd(self, param_dict={'label': 'psd'}):
         """Plot the periodogram."""
         if self.psd is None:
             raise ValueError('Peridogram not defined.')
         plt.plot(self.freqs, self.psd, **param_dict)
         plt.xlabel('f [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0.,0.5,11))
+        plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
         return
-    
-    
+
     def plot_logpsd(self, param_dict={'label': 'log(psd)'}):
         """Plot the periodogram."""
         if self.logpsd is None:
             raise ValueError('Log-Peridogram not defined.')
         plt.plot(self.freqs, self.logpsd, **param_dict)
         plt.xlabel('f [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0.,0.5,11))
+        plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
         return
-    
-    
+
     def plot_fpsd(self, FILTER_WINDOW_WIDTH=None, param_dict={'label': 'f-psd'}):
-        """Plot the filtered periodogram. 
+        """Plot the filtered periodogram.
         If FILTER_WINDOW_WIDTH is defined/passed a filtered psd is computed,
         otherwise the internal copy is used.
         """
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
-            self.filter_psd( FILTER_WINDOW_WIDTH )
+            self.filter_psd(FILTER_WINDOW_WIDTH)
         if self.fpsd is None:
             raise ValueError('Filtered peridogram not defined.')
         plt.plot(self.freqs, self.fpsd, **param_dict)
         plt.xlabel('f [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0.,0.5,11))
+        plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
         return
 
-        
     def plot_flogpsd(self, FILTER_WINDOW_WIDTH=None, param_dict={'label': 'f-log(psd)'}):
-        """Plot the filtered periodogram. 
+        """Plot the filtered periodogram.
         If FILTER_WINDOW_WIDTH is defined/passed a filtered psd is computed,
         otherwise the internal copy is used.
         """
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
-            self.filter_psd( FILTER_WINDOW_WIDTH )
+            self.filter_psd(FILTER_WINDOW_WIDTH)
         if self.flogpsd is None:
             raise ValueError('Filtered log-peridogram not defined.')
         plt.plot(self.freqs, self.flogpsd, **param_dict)
         plt.xlabel('f [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0.,0.5,11))
+        plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
         return
