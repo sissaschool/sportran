@@ -1,8 +1,9 @@
 # thermocepstrum
 Code to compute thermal conductivity through cepstral analysis of heat flux time series, as described in papers:
  - Ercole, Marcolongo, Baroni, Sci. Rep. 7, 15835 (2017), https://doi.org/10.1038/s41598-017-15843-2
- - for the multi-component analysis:  Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
-
+ - (multicomponent systems) Bertossa, Grasselli, Ercole, Baroni Phys. Rev. Lett. 122, 255901 (2019), https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.255901
+ - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
+ 
 **Acknowledgement**  The development of this software is part of the scientific program of the EU MaX Centre of Excellence for Supercomputing Applications (Grant No. 676598) and has been partly funded through it.
 
 ### Usage
@@ -14,7 +15,7 @@ It can execute most of the cepstral analysis routines, returning the results in 
 See the `examples` folder and the help (`python analysis.py --help`) for more information.
 
 ### Requirements
- - Python 2.7
+ - Python 2.7 or 3.x
  - Numpy
  - Scipy
  - Matplotlib
