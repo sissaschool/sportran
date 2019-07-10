@@ -217,7 +217,7 @@ class GraphWidget(Frame):
                 self.entry.insert(0, self.cut_line)
 
             self.graph.clear()
-            cu.set_graph(self.graph, self.func)
+            cu.set_graph(self.graph, self.func, x=cu.Data.j)
             for graph in self.other_graph:
                 cu.set_graph(self.graph, graph[1], **graph[2])
 
@@ -285,6 +285,39 @@ class TextWidget(Frame):
         self.text_box.insert(INSERT, str(text)+'\n')
 
 
+class CheckList(Frame):
+
+    def __init__(self, parent, controller, check_list=dict()):
+        Frame.__init__(self, parent, controller)
+
+        self.controller = controller
+        if list:
+            for row, el in enumerate(list(check_list.keys())):
+                chk = ttk.Checkbutton(self.controller, text=el)
+                chk.grid(row=row, column=0)
+                chk.state(['!selected'])
+
+    def set_list(self, check_list):
+        self.clear_list()
+        for row, el in enumerate(list(check_list.keys())):
+                chk = ttk.Checkbutton(self.controller, text=el)
+                chk.grid(row=row, column=0)
+                #chk.deselect()
+
+    def clear_list(self):
+        for el in self.controller.winfo_children():
+            el.destroy()
+
+    def get_list(self):
+        check = []
+
+        for el in self.controller.winfo_children():
+            if el.instate(['selected']):
+                check.append(el['text'])
+
+        return check
+
+
 class FileManager(Frame):
     # todo: add a function to update the file manager
     SortDir = True
@@ -294,27 +327,47 @@ class FileManager(Frame):
         TopBar(parent, controller)
 
         file_manager = Frame(self, width=400)
-        file_manager.pack(fill=BOTH, padx=100, pady=50)
+        file_manager.pack(fill=BOTH, padx=100, pady=30)
 
-        selection_frame = Frame(self, bg=settings.BG_COLOR)
+        prev_frame = Frame(self, width=400, height=10)
+        prev_frame.pack(fill=BOTH, padx=100, pady=20)
+
+        self.preview = Text(prev_frame, bd=1, relief=SOLID, height=10)
+        self.preview.pack(fill=BOTH, side=TOP)
+
+        settings_frame = Frame(self, bg=settings.BG_COLOR, width=400)
+        settings_frame.pack(fill=BOTH, padx=100)
+
+        selection_frame = Frame(settings_frame, bg=settings.BG_COLOR)
         selection_frame.pack(fill=BOTH, padx=100)
 
         Label(selection_frame, text='Selected: ', bg=settings.BG_COLOR).grid(row=0, column=0)
 
         self.selected = Entry(selection_frame, width=80, relief=SOLID, bd=1)
-        self.selected.grid(row=0, column=1, ipadx=1, ipady=1)
+        self.selected.grid(row=0, column=1, ipadx=1, ipady=1, sticky='w')
 
         self.find_button = Button(selection_frame, text='...', relief=SOLID, bd=1,
                                   command=lambda: self._select_file_with_manager())
-        self.find_button.grid(row=0, column=2, padx=4)
+        self.find_button.grid(row=0, column=2, padx=4, sticky='w')
 
         Label(selection_frame, text='Input format: ', bg=settings.BG_COLOR).grid(row=0, column=3, padx=5)
         self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly')
         self.input_selector.current(0)
-        self.input_selector.grid(row=0, column=4)
+        self.input_selector.grid(row=0, column=4, sticky='w')
+
+        Label(selection_frame, text='Filter width: ', bg=settings.BG_COLOR).grid(row=1, column=0)
+        self.filter_width_entry = Spinbox(selection_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
+        self.filter_width_entry.grid(row=1, column=1, padx=2, sticky='w', pady=10)
+
+        Label(selection_frame, text='Keys ', bg=settings.BG_COLOR).grid(row=2, column=0)
+        check_frame = Frame(selection_frame, bg=settings.BG_COLOR, width=100)
+        check_frame.grid(row=3, column=0, pady=10)
+
+        self.check_list = CheckList(self, check_frame)
+
         self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1,
                                    command=self._start_analysis)
-        self.start_button.grid(row=1, column=0, pady=20)
+        self.start_button.grid(row=5, column=0, sticky='w')
 
         self._start_file_manager(file_manager)
         self._parse_files()
@@ -337,6 +390,7 @@ class FileManager(Frame):
         ysb.grid(row=0, column=1, sticky='ns')
 
         self.file_list.bind('<<TreeviewSelect>>', self._select_file)
+        self.file_list.bind('<Double-1>', self._start_analysis)
         # set frame resize priorities
         inner_frame.rowconfigure(0, weight=1)
         inner_frame.columnconfigure(0, weight=1)
@@ -391,6 +445,14 @@ class FileManager(Frame):
         path = os.path.join(settings.DATA_PATH, name)
         self.selected.insert(0, path)
 
+        with open(path, 'r') as file:
+            lines = file.readlines()[0:settings.PREVIEW_LINES]
+            self.preview.delete('1.0', END)
+            self.preview.insert('1.0', lines)
+
+        keys = cu.load_keys(path)
+        self.check_list.set_list(keys)
+
     def _select_file_with_manager(self):
         '''
         This function allow the user to search in a more accurately way the file
@@ -400,19 +462,34 @@ class FileManager(Frame):
                                   title="Select file",
                                   filetypes=(("all files", "*.*"), ))
 
-        self.selected.delete(0, END)
-        self.selected.insert(0, path.name)
+        # self.selected.delete(0, END)
+        self.selected.insert(INSERT, path.name)
 
-    def _start_analysis(self):
+    def _start_analysis(self, ev=None):
         if self.selected.get():
             if os.path.exists(self.selected.get()):
                 if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
                     cu.CURRENT_FILE = self.selected.get()
                     # load_process = LoadingWindow(cu.get_file_size(cu.CURRENT_FILE))
                     if not cu.Data.loaded:
-                        cu.load_data(self.selected.get(), self.input_selector.get(), ['flux1'], temperature=1000.0, units='metal', volume=30000.0, psd_filter_w=1.0, DT_FS=5.0, logs=ThermocepstrumGUI.frames[Cutter].logs)
-                    ThermocepstrumGUI.show_frame(Cutter)
-                    ThermocepstrumGUI.frame.update()
+                        psd_filter_w = float(self.filter_width_entry.get())
+                        keys = self.check_list.get_list()
+
+                        if keys:
+                            cu.load_data(self.selected.get(), 
+                                self.input_selector.get(), 
+                                keys, 
+                                temperature=1000.0, 
+                                units='metal', 
+                                volume=30000.0, 
+                                psd_filter_w=psd_filter_w, 
+                                DT_FS=5.0, 
+                                logs=ThermocepstrumGUI.frames[Cutter].logs)
+
+                            ThermocepstrumGUI.show_frame(Cutter)
+                            ThermocepstrumGUI.frame.update()
+                        else:
+                            msg.showerror('No keys selected', 'You must select almost one header key!')
                 else:
                     msg.showerror('Invalid format!', 'The file that you have selected has an invalid format!')
             else:
@@ -453,6 +530,9 @@ class Cutter(Frame):
         self.value_entry.pack(side=LEFT)
         self.graph.attach_entry(self.value_entry)
 
+        self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID)
+        self.filter_width.pack(side=LEFT)
+
         resample_button = Button(value_frame, text='Resample', bd=1, relief=SOLID,
                                  command=self.resample).pack(side=RIGHT, padx=10)
         button_frame = Frame(sections, bg=settings.BG_COLOR)
@@ -484,10 +564,11 @@ class Cutter(Frame):
 
     def resample(self):
         cu.Data.fstar = float(self.value_entry.get())
+        filter_width = float(self.filter_width.get())
 
         if cu.Data.fstar >= 1:
             self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
-                                 PSD_FILTER_W=1.0)
+                                 PSD_FILTER_W=filter_width)
             self.graph.update_cut()
         else:
             msg.showwarning('Value error', 'F* can\'t be less than one')
@@ -511,7 +592,7 @@ class Cutter(Frame):
         ThermocepstrumGUI.show_frame(PStar)
 
     def update(self):
-        self.graph.show(cu.gm.plot_periodogram)
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
         # self.graph.cut_line = cu.Data.fstar
 
 
@@ -561,9 +642,9 @@ class PStar(Frame):
     def back(self):
         ThermocepstrumGUI.show_frame(Cutter)
 
-    def _get_pstar(self):
-        cu.Data.xf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=1.0)
-        return cu.Data.xf.dct.aic_Kmin
+    def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
+        cu.Data.xf.cepstral_analysis(aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
+        
 
     def _corr_factor(self):
         self.value_entry.config(from_=1.0, to=cu.Data.xf.Nfreqs)
@@ -574,16 +655,18 @@ class PStar(Frame):
         self.value_entry.config(increment=int(self.increment.get()))
 
     def _reload(self):
+        self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.Data.xf)
-        self.update()
+        self.graph.update_cut()
 
 
     def update(self):
-        self.graph.show(cu.gm.plot_periodogram)
+        self._corr_factor()
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
                              PSD_FILTER_W=1.0)
+        self._reload()
         self.graph.update_cut()
-        self._corr_factor()
 
 
 class Output(Frame):

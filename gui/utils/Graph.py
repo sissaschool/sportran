@@ -25,47 +25,8 @@ class GraphManager:
         self.freqs = j.freqs
         self.psd = j.psd
 
-    def plot_periodogram(self, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, external_object=None, **plot_kwargs):
-        """
-        Plot the periodogram.
-          PSD_FILTER_W  = width of the filtering window
-          freq_units    = 'thz'  THz
-                          'red'  omega*DT/(2*pi)
-          freq_scale    = rescale red frequencies by this factor (e.g. 2 --> freq = [0, 0.25])
-          axes          = matplotlib.axes.Axes object (if None, create one)
-          FIGSIZE       = size of the plot
-
-        Returns a matplotlib.axes.Axes object.
-        """
-        # recompute PSD if needed
-        if self.psd is None:
-            raise ValueError('psd is None')
-
-        if (freq_units == 'thz') or (freq_units == 'THz'):
-            axis.plot(self.freqs_THz, self.fpsd, **plot_kwargs)
-    #       axis.plot(self.freqs_THz, self.flogpsd, **plot_kwargs)
-            axis.set_xlim([0., self.Nyquist_f_THz])
-    #       axis.set_xlim([0., self.Nyquist_f_THz])
-        elif freq_units == 'red':
-            axis.plot(self.freqs / freq_scale, self.fpsd, **plot_kwargs)
-    #        axis.plot(self.freqs / freq_scale, self.flogpsd, **plot_kwargs)
-            axis.set_xlim([0., 0.5 / freq_scale])
-    #        axis.set_xlim([0., 0.5 / freq_scale])
-        else:
-            raise ValueError('Units not valid.')
-        axis.xaxis.set_ticks_position('top')
-
-        axis.set_ylabel(r'PSD [W/mK]')
-
-        axis.grid()
-        axis.xaxis.set_ticks_position('bottom')
-        axis.set_xlabel(r'$f$ [THz]')
-    #   axis.set_ylabel(r'log(PSD)')
-        axis.grid()
-        return axis
-
     @staticmethod
-    def GUI_plot_periodogram(x, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=False,
+    def GUI_plot_periodogram(x, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, external_object=None,
                              FIGSIZE=None, **plot_kwargs):
         """
         Plot the periodogram.
@@ -102,18 +63,18 @@ class GraphManager:
             psd_scale = 0.5 * x.kappa_scale
         else:
             psd_scale = 1.0
-        # if axes is None:
+        # if axis is None:
         #    figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         # plt.subplots_adjust(hspace = 0.1)
         if (freq_units == 'thz') or (freq_units == 'THz'):
-            axes.plot(x.freqs_THz, psd_scale * x.fpsd, **plot_kwargs)
+            axis.plot(x.freqs_THz, psd_scale * x.fpsd, **plot_kwargs)
             # axes[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
-            axes.set_xlim([0., x.Nyquist_f_THz])
+            axis.set_xlim([0., x.Nyquist_f_THz])
             # axes[1].set_xlim([0., x.Nyquist_f_THz])
         elif (freq_units == 'red'):
-            axes.plot(x.freqs / freq_scale, psd_scale * x.fpsd, **plot_kwargs)
+            axis.plot(x.freqs / freq_scale, psd_scale * x.fpsd, **plot_kwargs)
             # axes[1].plot(x.freqs/freq_scale, x.flogpsd, **plot_kwargs)
-            axes.set_xlim([0., 0.5 / freq_scale])
+            axis.set_xlim([0., 0.5 / freq_scale])
             # axes[1].set_xlim([0., 0.5/freq_scale])
         # else:
         #    raise ValueError('Units not valid.')
@@ -122,12 +83,12 @@ class GraphManager:
         #    axes[0].set_ylabel(r'PSD [W/mK]')
         # else:
         #    axes[0].set_ylabel(r'PSD')
-        axes.grid()
-        axes.xaxis.set_ticks_position('bottom')
-        axes.set_xlabel(r'$f$ [THz]')
+        axis.grid()
+        axis.xaxis.set_ticks_position('bottom')
+        axis.set_xlabel(r'$f$ [THz]')
         # axes[1].set_ylabel(r'log(PSD)')
-        axes.grid()
-        return axes
+        axis.grid()
+        return axis
 
     def resample_current(self, x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz',
                          FIGSIZE=None, axis=None, external_object=None):
@@ -153,7 +114,7 @@ class GraphManager:
                 TSKIP = int(round(x.Nyquist_f_THz / fstar_THz))
         fstar_THz = x.Nyquist_f_THz / TSKIP
         # fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
-
+        self.GUI_plot_periodogram(x, PSD_FILTER_W, freq_units, 1.0, axis=axis)
         # filter and sample
         if FILTER_W is None:
             FILTER_W = TSKIP
@@ -172,9 +133,9 @@ class GraphManager:
             xf = tc.heatcurrent.HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH * TSKIP)
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
-                self.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * 1000. / xf.DT_FS, 'thz', TSKIP, axes=axis)
+                self.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
             elif freq_units == 'red':
-                self.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axes=axis)
+                self.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axis=axis)
 
         # xf.resample_log = '-----------------------------------------------------\n' + \
         #                   '  RESAMPLE TIME SERIES\n' + \
@@ -209,9 +170,11 @@ class GraphManager:
     @staticmethod
     def plot_cepstral_spectrum(x, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None, external_object=None,
                                **plot_kwargs):
-        if axis is None:
-            figure, axis = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        plt.subplots_adjust(hspace=0.1)
+        print('========================================')
+        print(x.dct)
+        print('-----------------')
+        print(x.dct.psd)
+        print('========================================')
         if kappa_units:
             psd_scale = 0.5 * x.kappa_scale
         else:

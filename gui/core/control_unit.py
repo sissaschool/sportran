@@ -120,6 +120,10 @@ def set_defaults():
     load_path()
 
 
+def load_keys(inputfile):
+    jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+    return jfile.all_ckeys
+
 def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None, logs=None):
 
     if input_format == 'table':

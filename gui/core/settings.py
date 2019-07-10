@@ -26,6 +26,7 @@ FILE_EXTENSIONS = ['dat', 'log', 'txt', 'bin']
 
 STATUS = ['Loading', 'Configuring', 'Calculating', 'Idle', 'Sleep']
 STATUS_NOW = STATUS[0]
+PREVIEW_LINES = 10
 
 # LANGUAGE = 'en-EN'
 
