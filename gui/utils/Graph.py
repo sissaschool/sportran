@@ -114,7 +114,7 @@ class GraphManager:
                 TSKIP = int(round(x.Nyquist_f_THz / fstar_THz))
         fstar_THz = x.Nyquist_f_THz / TSKIP
         # fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
-        self.GUI_plot_periodogram(x, PSD_FILTER_W, freq_units, 1.0, axis=axis)
+        # self.GUI_plot_periodogram(x, PSD_FILTER_W, freq_units, 1.0, axis=axis)
         # filter and sample
         if FILTER_W is None:
             FILTER_W = TSKIP

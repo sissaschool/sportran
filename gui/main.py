@@ -217,7 +217,7 @@ class GraphWidget(Frame):
                 self.entry.insert(0, self.cut_line)
 
             self.graph.clear()
-            cu.set_graph(self.graph, self.func, x=cu.Data.j)
+            cu.set_graph(self.graph, self.func, x=cu.Data.j, PSD_FILTER_W=cu.Data.psd_filter_width)
             for graph in self.other_graph:
                 cu.set_graph(self.graph, graph[1], **graph[2])
 
@@ -250,24 +250,6 @@ class GraphWidget(Frame):
     def _on_slider_change(self, ev):
         self.cut_line = self.slider.get()
         self.update_cut()
-
-    def get_value_by_x(self, x):
-
-        x_values = self.line2D[0].get_xdata()
-        y_values = self.line2D[0].get_ydata()
-
-        idx = np.where(x_values == x_values[x])
-
-        return y_values[idx]
-
-    def get_value_by_y(self, y):
-
-        x_values = self.line2D[0].get_xdata()
-        y_values = self.line2D[0].get_ydata()
-
-        idy = np.where(y_values == y_values[y])
-
-        return x_values[idy]
 
 
 class TextWidget(Frame):
@@ -364,6 +346,24 @@ class FileManager(Frame):
         check_frame.grid(row=3, column=0, pady=10)
 
         self.check_list = CheckList(self, check_frame)
+
+        enviroment_settings = Frame(selection_frame, bg=settings.BG_COLOR, width=200)
+        enviroment_settings.grid(row=3, column=1)
+
+        Label(enviroment_settings, text='Temperature: ', bg=settings.BG_COLOR).grid(row=0, column=0)
+        self.temperature_entry = Spinbox(enviroment_settings, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
+        self.temperature_entry.grid(row=0, column=1, padx=2, sticky='w', pady=10)
+
+        Label(enviroment_settings, text='Volume: ', bg=settings.BG_COLOR).grid(row=1, column=0)
+        self.volume_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
+        self.volume_entry.grid(row=1, column=1, padx=2, sticky='w')
+
+        Label(enviroment_settings, text='DT_FS: ', bg=settings.BG_COLOR).grid(row=2, column=0)
+        self.DT_FS_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
+        self.DT_FS_entry.grid(row=2, column=1, padx=2, sticky='w', pady=10)
+
+        self.auto_flag = Checkbutton(enviroment_settings, text='Auto')
+        self.auto_flag.grid(row=3, column=0)
 
         self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1,
                                    command=self._start_analysis)
@@ -473,21 +473,36 @@ class FileManager(Frame):
                     # load_process = LoadingWindow(cu.get_file_size(cu.CURRENT_FILE))
                     if not cu.Data.loaded:
                         psd_filter_w = float(self.filter_width_entry.get())
+                        cu.Data.psd_filter_width = psd_filter_w
                         keys = self.check_list.get_list()
 
                         if keys:
-                            cu.load_data(self.selected.get(), 
-                                self.input_selector.get(), 
-                                keys, 
-                                temperature=1000.0, 
-                                units='metal', 
-                                volume=30000.0, 
-                                psd_filter_w=psd_filter_w, 
-                                DT_FS=5.0, 
-                                logs=ThermocepstrumGUI.frames[Cutter].logs)
 
-                            ThermocepstrumGUI.show_frame(Cutter)
-                            ThermocepstrumGUI.frame.update()
+                            # if self.auto_flag.instate(['selected']):
+                            #     temperature = None
+                            #     volume = None
+                            # else:
+                            #     pass
+
+                            temperature = float(self.temperature_entry.get())
+                            volume = float(self.volume_entry.get())
+                            DT_FS = float(self.DT_FS_entry.get())
+
+                            if temperature > 0 and volume > 0 and DT_FS > 0:
+                                cu.load_data(self.selected.get(),
+                                    self.input_selector.get(),
+                                    keys,
+                                    temperature=temperature,
+                                    units='metal',
+                                    volume=volume,
+                                    psd_filter_w=psd_filter_w,
+                                    DT_FS=DT_FS,
+                                    logs=ThermocepstrumGUI.frames[Cutter].logs)
+
+                                ThermocepstrumGUI.show_frame(Cutter)
+                                ThermocepstrumGUI.frame.update()
+                            else:
+                                msg.showerror('Value error', 'Temperature, volume and DT_FS can\'t be less than 0')
                         else:
                             msg.showerror('No keys selected', 'You must select almost one header key!')
                 else:
@@ -592,7 +607,7 @@ class Cutter(Frame):
         ThermocepstrumGUI.show_frame(PStar)
 
     def update(self):
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j, PSD_FILTER_W=cu.Data.psd_filter_width)
         # self.graph.cut_line = cu.Data.fstar
 
 
@@ -623,7 +638,6 @@ class PStar(Frame):
         Radiobutton(value_frame, text='100', variable=self.increment, value=100,
                     bg=settings.BG_COLOR, command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
 
-
         button_frame = Frame(sections, bg=settings.BG_COLOR)
         button_frame.pack(pady=20)
 
@@ -644,7 +658,6 @@ class PStar(Frame):
 
     def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
         cu.Data.xf.cepstral_analysis(aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
-        
 
     def _corr_factor(self):
         self.value_entry.config(from_=1.0, to=cu.Data.xf.Nfreqs)
@@ -659,12 +672,11 @@ class PStar(Frame):
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.Data.xf)
         self.graph.update_cut()
 
-
     def update(self):
         self._corr_factor()
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
-                             PSD_FILTER_W=1.0)
+                             PSD_FILTER_W=cu.Data.psd_filter_width)
         self._reload()
         self.graph.update_cut()
 
@@ -696,8 +708,6 @@ class LoadingWindow(Tk):
         index = ThermocepstrumGUI.open_windows.index(self)
         del ThermocepstrumGUI.open_windows[index]
         self.destroy()
-
-
 
 
 def run():

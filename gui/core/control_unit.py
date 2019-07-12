@@ -27,6 +27,7 @@ class Data:
     axis = None
 
     fstar = 0.0
+    psd_filter_width = 0.0
 
 
 gm = Graph.GraphManager()
@@ -59,6 +60,45 @@ def secure_exit(main_window):
 
     exit()
 
+
+def get_temp(jdata, selected_keys):
+    if 'Temp' in jdata:
+        temperature = np.mean(jdata['Temp'])
+        temperature_std = np.std(jdata['Temp'])   # this is wrong (needs block average)
+        if 'Temp' in selected_keys:
+            selected_keys.remove('Temp')
+        print(' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std))
+        # logfile.write(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
+    elif 'Temp_ave' in jdata:
+        temperature = jdata['Temp_ave']
+        if 'Temp_std' in jdata:
+            temperature_std = jdata['Temp_std']
+            print(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
+            # logfile.write(' Mean Temperature (file):      {} K  +/-  {}\n'.format(temperature, temperature_std))
+        else:
+            print(' Mean Temperature (file):      {} K'.format(temperature))
+            # logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
+    else:
+        temperature = -1
+        # raise RuntimeError('No Temp key found. Please provide Temperature (-T).')
+
+    return temperature, selected_keys
+
+
+def get_volume(jdata, structurefile):
+    if structurefile is not None:
+        _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
+        print(' Volume (structure file):    {} A^3'.format(volume))
+        # logfile.write(' Volume (structure file):    {} A^3'.format(volume))
+    elif 'Volume' in jdata:
+        volume = jdata['Volume']
+        print(' Volume (file):    {} A^3'.format(volume))
+        # logfile.write(' Volume (file):    {} A^3\n'.format(volume))
+    else:
+        volume = -1
+        # raise RuntimeError('No Volume key found. Please provide Volume (-V) of structure file (--structure).')
+
+    return volume
 
 # -------- LOAD SECTION --------
 
@@ -124,7 +164,8 @@ def load_keys(inputfile):
     jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
     return jfile.all_ckeys
 
-def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None, logs=None):
+
+def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None, logs=None, structurefile=None):
 
     if input_format == 'table':
         if temperature is None:
@@ -150,6 +191,11 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
         ## Define currents
 #    print(selected_keys, jindex)
 
+    if temperature is None:
+        temperature, selected_keys = get_temp(Data.jdata, selected_keys)
+    if volume is None:
+        volume = get_volume(Data.jdata, structurefile)
+
     if NSTEPS == 0:
         NSTEPS = Data.jdata[list(Data.jdata.keys())[0]].shape[0]
     if True: #jindex is None:
@@ -173,5 +219,14 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
         print(currents)
 
     # create HeatCurrent object
-    Data.j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
-    gm.initialize(Data.j)
+    emsgs = []
+    if volume is not -1:
+        if temperature is not -1:
+            Data.j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
+            gm.initialize(Data.j)
+        else:
+            emsgs.append('Invalid temperature!')
+            return -1, emsgs
+    else:
+        emsgs.append('Invalid volume!')
+        return -1, emsgs
