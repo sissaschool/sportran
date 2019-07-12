@@ -120,7 +120,7 @@ class GraphManager:
             FILTER_W = TSKIP
         trajf = tc.md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
         if not x.multicomponent:
-            xf = tc.heatcurrent.HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH * TSKIP)
+            xf = tc.heatcurrent.HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W)
         else:
             if x.otherMD is None:
                 raise ValueError('x.otherMD cannot be none (wrong/missing initialization?)')
