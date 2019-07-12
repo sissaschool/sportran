@@ -580,13 +580,14 @@ class Cutter(Frame):
     def resample(self):
         cu.Data.fstar = float(self.value_entry.get())
         filter_width = float(self.filter_width.get())
+        cu.Data.psd_filter_width=filter_width
 
-        if cu.Data.fstar >= 1:
+        if cu.Data.fstar > 0:
             self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
                                  PSD_FILTER_W=filter_width)
             self.graph.update_cut()
         else:
-            msg.showwarning('Value error', 'F* can\'t be less than one')
+            msg.showwarning('Value error', 'F* must be greater than zero')
 
     def back(self):
         response = msg.askyesnocancel('Back to file manager?', "Save changes?\nIf reopen the same file \nthe values that you chosed will not be deleted!")

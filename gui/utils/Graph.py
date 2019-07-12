@@ -103,6 +103,9 @@ class GraphManager:
                          'red'  omega*DT/(2*pi)
           FIGSIZE      = plot figure size
         """
+        #TODO: move everything that is not strictly related to the plot to control_unit.py
+
+
         # if not isinstance(x, HeatCurrent):
         #     raise ValueError('x must be a HeatCurrent object.')
         # if (TSKIP is not None) and (fstar_THz is not None):
@@ -131,6 +134,8 @@ class GraphManager:
                 tmp = tc.md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
                 yf.append(tmp)
             xf = tc.heatcurrent.HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH * TSKIP)
+        #TODO: move stuff above in control unit?
+
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
                 self.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
