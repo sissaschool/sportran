@@ -262,9 +262,17 @@ class TextWidget(Frame):
 
         self.text_box = Text(text_frame, height=height, bd=0)
         self.text_box.pack(padx=4, pady=4)
+        self.text_box.config(state=DISABLED)
+
+    def clear(self):
+        self.text_box.config(state=NORMAL)
+        self.text_box.delete('0.1', END)
+        self.text_box.config(state=DISABLED)
 
     def write(self, text):
+        self.text_box.config(state=NORMAL)
         self.text_box.insert(INSERT, str(text)+'\n')
+        self.text_box.config(state=DISABLED)
 
 
 class CheckList(Frame):
@@ -283,7 +291,7 @@ class CheckList(Frame):
         self.clear_list()
         for row, el in enumerate(list(check_list.keys())):
                 chk = ttk.Checkbutton(self.controller, text=el)
-                chk.grid(row=row, column=0)
+                chk.grid(row=row, column=0, sticky='w')
                 #chk.deselect()
 
     def clear_list(self):
@@ -300,6 +308,33 @@ class CheckList(Frame):
         return check
 
 
+class ScrollFrame(Frame):
+
+    def __init__(self, parent, controller, width=0, height=0):
+        Frame.__init__(self, parent)
+
+        if width or height:
+            self.canvas = Canvas(controller, borderwidth=0, background="#ffffff", width=width, height=height)
+        else:
+            self.canvas = Canvas(controller, borderwidth=0, background="#ffffff")
+        self.viewPort = Frame(self.canvas, background="#ffffff")
+        self.vsb = Scrollbar(controller, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side=TOP, fill="both", expand=True, anchor='n', pady=10)
+        self.canvas.create_window(0, 0, window=self.viewPort, tags="self.viewPort")
+
+        self.viewPort.bind("<Configure>", self.on_frame_configure)
+
+    def on_frame_configure(self, event):
+        '''
+        Reset the scroll region to encompass the inner frame
+        '''
+
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+
+
 class FileManager(Frame):
     # todo: add a function to update the file manager
     SortDir = True
@@ -308,36 +343,38 @@ class FileManager(Frame):
         Frame.__init__(self, parent)
         TopBar(parent, controller)
 
-        file_manager = Frame(self, width=400)
+        main_frame = ScrollFrame(controller, self)
+
+        file_manager = Frame(main_frame.viewPort, width=400)
         file_manager.pack(fill=BOTH, padx=100, pady=30)
 
-        prev_frame = Frame(self, width=400, height=10)
+        prev_frame = Frame(main_frame.viewPort, width=400, height=10)
         prev_frame.pack(fill=BOTH, padx=100, pady=20)
 
         self.preview = Text(prev_frame, bd=1, relief=SOLID, height=10)
         self.preview.pack(fill=BOTH, side=TOP)
 
-        settings_frame = Frame(self, bg=settings.BG_COLOR, width=400)
+        settings_frame = Frame(main_frame.viewPort, bg=settings.BG_COLOR, width=400)
         settings_frame.pack(fill=BOTH, padx=100)
 
         selection_frame = Frame(settings_frame, bg=settings.BG_COLOR)
-        selection_frame.pack(fill=BOTH, padx=100)
+        selection_frame.pack(fill=BOTH)
 
-        Label(selection_frame, text='Selected: ', bg=settings.BG_COLOR).grid(row=0, column=0)
+        Label(selection_frame, text='Selected: ', bg=settings.BG_COLOR).grid(row=0, column=0, sticky='e')
 
-        self.selected = Entry(selection_frame, width=80, relief=SOLID, bd=1)
+        self.selected = Entry(selection_frame, width=60, relief=SOLID, bd=1)
         self.selected.grid(row=0, column=1, ipadx=1, ipady=1, sticky='w')
 
         self.find_button = Button(selection_frame, text='...', relief=SOLID, bd=1,
                                   command=lambda: self._select_file_with_manager())
         self.find_button.grid(row=0, column=2, padx=4, sticky='w')
 
-        Label(selection_frame, text='Input format: ', bg=settings.BG_COLOR).grid(row=0, column=3, padx=5)
+        Label(selection_frame, text='Input format: ', bg=settings.BG_COLOR).grid(row=0, column=3, padx=5, sticky='e')
         self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly')
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
 
-        Label(selection_frame, text='Filter width: ', bg=settings.BG_COLOR).grid(row=1, column=0)
+        Label(selection_frame, text='Filter width: ', bg=settings.BG_COLOR).grid(row=1, column=0, sticky='e')
         self.filter_width_entry = Spinbox(selection_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
         self.filter_width_entry.grid(row=1, column=1, padx=2, sticky='w', pady=10)
 
@@ -345,25 +382,26 @@ class FileManager(Frame):
         check_frame = Frame(selection_frame, bg=settings.BG_COLOR, width=100)
         check_frame.grid(row=3, column=0, pady=10)
 
-        self.check_list = CheckList(self, check_frame)
+        check_scrollable = ScrollFrame(main_frame.viewPort, check_frame, 200, 100)
+        self.check_list = CheckList(check_scrollable, check_scrollable.viewPort)
 
         enviroment_settings = Frame(selection_frame, bg=settings.BG_COLOR, width=200)
         enviroment_settings.grid(row=3, column=1)
 
-        Label(enviroment_settings, text='Temperature: ', bg=settings.BG_COLOR).grid(row=0, column=0)
+        Label(enviroment_settings, text='Temperature: ', bg=settings.BG_COLOR).grid(row=0, column=0, sticky='w')
         self.temperature_entry = Spinbox(enviroment_settings, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
         self.temperature_entry.grid(row=0, column=1, padx=2, sticky='w', pady=10)
 
-        Label(enviroment_settings, text='Volume: ', bg=settings.BG_COLOR).grid(row=1, column=0)
+        Label(enviroment_settings, text='Volume: ', bg=settings.BG_COLOR).grid(row=1, column=0, sticky='w')
         self.volume_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
         self.volume_entry.grid(row=1, column=1, padx=2, sticky='w')
 
-        Label(enviroment_settings, text='DT_FS: ', bg=settings.BG_COLOR).grid(row=2, column=0)
+        Label(enviroment_settings, text='DT_FS: ', bg=settings.BG_COLOR).grid(row=2, column=0, sticky='w')
         self.DT_FS_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
         self.DT_FS_entry.grid(row=2, column=1, padx=2, sticky='w', pady=10)
 
         self.auto_flag = Checkbutton(enviroment_settings, text='Auto')
-        self.auto_flag.grid(row=3, column=0)
+        self.auto_flag.grid(row=3, column=0, sticky='w')
 
         self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1,
                                    command=self._start_analysis)
@@ -588,6 +626,7 @@ class Cutter(Frame):
             self.graph.update_cut()
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
+        self.update()
 
     def back(self):
         response = msg.askyesnocancel('Back to file manager?', "Save changes?\nIf reopen the same file \nthe values that you chosed will not be deleted!")
@@ -604,11 +643,13 @@ class Cutter(Frame):
             pass
 
     def next(self):
+        self.resample()
         cu.Data.fstar = float(self.value_entry.get())
         ThermocepstrumGUI.show_frame(PStar)
 
     def update(self):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j, PSD_FILTER_W=cu.Data.psd_filter_width)
+        cu.update_info(self.info)
         # self.graph.cut_line = cu.Data.fstar
 
 
@@ -680,6 +721,7 @@ class PStar(Frame):
                              PSD_FILTER_W=cu.Data.psd_filter_width)
         self._reload()
         self.graph.update_cut()
+        cu.update_info(self.info)
 
 
 class Output(Frame):

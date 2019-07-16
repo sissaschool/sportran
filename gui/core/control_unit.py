@@ -21,10 +21,16 @@ class Data:
     CURRENT_FILE = ''
     loaded = False
 
+    inputformat = None
+    jfile = None
     jdata = None
     j = None
     xf = None
     axis = None
+
+    temperature = 0
+    volume = 0
+    DT_FS = 0
 
     fstar = 0.0
     psd_filter_width = 0.0
@@ -167,12 +173,18 @@ def load_keys(inputfile):
 
 def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None, logs=None, structurefile=None):
 
+    Data.temperature = temperature
+    Data.volume = volume
+    Data.DT_FS = DT_FS
+    Data.inputformat = input_format
+
     if input_format == 'table':
         if temperature is None:
             selected_keys.append('Temp')
         #      if 'Press' in jfile.ckey:
         #         selected_keys.append('Press')
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+        Data.jfile = jfile
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         Data.jdata = jfile.data
     elif input_format == 'dict':
@@ -230,3 +242,23 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
     else:
         emsgs.append('Invalid volume!')
         return -1, emsgs
+
+
+def update_info(frame):
+    frame.clear()
+    frame.write('file name:        {}'.format(Data.jfile.filename))
+    frame.write('file size:        {}'.format(get_file_size(Data.jfile.filename)))
+    frame.write('input format:     {}'.format(Data.inputformat))
+    frame.write('data length:      {}'.format(Data.jfile.MAX_NSTEPS))
+    frame.write('selected ckeys:   {}'.format(Data.jfile.select_ckeys))
+    frame.write('------------------------------------')
+    frame.write('Temperature:      {}'.format(Data.temperature))
+    frame.write('Volume:           {}'.format(Data.volume))
+    frame.write('DT_FS:            {}'.format(Data.DT_FS))
+    frame.write('psd filter width: {}'.format(Data.psd_filter_width))
+    frame.write('F*:               {}'.format(Data.fstar))
+    if Data.xf:
+        if Data.xf.dct:
+            frame.write('aic type:         {}'.format(Data.xf.dct.aic_type))
+            frame.write('aic min:          {}'.format(Data.xf.dct.aic_min))
+            frame.write('P*:               {}'.format(Data.xf.dct.aic_Kmin + 1))
