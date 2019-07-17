@@ -695,7 +695,7 @@ class PStar(Frame):
         value_frame = Frame(sections, bg=settings.BG_COLOR)
         value_frame.pack(side=TOP)
 
-        Label(value_frame, text='Correction factor', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
+        Label(value_frame, text='P*', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
         self.value_entry = Spinbox(value_frame, bd=1, relief=SOLID, increment=1)
         self.value_entry.pack()
 
@@ -723,16 +723,18 @@ class PStar(Frame):
         self.logs = TextWidget(parent, info_section, 'Logs', 15)
         self.info = TextWidget(parent, info_section, 'Info', 10)
 
+        self.setted = False
+
     def back(self):
         ThermocepstrumGUI.show_frame(Cutter)
 
     def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
-        cu.Data.xf.cepstral_analysis(aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
+        cu.Data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor)
 
     def _corr_factor(self):
         self.value_entry.config(from_=1.0, to=cu.Data.xf.Nfreqs)
         self.value_entry.delete(0, END)
-        self.value_entry.insert(0, 1)
+        self.value_entry.insert(0, cu.Data.xf.dct.aic_Kmin)
 
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
@@ -742,8 +744,21 @@ class PStar(Frame):
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.Data.xf)
         self.graph.update_cut()
 
-    def update(self):
+    def _setup_pstar(self):
+        cu.Data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
         self._corr_factor()
+
+    def update(self):
+        if cu.Data.fstar == cu.Data.old_fstar:
+            self.setted = True
+        else:
+            self.setted = False
+            cu.Data.old_fstar = cu.Data.fstar
+
+        if not self.setted:
+            self.setted = True
+            self._setup_pstar()
+
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
                              PSD_FILTER_W=cu.Data.psd_filter_width)

@@ -35,6 +35,7 @@ class Data:
     currents = None
 
     fstar = 0.0
+    old_fstar = 0.0
     psd_filter_width = 0.0
 
 
