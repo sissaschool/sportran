@@ -29,8 +29,10 @@ class Data:
     axis = None
 
     temperature = 0
+    temperature_std = 0
     volume = 0
     DT_FS = 0
+    currents = None
 
     fstar = 0.0
     psd_filter_width = 0.0
@@ -67,28 +69,30 @@ def secure_exit(main_window):
     exit()
 
 
-def get_temp(jdata, selected_keys):
-    if 'Temp' in jdata:
-        temperature = np.mean(jdata['Temp'])
-        temperature_std = np.std(jdata['Temp'])   # this is wrong (needs block average)
-        if 'Temp' in selected_keys:
-            selected_keys.remove('Temp')
-        print(' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std))
-        # logfile.write(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
-    elif 'Temp_ave' in jdata:
-        temperature = jdata['Temp_ave']
-        if 'Temp_std' in jdata:
-            temperature_std = jdata['Temp_std']
-            print(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
-            # logfile.write(' Mean Temperature (file):      {} K  +/-  {}\n'.format(temperature, temperature_std))
-        else:
-            print(' Mean Temperature (file):      {} K'.format(temperature))
-            # logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
+def get_cor_index(arr1, arr2, corr_key):
+    i = arr2.index(corr_key)
+    return arr1[i], i
+
+
+def get_temp(jdata, selected_key):
+    if selected_key in jdata:
+        temperature = np.mean(jdata[selected_key])
+        temperature_std = np.std(jdata[selected_key])   # this is wrong (needs block average)
+        print(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
+    # elif 'Temp_ave' in jdata:
+    #     temperature = jdata['Temp_ave']
+    #     if 'Temp_std' in jdata:
+    #         temperature_std = jdata['Temp_std']
+    #         print(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
+    #         # logfile.write(' Mean Temperature (file):      {} K  +/-  {}\n'.format(temperature, temperature_std))
+    #     else:
+    #         print(' Mean Temperature (file):      {} K'.format(temperature))
+    #         # logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
     else:
         temperature = -1
         # raise RuntimeError('No Temp key found. Please provide Temperature (-T).')
 
-    return temperature, selected_keys
+    return temperature
 
 
 def get_volume(jdata, structurefile):
@@ -171,7 +175,7 @@ def load_keys(inputfile):
     return jfile.all_ckeys
 
 
-def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None, logs=None, structurefile=None):
+def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,START_STEP=0,run_keyword='',units=None,DT_FS=None,volume=None,psd_filter_w=None,axis_=None, structurefile=None, descriptions=[]):
 
     Data.temperature = temperature
     Data.volume = volume
@@ -179,10 +183,6 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
     Data.inputformat = input_format
 
     if input_format == 'table':
-        if temperature is None:
-            selected_keys.append('Temp')
-        #      if 'Press' in jfile.ckey:
-        #         selected_keys.append('Press')
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
         Data.jfile = jfile
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
@@ -191,10 +191,6 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
         Data.jdata = np.load(inputfile)
     elif input_format == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
-        if temperature is None:
-            selected_keys.append('Temp')
-        #      if 'Press' in jfile.ckey:
-        #         selected_keys.append('Press')
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         Data.jdata = jfile.data
     else:
@@ -203,15 +199,26 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
         ## Define currents
 #    print(selected_keys, jindex)
 
-    if temperature is None:
-        temperature, selected_keys = get_temp(Data.jdata, selected_keys)
+    if descriptions.count('Temperature') == 1:
+        temperature = get_temp(Data.jdata, get_cor_index(selected_keys, descriptions, 'Temperature')[0], logs)
+        Data.temperature = temperature
+        i = get_cor_index(selected_keys, descriptions, 'Temperature')[1]
+        del descriptions[i]
+        del selected_keys[i]
     if volume is None:
         volume = get_volume(Data.jdata, structurefile)
 
     if NSTEPS == 0:
         NSTEPS = Data.jdata[list(Data.jdata.keys())[0]].shape[0]
     if True: #jindex is None:
-        currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in selected_keys])
+        heat_current, i = get_cor_index(selected_keys, descriptions, 'Heat current')
+        del descriptions[i]
+        del selected_keys[i]
+        currents_headers = [heat_current]
+        for other in selected_keys:
+            currents_headers.append(other)
+
+        currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in currents_headers])
     else:
         pass
         # if sindex is None:
@@ -219,17 +226,7 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
         # else:
         #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - Data.jdata[key][START_STEP:(
         #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
-
-    if logs:
-        logs.write('currents shape is {}'.format(currents.shape))
-        logs.write('snippets')
-        logs.write(currents)
-    else:
-        print('  currents shape is {}'.format(currents.shape))
-        # logfile.write('  currents shape is {}\n'.format(currents.shape))
-        print('snippet:')
-        print(currents)
-
+    Data.currents = currents
     # create HeatCurrent object
     emsgs = []
     if volume is not -1:
@@ -257,8 +254,17 @@ def update_info(frame):
     frame.write('DT_FS:            {}'.format(Data.DT_FS))
     frame.write('psd filter width: {}'.format(Data.psd_filter_width))
     frame.write('F*:               {}'.format(Data.fstar))
-    if Data.xf:
-        if Data.xf.dct:
-            frame.write('aic type:         {}'.format(Data.xf.dct.aic_type))
-            frame.write('aic min:          {}'.format(Data.xf.dct.aic_min))
-            frame.write('P*:               {}'.format(Data.xf.dct.aic_Kmin + 1))
+    # if Data.xf.dct is not None:
+    #     frame.write('aic type:         {}'.format(Data.xf.dct.aic_type))
+    #     frame.write('aic min:          {}'.format(Data.xf.dct.aic_min))
+    #     frame.write('P*:               {}'.format(Data.xf.dct.aic_Kmin + 1))
+
+
+def update_logs(frame):
+    frame.clear()
+    if Data.currents is not None:
+        frame.write('currents shape is {}'.format(Data.currents.shape))
+        frame.write('snippets')
+        frame.write(Data.currents)
+    if Data.temperature:
+        frame.write(' Mean Temperature (computed):  {} K  +/-  {}'.format(Data.temperature, Data.temperature_std))
