@@ -176,6 +176,10 @@ class CosFilter(object):
             self.K_PSD = self.aic_Kmin
         else:
             self.K_PSD = K_PSD
+            self.aic_Kmin = self.K_PSD
+
+        if (self.aic_Kmin >= self.samplelogpsd.size):
+            print('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
 
         # COS-filter analysis with frequency cutoff K
         self.logtau = dct_filter_tau(self.samplelogpsd)
