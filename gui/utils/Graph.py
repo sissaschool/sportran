@@ -115,11 +115,6 @@ class GraphManager:
     @staticmethod
     def plot_cepstral_spectrum(x, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None, external_object=None,
                                **plot_kwargs):
-        print('========================================')
-        print(x.dct)
-        print('-----------------')
-        print(x.dct.psd)
-        print('========================================')
         if kappa_units:
             psd_scale = 0.5 * x.kappa_scale
         else:
