@@ -311,6 +311,11 @@ class HeatCurrent(MDSample):
         axes[1].grid()
         return axes
 
+    def resample_current(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz',
+                     FIGSIZE=None):
+        return resample_current(self, TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=plot, PSD_FILTER_W=PSD_FILTER_W,
+                                freq_units=freq_units)
+
 
 #is this function needed?
 #   def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None):
@@ -378,7 +383,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
     if not x.multicomponent:
         if x.FILTER_WINDOW_WIDTH is not None:
-            xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH * TSKIP)
+            xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W= PSD_FILTER_W, freq_units=freq_units)
         else:
             xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME)
     else:
@@ -391,7 +396,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
             tmp = md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
             yf.append(tmp)
         if x.FILTER_WINDOW_WIDTH is not None:
-            xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH * TSKIP)
+            xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W= PSD_FILTER_W, freq_units=freq_units)
         else:
             xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME)
     if plot:

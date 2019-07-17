@@ -56,7 +56,6 @@ class ThermocepstrumGUI(Tk):
                                            settings.Y_SIZE,
                                            settings.X_SPACING,
                                            settings.Y_SPACING))
-
         self.configure(bg=settings.BG_COLOR)
         self.resizable(settings.X_RESIZE, settings.Y_RESIZE)
         self.protocol('WM_DELETE_WINDOW', func=lambda: cu.secure_exit(ThermocepstrumGUI))
@@ -322,7 +321,7 @@ class ScrollFrame(Frame):
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
         self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(side=TOP, fill="both", expand=True, anchor='n', pady=10)
+        self.canvas.pack(side=TOP, fill="both", expand=True, anchor='n')
         self.canvas.create_window(0, 0, window=self.viewPort, tags="self.viewPort")
 
         self.viewPort.bind("<Configure>", self.on_frame_configure)
@@ -343,22 +342,22 @@ class FileManager(Frame):
         Frame.__init__(self, parent)
         TopBar(parent, controller)
 
-        main_frame = ScrollFrame(controller, self)
+        self.main_frame = ScrollFrame(controller, self)
 
-        file_manager = Frame(main_frame.viewPort, width=400)
-        file_manager.pack(fill=BOTH, padx=100, pady=30)
+        file_manager = Frame(self.main_frame.viewPort)
+        file_manager.pack(fill=BOTH, expand=True, padx=100, pady=30)
 
-        prev_frame = Frame(main_frame.viewPort, width=400, height=10)
-        prev_frame.pack(fill=BOTH, padx=100, pady=20)
+        prev_frame = Frame(self.main_frame.viewPort, height=10)
+        prev_frame.pack(fill=BOTH, expand=True, padx=100, pady=20)
 
         self.preview = Text(prev_frame, bd=1, relief=SOLID, height=10)
-        self.preview.pack(fill=BOTH, side=TOP)
+        self.preview.pack(fill=BOTH, expand=True, side=TOP)
 
-        settings_frame = Frame(main_frame.viewPort, bg=settings.BG_COLOR, width=400)
-        settings_frame.pack(fill=BOTH, padx=100)
+        settings_frame = Frame(self.main_frame.viewPort, bg=settings.BG_COLOR, width=400)
+        settings_frame.pack(fill=BOTH, expand=True, padx=100)
 
         selection_frame = Frame(settings_frame, bg=settings.BG_COLOR)
-        selection_frame.pack(fill=BOTH)
+        selection_frame.pack(fill=BOTH, expand=True)
 
         Label(selection_frame, text='Selected: ', bg=settings.BG_COLOR).grid(row=0, column=0, sticky='e')
 
@@ -382,7 +381,7 @@ class FileManager(Frame):
         check_frame = Frame(selection_frame, bg=settings.BG_COLOR, width=100)
         check_frame.grid(row=3, column=0, pady=10)
 
-        check_scrollable = ScrollFrame(main_frame.viewPort, check_frame, 200, 100)
+        check_scrollable = ScrollFrame(self.main_frame.viewPort, check_frame, 200, 100)
         self.check_list = CheckList(check_scrollable, check_scrollable.viewPort)
 
         enviroment_settings = Frame(selection_frame, bg=settings.BG_COLOR, width=200)
@@ -405,7 +404,7 @@ class FileManager(Frame):
 
         self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1,
                                    command=self._start_analysis)
-        self.start_button.grid(row=5, column=0, sticky='w')
+        self.start_button.grid(row=5, column=0, sticky='w', pady=10)
 
         self._start_file_manager(file_manager)
         self._parse_files()
@@ -550,6 +549,9 @@ class FileManager(Frame):
         else:
             msg.showerror('No file selected!', 'You must select a data file!')
 
+    def update(self):
+        self.main_frame.canvas.yview_moveto(0)
+
 
 class Cutter(Frame):
 
@@ -618,11 +620,11 @@ class Cutter(Frame):
     def resample(self):
         cu.Data.fstar = float(self.value_entry.get())
         filter_width = float(self.filter_width.get())
-        cu.Data.psd_filter_width=filter_width
+        cu.Data.psd_filter_width = filter_width
 
         if cu.Data.fstar > 0:
             self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
-                                 PSD_FILTER_W=filter_width)
+                                 PSD_FILTER_W=cu.Data.psd_filter_width)
             self.graph.update_cut()
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')

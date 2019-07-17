@@ -92,75 +92,15 @@ class GraphManager:
 
     def resample_current(self, x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz',
                          FIGSIZE=None, axis=None, external_object=None):
-        """
-        Simulate the resampling of x.
-          TSKIP        = sampling time [steps]
-          fstar_THz    = target cutoff frequency [THz]
-          FILTER_W     = pre-sampling filter window width [steps]
-          plot         = plot the PSD (True/False)
-          PSD_FILTER_W = PSD filtering window width [chosen frequency units]
-          freq_units   = 'thz'  THz
-                         'red'  omega*DT/(2*pi)
-          FIGSIZE      = plot figure size
-        """
-        #TODO: move everything that is not strictly related to the plot to control_unit.py
 
-
-        # if not isinstance(x, HeatCurrent):
-        #     raise ValueError('x must be a HeatCurrent object.')
-        # if (TSKIP is not None) and (fstar_THz is not None):
-        #     raise ValueError('Please specify either TSKIP or fstar_THz.')
-        if TSKIP is None:
-            if fstar_THz is None:
-                raise ValueError('Please specify either TSKIP or fstar_THz.')
-            else:
-                TSKIP = int(round(x.Nyquist_f_THz / fstar_THz))
-        fstar_THz = x.Nyquist_f_THz / TSKIP
-        # fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
-        # self.GUI_plot_periodogram(x, PSD_FILTER_W, freq_units, 1.0, axis=axis)
-        # filter and sample
-        if FILTER_W is None:
-            FILTER_W = TSKIP
-        trajf = tc.md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
-        if not x.multicomponent:
-            xf = tc.heatcurrent.HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W)
-        else:
-            if x.otherMD is None:
-                raise ValueError('x.otherMD cannot be none (wrong/missing initialization?)')
-            # filter_and_sample also other trajectories
-            yf = []
-            yf.append(trajf)
-            for y in x.otherMD:
-                tmp = tc.md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
-                yf.append(tmp)
-            xf = tc.heatcurrent.HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, x.FILTER_WINDOW_WIDTH * TSKIP)
-        #TODO: move stuff above in control unit?
+        xf = x.resample_current(TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=False, PSD_FILTER_W=PSD_FILTER_W,
+                                freq_units=freq_units)
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
                 self.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
             elif freq_units == 'red':
                 self.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axis=axis)
-
-        # xf.resample_log = '-----------------------------------------------------\n' + \
-        #                   '  RESAMPLE TIME SERIES\n' + \
-        #                   '-----------------------------------------------------\n' + \
-        #                   ' Original Nyquist freq  f_Ny =  {:12.5f} THz\n'.format(x.Nyquist_f_THz) + \
-        #                   ' Resampling freq          f* =  {:12.5f} THz\n'.format(fstar_THz) + \
-        #                   ' Sampling time         TSKIP =  {:12d} steps\n'.format(TSKIP) + \
-        #                   '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) + \
-        #                   ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) + \
-        #                   ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs) + \
-        #                   ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) + \
-        #                   '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) + \
-        #                   ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) + \
-        #                   '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) + \
-        #                   ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) + \
-        #                   ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) + \
-        #                   ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(
-        #                       np.trapz(x.psd[:fstar_idx + 1]) / x.psd_power * 100.) + \
-        #                   '-----------------------------------------------------\n'
-        # print(xf.resample_log)
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
