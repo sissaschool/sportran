@@ -201,7 +201,7 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
 #    print(selected_keys, jindex)
 
     if descriptions.count('Temperature') == 1:
-        temperature = get_temp(Data.jdata, get_cor_index(selected_keys, descriptions, 'Temperature')[0], logs)
+        temperature = get_temp(Data.jdata, get_cor_index(selected_keys, descriptions, 'Temperature')[0])
         Data.temperature = temperature
         i = get_cor_index(selected_keys, descriptions, 'Temperature')[1]
         del descriptions[i]
