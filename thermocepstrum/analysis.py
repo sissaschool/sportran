@@ -39,6 +39,10 @@ try:
     plt.style.use(pltstyle_filename)
 except:
     pass
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
+
+log.set_method('bash')
 
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
@@ -101,7 +105,7 @@ Contact: lercole@sissa.it
     # yapf: disable
     parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument( 'inputfile', type=str, help='input file to read (default format: Table)' )
-    parser.add_argument( '-t', '--timestep', type=float, required=True, help='Time step of the printed data (fs)' )
+    parser.add_argument( '-t', '--timestep', type=float, required=True, help='Time step of the log.write_loged data (fs)' )
     parser.add_argument( '-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux' )
     parser.add_argument( '-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)' )
     parser.add_argument( '-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)' )
@@ -204,11 +208,11 @@ Contact: lercole@sissa.it
     selected_keys.extend(j2_keys)
 
     # Write some parameters
-    print(' Input file ({}):      {}'.format(input_format, inputfile))
+    log.write_log(' Input file ({}):      {}'.format(input_format, inputfile))
     logfile.write(' Input file ({}):      {}\n'.format(input_format, inputfile))
-    print(' Units:      {}'.format(units))
+    log.write_log(' Units:      {}'.format(units))
     logfile.write(' Units:      {}\n'.format(units))
-    print(' Time step:      {} fs'.format(DT_FS))
+    log.write_log(' Time step:      {} fs'.format(DT_FS))
     logfile.write(' Time step:      {} fs\n'.format(DT_FS))
 
     ## Read data
@@ -236,7 +240,7 @@ Contact: lercole@sissa.it
         raise NotImplemented('input format not implemented.')
 
     if (NSPLIT > 1):
-        print('Splitting input data time series into {:d} segments...'.format(NSPLIT))
+        log.write_log('Splitting input data time series into {:d} segments...'.format(NSPLIT))
         logfile.write('Splitting input data time series into {:d} segments...\n'.format(NSPLIT))
         data_size = jdata[selected_keys[0]].shape[0]
         n_proc = 1
@@ -254,7 +258,7 @@ Contact: lercole@sissa.it
                 newdata = value[:steps_start].reshape((NSPLIT, data_size / NSPLIT, n_proc)).transpose(
                     (1, 0, 2)).reshape((data_size / NSPLIT, NSPLIT * n_proc))
                 jdata[key] = newdata[:steps_end]
-        print('New shape of input data: {}'.format(jdata[selected_keys[0]].shape))
+        log.write_log('New shape of input data: {}'.format(jdata[selected_keys[0]].shape))
         logfile.write('New shape of input data: {}\n'.format(jdata[selected_keys[0]].shape))
 
     if (NSTEPS == 0):
@@ -267,50 +271,50 @@ Contact: lercole@sissa.it
             temperature_std = np.std(jdata['Temp'])   # this is wrong (needs block average)
             if 'Temp' in selected_keys:
                 selected_keys.remove('Temp')
-            print(' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std))
+            log.write_log(' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std))
             logfile.write(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
         elif 'Temp_ave' in jdata:
             temperature = jdata['Temp_ave']
             if 'Temp_std' in jdata:
                 temperature_std = jdata['Temp_std']
-                print(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
+                log.write_log(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
                 logfile.write(' Mean Temperature (file):      {} K  +/-  {}\n'.format(temperature, temperature_std))
             else:
-                print(' Mean Temperature (file):      {} K'.format(temperature))
+                log.write_log(' Mean Temperature (file):      {} K'.format(temperature))
                 logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
         else:
             raise RuntimeError('No Temp key found. Please provide Temperature (-T).')
     else:
-        print(' Mean Temperature (input):  {} K'.format(temperature))
+        log.write_log(' Mean Temperature (input):  {} K'.format(temperature))
         logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
 
     ## Define Volume
     if volume is None:
         if structurefile is not None:
             _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
-            print(' Volume (structure file):    {} A^3'.format(volume))
+            log.write_log(' Volume (structure file):    {} A^3'.format(volume))
             logfile.write(' Volume (structure file):    {} A^3'.format(volume))
         elif 'Volume' in jdata:
             volume = jdata['Volume']
-            print(' Volume (file):    {} A^3'.format(volume))
+            log.write_log(' Volume (file):    {} A^3'.format(volume))
             logfile.write(' Volume (file):    {} A^3\n'.format(volume))
         else:
             raise RuntimeError('No Volume key found. Please provide Volume (-V) of structure file (--structure).')
     else:
-        print(' Volume (input):  {} A^3'.format(volume))
+        log.write_log(' Volume (input):  {} A^3'.format(volume))
         logfile.write(' Volume (input):  {} A^3\n'.format(volume))
 
-    print(' Time step (input):  {} fs'.format(DT_FS))
+    log.write_log(' Time step (input):  {} fs'.format(DT_FS))
     logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
     ### Compute Pressure (optional)
     #if 'Press' in jdata:
     #   pressure = np.mean(jdata['Press'])
-    #   print ' Mean Pressure (computed):  {} K'.format(pressure)
+    #   log.write_log ' Mean Pressure (computed):  {} K'.format(pressure)
     #   logfile.write(' Mean Pressure (computed):  {} K'.format(pressure))
 
     ## Define currents
-    print(selected_keys, jindex)
+    log.write_log(selected_keys, jindex)
     if jindex is None:
         currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in selected_keys])
     else:
@@ -321,21 +325,21 @@ Contact: lercole@sissa.it
                 jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] -
                 jdata[key][START_STEP:(START_STEP + NSTEPS), sindex] for key in selected_keys
             ])
-    print('  currents shape is {}'.format(currents.shape))
+    log.write_log('  currents shape is {}'.format(currents.shape))
     logfile.write('  currents shape is {}\n'.format(currents.shape))
-    print('snippet:')
-    print(currents)
+    log.write_log('snippet:')
+    log.write_log(currents)
 
     # create HeatCurrent object
     j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
 
-    print(' Number of currents = {}'.format(ncurrents))
+    log.write_log(' Number of currents = {}'.format(ncurrents))
     logfile.write(' Number of currrents = {}\n'.format(ncurrents))
-    print(' Number of components = {}'.format(j.N_COMPONENTS))
+    log.write_log(' Number of components = {}'.format(j.N_COMPONENTS))
     logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
-    print(' kappa_scale = {}'.format(j.kappa_scale))
+    log.write_log(' kappa_scale = {}'.format(j.kappa_scale))
     logfile.write(' kappa_scale = {}\n'.format(j.kappa_scale))
-    print(' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz))
+    log.write_log(' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz))
     logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
     ################################
@@ -525,10 +529,10 @@ Contact: lercole@sissa.it
         #conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
         #
         #if units=='metal':
-        #    print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
+        #    log.write_log 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
         #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
         #elif units=='real':
-        #    print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
+        #    log.write_log 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
         #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
         #conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
         #conv_fact.close()

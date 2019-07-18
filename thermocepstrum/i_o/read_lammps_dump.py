@@ -16,7 +16,8 @@
 
 import numpy as np
 from time import time
-
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 def is_string(string):
     try:
@@ -77,7 +78,7 @@ class LAMMPS_Dump(object):
       traj.read_timesteps(10, select_ckeys=['id,xu,yu,vu']) -->>   Read the next 10 timesteps, only the specified columns (DELTA_TIMESTEP is assumed)
       traj.read_timesteps((10,30))      -->>  Read from TIMESTEP 10 to 30
       traj.read_timesteps((10,30,2))    -->>  Read every 2 steps from TIMESTEP 10 to 30
-      print traj.data
+      log.write_log traj.data
     """
 
     def __init__(self, *args, **kwargs):
@@ -103,7 +104,7 @@ class LAMMPS_Dump(object):
         self._read_ckeys(group_vectors, preload_timesteps)
         self.ckey = None
         #self.MAX_NSTEPS = data_length(self.filename)
-        #print "Data length = ", self.MAX_NSTEPS
+        #log.write_log "Data length = ", self.MAX_NSTEPS
         return
 
     def __repr__(self):
@@ -199,7 +200,7 @@ class LAMMPS_Dump(object):
             self.TOT_TIMESTEPS = len(self.all_timesteps)
             self.all_timesteps = np.array(self.all_timesteps)
         else:
-            print(' ** No timesteps pre-loaded. Be careful in the selection. **')
+            log.write_log(' ** No timesteps pre-loaded. Be careful in the selection. **')
             # get the first 2 timesteps
             while (len(self.all_timesteps) < 2):
                 line = self.file.readline()
@@ -217,12 +218,12 @@ class LAMMPS_Dump(object):
         # go back to the first timestep
         self.gototimestep(0)   # compute_first = True
         self._start_byte = 0
-        print('  all_ckeys      = ', self.all_ckeys)
-        print('  TOT_TIMESTEPS  = ', self.TOT_TIMESTEPS)
-        print('  FIRST_TIMESTEP = ', self.FIRST_TIMESTEP)
-        print('  DELTA_TIMESTEP = ', self.DELTA_TIMESTEP)
-        print('  LAST_TIMESTEP  = ', self.LAST_TIMESTEP)
-        print('  all_timesteps  = ', self.all_timesteps)
+        log.write_log('  all_ckeys      = ', self.all_ckeys)
+        log.write_log('  TOT_TIMESTEPS  = ', self.TOT_TIMESTEPS)
+        log.write_log('  FIRST_TIMESTEP = ', self.FIRST_TIMESTEP)
+        log.write_log('  DELTA_TIMESTEP = ', self.DELTA_TIMESTEP)
+        log.write_log('  LAST_TIMESTEP  = ', self.LAST_TIMESTEP)
+        log.write_log('  all_timesteps  = ', self.all_timesteps)
         return
 
     def _set_ckey(self, select_ckeys=None):
@@ -242,12 +243,12 @@ class LAMMPS_Dump(object):
                 if value is not None:
                     self.ckey[key] = value[:]   # copy all indexes (up to max dimension for vectors)
                 else:
-                    print('Warning: ', key, 'key not found.')
+                    log.write_log('Warning: ', key, 'key not found.')
         if (len(self.ckey) == 0):
             raise KeyError('No ckey set. Check selected keys.')
         else:
             if not self._quiet:
-                print('  ckey = ', self.ckey)
+                log.write_log('  ckey = ', self.ckey)
         return
 
     def _set_timesteps(self, selection, start_step=-1):
@@ -279,7 +280,7 @@ class LAMMPS_Dump(object):
         if step is None:
             step = self.DELTA_TIMESTEP
         elif (step % self.DELTA_TIMESTEP != 0):
-            print('Warning: step is not a multiple of the detected DELTA_TIMESTEP. You may get errors.')
+            log.write_log('Warning: step is not a multiple of the detected DELTA_TIMESTEP. You may get errors.')
         if (first % step != 0):
             first += step - first % step   # round first step to the next in the list
 
@@ -290,7 +291,7 @@ class LAMMPS_Dump(object):
                 if step in self.all_timesteps:
                     self.timestep.append(step)   # make list of available selected-timesteps
                 else:
-                    print('Warning: timestep # {:d} not found.'.format(step))
+                    log.write_log('Warning: timestep # {:d} not found.'.format(step))
         else:
             self.timestep = self.select_timesteps   # use all the selected (be careful)
         self.nsteps = len(self.timestep)   # number of available steps
@@ -298,8 +299,8 @@ class LAMMPS_Dump(object):
             raise ValueError('No timestep set. Check selected timesteps.')
         else:
             if not self._quiet:
-                print('  nsteps   = ', self.nsteps)
-                print('  timestep = ', self.timestep)
+                log.write_log('  nsteps   = ', self.nsteps)
+                log.write_log('  timestep = ', self.timestep)
         return
 
     def _initialize_dic(self):
@@ -407,20 +408,20 @@ class LAMMPS_Dump(object):
                     progbar.value = float(istep + 1) / self.nsteps * 100.
                     progbar.description = '%g %%' % progbar.value
                 else:
-                    print('    step = {:9d} - {:6.2f}% completed'.format(istep + 1,
+                    log.write_log('    step = {:9d} - {:6.2f}% completed'.format(istep + 1,
                                                                          float(istep + 1) / self.nsteps * 100.))
         if self._GUI:
             progbar.close()
         # check number of steps read, keep an even number of steps
         if (istep + 1 < self.nsteps):   # (should never happen)
             if (istep == 0):
-                print('WARNING:  no step read.')
+                log.write_log('WARNING:  no step read.')
                 return
             else:
-                print('Warning:  less steps read.')
+                log.write_log('Warning:  less steps read.')
                 self.nsteps = istep + 1
         if not self._quiet:
-            print('  ( %d ) steps read.' % (self.nsteps))
-            print('DONE.  Elapsed time: ', time() - start_time, 'seconds')
+            log.write_log('  ( %d ) steps read.' % (self.nsteps))
+            log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
         self._compute_current_step = False   # next time do not compute the current_step
         return self.data

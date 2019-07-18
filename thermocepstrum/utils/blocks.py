@@ -6,7 +6,7 @@ abs_path = os.path.abspath(sys.argv[0])
 tc_path = abs_path[:abs_path.rfind('/')]
 tc_path = tc_path[:tc_path.rfind('/')]
 sys.path.append(tc_path[:tc_path.rfind('/')])
-print(tc_path)
+log.write_log(tc_path)
 
 import numpy as np
 import scipy as sp
@@ -31,7 +31,9 @@ import thermocepstrum as tc
 try:
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 except:
-    print('Error: cannot import inset_axes (will not be able to plot some parts of the plots)')
+    log.write_log('Error: cannot import inset_axes (will not be able to plot some parts of the plots)')
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 
 def main():
@@ -50,14 +52,14 @@ def main():
     all_cut = 1500
 
     if len(sys.argv) < 8:
-        print(usage)
+        log.write_log(usage)
         exit(-1)
 
     output = sys.argv[1]
     M = int(sys.argv[2])
     L = int(sys.argv[3])
     dof = L - M + 1
-    print(dof, ' degrees of freedom for the chi2 distribution')
+    log.write_log(dof, ' degrees of freedom for the chi2 distribution')
     DT_FS = float(sys.argv[4])
     max_THz = float(sys.argv[5])
     nyq = float(sys.argv[6])
@@ -67,7 +69,7 @@ def main():
     ff = 10
     ndata = len(sys.argv) - ff
 
-    print('Number of inputs: {}\n reading...'.format(ndata))
+    log.write_log('Number of inputs: {}\n reading...'.format(ndata))
     periodograms = []
     cospectrums = []
     cepstrals = []
@@ -88,7 +90,7 @@ def main():
         else:
             periodograms.append(np.loadtxt(fname + '.psd.dat', usecols=(3, 4), unpack=True))
         if periodograms[-1].shape != periodograms[0].shape:
-            print(fname, ' not used (inconsistent shape with firts element)', periodograms[-1].shape,
+            log.write_log(fname, ' not used (inconsistent shape with firts element)', periodograms[-1].shape,
                   periodograms[0].shape)
             del periodograms[-1]
             continue
@@ -115,12 +117,12 @@ def main():
         kappas_Kmin_std[cont] = cepstrals[cont][1, aic_Kmin]
         l0s[cont] = cepstrals[cont][2, aic_Kmin]
         l0s_std[cont] = cepstrals[cont][3, aic_Kmin]
-        print(fname, periodograms[cont].shape, cepstrals[cont].shape)
+        log.write_log(fname, periodograms[cont].shape, cepstrals[cont].shape)
         cont += 1
 
     aic_KminM = np.mean(aic_Kmins)
     aic_Kmin = int(aic_KminM)
-    print('Reading done.')
+    log.write_log('Reading done.')
 
     #resizing and creating a big numpy array.
     #for periodogram,cepstral in zip(periodograms,cepstrals):
@@ -129,9 +131,9 @@ def main():
         cepstrals[i].resize(cepstrals[0].shape)
     # *this does not work when using a lot of data
     #import pdb; pdb.set_trace()
-    #print periodograms[0].shape
+    #log.write_log periodograms[0].shape
     #for i in range(1,len(periodograms)):
-    #    print i
+    #    log.write_log i
     #    periodograms[i]=np.resize(periodograms[i],periodograms[0].shape)
     #    cepstrals[i]=np.resize(cepstrals[i],cepstrals[0].shape)
 
@@ -173,15 +175,15 @@ def main():
     if cospectrums != None:
         mean_cospectrum = np.mean(cospectrums, axis=0)
     mean_cepstral = np.mean(cepstrals, axis=0)
-    print(mean_cepstral.shape)
-    print(mean_periodogram.shape)
+    log.write_log(mean_cepstral.shape)
+    log.write_log(mean_periodogram.shape)
     np.savetxt(output + '.mean_periodogram',
                np.c_[freqs, mean_periodogram[0], std_periodogram[0], mean_periodogram[1], std_periodogram[1]])
     np.savetxt(output + '.mean_cepstral', np.c_[mean_cepstral[0], std_cepstral[0], mean_cepstral[1], std_cepstral[1]])
 
-    print('Mean values and standard deviations done.')
+    log.write_log('Mean values and standard deviations done.')
 
-    print('Computing index of .40 psd power...')
+    log.write_log('Computing index of .40 psd power...')
     psd_int = np.cumsum(mean_periodogram[0])
     psd_int = psd_int / psd_int[-1]
     p95 = 0
@@ -197,12 +199,12 @@ def main():
     for i in range(all_cut):
         if mean_periodogram[0, i] > zero:
             selection_not_zero.append(i)
-    print('Number of components > {}: {}. Last is {}'.format(zero, len(selection_not_zero), selection_not_zero[-1]))
-    #     print selection_not_zero
+    log.write_log('Number of components > {}: {}. Last is {}'.format(zero, len(selection_not_zero), selection_not_zero[-1]))
+    #     log.write_log selection_not_zero
 
-    print('Index = {} , {} THz'.format(p95, freqs[p95]))
+    log.write_log('Index = {} , {} THz'.format(p95, freqs[p95]))
 
-    print('Some plots...')
+    log.write_log('Some plots...')
     #make some plots and histograms
 
     with PdfPages(output + '_all.pdf') as pdf:
@@ -225,7 +227,7 @@ def main():
 
             def ffpsd(self, w, single=False):
                 WF = int(round(w / 1000. * self.DT_FS * len(self.freqs_THz) * 2.))
-                print('filtering: ', WF)
+                log.write_log('filtering: ', WF)
                 if not single:
                     ffpsd = tc.md.tools.runavefilter(self.mpsd, WF)
                 else:
@@ -373,10 +375,10 @@ def main():
         plt.close()
 
         #         np.savetxt(output+'.histogram_all',np.c_[(intervals[1:]+intervals[:-1])/2.0,histogram/np.sum(histogram)])
-        #         print 'Histogram bin width: {}'.format(intervals[1]-intervals[0])
+        #         log.write_log 'Histogram bin width: {}'.format(intervals[1]-intervals[0])
 
         #         np.savetxt(output+'.kolmogorov_smirnov',[ks_0,ks_1,ks_all])
-        print('Statistical test results (psd(0), psd(1), psd(all but 0)): {}'.format([ks__0, ks__1, ks_all]))
+        log.write_log('Statistical test results (psd(0), psd(1), psd(all but 0)): {}'.format([ks__0, ks__1, ks_all]))
 
         #make graphs of mean of theoretical and statistical error of the final result
         plt.fill_between(np.arange(mean_cepstral.shape[1]), mean_cepstral[0] - std_cepstral[0],
@@ -449,7 +451,7 @@ def plt_psd_with_zoom(jf,
     f_x2 = 1.25
     f_y = 0.87
     f_y2 = 1.35
-    print(inv.transform((coord_f[0] * f_x, coord_f[1] * f_y)))
+    log.write_log(inv.transform((coord_f[0] * f_x, coord_f[1] * f_y)))
     ax0.add_patch(
         matplotlib.patches.Rectangle((coord_f[0] * f_x, coord_f[1] * f_y),
                                      coord_f[2] * f_x2,
@@ -534,7 +536,7 @@ def n_tick_in_range(beg, end, n, n_c=1, nit=0):
     if cifre == 0:
         cifre = 1.0
     delta = cifre * e / 10**(n_c)
-    #print "n=",n, " dx0=",dx0," e=",e," m=" ,m," cifre=",cifre
+    #log.write_log "n=",n, " dx0=",dx0," e=",e," m=" ,m," cifre=",cifre
     if nit < 30:
         if delta >= size:
             return n_tick_in_range(beg, end, n + 1, n_c, nit + 1)

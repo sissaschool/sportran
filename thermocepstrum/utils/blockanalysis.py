@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import thermocepstrum as tc
 from scipy.stats import shapiro
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 ################################################################################
 
@@ -47,8 +49,8 @@ class MDBlocks(object):
                                             even_NSTEPS=True, detrend=False, drop_first=True )
         self.NYQUIST_F = 0.5 / TSKIP   # Nyquist frequency (rescaled) [\omega*DT/(2*pi)]
         self.TOT_TIME = self.y_big.shape[0]
-        print(' TOT_TIME     = {:}'.format(self.y_big.shape))
-        print(' NYQUIST_F    = {:10g} = {:10g} THz'.format(self.NYQUIST_F, self.NYQUIST_F / DT_FS * 1000))
+        log.write_log(' TOT_TIME     = {:}'.format(self.y_big.shape))
+        log.write_log(' NYQUIST_F    = {:10g} = {:10g} THz'.format(self.NYQUIST_F, self.NYQUIST_F / DT_FS * 1000))
         return
 
     def segment_trajectory(self, BLOCK_SIZE_T):
@@ -58,8 +60,8 @@ class MDBlocks(object):
         if (self.BLOCK_SIZE % 2 == 1):
             self.BLOCK_SIZE = self.BLOCK_SIZE - 1
         self.N_BLOCKS = int(np.floor(self.TOT_TIME / self.BLOCK_SIZE))
-        print(' BLOCK_SIZE   = {:10d}'.format(self.BLOCK_SIZE))
-        print(' N_BLOCKS     = {:10d}'.format(self.N_BLOCKS))
+        log.write_log(' BLOCK_SIZE   = {:10d}'.format(self.BLOCK_SIZE))
+        log.write_log(' N_BLOCKS     = {:10d}'.format(self.N_BLOCKS))
 
         # define blocks from segments of y_big
         self.block = [
@@ -77,7 +79,7 @@ class MDBlocks(object):
 
         self.BLOCK_NFREQS = self.BLOCK_SIZE / 2 + 1
         if self.MULTI_COMPONENT:
-            print(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
+            log.write_log(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
             self.ck_THEORY_var, self.psd_THEORY_mean = tc.md.cepstral.multicomp_cepstral_parameters(
                 self.BLOCK_NFREQS, self.N_COMPONENTS)
         self.bayes_p = bayes_p
@@ -126,7 +128,7 @@ class MDBlocks(object):
 
         self.BLOCK_NFREQS = self.BLOCK_SIZE / 2 + 1
         if self.MULTI_COMPONENT:
-            print(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
+            log.write_log(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
             self.ck_THEORY_var, self.psd_THEORY_mean = tc.md.cepstral.multicomp_cepstral_parameters(
                 self.BLOCK_NFREQS, self.N_COMPONENTS - 1)   #different number of degrees of freedom!
         self.bayes_p = bayes_p
@@ -302,7 +304,7 @@ class MDBlocks(object):
         ## sample psd
         self.spsd_ave = np.mean(list(self.spsd()), axis=1)
         self.spsd_std = np.std(list(self.spsd()), axis=1, ddof=1)
-        print('\n   min(psd)           =  {:12g}'.format(np.min(list(self.spsd()))))
+        log.write_log('\n   min(psd)           =  {:12g}'.format(np.min(list(self.spsd()))))
 
         ## sample log(psd)
         self.slogpsd_ave = np.mean(list(self.slogpsd()), axis=1)
@@ -333,8 +335,8 @@ class MDBlocks(object):
         ## DCT aic_Kmin
         self.aic_Kmin_ave = np.mean(list(self.aic_Kmin()))
         self.aic_Kmin_std = np.std(list(self.aic_Kmin()), ddof=1)
-        print('   max[AIC_Kmin]      =  {:12d}'.format(np.max(list(self.aic_Kmin()))))
-        print('   AIC_Kmin           =  {:12.3f} +/- {:8f}'.format(self.aic_Kmin_ave, self.aic_Kmin_std))
+        log.write_log('   max[AIC_Kmin]      =  {:12d}'.format(np.max(list(self.aic_Kmin()))))
+        log.write_log('   AIC_Kmin           =  {:12.3f} +/- {:8f}'.format(self.aic_Kmin_ave, self.aic_Kmin_std))
 
         if self.bayes_p:
             ## DCT p_aic
@@ -343,8 +345,8 @@ class MDBlocks(object):
             self.avep_aic = np.mean(list(self.p_aic()), axis=1)
             self.avep_aic_KAVE, self.avep_aic_KSTD = tc.md.aic.grid_statistics(np.arange(self.BLOCK_NFREQS),
                                                                                self.avep_aic)
-            print('   AIC_weight_distr   =  {:12.3f} +/- {:8f}'.format(self.p_aic_KAVE, self.p_aic_KSTD))
-            print('       ave_AIC_w check:  {:12.3f} +/- {:8f}'.format(self.avep_aic_KAVE, self.avep_aic_KSTD))
+            log.write_log('   AIC_weight_distr   =  {:12.3f} +/- {:8f}'.format(self.p_aic_KAVE, self.p_aic_KSTD))
+            log.write_log('       ave_AIC_w check:  {:12.3f} +/- {:8f}'.format(self.avep_aic_KAVE, self.avep_aic_KSTD))
 
         ## DCT-Filtered@aic_Kmin log(psd)
         self.flogpsd_Kmin_ave = np.nanmean(list(self.flogpsd_Kmin()), axis=1)
@@ -361,26 +363,26 @@ class MDBlocks(object):
         self.flogtau_Kmin_std = np.nanstd(list(self.flogtau_Kmin()), ddof=1)
         if self.N_BLOCKS > 2:
             self.flogtau_Kmin_SW_pvalue = shapiro(list(self.flogtau_Kmin()))[1]
-        print('\n   flogtau[@AIC_Kmin] =  {:12f} +/- {:8f}  (SW p-value = {:5f})'.format(
+        log.write_log('\n   flogtau[@AIC_Kmin] =  {:12f} +/- {:8f}  (SW p-value = {:5f})'.format(
             self.flogtau_Kmin_ave, self.flogtau_Kmin_std, self.flogtau_Kmin_SW_pvalue))
 
         self.ftau_Kmin_ave = np.nanmean(list(self.ftau_Kmin()))
         self.ftau_Kmin_std = self.flogtau_Kmin_std * self.ftau_Kmin_ave   # np.std(list(self.ftau_Kmin()), ddof=1)
-        print('   ftau[@AIC_Kmin]    =  {:12f} +/- {:8f}'.format(self.ftau_Kmin_ave, self.ftau_Kmin_std))
+        log.write_log('   ftau[@AIC_Kmin]    =  {:12f} +/- {:8f}'.format(self.ftau_Kmin_ave, self.ftau_Kmin_std))
 
         self.FTAU_Kmin_ave = self.ftau_Kmin_ave * 0.5 * self.tau_scale
         self.FTAU_Kmin_std = self.ftau_Kmin_std * 0.5 * self.tau_scale
-        print('   FTAU[@AIC_Kmin]    =  {:12f} +/- {:8f}'.format(self.FTAU_Kmin_ave, self.FTAU_Kmin_std))
+        log.write_log('   FTAU[@AIC_Kmin]    =  {:12f} +/- {:8f}'.format(self.FTAU_Kmin_ave, self.FTAU_Kmin_std))
 
         ## log(tau), tau, TAU THEORY std @average AIC Kmin
         self.flogtau_THEORY_std_aveKmin = self.logtau_THEORY_std[int(round(self.aic_Kmin_ave))]
         self.ftau_THEORY_std_aveKmin = self.flogtau_THEORY_std_aveKmin * self.ftau_Kmin_ave
         self.FTAU_THEORY_std_aveKmin = self.ftau_THEORY_std_aveKmin * 0.5 * self.tau_scale
-        print('\n   THEORY_STD_flogtau[@ave_AIC_Kmin] =    {:8f}  (errcheck: {:8f} +/- {:8f})'.format(
+        log.write_log('\n   THEORY_STD_flogtau[@ave_AIC_Kmin] =    {:8f}  (errcheck: {:8f} +/- {:8f})'.format(
             self.flogtau_THEORY_std_aveKmin, np.nanmean(list(self.flogtau_Kmin_THEORYstd())),
             np.nanstd(list(self.flogtau_Kmin_THEORYstd()))))
-        print('   THEORY_STD_ftau[@ave_AIC_Kmin]    =    {:8f}'.format(self.ftau_THEORY_std_aveKmin))
-        print('   THEORY_STD_FTAU[@ave_AIC_Kmin]    =    {:8f}'.format(self.FTAU_THEORY_std_aveKmin))
+        log.write_log('   THEORY_STD_ftau[@ave_AIC_Kmin]    =    {:8f}'.format(self.ftau_THEORY_std_aveKmin))
+        log.write_log('   THEORY_STD_FTAU[@ave_AIC_Kmin]    =    {:8f}'.format(self.FTAU_THEORY_std_aveKmin))
 
         if self.bayes_p:
             ## DCT-Filtered Bayesian distribution log(tau), tau, TAU (SI units)
@@ -389,27 +391,27 @@ class MDBlocks(object):
             self.flogtau_avedensity = np.mean(list(self.flogtau_density()), axis=1)
             self.flogtau_avedensity_XAVE, self.flogtau_avedensity_XSTD = tc.md.aic.grid_statistics(
                 self.density_grid, self.flogtau_avedensity)
-            print('\n   flogtau[AIC_w]     =  {:12f} +/- {:8f} (errcheck: {:8f} +/- {:8f})'.format(
+            log.write_log('\n   flogtau[AIC_w]     =  {:12f} +/- {:8f} (errcheck: {:8f} +/- {:8f})'.format(
                 self.flogtau_density_XAVE, self.flogtau_density_XSTD,
                 np.mean(np.mean(list(self.flogtau_density_xstd()))), np.std(list(self.flogtau_density_xstd()))))
-            print('   flogtau[ave AIC_w] =  {:12f} +/- {:8f}'.format(self.flogtau_avedensity_XAVE,
+            log.write_log('   flogtau[ave AIC_w] =  {:12f} +/- {:8f}'.format(self.flogtau_avedensity_XAVE,
                                                                      self.flogtau_avedensity_XSTD))
 
             self.ftau_density_XAVE = np.mean(list(self.ftau_density_xave()))
             self.ftau_density_XSTD = np.std(list(self.ftau_density_xave()))
             #self.ftau_avedensity = np.mean(list(self.ftau_density()), axis=1)
             #self.ftau_avedensity_XAVE, self.ftau_avedensity_XSTD = ta.grid_statistics(self.density_grid, self.ftau_avedensity)
-            print('   ftau[AIC_w]        =  {:12f} +/- {:8f}'.format(self.ftau_density_XAVE, self.ftau_density_XSTD))
-            #print '   ftau[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.ftau_avedensity_XAVE, self.ftau_avedensity_XSTD)
+            log.write_log('   ftau[AIC_w]        =  {:12f} +/- {:8f}'.format(self.ftau_density_XAVE, self.ftau_density_XSTD))
+            #log.write_log '   ftau[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.ftau_avedensity_XAVE, self.ftau_avedensity_XSTD)
 
             self.FTAU_density_XAVE = self.ftau_density_XAVE * 0.5 * self.tau_scale
             self.FTAU_density_XSTD = self.ftau_density_XSTD * 0.5 * self.tau_scale
             #self.FTAU_avedensity = self.ftau_avedensity*0.5*self.tau_scale
             #self.FTAU_avedensity_XAVE = self.ftau_avedensity_XAVE*0.5*self.tau_scale
             #self.FTAU_avedensity_XSTD = self.ftau_avedensity_XSTD*0.5*self.tau_scale
-            print('   FTAU[AIC_w]        =  {:12f} +/- {:8f}'.format(self.FTAU_density_XAVE, self.FTAU_density_XSTD))
-            #print '   FTAU[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.FTAU_avedensity_XAVE, self.FTAU_avedensity_XSTD)
-        print()
+            log.write_log('   FTAU[AIC_w]        =  {:12f} +/- {:8f}'.format(self.FTAU_density_XAVE, self.FTAU_density_XSTD))
+            #log.write_log '   FTAU[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.FTAU_avedensity_XAVE, self.FTAU_avedensity_XSTD)
+        log.write_log()
         return
 
     def slogpsd_histogram(self, XBINW=20, NYBINS=100, YEDGE1=-8.0, YEDGE2=8.0):

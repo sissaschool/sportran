@@ -3,6 +3,8 @@ from scipy.special import polygamma
 from scipy.fftpack import dct
 from .tools import logtau_to_tau
 from .aic import *
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992   # Euler-Mascheroni constant
 
@@ -39,7 +41,7 @@ def dct_coefficients(y):
 def dct_filter_psd(y, K=None):
     # K=P*-1 is the maximum coefficient summed (c_k = 0 for k > K)
     if (K >= y.size):
-        print('! Warning:  dct_filter_psd K value ({:}) out of range.'.format(K))
+        log.write_log('! Warning:  dct_filter_psd K value ({:}) out of range.'.format(K))
         return np.full(y.size, np.NaN)
     yk = dct(y, type=1)
     if K is not None:
@@ -131,7 +133,7 @@ class CosFilter(object):
         self.Kmin_corrfactor = Kmin_corrfactor
         self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
         if (self.aic_Kmin >= NF):
-            print('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
+            log.write_log('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
 
         # set theoretical errors
         if ck_theory_var is None:
@@ -179,7 +181,7 @@ class CosFilter(object):
             self.aic_Kmin = self.K_PSD
 
         if (self.aic_Kmin >= self.samplelogpsd.size):
-            print('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
+            log.write_log('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
 
         # COS-filter analysis with frequency cutoff K
         self.logtau = dct_filter_tau(self.samplelogpsd)
@@ -290,5 +292,5 @@ class CosFilter(object):
 #        else:
 #            self.optimalK_idx = np.NaN
 #            self.optimalK = np.NaN
-#            print 'Warning: optimal cutoff K NOT FOUND.'
+#            log.write_log 'Warning: optimal cutoff K NOT FOUND.'
 #        return

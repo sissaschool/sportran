@@ -8,11 +8,13 @@ from .md.mdsample import MDSample
 
 #import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 try:
     plt
 except:
-    print('Warning: plt undefined')
+    log.write_log('Warning: plt undefined')
 
 
 def freq_THz_to_red(f, DT_FS):
@@ -51,7 +53,7 @@ class HeatCurrent(MDSample):
             raise ValueError('Shape of j {} not valid.'.format(j.shape))
 
         if self.multicomponent:
-            print('Using multicomponent code.')
+            log.write_log('Using multicomponent code.')
             MDSample.__init__(self, traj=j[0], DT_FS=DT_FS)
             # initialize other MDSample objects needed to make the work
             self.otherMD = []
@@ -83,7 +85,7 @@ class HeatCurrent(MDSample):
                     raise ValueError('Freq units not valid.')
             self.initialize_cepstral_parameters()
         else:
-            print('Warning: trajectory not initialized. You should manually initialize what you need.')
+            log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
 
         self.dct = None
         return
@@ -157,7 +159,7 @@ class HeatCurrent(MDSample):
               '-----------------------------------------------------\n' +\
               '  kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.kappa_Kmin, self.kappa_Kmin_std) +\
               '-----------------------------------------------------\n'
-        print(self.cepstral_log)
+        log.write_log(self.cepstral_log)
         return
 
     ###################################
@@ -320,7 +322,7 @@ class HeatCurrent(MDSample):
 #is this function needed?
 #   def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None):
 #      """Multi-component kappa calculation."""
-#      print "HeatCurrent.compute_kappa_multi"
+#      log.write_log "HeatCurrent.compute_kappa_multi"
 #      if FILTER_WINDOW_WIDTH is None:
 #         FILTER_WINDOW_WIDTH = self.FILTER_WINDOW_WIDTH
 #      multi_mdsample = super(HeatCurrent, self).compute_kappa_multi(others, FILTER_WINDOW_WIDTH, DT_FS=self.DT_FS, call_other=True)
@@ -403,8 +405,8 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         if (freq_units == 'thz') or (freq_units == 'THz'):
             xf.plot_periodogram(x.FILTER_WINDOW_WIDTH * 1000. / x.DT_FS, 'thz', TSKIP, axes=axes)
         elif (freq_units == 'red'):
-            print(PSD_FILTER_W)
-            print(x.FILTER_WINDOW_WIDTH)
+            log.write_log(PSD_FILTER_W)
+            log.write_log(x.FILTER_WINDOW_WIDTH)
             xf.plot_periodogram(x.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axes=axes)
 
     xf.resample_log = '-----------------------------------------------------\n' +\
@@ -427,7 +429,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     else:
         xf.resample_log = xf.resample_log + ' fPSD not calculated before resampling!\n '
     xf.resample_log = xf.resample_log + '-----------------------------------------------------\n'
-    print(xf.resample_log)
+    log.write_log(xf.resample_log)
 
     if plot:
         if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -477,7 +479,7 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
 
     xf = []
     for TSKIP in TSKIP_LIST:
-        print('TSKIP =  {:d}'.format(TSKIP))
+        log.write_log('TSKIP =  {:d}'.format(TSKIP))
         xff = resample_current(x, TSKIP, plot=False)
         xff.cepstral_analysis(aic_type, Kmin_corrfactor)
         xf.append(xff)

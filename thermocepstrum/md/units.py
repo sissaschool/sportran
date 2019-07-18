@@ -75,3 +75,4 @@ def scale_kappa_DLPOLYtoSI(temp, volume, timestep):
     kB = 1.3806504
     NA = 6.022140857
     return (1.0 / NA / temp)**2 / kB / volume * timestep * 1e10
+

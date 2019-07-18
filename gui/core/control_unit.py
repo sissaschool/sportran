@@ -259,13 +259,3 @@ def update_info(frame):
     #     frame.write('aic type:         {}'.format(Data.xf.dct.aic_type))
     #     frame.write('aic min:          {}'.format(Data.xf.dct.aic_min))
     #     frame.write('P*:               {}'.format(Data.xf.dct.aic_Kmin + 1))
-
-
-def update_logs(frame):
-    frame.clear()
-    if Data.currents is not None:
-        frame.write('currents shape is {}'.format(Data.currents.shape))
-        frame.write('snippets')
-        frame.write(Data.currents)
-    if Data.temperature:
-        frame.write(' Mean Temperature (computed):  {} K  +/-  {}'.format(Data.temperature, Data.temperature_std))

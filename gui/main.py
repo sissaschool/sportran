@@ -18,6 +18,7 @@ import os
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.figure import Figure
 import matplotlib.patches as patches
 
@@ -32,6 +33,8 @@ from tkinter.font import Font
 
 from core import settings
 import core.control_unit as cu
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 
 # Main app
@@ -135,6 +138,24 @@ class StatusFrame(Frame):
         self.status.pack(side=LEFT, padx=4, pady=2)
 
 
+class GraphToolbar(NavigationToolbar2):
+
+    def __init__(self, parent, controller):
+        self.toolitems = (
+            ('Home', 'Reset the view', 'home', 'home'),
+            ('Back', 'Go back to the previous view', 'back', 'back'),
+            ('Forward', 'Go back to the last view', 'forward', 'forward'),
+            (None, None, None, None),
+            ('Pan', 'Use to navigate in the graph', 'move', 'pan'),
+            ('Zoom', 'Use to zoom a section of the graph', 'zoom_to_rect', 'zoom'),
+            (None, None, None, None),
+            (None, None, None, None),
+            ('Save', 'sollemnes in futurum', 'filesave', 'save_figure'),
+        )
+
+        NavigationToolbar2.__init__(self, parent, controller)
+
+
 class GraphWidget(Frame):
 
     def __init__(self, parent, controller, size=(4, 4), type=111, toolbar=False):
@@ -187,7 +208,6 @@ class GraphWidget(Frame):
 
     def show(self, func, **kwargs):
         self.func = func
-        # todo: add kwargs
         cu.set_graph(self.graph, func, **kwargs)
         self.max_x = self.get_max_x()
         self.max_y = self.get_max_y()
@@ -677,7 +697,7 @@ class Cutter(Frame):
     def update(self):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j, PSD_FILTER_W=cu.Data.psd_filter_width)
         cu.update_info(self.info)
-        cu.update_logs(self.logs)
+        log.set_func(self.logs.write)
         # self.graph.cut_line = cu.Data.fstar
 
 
@@ -714,7 +734,7 @@ class PStar(Frame):
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
         back_button.grid(row=0, column=0, sticky='w', padx=5)
 
-        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=self._reload)
+        next_button = Button(button_frame, text='Recalculate', bd=1, relief=SOLID, command=self._reload)
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
         info_section = Frame(self, bg=settings.BG_COLOR)
@@ -741,6 +761,7 @@ class PStar(Frame):
 
     def _reload(self):
         self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
+        self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.Data.xf)
         self.graph.update_cut()
 
@@ -762,10 +783,10 @@ class PStar(Frame):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
                              PSD_FILTER_W=cu.Data.psd_filter_width)
+        cu.update_info(self.info)
+        log.set_func(self.logs.write)
         self._reload()
         self.graph.update_cut()
-        cu.update_info(self.info)
-        cu.update_logs(self.logs)
 
 
 class Output(Frame):
@@ -806,4 +827,5 @@ def run():
 
 
 if __name__ == '__main__':
+    log.set_method('other')
     run()
