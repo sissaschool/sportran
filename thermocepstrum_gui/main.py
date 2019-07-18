@@ -33,7 +33,16 @@ from tkinter.font import Font
 
 from thermocepstrum_gui.core import settings
 import thermocepstrum_gui.core.control_unit as cu
-from thermocepstrum.utils.utils import PrintMethod
+try:
+    from thermocepstrum.utils.utils import PrintMethod
+except ImportError:
+    from thermocepstrum_gui.utils.utils import PrintMethod
+
+try:
+    import thermocepstrum
+except ImportError:
+    raise ImportError('Couldn\'t find thermocepstrum')
+
 log = PrintMethod()
 
 
@@ -172,6 +181,7 @@ class GraphWidget(Frame):
         self.cut_line = 0
         self.max_x = 1
         self.max_y = 1
+        self.new_view_x = 1
 
         self.f = Figure(figsize=self.size, dpi=100)
         self.graph = self.f.add_subplot(self.type)
@@ -216,7 +226,10 @@ class GraphWidget(Frame):
         self.max_x = self.get_max_x()
         self.max_y = self.get_max_y()
         if self.slider:
-            self.slider.config(to_=self.max_x)
+            if self.show_selected_area:
+                self.change_view()
+            else:
+                self.slider.config(to_=self.max_x)
         self.update_cut()
 
     def add_graph(self, func, name, **kwargs):
@@ -247,8 +260,9 @@ class GraphWidget(Frame):
             rect = patches.Rectangle((0, 0), self.cut_line, self.max_y, linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
             self.graph.plot([self.cut_line, self.cut_line], [0, self.max_y])
             self.graph.add_patch(rect)
+            self.graph.set_ylim([0, self.max_y])
             if self.show_selected_area:
-                self.graph.set_xlim([0, self.cut_line])
+                self.graph.set_xlim([0, self.new_view_x])
         self.canvas.draw()
 
     def get_graph(self):
@@ -261,6 +275,13 @@ class GraphWidget(Frame):
     def attach_slider(self, slider):
         self.slider = slider
         self.slider.config(command=self._on_slider_change, to_=self.get_max_x())
+
+    def change_view(self):
+        if self.show_selected_area:
+            self.new_view_x = self.cut_line
+            self.slider.config(to_=self.new_view_x)
+        else:
+            self.slider.config(to_=self.max_x)
 
     def attach_entry(self, entry):
         self.entry = entry
@@ -279,13 +300,13 @@ class GraphWidget(Frame):
 
 class TextWidget(Frame):
 
-    def __init__(self, parent, controller, title, height):
+    def __init__(self, parent, controller, title, height, width):
         Frame.__init__(self, parent, controller)
 
         text_frame = LabelFrame(controller, text=title, bd=1, relief=SOLID)
         text_frame.pack(side=TOP)
 
-        self.text_box = Text(text_frame, height=height, bd=0)
+        self.text_box = Text(text_frame, height=height, width=width, bd=0)
         self.text_box.pack(padx=4, pady=4)
         self.text_box.config(state=DISABLED)
 
@@ -522,15 +543,7 @@ class FileManager(Frame):
         path = os.path.join(settings.DATA_PATH, name)
         self.selected.insert(0, path)
 
-        with open(path, 'r') as file:
-            lines = file.readlines()[0:settings.PREVIEW_LINES]
-            self.preview.config(state=NORMAL)
-            self.preview.delete('1.0', END)
-            self.preview.insert('1.0', lines)
-            self.preview.config(state=DISABLED)
-
-        keys = cu.load_keys(path)
-        self.check_list.set_list(keys)
+        self.load_file_settings(path)
 
     def _select_file_with_manager(self):
         '''
@@ -543,6 +556,17 @@ class FileManager(Frame):
 
         # self.selected.delete(0, END)
         self.selected.insert(INSERT, path.name)
+        self.load_file_settings(path.name)
+    
+    def load_file_settings(self, path):
+        with open(path, 'r') as file:
+            lines = file.readlines()[0:settings.PREVIEW_LINES]
+            self.preview.config(state=NORMAL)
+            self.preview.delete('1.0', END)
+            self.preview.insert('1.0', lines)
+            self.preview.config(state=DISABLED)
+        keys = cu.load_keys(path)
+        self.check_list.set_list(keys)
 
     def _start_analysis(self, ev=None):
         if self.selected.get():
@@ -608,8 +632,12 @@ class Cutter(Frame):
 
         TopBar(parent, controller)
 
-        sections = Frame(self)
-        sections.pack(side=LEFT, anchor='n')
+        main_frame = Frame(self)
+        main_frame.pack(expand=True, fill=BOTH)
+
+        sections = Frame(main_frame)
+        sections.grid(row=0, column=0, sticky='n')
+
         self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
 
         self.slider_locked = False
@@ -626,20 +654,22 @@ class Cutter(Frame):
         self.graph.attach_slider(self.slider)
 
         value_frame = Frame(sections)
-        value_frame.pack(side=TOP)
+        value_frame.pack(side=LEFT, pady=10, padx=100)
 
-        Label(value_frame, text='Selected value:').pack(side=TOP, pady=10)
+        Label(value_frame, text='Selected value:').grid(row=0, column=0, sticky='w', pady=4)
         self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
-        self.value_entry.pack(side=LEFT)
+        self.value_entry.grid(row=0, column=1, sticky='w')
         self.graph.attach_entry(self.value_entry)
 
+        Label(value_frame, text='Filter width:').grid(row=1, column=0, sticky='w')
         self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID)
-        self.filter_width.pack(side=LEFT)
+        self.filter_width.grid(row=1, column=1, sticky='w', pady=10)
 
-        resample_button = Button(value_frame, text='Resample', bd=1, relief=SOLID,
-                                 command=self.resample).pack(side=RIGHT, padx=10)
-        button_frame = Frame(sections)
-        button_frame.pack(pady=20)
+        Button(value_frame, text='Resample', bd=1, relief=SOLID,
+               command=self.resample).grid(row=2, column=0, sticky='w')
+
+        button_frame = Frame(value_frame)
+        button_frame.grid(row=3, column=2)
 
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
         back_button.grid(row=0, column=0, sticky='w', padx=5)
@@ -647,16 +677,18 @@ class Cutter(Frame):
         next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next())
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
-        info_section = Frame(self)
-        info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
+        Button(slider_frame, text='View', command=lambda: self._change_view()).grid(row=0, column=2, sticky='w')
+
+        info_section = Frame(main_frame)
+        info_section.grid(row=0, column=2, sticky='n', pady=40)
 
 
-        self.logs = TextWidget(parent, info_section, 'Logs', 15)
-        self.info = TextWidget(parent, info_section, 'Info', 10)
+        self.logs = TextWidget(parent, info_section, 'Logs', 15, 45)
+        self.info = TextWidget(parent, info_section, 'Info', 10, 45)
         # StatusFrame(parent, controller)
 
-    def _lock_unlock_slider(self):
-        if self.slider_locked:
+    def _lock_unlock_slider(self, force=False):
+        if self.slider_locked or not force:
             self.slider_locked = False
             self.slider.state(['!disabled'])
             self.value_entry.config(state=NORMAL)
@@ -664,6 +696,16 @@ class Cutter(Frame):
             self.slider_locked = True
             self.slider.state(['disabled'])
             self.value_entry.config(state=DISABLED)
+
+    def _change_view(self):
+        if self.graph.cut_line > 0:
+            if self.graph.show_selected_area:
+                self.graph.show_selected_area = False
+            else:
+                self.graph.show_selected_area = True
+
+            self.graph.change_view()
+            self.graph.update_cut()
 
     def resample(self):
         cu.Data.fstar = float(self.value_entry.get())
@@ -677,6 +719,9 @@ class Cutter(Frame):
 
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
+        if self.graph.show_selected_area:
+            self.graph.show_selected_area = True
+            self.graph.change_view()
         self.update()
 
     def back(self):
@@ -760,8 +805,8 @@ class PStar(Frame):
         info_section = Frame(self)
         info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
 
-        self.logs = TextWidget(parent, info_section, 'Logs', 15)
-        self.info = TextWidget(parent, info_section, 'Info', 10)
+        self.logs = TextWidget(parent, info_section, 'Logs', 15, 45)
+        self.info = TextWidget(parent, info_section, 'Info', 10, 45)
 
         self.setted = False
 
