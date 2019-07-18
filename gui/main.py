@@ -46,6 +46,11 @@ class ThermocepstrumGUI(Tk):
     def __init__(self, version, dev_state, last_release, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
 
+        self.option_add("*Font", "{} {}".format(settings.FONT, settings.FONT_SIZE))
+        self.option_add("*Background", "{}".format(settings.BG_COLOR))
+        self.option_add("*selectBackground", "light blue")
+        self.option_add("*selectForeground", "black")
+
         # Define some info
         self.version = version
         self.dev_state = dev_state
@@ -59,7 +64,7 @@ class ThermocepstrumGUI(Tk):
                                            settings.Y_SIZE,
                                            settings.X_SPACING,
                                            settings.Y_SPACING))
-        self.configure(bg=settings.BG_COLOR)
+
         self.resizable(settings.X_RESIZE, settings.Y_RESIZE)
         self.protocol('WM_DELETE_WINDOW', func=lambda: cu.secure_exit(ThermocepstrumGUI))
 
@@ -75,7 +80,6 @@ class ThermocepstrumGUI(Tk):
 
         for F in (FileManager, Cutter, PStar, Output):
             ThermocepstrumGUI.frame = F(container, self)
-            ThermocepstrumGUI.frame.configure(bg=settings.BG_COLOR)
 
             ThermocepstrumGUI.frames[F] = ThermocepstrumGUI.frame
             ThermocepstrumGUI.frame.grid(row=0, column=0, sticky='nsew')
@@ -182,7 +186,7 @@ class GraphWidget(Frame):
 
         self.slider = None
         self.entry = None
-        self.line2D = None
+        self.show_selected_area = False
         self.plot_call = None
         self.plot_call_kwargs = None
 
@@ -243,6 +247,8 @@ class GraphWidget(Frame):
             rect = patches.Rectangle((0, 0), self.cut_line, self.max_y, linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
             self.graph.plot([self.cut_line, self.cut_line], [0, self.max_y])
             self.graph.add_patch(rect)
+            if self.show_selected_area:
+                self.graph.set_xlim([0, self.cut_line])
         self.canvas.draw()
 
     def get_graph(self):
@@ -276,7 +282,7 @@ class TextWidget(Frame):
     def __init__(self, parent, controller, title, height):
         Frame.__init__(self, parent, controller)
 
-        text_frame = LabelFrame(controller, text=title, bg=settings.BG_COLOR, bd=1, relief=SOLID)
+        text_frame = LabelFrame(controller, text=title, bd=1, relief=SOLID)
         text_frame.pack(side=TOP)
 
         self.text_box = Text(text_frame, height=height, bd=0)
@@ -310,7 +316,7 @@ class CheckList(Frame):
     def set_list(self, check_list):
         self.clear_list()
         for row, el in enumerate(list(check_list.keys())):
-                frame = Frame(self.controller, bg=settings.BG_COLOR)
+                frame = Frame(self.controller)
                 frame.grid(row=row, column=0, sticky='we', pady=2)
                 chk = ttk.Checkbutton(frame, text=el)
                 chk.grid(row=0, column=0, padx=2)
@@ -348,10 +354,10 @@ class ScrollFrame(Frame):
         Frame.__init__(self, parent)
 
         if width or height:
-            self.canvas = Canvas(controller, borderwidth=0, background="#ffffff", width=width, height=height)
+            self.canvas = Canvas(controller, borderwidth=0, background=settings.BG_COLOR, width=width, height=height)
         else:
-            self.canvas = Canvas(controller, borderwidth=0, background="#ffffff")
-        self.viewPort = Frame(self.canvas, background="#ffffff")
+            self.canvas = Canvas(controller, borderwidth=0, background=settings.BG_COLOR)
+        self.viewPort = Frame(self.canvas, background=settings.BG_COLOR)
         self.vsb = Scrollbar(controller, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
@@ -389,13 +395,13 @@ class FileManager(Frame):
         self.preview.pack(fill=BOTH, expand=True, side=TOP)
         self.preview.config(state=NORMAL)
 
-        settings_frame = Frame(self.main_frame.viewPort, bg=settings.BG_COLOR, width=400)
+        settings_frame = Frame(self.main_frame.viewPort, width=400)
         settings_frame.pack(fill=BOTH, expand=True, padx=100)
 
-        selection_frame = Frame(settings_frame, bg=settings.BG_COLOR)
+        selection_frame = Frame(settings_frame)
         selection_frame.pack(fill=BOTH, expand=True)
 
-        Label(selection_frame, text='Selected: ', bg=settings.BG_COLOR).grid(row=0, column=0, sticky='e')
+        Label(selection_frame, text='Selected: ').grid(row=0, column=0, sticky='e')
 
         self.selected = Entry(selection_frame, width=60, relief=SOLID, bd=1)
         self.selected.grid(row=0, column=1, ipadx=1, ipady=1, sticky='w')
@@ -404,35 +410,35 @@ class FileManager(Frame):
                                   command=lambda: self._select_file_with_manager())
         self.find_button.grid(row=0, column=2, padx=4, sticky='w')
 
-        Label(selection_frame, text='Input format: ', bg=settings.BG_COLOR).grid(row=0, column=3, padx=5, sticky='e')
+        Label(selection_frame, text='Input format: ').grid(row=0, column=3, padx=5, sticky='e')
         self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly')
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
 
-        Label(selection_frame, text='Filter width: ', bg=settings.BG_COLOR).grid(row=1, column=0, sticky='e')
+        Label(selection_frame, text='Filter width: ').grid(row=1, column=0, sticky='e')
         self.filter_width_entry = Spinbox(selection_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
         self.filter_width_entry.grid(row=1, column=1, padx=2, sticky='w', pady=10)
 
-        Label(selection_frame, text='Keys ', bg=settings.BG_COLOR).grid(row=2, column=0)
-        check_frame = Frame(selection_frame, bg=settings.BG_COLOR, width=100)
+        Label(selection_frame, text='Keys ').grid(row=2, column=0)
+        check_frame = Frame(selection_frame, width=100)
         check_frame.grid(row=3, column=0, pady=10)
 
         check_scrollable = ScrollFrame(self.main_frame.viewPort, check_frame, 200, 100)
         self.check_list = CheckList(check_scrollable, check_scrollable.viewPort)
         self.check_list.attach_function_on_combo(self._update_status)
 
-        enviroment_settings = Frame(selection_frame, bg=settings.BG_COLOR, width=200)
+        enviroment_settings = Frame(selection_frame, width=200)
         enviroment_settings.grid(row=3, column=1)
 
-        Label(enviroment_settings, text='Temperature: ', bg=settings.BG_COLOR).grid(row=0, column=0, sticky='w')
+        Label(enviroment_settings, text='Temperature: ').grid(row=0, column=0, sticky='w')
         self.temperature_entry = Spinbox(enviroment_settings, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
         self.temperature_entry.grid(row=0, column=1, padx=2, sticky='w', pady=10)
 
-        Label(enviroment_settings, text='Volume: ', bg=settings.BG_COLOR).grid(row=1, column=0, sticky='w')
+        Label(enviroment_settings, text='Volume: ').grid(row=1, column=0, sticky='w')
         self.volume_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
         self.volume_entry.grid(row=1, column=1, padx=2, sticky='w')
 
-        Label(enviroment_settings, text='DT_FS: ', bg=settings.BG_COLOR).grid(row=2, column=0, sticky='w')
+        Label(enviroment_settings, text='DT_FS: ').grid(row=2, column=0, sticky='w')
         self.DT_FS_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
         self.DT_FS_entry.grid(row=2, column=1, padx=2, sticky='w', pady=10)
 
@@ -602,27 +608,27 @@ class Cutter(Frame):
 
         TopBar(parent, controller)
 
-        sections = Frame(self, bg=settings.BG_COLOR)
+        sections = Frame(self)
         sections.pack(side=LEFT, anchor='n')
         self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
 
         self.slider_locked = False
 
-        slider_frame = Frame(sections, bg=settings.BG_COLOR)
+        slider_frame = Frame(sections)
         slider_frame.pack(side=TOP, anchor='w', padx=115)
 
         self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1, length=520)
         self.slider.grid(row=0, column=0)
 
         lock_slider = Button(slider_frame, command=lambda: self._lock_unlock_slider(),
-                             bg=settings.BG_COLOR, bd=1, relief=SOLID)
+                             bd=1, relief=SOLID)
         lock_slider.grid(row=0, column=1, padx=2)
         self.graph.attach_slider(self.slider)
 
-        value_frame = Frame(sections, bg=settings.BG_COLOR)
+        value_frame = Frame(sections)
         value_frame.pack(side=TOP)
 
-        Label(value_frame, text='Selected value:', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
+        Label(value_frame, text='Selected value:').pack(side=TOP, pady=10)
         self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
         self.value_entry.pack(side=LEFT)
         self.graph.attach_entry(self.value_entry)
@@ -632,7 +638,7 @@ class Cutter(Frame):
 
         resample_button = Button(value_frame, text='Resample', bd=1, relief=SOLID,
                                  command=self.resample).pack(side=RIGHT, padx=10)
-        button_frame = Frame(sections, bg=settings.BG_COLOR)
+        button_frame = Frame(sections)
         button_frame.pack(pady=20)
 
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
@@ -641,7 +647,7 @@ class Cutter(Frame):
         next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next())
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
-        info_section = Frame(self, bg=settings.BG_COLOR)
+        info_section = Frame(self)
         info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
 
 
@@ -668,6 +674,7 @@ class Cutter(Frame):
             self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
                                  PSD_FILTER_W=cu.Data.psd_filter_width)
             self.graph.update_cut()
+
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
         self.update()
@@ -675,6 +682,7 @@ class Cutter(Frame):
     def back(self):
         response = msg.askyesnocancel('Back to file manager?', "Save changes?\nIf reopen the same file \nthe values that you chosed will not be deleted!")
 
+        log.set_func(None)
         if response:
             cu.Data.fstar = float(self.value_entry.get())
             cu.Data.loaded = True
@@ -708,27 +716,39 @@ class PStar(Frame):
 
         TopBar(parent, controller)
 
-        sections = Frame(self, bg=settings.BG_COLOR)
+        sections = Frame(self)
         sections.pack(side=LEFT, anchor='n')
         self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
 
-        value_frame = Frame(sections, bg=settings.BG_COLOR)
+        variable_frame = Frame(sections, bd=1, relief=SOLID)
+        variable_frame.pack(side=TOP, pady=3)
+
+        Label(variable_frame, text='f*: ', font='Arial 12 bold').grid(row=0, column=0)
+        self.fstar_label = Label(variable_frame, text='')
+        self.fstar_label.grid(row=0, column=1)
+        Label(variable_frame, text='P*: ', font='Arial 12 bold').grid(row=0, column=2)
+        self.pstar_label = Label(variable_frame, text='')
+        self.pstar_label.grid(row=0, column=3)
+        Label(variable_frame, text='\u03f0:', font='Arial 12 bold').grid(row=0, column=4)
+        self.kmin_label = Label(variable_frame, text='')
+        self.kmin_label.grid(row=0, column=5)
+        value_frame = Frame(sections)
         value_frame.pack(side=TOP)
 
-        Label(value_frame, text='P*', bg=settings.BG_COLOR).pack(side=TOP, pady=10)
+        Label(value_frame, text='P*').pack(side=TOP, pady=10)
         self.value_entry = Spinbox(value_frame, bd=1, relief=SOLID, increment=1)
         self.value_entry.pack()
 
         self.increment = IntVar()
-        Label(value_frame, text='Increment by', bg=settings.BG_COLOR).pack(side=TOP, pady=4)
+        Label(value_frame, text='Increment by').pack(side=TOP, pady=4)
         Radiobutton(value_frame, text='1', variable=self.increment, value=1,
-                    bg=settings.BG_COLOR, command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
+                    command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
         Radiobutton(value_frame, text='10', variable=self.increment, value=10,
-                    bg=settings.BG_COLOR, command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
+                    command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
         Radiobutton(value_frame, text='100', variable=self.increment, value=100,
-                    bg=settings.BG_COLOR, command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
+                    command=self._change_increment).pack(side=LEFT, anchor='n', padx=2)
 
-        button_frame = Frame(sections, bg=settings.BG_COLOR)
+        button_frame = Frame(sections)
         button_frame.pack(pady=20)
 
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
@@ -737,7 +757,7 @@ class PStar(Frame):
         next_button = Button(button_frame, text='Recalculate', bd=1, relief=SOLID, command=self._reload)
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
-        info_section = Frame(self, bg=settings.BG_COLOR)
+        info_section = Frame(self)
         info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
 
         self.logs = TextWidget(parent, info_section, 'Logs', 15)
@@ -749,12 +769,16 @@ class PStar(Frame):
         ThermocepstrumGUI.show_frame(Cutter)
 
     def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
-        cu.Data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor)
+        cu.Data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor-1)
 
-    def _corr_factor(self):
-        self.value_entry.config(from_=1.0, to=cu.Data.xf.Nfreqs)
+    def _pstar(self):
+        self.value_entry.config(from_=2, to=cu.Data.xf.Nfreqs)
         self.value_entry.delete(0, END)
-        self.value_entry.insert(0, cu.Data.xf.dct.aic_Kmin)
+        self.value_entry.insert(0, (cu.Data.xf.dct.aic_Kmin+1))
+
+        self.fstar_label.config(text='{:4f}'.format(cu.Data.fstar))
+        self.pstar_label.config(text=f'{cu.Data.xf.dct.aic_Kmin+1}')
+        self.kmin_label.config(text='{:18f} +/- {:10f} W/mK'.format(cu.Data.xf.kappa_Kmin, cu.Data.xf.kappa_Kmin_std))
 
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
@@ -767,7 +791,7 @@ class PStar(Frame):
 
     def _setup_pstar(self):
         cu.Data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
-        self._corr_factor()
+        self._pstar()
 
     def update(self):
         if cu.Data.fstar == cu.Data.old_fstar:
@@ -804,7 +828,7 @@ class LoadingWindow(Tk):
 
         ThermocepstrumGUI.open_windows.insert(0, self)
         self.protocol('WM_DELETE_WINDOW', func=lambda: self.kill())
-        frame = Frame(self, bg=settings.BG_COLOR)
+        frame = Frame(self)
         frame.pack(fill=BOTH, expand=1)
 
         Label(frame, text='Loading data').pack(side=TOP)
