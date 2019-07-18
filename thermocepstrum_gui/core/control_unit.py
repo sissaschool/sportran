@@ -14,7 +14,7 @@ from . import settings
 
 import thermocepstrum as tc
 import numpy as np
-from utils import Graph
+from thermocepstrum_gui.utils import Graph
 
 
 class Data:

@@ -31,8 +31,8 @@ from tkinter import messagebox as msg
 import tkinter.filedialog as dialog
 from tkinter.font import Font
 
-from core import settings
-import core.control_unit as cu
+from thermocepstrum_gui.core import settings
+import thermocepstrum_gui.core.control_unit as cu
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
 

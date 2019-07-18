@@ -1,7 +1,7 @@
 {
     "name": "thermocepstrum",
-    "version": "1.0.0a1",
-    "author": "Loris Ercole, Riccardo Bertossa",
+    "version": "1.0.0a2",
+    "author": "Loris Ercole, Riccardo Bertossa, Sebastiano Bisacchi",
     "author_email": "loris.ercole@epfl.ch",
     "description": "Cepstral Data Analysis of current time series for Green-Kubo transport coefficients",
     "license": "GPL 3",
@@ -42,7 +42,8 @@
     },
     "entry_points": {
         "console_scripts": [
-            "thermocepstrum-analysis = thermocepstrum.analysis:main"
+            "thermocepstrum-analysis = thermocepstrum.analysis:main",
+            "thermocepstrum-gui = thermocepstrum_gui.main:run"
         ]
     }
 }
