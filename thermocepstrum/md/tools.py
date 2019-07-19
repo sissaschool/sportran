@@ -102,7 +102,7 @@ def resample_psd(freqs, psd, cutfrequency):
         newpsd = psd.copy()[:cutidx + 1]
         newpsd = newpsd + psd[:-cutidx - 2:-1]
         newfreqs = freqs[:cutidx + 1]
-        #log.write_log cutidx, DT, freqs[cutidx], newpsd.size
+        #log.write_log(cutidx, DT, freqs[cutidx], newpsd.size)
     else:
         raise NotImplementedError('Not implemented.')
     return newfreqs, newpsd

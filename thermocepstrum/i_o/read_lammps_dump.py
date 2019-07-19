@@ -19,6 +19,7 @@ from time import time
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
 
+
 def is_string(string):
     try:
         float(string)
@@ -78,7 +79,7 @@ class LAMMPS_Dump(object):
       traj.read_timesteps(10, select_ckeys=['id,xu,yu,vu']) -->>   Read the next 10 timesteps, only the specified columns (DELTA_TIMESTEP is assumed)
       traj.read_timesteps((10,30))      -->>  Read from TIMESTEP 10 to 30
       traj.read_timesteps((10,30,2))    -->>  Read every 2 steps from TIMESTEP 10 to 30
-      log.write_log traj.data
+      print(traj.data)
     """
 
     def __init__(self, *args, **kwargs):
@@ -104,7 +105,7 @@ class LAMMPS_Dump(object):
         self._read_ckeys(group_vectors, preload_timesteps)
         self.ckey = None
         #self.MAX_NSTEPS = data_length(self.filename)
-        #log.write_log "Data length = ", self.MAX_NSTEPS
+        #log.write_log("Data length = ", self.MAX_NSTEPS)
         return
 
     def __repr__(self):
@@ -409,7 +410,7 @@ class LAMMPS_Dump(object):
                     progbar.description = '%g %%' % progbar.value
                 else:
                     log.write_log('    step = {:9d} - {:6.2f}% completed'.format(istep + 1,
-                                                                         float(istep + 1) / self.nsteps * 100.))
+                                                                                 float(istep + 1) / self.nsteps * 100.))
         if self._GUI:
             progbar.close()
         # check number of steps read, keep an even number of steps

@@ -292,5 +292,5 @@ class CosFilter(object):
 #        else:
 #            self.optimalK_idx = np.NaN
 #            self.optimalK = np.NaN
-#            log.write_log 'Warning: optimal cutoff K NOT FOUND.'
+#            log.write_log(Warning: optimal cutoff K NOT FOUND.')
 #        return

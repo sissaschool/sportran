@@ -22,6 +22,11 @@ except ImportError:
     except ImportError:
         raise ImportError('Cannot locate thermocepstrum.')
 
+# import log-print method
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
+log.set_method('bash')
+
 #try to import plotstyle (not fundamental)
 try:
     import pkg_resources
@@ -39,10 +44,6 @@ try:
     plt.style.use(pltstyle_filename)
 except:
     pass
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
-
-log.set_method('bash')
 
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 

@@ -395,22 +395,24 @@ class MDBlocks(object):
                 self.flogtau_density_XAVE, self.flogtau_density_XSTD,
                 np.mean(np.mean(list(self.flogtau_density_xstd()))), np.std(list(self.flogtau_density_xstd()))))
             log.write_log('   flogtau[ave AIC_w] =  {:12f} +/- {:8f}'.format(self.flogtau_avedensity_XAVE,
-                                                                     self.flogtau_avedensity_XSTD))
+                                                                             self.flogtau_avedensity_XSTD))
 
             self.ftau_density_XAVE = np.mean(list(self.ftau_density_xave()))
             self.ftau_density_XSTD = np.std(list(self.ftau_density_xave()))
             #self.ftau_avedensity = np.mean(list(self.ftau_density()), axis=1)
             #self.ftau_avedensity_XAVE, self.ftau_avedensity_XSTD = ta.grid_statistics(self.density_grid, self.ftau_avedensity)
-            log.write_log('   ftau[AIC_w]        =  {:12f} +/- {:8f}'.format(self.ftau_density_XAVE, self.ftau_density_XSTD))
-            #log.write_log '   ftau[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.ftau_avedensity_XAVE, self.ftau_avedensity_XSTD)
+            log.write_log('   ftau[AIC_w]        =  {:12f} +/- {:8f}'.format(self.ftau_density_XAVE,
+                                                                             self.ftau_density_XSTD))
+            #log.write_log('   ftau[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.ftau_avedensity_XAVE, self.ftau_avedensity_XSTD))
 
             self.FTAU_density_XAVE = self.ftau_density_XAVE * 0.5 * self.tau_scale
             self.FTAU_density_XSTD = self.ftau_density_XSTD * 0.5 * self.tau_scale
             #self.FTAU_avedensity = self.ftau_avedensity*0.5*self.tau_scale
             #self.FTAU_avedensity_XAVE = self.ftau_avedensity_XAVE*0.5*self.tau_scale
             #self.FTAU_avedensity_XSTD = self.ftau_avedensity_XSTD*0.5*self.tau_scale
-            log.write_log('   FTAU[AIC_w]        =  {:12f} +/- {:8f}'.format(self.FTAU_density_XAVE, self.FTAU_density_XSTD))
-            #log.write_log '   FTAU[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.FTAU_avedensity_XAVE, self.FTAU_avedensity_XSTD)
+            log.write_log('   FTAU[AIC_w]        =  {:12f} +/- {:8f}'.format(self.FTAU_density_XAVE,
+                                                                             self.FTAU_density_XSTD))
+            #log.write_log('   FTAU[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.FTAU_avedensity_XAVE, self.FTAU_avedensity_XSTD))
         log.write_log()
         return
 

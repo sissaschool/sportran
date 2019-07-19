@@ -313,16 +313,16 @@ class HeatCurrent(MDSample):
         axes[1].grid()
         return axes
 
-    def resample_current(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz',
-                     FIGSIZE=None):
-        return resample_current(self, TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=plot, PSD_FILTER_W=PSD_FILTER_W,
-                                freq_units=freq_units)
+    def resample_current(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
+                         req_units='thz', FIGSIZE=None):   # yapf: disable
+        return resample_current(self, TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=plot,
+                                PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units)   # yapf: disable
 
 
 #is this function needed?
 #   def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None):
 #      """Multi-component kappa calculation."""
-#      log.write_log "HeatCurrent.compute_kappa_multi"
+#      log.write_log("HeatCurrent.compute_kappa_multi")
 #      if FILTER_WINDOW_WIDTH is None:
 #         FILTER_WINDOW_WIDTH = self.FILTER_WINDOW_WIDTH
 #      multi_mdsample = super(HeatCurrent, self).compute_kappa_multi(others, FILTER_WINDOW_WIDTH, DT_FS=self.DT_FS, call_other=True)
@@ -375,7 +375,8 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
             TSKIP = int(round(x.Nyquist_f_THz / fstar_THz))
     if plot:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, 1.0, axes=axes)
+        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, 1.0, axes=axes)   # this also updates x.FILTER_WINDOW_WIDTH
+
     fstar_THz = x.Nyquist_f_THz / TSKIP
     fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
 
@@ -383,24 +384,25 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     if FILTER_W is None:
         FILTER_W = TSKIP
     trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
+
+    # resample filtering window width in order to use the same filtering frequency window in the plot
+    # if PSD_FILTER_W was specified, then x.FILTER_WINDOW_WIDTH was updated by the previous plot function
+    if x.FILTER_WINDOW_WIDTH is not None:
+        PSD_FILTER_W = x.FILTER_WINDOW_WIDTH * TSKIP
+
+    # define new HeatCurrent
     if not x.multicomponent:
-        if x.FILTER_WINDOW_WIDTH is not None:
-            xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W= PSD_FILTER_W, freq_units=freq_units)
-        else:
-            xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME)
+        xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
     else:
         if x.otherMD is None:
-            raise ValueError('x.otherMD cannot be none (wrong/missing initialization?)')
+            raise RuntimeError('x.otherMD cannot be none (wrong/missing initialization?)')
         # filter_and_sample also other trajectories
         yf = []
         yf.append(trajf)
         for y in x.otherMD:
             tmp = md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
             yf.append(tmp)
-        if x.FILTER_WINDOW_WIDTH is not None:
-            xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W= PSD_FILTER_W, freq_units=freq_units)
-        else:
-            xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME)
+        xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
     if plot:
         if (freq_units == 'thz') or (freq_units == 'THz'):
             xf.plot_periodogram(x.FILTER_WINDOW_WIDTH * 1000. / x.DT_FS, 'thz', TSKIP, axes=axes)
@@ -409,26 +411,29 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
             log.write_log(x.FILTER_WINDOW_WIDTH)
             xf.plot_periodogram(x.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axes=axes)
 
-    xf.resample_log = '-----------------------------------------------------\n' +\
-                      '  RESAMPLE TIME SERIES\n' +\
-                      '-----------------------------------------------------\n' +\
-                      ' Original Nyquist freq  f_Ny =  {:12.5f} THz\n'.format(x.Nyquist_f_THz) +\
-                      ' Resampling freq          f* =  {:12.5f} THz\n'.format(fstar_THz) +\
-                      ' Sampling time         TSKIP =  {:12d} steps\n'.format(TSKIP) +\
-                      '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
-                      ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
-                      ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
+    # write log
+    xf.resample_log = \
+        '-----------------------------------------------------\n' +\
+        '  RESAMPLE TIME SERIES\n' +\
+        '-----------------------------------------------------\n' +\
+        ' Original Nyquist freq  f_Ny =  {:12.5f} THz\n'.format(x.Nyquist_f_THz) +\
+        ' Resampling freq          f* =  {:12.5f} THz\n'.format(fstar_THz) +\
+        ' Sampling time         TSKIP =  {:12d} steps\n'.format(TSKIP) +\
+        '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
+        ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
+        ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
     if x.fpsd is not None:
-        xf.resample_log = xf.resample_log + ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
-                                          '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
-                                          ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
-                                          '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
-                                          ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
-                                          ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
-                                          ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
+        xf.resample_log += \
+            ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
+            '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
+            ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
+            '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
+            ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
+            ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
+            ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
     else:
-        xf.resample_log = xf.resample_log + ' fPSD not calculated before resampling!\n '
-    xf.resample_log = xf.resample_log + '-----------------------------------------------------\n'
+        xf.resample_log += ' fPSD not calculated before resampling!\n '
+    xf.resample_log += '-----------------------------------------------------\n'
     log.write_log(xf.resample_log)
 
     if plot:

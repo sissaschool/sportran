@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 import sys
 import os
+import math
+import os.path
+import thermocepstrum as tc
+
 abs_path = os.path.abspath(sys.argv[0])
 tc_path = abs_path[:abs_path.rfind('/')]
 tc_path = tc_path[:tc_path.rfind('/')]
@@ -24,16 +30,11 @@ except:
 #plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 from matplotlib.ticker import MultipleLocator
-import math
-import os.path
-import thermocepstrum as tc
 
 try:
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 except:
     log.write_log('Error: cannot import inset_axes (will not be able to plot some parts of the plots)')
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
 
 
 def main():
@@ -91,7 +92,7 @@ def main():
             periodograms.append(np.loadtxt(fname + '.psd.dat', usecols=(3, 4), unpack=True))
         if periodograms[-1].shape != periodograms[0].shape:
             log.write_log(fname, ' not used (inconsistent shape with firts element)', periodograms[-1].shape,
-                  periodograms[0].shape)
+                          periodograms[0].shape)
             del periodograms[-1]
             continue
         if os.path.isfile(fname + '.cepstral.npy'):
@@ -131,7 +132,7 @@ def main():
         cepstrals[i].resize(cepstrals[0].shape)
     # *this does not work when using a lot of data
     #import pdb; pdb.set_trace()
-    #log.write_log periodograms[0].shape
+    #log.write_log(periodograms[0].shape)
     #for i in range(1,len(periodograms)):
     #    log.write_log i
     #    periodograms[i]=np.resize(periodograms[i],periodograms[0].shape)
@@ -199,8 +200,9 @@ def main():
     for i in range(all_cut):
         if mean_periodogram[0, i] > zero:
             selection_not_zero.append(i)
-    log.write_log('Number of components > {}: {}. Last is {}'.format(zero, len(selection_not_zero), selection_not_zero[-1]))
-    #     log.write_log selection_not_zero
+    log.write_log('Number of components > {}: {}. Last is {}'.format(zero, len(selection_not_zero),
+                                                                     selection_not_zero[-1]))
+    #     log.write_log(selection_not_zero)
 
     log.write_log('Index = {} , {} THz'.format(p95, freqs[p95]))
 
@@ -375,7 +377,7 @@ def main():
         plt.close()
 
         #         np.savetxt(output+'.histogram_all',np.c_[(intervals[1:]+intervals[:-1])/2.0,histogram/np.sum(histogram)])
-        #         log.write_log 'Histogram bin width: {}'.format(intervals[1]-intervals[0])
+        #         log.write_log('Histogram bin width: {}'.format(intervals[1]-intervals[0]))
 
         #         np.savetxt(output+'.kolmogorov_smirnov',[ks_0,ks_1,ks_all])
         log.write_log('Statistical test results (psd(0), psd(1), psd(all but 0)): {}'.format([ks__0, ks__1, ks_all]))
@@ -536,7 +538,7 @@ def n_tick_in_range(beg, end, n, n_c=1, nit=0):
     if cifre == 0:
         cifre = 1.0
     delta = cifre * e / 10**(n_c)
-    #log.write_log "n=",n, " dx0=",dx0," e=",e," m=" ,m," cifre=",cifre
+    #log.write_log("n=",n, " dx0=",dx0," e=",e," m=" ,m," cifre=", cifre)
     if nit < 30:
         if delta >= size:
             return n_tick_in_range(beg, end, n + 1, n_c, nit + 1)

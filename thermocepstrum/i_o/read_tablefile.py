@@ -30,13 +30,14 @@
 ###   example:
 ###      current = TableFile(filename)
 ###      current.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-###      log.write_log current.data
+###      print(current.data)
 ################################################################################
 
 import numpy as np
 from time import time
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
+
 
 def is_string(string):
     try:
@@ -78,7 +79,7 @@ class TableFile(object):
     Example:
       current = TableFile(filename)
       current.read_datalines(NSTEPS=100, select_ckeys=['Step', 'Temp', 'flux'])
-      log.write_log current.data
+      print(current.data)
 
     Variables (columns) are organized into a dictionary according to the column headers.
     LAMMPS-style vector variables header are grouped together (only if group_vector = True).
@@ -270,7 +271,8 @@ class TableFile(object):
                     progbar.value = float(step + 1) / NSTEPS * 100.
                     progbar.description = '{:6.2f}%'.format(progbar.value)
                 else:
-                    log.write_log('    step = {:9d} - {:6.2f}% completed'.format(step + 1, float(step + 1) / NSTEPS * 100.))
+                    log.write_log('    step = {:9d} - {:6.2f}% completed'.format(step + 1,
+                                                                                 float(step + 1) / NSTEPS * 100.))
 
         if self._GUI:
             progbar.close()

@@ -40,7 +40,7 @@
 ###  Example script:
 ###     data = LAMMPSLogFile('lammps.log', run_keyword='PRODUCTION RUN')
 ###     data.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-###     log.write_log data.data
+###     print(data.data)
 ###
 ###     # to save data into a Numpy file:
 ###     save_hc_npz(data, ['flux'], 'lammps.data', 'flux.npz')
@@ -50,6 +50,7 @@ import numpy as np
 from time import time
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
+
 
 def is_string(string):
     try:
@@ -120,7 +121,7 @@ class LAMMPSLogFile(object):
   Example script:
      data = LAMMPSLogFile(filename, run_keyword='PRODUCTION RUN')
      data.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-     log.write_log data.data
+     print(data.data)
 
      # to save data into a Numpyz file:
      save_hc_npz(data, ['flux'], 'lammps.data', 'flux.npz')
@@ -326,7 +327,8 @@ class LAMMPSLogFile(object):
                     progbar.value = float(step + 1) / NSTEPS * 100.
                     progbar.description = '{:6.2f}%'.format(progbar.value)
                 else:
-                    log.write_log('    step = {:9d} - {:6.2f}% completed'.format(step + 1, float(step + 1) / NSTEPS * 100.))
+                    log.write_log('    step = {:9d} - {:6.2f}% completed'.format(step + 1,
+                                                                                 float(step + 1) / NSTEPS * 100.))
 
         if self._GUI:
             progbar.close()
@@ -400,7 +402,7 @@ def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilena
     if 'Time' in lammpslogfile.ckey:
         dic['DT_TIMEUNITS'] = lammpslogfile.data['Time'][1, 0] - lammpslogfile.data['Time'][0, 0]
 
-    log.write_log("These keys will be saved in file \"{:}\" :".format(outfilename))
+    log.write_log('These keys will be saved in file \"{:}\" :'.format(outfilename))
     log.write_log(' ', list(dic.keys()))
     np.savez(outfilename, **dic)
     return
