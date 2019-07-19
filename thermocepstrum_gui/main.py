@@ -503,8 +503,6 @@ class FileManager(Frame):
         for file in files:
             file_name, file_type = file.split('.')
             file_size = cu.get_file_size(os.path.join(settings.DATA_PATH, file))
-
-
             self.loaded_files.append((file_name, file_type, file_size))
 
         # Set column header
@@ -550,11 +548,15 @@ class FileManager(Frame):
         This function allow the user to search in a more accurately way the file
         by using the OS manager.
         '''
-        path = dialog.askopenfile(initialdir="/",
+        path = dialog.askopenfile(initialdir=os.getcwd(),
                                   title="Select file",
                                   filetypes=(("all files", "*.*"), ))
 
         # self.selected.delete(0, END)
+
+        settings.DATA_PATH = os.path.dirname(path.name)
+        self._parse_files()
+
         self.selected.insert(INSERT, path.name)
         self.load_file_settings(path.name)
     

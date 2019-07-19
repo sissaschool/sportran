@@ -385,10 +385,12 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         FILTER_W = TSKIP
     trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
 
+    #TODO: document the units of frequency used everywere in the library and use a consistent scheme.
+
     # resample filtering window width in order to use the same filtering frequency window in the plot
     # if PSD_FILTER_W was specified, then x.FILTER_WINDOW_WIDTH was updated by the previous plot function
-    if x.FILTER_WINDOW_WIDTH is not None:
-        PSD_FILTER_W = x.FILTER_WINDOW_WIDTH * TSKIP
+    #if x.FILTER_WINDOW_WIDTH is not None:
+    #    PSD_FILTER_W = x.FILTER_WINDOW_WIDTH * TSKIP
 
     # define new HeatCurrent
     if not x.multicomponent:
