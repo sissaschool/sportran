@@ -314,7 +314,7 @@ class HeatCurrent(MDSample):
         return axes
 
     def resample_current(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
-                         req_units='thz', FIGSIZE=None):   # yapf: disable
+                         freq_units='thz', FIGSIZE=None):   # yapf: disable
         return resample_current(self, TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=plot,
                                 PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units)   # yapf: disable
 

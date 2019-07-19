@@ -42,6 +42,6 @@ Y_SPACING = 200
 
 # -------- GRAPHIC SETTINGS --------
 
-BG_COLOR = '#000000'
+BG_COLOR = '#ffffff'
 FONT = 'Arial'
 FONT_SIZE = 11
