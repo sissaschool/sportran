@@ -22,11 +22,9 @@ from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.figure import Figure
 import matplotlib.patches as patches
 
-import numpy as np
-
 from tkinter import *
 from tkinter import ttk
-from tkinter.ttk import Separator, Progressbar
+from tkinter.ttk import Separator
 from tkinter import messagebox as msg
 import tkinter.filedialog as dialog
 from tkinter.font import Font
@@ -38,11 +36,13 @@ try:
 except ImportError:
     from thermocepstrum_gui.utils.utils import PrintMethod
 
+# Verify that thermocepstrum is installed
 try:
     import thermocepstrum
 except ImportError:
     raise ImportError('Couldn\'t find thermocepstrum')
 
+# Init print method
 log = PrintMethod()
 
 
@@ -51,10 +51,12 @@ class ThermocepstrumGUI(Tk):
     open_windows = []
     frames = []
     frame = None
+    root = None
 
     def __init__(self, version, dev_state, last_release, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
 
+        ThermocepstrumGUI.root = self
         self.option_add("*Font", "{} {}".format(settings.FONT, settings.FONT_SIZE))
         self.option_add("*Background", "{}".format(settings.BG_COLOR))
         self.option_add("*selectBackground", "light blue")
@@ -87,7 +89,7 @@ class ThermocepstrumGUI(Tk):
 
         ThermocepstrumGUI.frames = {}
 
-        for F in (FileManager, Cutter, PStar, Output):
+        for F in (FileManager, HeaderSelector, OtherVariables, FStarSelector, PStarSelector):
             ThermocepstrumGUI.frame = F(container, self)
 
             ThermocepstrumGUI.frames[F] = ThermocepstrumGUI.frame
@@ -104,8 +106,16 @@ class ThermocepstrumGUI(Tk):
 
 class TopBar(Frame):
 
+    show_logs = None
+    show_info = None
+
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
+
+        self.parent = parent
+
+        TopBar.show_logs = BooleanVar()
+        TopBar.show_info = BooleanVar()
 
         # Setup the top menu
         top_menu = Menu(self)
@@ -122,9 +132,11 @@ class TopBar(Frame):
         file_menu.add_separator()
         file_menu.add_command(label='Exit', command=lambda: cu.secure_exit(ThermocepstrumGUI))
 
-        # Create the tool section of the top menu
-        # tool_menu = Menu(top_menu, tearoff=False)
-        # top_menu.add_cascade(label='Tools', menu=tool_menu)
+        # Create the view section of the top menu
+        view_menu = Menu(top_menu, tearoff=False)
+        top_menu.add_cascade(label='View', menu=view_menu)
+        view_menu.add_checkbutton(label='Show logs', variable=TopBar.show_logs, onvalue=1, offvalue=0, command=self._update_window)
+        view_menu.add_checkbutton(label='Show info', variable=TopBar.show_info, onvalue=1, offvalue=0, command=self._update_window)
 
         # Create the info section of the top menu
         file_menu = Menu(top_menu, tearoff=False)
@@ -137,6 +149,9 @@ class TopBar(Frame):
         file_menu.add_command(label='About')
         file_menu.add_separator()
         file_menu.add_command(label='Help')
+
+    def _update_window(self):
+        ThermocepstrumGUI.frame.update()
 
 
 class StatusFrame(Frame):
@@ -329,23 +344,18 @@ class CheckList(Frame):
         self.controller = controller
         self.combo_func = None
         if list:
-            for row, el in enumerate(list(check_list.keys())):
-                chk = ttk.Checkbutton(self.controller, text=el)
-                chk.grid(row=row, column=0)
-                chk.state(['!selected'])
+            self.set_list(check_list)
 
     def set_list(self, check_list):
         self.clear_list()
         for row, el in enumerate(list(check_list.keys())):
                 frame = Frame(self.controller)
                 frame.grid(row=row, column=0, sticky='we', pady=2)
-                chk = ttk.Checkbutton(frame, text=el)
-                chk.grid(row=0, column=0, padx=2)
+                Label(frame, text=el, font="{} 12 bold".format(settings.FONT)).grid(row=0, column=0)
                 cmb = ttk.Combobox(frame, values=["None", "Heat current", "Other current", "Temperature"], state='readonly', width=12)
                 cmb.bind('<<ComboboxSelected>>', self.combo_func)
                 cmb.current(0)
                 cmb.grid(row=0, column=1, sticky='e')
-                #chk.deselect()
 
     def clear_list(self):
         for el in self.controller.winfo_children():
@@ -356,11 +366,11 @@ class CheckList(Frame):
         combo = []
 
         for el in self.controller.winfo_children():
-            chk = el.winfo_children()[0]
+            header = el.winfo_children()[0]
             cmb = el.winfo_children()[1]
 
-            if chk.instate(['selected']):
-                check.append(chk['text'])
+            if cmb.get() is not None:
+                check.append(header['text'])
                 combo.append(cmb.get())
 
         return check, combo
@@ -371,22 +381,29 @@ class CheckList(Frame):
 
 class ScrollFrame(Frame):
 
-    def __init__(self, parent, controller, width=0, height=0):
+    def __init__(self, parent, controller, width=0, height=0, bd=0):
         Frame.__init__(self, parent)
 
         if width or height:
-            self.canvas = Canvas(controller, borderwidth=0, background=settings.BG_COLOR, width=width, height=height)
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=settings.BG_COLOR, width=width, height=height)
         else:
-            self.canvas = Canvas(controller, borderwidth=0, background=settings.BG_COLOR)
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=settings.BG_COLOR)
         self.viewPort = Frame(self.canvas, background=settings.BG_COLOR)
         self.vsb = Scrollbar(controller, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
         self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(side=TOP, fill="both", expand=True, anchor='n')
+        self.canvas.pack(fill=BOTH, expand=1)
         self.canvas.create_window(0, 0, window=self.viewPort, tags="self.viewPort")
 
         self.viewPort.bind("<Configure>", self.on_frame_configure)
+
+        self.viewPort.bind("<MouseWheel>", self._on_mousewheel)
+        self.viewPort.bind("<Button-4>", self._on_mousewheel)
+        self.viewPort.bind("<Button-5>", self._on_mousewheel)
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(-1 * int((event.delta / 120)), "units")
 
     def on_frame_configure(self, event):
         '''
@@ -397,7 +414,6 @@ class ScrollFrame(Frame):
 
 
 class FileManager(Frame):
-    # todo: add a function to update the file manager
     SortDir = True
 
     def __init__(self, parent, controller):
@@ -409,14 +425,17 @@ class FileManager(Frame):
         file_manager = Frame(self.main_frame.viewPort)
         file_manager.pack(fill=BOTH, expand=True, padx=100, pady=30)
 
+        Label(file_manager, text='Select a file', font='Arial 11 bold').grid(row=0, column=0, sticky='w')
+
         prev_frame = Frame(self.main_frame.viewPort, height=10)
         prev_frame.pack(fill=BOTH, expand=True, padx=100, pady=20)
 
+        Label(prev_frame, text='File preview', font='Arial 11 bold').pack(side=TOP, anchor='w')
         self.preview = Text(prev_frame, bd=1, relief=SOLID, height=10)
         self.preview.pack(fill=BOTH, expand=True, side=TOP)
         self.preview.config(state=NORMAL)
 
-        settings_frame = Frame(self.main_frame.viewPort, width=400)
+        settings_frame = Frame(self.main_frame.viewPort)
         settings_frame.pack(fill=BOTH, expand=True, padx=100)
 
         selection_frame = Frame(settings_frame)
@@ -436,36 +455,36 @@ class FileManager(Frame):
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
 
-        Label(selection_frame, text='Filter width: ').grid(row=1, column=0, sticky='e')
-        self.filter_width_entry = Spinbox(selection_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
-        self.filter_width_entry.grid(row=1, column=1, padx=2, sticky='w', pady=10)
-
-        Label(selection_frame, text='Keys ').grid(row=2, column=0)
-        check_frame = Frame(selection_frame, width=100)
-        check_frame.grid(row=3, column=0, pady=10)
-
-        check_scrollable = ScrollFrame(self.main_frame.viewPort, check_frame, 200, 100)
-        self.check_list = CheckList(check_scrollable, check_scrollable.viewPort)
-        self.check_list.attach_function_on_combo(self._update_status)
-
-        enviroment_settings = Frame(selection_frame, width=200)
-        enviroment_settings.grid(row=3, column=1)
-
-        Label(enviroment_settings, text='Temperature: ').grid(row=0, column=0, sticky='w')
-        self.temperature_entry = Spinbox(enviroment_settings, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
-        self.temperature_entry.grid(row=0, column=1, padx=2, sticky='w', pady=10)
-
-        Label(enviroment_settings, text='Volume: ').grid(row=1, column=0, sticky='w')
-        self.volume_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
-        self.volume_entry.grid(row=1, column=1, padx=2, sticky='w')
-
-        Label(enviroment_settings, text='DT_FS: ').grid(row=2, column=0, sticky='w')
-        self.DT_FS_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
-        self.DT_FS_entry.grid(row=2, column=1, padx=2, sticky='w', pady=10)
-
-        self.start_button = Button(selection_frame, text='Start analysis', relief=SOLID, bd=1,
-                                   command=self._start_analysis)
-        self.start_button.grid(row=5, column=0, sticky='w', pady=10)
+        # Label(selection_frame, text='Filter width: ').grid(row=1, column=0, sticky='e')
+        # self.filter_width_entry = Spinbox(selection_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
+        # self.filter_width_entry.grid(row=1, column=1, padx=2, sticky='w', pady=10)
+        #
+        # Label(selection_frame, text='Keys ').grid(row=2, column=0)
+        # check_frame = Frame(selection_frame, width=100)
+        # check_frame.grid(row=3, column=0, pady=10)
+        #
+        # check_scrollable = ScrollFrame(self.main_frame.viewPort, check_frame, 200, 100, 1)
+        # self.check_list = CheckList(check_scrollable, check_scrollable.viewPort)
+        # self.check_list.attach_function_on_combo(self._update_status)
+        #
+        # enviroment_settings = Frame(selection_frame, width=200)
+        # enviroment_settings.grid(row=3, column=1)
+        #
+        # Label(enviroment_settings, text='Temperature: ').grid(row=0, column=0, sticky='w')
+        # self.temperature_entry = Spinbox(enviroment_settings, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
+        # self.temperature_entry.grid(row=0, column=1, padx=2, sticky='w', pady=10)
+        #
+        # Label(enviroment_settings, text='Volume: ').grid(row=1, column=0, sticky='w')
+        # self.volume_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
+        # self.volume_entry.grid(row=1, column=1, padx=2, sticky='w')
+        #
+        # Label(enviroment_settings, text='DT_FS: ').grid(row=2, column=0, sticky='w')
+        # self.DT_FS_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
+        # self.DT_FS_entry.grid(row=2, column=1, padx=2, sticky='w', pady=10)
+        #
+        self.next_button = Button(selection_frame, text='Next', relief=SOLID, bd=1,
+                                   command=lambda: self.next())
+        self.next_button.grid(row=5, column=0, sticky='w', pady=10)
 
         self._start_file_manager(file_manager)
         self._parse_files()
@@ -484,11 +503,11 @@ class FileManager(Frame):
         self.file_list['yscroll'] = ysb.set
 
         # add scrollbars to frame
-        self.file_list.grid(row=0, column=0, sticky=NSEW)
-        ysb.grid(row=0, column=1, sticky='ns')
+        self.file_list.grid(row=1, column=0, sticky=NSEW)
+        ysb.grid(row=1, column=1, sticky='ns')
 
         self.file_list.bind('<<TreeviewSelect>>', self._select_file)
-        self.file_list.bind('<Double-1>', self._start_analysis)
+        self.file_list.bind('<Double-1>', self.next)
         # set frame resize priorities
         inner_frame.rowconfigure(0, weight=1)
         inner_frame.columnconfigure(0, weight=1)
@@ -554,6 +573,9 @@ class FileManager(Frame):
 
         # self.selected.delete(0, END)
 
+        for item in self.file_list.get_children():
+            self.file_list.delete(item)
+
         settings.DATA_PATH = os.path.dirname(path.name)
         self._parse_files()
 
@@ -567,49 +589,64 @@ class FileManager(Frame):
             self.preview.delete('1.0', END)
             self.preview.insert('1.0', lines)
             self.preview.config(state=DISABLED)
-        keys = cu.load_keys(path)
-        self.check_list.set_list(keys)
+        # keys = cu.load_keys(path)
+        # self.check_list.set_list(keys)
 
-    def _start_analysis(self, ev=None):
+    # def _start_analysis(self, ev=None):
+    #     if self.selected.get():
+    #         if os.path.exists(self.selected.get()):
+    #             if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
+    #                 cu.CURRENT_FILE = self.selected.get()
+    #                 # load_process = LoadingWindow(cu.get_file_size(cu.CURRENT_FILE))
+    #                 if not cu.Data.loaded:
+    #                     psd_filter_w = float(self.filter_width_entry.get())
+    #                     cu.Data.psd_filter_width = psd_filter_w
+    #                     keys, description = self.check_list.get_list()
+    #
+    #                     if description.count('Heat current') == 1:
+    #                         if description.count('Temperature') <= 1:
+    #                             if keys:
+    #
+    #                                 temperature = float(self.temperature_entry.get())
+    #                                 volume = float(self.volume_entry.get())
+    #                                 DT_FS = float(self.DT_FS_entry.get())
+    #
+    #                                 if (temperature > 0 or description.count('Temperature') is 1) and volume > 0 and DT_FS > 0:
+    #                                     cu.load_data(self.selected.get(),
+    #                                         self.input_selector.get(),
+    #                                         keys,
+    #                                         descriptions=description,
+    #                                         temperature=temperature,
+    #                                         units='metal',
+    #                                         volume=volume,
+    #                                         psd_filter_w=psd_filter_w,
+    #                                         DT_FS=DT_FS)
+    #
+    #                                     ThermocepstrumGUI.show_frame(FStarSelector)
+    #                                     ThermocepstrumGUI.frame.update()
+    #                                 else:
+    #                                     msg.showerror('Value error', 'Temperature, volume and DT_FS can\'t be less than 0')
+    #                             else:
+    #                                 msg.showerror('No keys selected', 'You must select almost one header key!')
+    #                         else:
+    #                             msg.showerror('Value error', 'You can\'t assign more than one time the value "Temperature"')
+    #                     else:
+    #                         msg.showerror('Value error', 'You must assign only one "Heat current" value')
+    #             else:
+    #                 msg.showerror('Invalid format!', 'The file that you have selected has an invalid format!')
+    #         else:
+    #             msg.showerror('File doesn\'t exists!', 'The file that you have selected doesn\'t exists!')
+    #     else:
+    #         msg.showerror('No file selected!', 'You must select a data file!')
+
+    def next(self, ev=None):
         if self.selected.get():
             if os.path.exists(self.selected.get()):
                 if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
-                    cu.CURRENT_FILE = self.selected.get()
-                    # load_process = LoadingWindow(cu.get_file_size(cu.CURRENT_FILE))
-                    if not cu.Data.loaded:
-                        psd_filter_w = float(self.filter_width_entry.get())
-                        cu.Data.psd_filter_width = psd_filter_w
-                        keys, description = self.check_list.get_list()
+                    cu.Data.CURRENT_FILE = self.selected.get()
+                    cu.Data.inputformat = self.input_selector.get()
 
-                        if description.count('Heat current') == 1:
-                            if description.count('Temperature') <= 1:
-                                if keys:
-
-                                    temperature = float(self.temperature_entry.get())
-                                    volume = float(self.volume_entry.get())
-                                    DT_FS = float(self.DT_FS_entry.get())
-
-                                    if (temperature > 0 or description.count('Temperature') is 1) and volume > 0 and DT_FS > 0:
-                                        cu.load_data(self.selected.get(),
-                                            self.input_selector.get(),
-                                            keys,
-                                            descriptions=description,
-                                            temperature=temperature,
-                                            units='metal',
-                                            volume=volume,
-                                            psd_filter_w=psd_filter_w,
-                                            DT_FS=DT_FS)
-
-                                        ThermocepstrumGUI.show_frame(Cutter)
-                                        ThermocepstrumGUI.frame.update()
-                                    else:
-                                        msg.showerror('Value error', 'Temperature, volume and DT_FS can\'t be less than 0')
-                                else:
-                                    msg.showerror('No keys selected', 'You must select almost one header key!')
-                            else:
-                                msg.showerror('Value error', 'You can\'t assign more than one time the value "Temperature"')
-                        else:
-                            msg.showerror('Value error', 'You must assign only one "Heat current" value')
+                    ThermocepstrumGUI.show_frame(HeaderSelector)
                 else:
                     msg.showerror('Invalid format!', 'The file that you have selected has an invalid format!')
             else:
@@ -617,23 +654,213 @@ class FileManager(Frame):
         else:
             msg.showerror('No file selected!', 'You must select a data file!')
 
-    def _update_status(self, ev):
-        if 'Temperature' in self.check_list.get_list()[1]:
-            self.temperature_entry.config(state=DISABLED)
-        else:
-            self.temperature_entry.config(state=NORMAL)
+
+    # def _update_status(self, ev):
+    #     if 'Temperature' in self.check_list.get_list()[1]:
+    #         self.temperature_entry.config(state=DISABLED)
+    #     else:
+    #         self.temperature_entry.config(state=NORMAL)
 
     def update(self):
         self.main_frame.canvas.yview_moveto(0)
 
 
-class Cutter(Frame):
+class HeaderSelector(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+
+        TopBar(parent, controller)
+        self.main_frame = ScrollFrame(controller, self)
+
+        header_frame = Frame(self.main_frame.viewPort)
+        header_frame.pack(fill=BOTH, expand=1, padx=100, pady=20)
+
+        Label(header_frame, text='Define the use of the headers').grid(row=0, column=0, sticky='w')
+        definitions_frame = Frame(header_frame)
+        definitions_frame.grid(row=1, column=1, sticky='n', padx=20)
+        Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wn')
+        Label(definitions_frame, text='Temperature: the header that will be used to calculate the temperature').grid(row=1, column=0, sticky='wn')
+        # todo: put definition
+        Label(definitions_frame, text='Heat current: put definition').grid(row=2, column=0, sticky='wn')
+        Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wn')
+
+        header_list_frame = Frame(header_frame)
+        header_list_frame.grid(row=1, column=0, sticky='w', pady=10)
+
+        scrollable_header_list = ScrollFrame(self.main_frame, header_list_frame, bd=1)
+        self.check_list = CheckList(scrollable_header_list, scrollable_header_list.viewPort)
+
+        button_frame = Frame(header_frame)
+        button_frame.grid(row=2, column=0, sticky='w')
+
+        Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
+               command=lambda: self.back()).grid(row=0, column=0)
+
+        Button(button_frame, text='Next', bd=1, relief=SOLID, font='Arial 12',
+               command=lambda: self.next()).grid(row=0, column=1, padx=5)
+
+    def next(self):
+        keys, description = self.check_list.get_list()
+        if 'Heat current' in description:
+            if description.count('Heat current') == 1:
+                if description.count('Temperature') <= 1:
+                    cu.Data.keys = keys
+                    cu.Data.description = description
+
+                    ThermocepstrumGUI.show_frame(OtherVariables)
+                else:
+                    msg.showerror('Value error', 'You can\'t assign more than one time the value "Temperature"')
+            else:
+                msg.showerror('Value error', 'You must assign only one "Heat current" value')
+        else:
+            msg.showerror('No keys selected', 'You must select almost one header key!')
+
+    def back(self):
+        cu.Data.keys = None
+        cu.Data.description = None
+
+        ThermocepstrumGUI.show_frame(FileManager)
+
+    def update(self):
+        keys = cu.load_keys(cu.Data.CURRENT_FILE)
+        self.check_list.set_list(keys)
+
+
+class OtherVariables(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
 
         TopBar(parent, controller)
 
+        self.main_frame = ScrollFrame(controller, self)
+
+        variable_frame = Frame(self.main_frame.viewPort)
+        variable_frame.pack(fill=BOTH, expand=True, padx=100)
+
+        Label(variable_frame, text='Set variables', font='Arial 11 bold').grid(row=0, column=0, pady=2, sticky='w')
+
+        Label(variable_frame, text='Environment variables', font='Arial 11').grid(row=1, column=0, pady=20)
+        Separator(variable_frame, orient=HORIZONTAL).grid(row=2, sticky='we', columnspan=3)
+
+        Label(variable_frame, text='Temperature: ').grid(row=3, column=0, sticky='w')
+        self.temperature_entry = Spinbox(variable_frame, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
+        self.temperature_entry.grid(row=3, column=1, padx=2, sticky='w', pady=10)
+        self.temp_advertise = Label(variable_frame, text='', font='Arial 10')
+        self.temp_advertise.grid(row=3, column=2, sticky='w')
+
+        Label(variable_frame, text='Volume: ').grid(row=4, column=0, sticky='w')
+        self.volume_entry = Entry(variable_frame, bd=1, relief=SOLID)
+        self.volume_entry.grid(row=4, column=1, padx=2, sticky='w')
+
+        Label(variable_frame, text='DT_FS: ').grid(row=5, column=0, sticky='w')
+        self.DT_FS_entry = Entry(variable_frame, bd=1, relief=SOLID)
+        self.DT_FS_entry.grid(row=5, column=1, padx=2, sticky='w', pady=10)
+
+        Label(variable_frame, text='Filter variables', font='Arial 11').grid(row=6, column=0, pady=20, sticky='w')
+        Separator(variable_frame, orient=HORIZONTAL).grid(row=7, sticky='we', columnspan=3)
+
+        Label(variable_frame, text='Filter width: ').grid(row=8, column=0, sticky='w')
+        self.filter_width_entry = Spinbox(variable_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
+        self.filter_width_entry.grid(row=8, column=1, padx=2, sticky='w', pady=10)
+
+        button_frame = Frame(variable_frame)
+        button_frame.grid(row=9, column=0, sticky='w')
+
+        Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
+               command=lambda: self.back()).grid(row=0, column=0)
+
+        Button(button_frame, text='Next', bd=1, relief=SOLID, font='Arial 12',
+               command=lambda: self.next()).grid(row=0, column=1, padx=5)
+
+    def next(self):
+        psd_filter_width = None
+        temperature = None
+        volume = None
+        DT_FS = None
+
+        if self.filter_width_entry.get():
+            psd_filter_width = float(self.filter_width_entry.get())
+        if self.temperature_entry.get():
+            temperature = float(self.temperature_entry.get())
+        if self.volume_entry.get():
+            volume = float(self.volume_entry.get())
+        if self.DT_FS_entry.get():
+            DT_FS = float(self.DT_FS_entry.get())
+
+        er = False
+        msgs = []
+        if temperature:
+            if temperature < 0 and not 'Temperature' in cu.Data.description:
+                msgs.append('Temperature can\'t be less than 0')
+                er = True
+        else:
+            msgs.append('Temperature can\'t be void')
+
+        if volume:
+            if volume < 0:
+                msgs.append('Volume can\'t be less than 0')
+                er = True
+        else:
+            msgs.append('Volume can\'t be void')
+            er = True
+
+        if DT_FS:
+            if DT_FS < 0:
+                msgs.append('DT_FS can\'t be less than 0')
+                er = True
+        else:
+            msgs.append('DT_FS can\'t be void')
+            er = True
+
+        if psd_filter_width:
+            if psd_filter_width < 0:
+                msgs.append('Filter width can\'t be less than 0')
+                er = True
+        else:
+            msgs.append('Filter width can\'t be void')
+            er = True
+
+        if not er:
+            cu.Data.psd_filter_width = psd_filter_width
+            cu.load_data(cu.Data.CURRENT_FILE,
+                         cu.Data.inputformat,
+                         cu.Data.keys,
+                         descriptions=cu.Data.description,
+                         temperature=temperature,
+                         units='metal',
+                         volume=volume,
+                         psd_filter_w=cu.Data.psd_filter_width,
+                         DT_FS=DT_FS)
+
+            ThermocepstrumGUI.show_frame(FStarSelector)
+        else:
+            ermsg = '\n'.join(mser for mser in msgs)
+            msg.showerror('Value error', ermsg)
+
+    def back(self):
+        cu.Data.psd_filter_width = 0.1
+
+        ThermocepstrumGUI.show_frame(HeaderSelector)
+
+    def update(self):
+        if 'Temperature' in cu.Data.description:
+            self.temperature_entry.config(state=DISABLED)
+            self.temp_advertise.config(text='The temperature will be automatically calculated')
+        else:
+            self.temperature_entry.config(state=NORMAL)
+            self.temp_advertise.config(text='')
+
+
+class FStarSelector(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+
+        TopBar(parent, controller)
+
+        self.parent = parent
         main_frame = Frame(self)
         main_frame.pack(expand=True, fill=BOTH)
 
@@ -681,12 +908,14 @@ class Cutter(Frame):
 
         Button(slider_frame, text='View', command=lambda: self._change_view()).grid(row=0, column=2, sticky='w')
 
-        info_section = Frame(main_frame)
-        info_section.grid(row=0, column=2, sticky='n', pady=40)
+        self.info_section = Frame(main_frame)
+        self.info_section.grid(row=0, column=2, sticky='n', pady=40)
 
+        self.logs = None
+        self.info = None
 
-        self.logs = TextWidget(parent, info_section, 'Logs', 15, 45)
-        self.info = TextWidget(parent, info_section, 'Info', 10, 45)
+        self._init_output_frame()
+
         # StatusFrame(parent, controller)
 
     def _lock_unlock_slider(self, force=False):
@@ -708,6 +937,28 @@ class Cutter(Frame):
 
             self.graph.change_view()
             self.graph.update_cut()
+
+    def _init_output_frame(self):
+        if TopBar.show_logs.get():
+            if not self.logs:
+                self.logs = TextWidget(self.parent, self.info_section, 'Logs', 15, 45)
+        else:
+            if self.logs:
+                self._del_out_frames()
+
+        if TopBar.show_info.get():
+            if not self.info:
+                self.info = TextWidget(self.parent, self.info_section, 'Info', 10, 45)
+        else:
+            if self.info:
+                self._del_out_frames()
+
+    def _del_out_frames(self):
+        for el in self.info_section.winfo_children():
+            el.destroy()
+        self.logs = None
+        self.info = None
+        self.update()
 
     def resample(self):
         cu.Data.fstar = float(self.value_entry.get())
@@ -747,19 +998,24 @@ class Cutter(Frame):
     def next(self):
         self.resample()
         cu.Data.fstar = float(self.value_entry.get())
-        ThermocepstrumGUI.show_frame(PStar)
+        ThermocepstrumGUI.show_frame(PStarSelector)
 
     def update(self):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j, PSD_FILTER_W=cu.Data.psd_filter_width)
-        cu.update_info(self.info)
-        log.set_func(self.logs.write)
+        self._init_output_frame()
+        if self.info:
+            cu.update_info(self.info)
+        if self.logs:
+            log.set_func(self.logs.write)
         # self.graph.cut_line = cu.Data.fstar
 
 
-class PStar(Frame):
+class PStarSelector(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
+
+        self.parent = parent
 
         TopBar(parent, controller)
 
@@ -804,16 +1060,40 @@ class PStar(Frame):
         next_button = Button(button_frame, text='Recalculate', bd=1, relief=SOLID, command=self._reload)
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
-        info_section = Frame(self)
-        info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
+        self.info_section = Frame(self)
+        self.info_section.pack(side=RIGHT, anchor='n', pady=30, padx=20, fill='x', expand=True)
 
-        self.logs = TextWidget(parent, info_section, 'Logs', 15, 45)
-        self.info = TextWidget(parent, info_section, 'Info', 10, 45)
+        self.logs = None
+        self.info = None
+
+        self._init_output_frame()
 
         self.setted = False
 
+    def _init_output_frame(self):
+        if TopBar.show_logs.get():
+            if not self.logs:
+                self.logs = TextWidget(self.parent, self.info_section, 'Logs', 15, 45)
+        else:
+            if self.logs:
+                self._del_out_frames()
+
+        if TopBar.show_info.get():
+            if not self.info:
+                self.info = TextWidget(self.parent, self.info_section, 'Info', 10, 45)
+        else:
+            if self.info:
+                self._del_out_frames()
+
+    def _del_out_frames(self):
+        for el in self.info_section.winfo_children():
+            el.destroy()
+        self.logs = None
+        self.info = None
+        self.update()
+
     def back(self):
-        ThermocepstrumGUI.show_frame(Cutter)
+        ThermocepstrumGUI.show_frame(FStarSelector)
 
     def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
         cu.Data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor-1)
@@ -854,18 +1134,14 @@ class PStar(Frame):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
                              PSD_FILTER_W=cu.Data.psd_filter_width)
-        cu.update_info(self.info)
-        log.set_func(self.logs.write)
+
+        self._init_output_frame()
+        if self.info:
+            cu.update_info(self.info)
+        if self.logs:
+            log.set_func(self.logs.write)
         self._reload()
         self.graph.update_cut()
-
-
-class Output(Frame):
-
-    def __init__(self, parent, controller):
-        Frame.__init__(self, parent)
-
-        TopBar(parent, controller)
 
 
 class LoadingWindow(Tk):

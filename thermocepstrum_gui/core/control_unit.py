@@ -28,6 +28,9 @@ class Data:
     xf = None
     axis = None
 
+    keys = None
+    description = None
+
     temperature = 0
     temperature_std = 0
     volume = 0
