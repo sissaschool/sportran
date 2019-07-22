@@ -455,41 +455,12 @@ class FileManager(Frame):
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
 
-        # Label(selection_frame, text='Filter width: ').grid(row=1, column=0, sticky='e')
-        # self.filter_width_entry = Spinbox(selection_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
-        # self.filter_width_entry.grid(row=1, column=1, padx=2, sticky='w', pady=10)
-        #
-        # Label(selection_frame, text='Keys ').grid(row=2, column=0)
-        # check_frame = Frame(selection_frame, width=100)
-        # check_frame.grid(row=3, column=0, pady=10)
-        #
-        # check_scrollable = ScrollFrame(self.main_frame.viewPort, check_frame, 200, 100, 1)
-        # self.check_list = CheckList(check_scrollable, check_scrollable.viewPort)
-        # self.check_list.attach_function_on_combo(self._update_status)
-        #
-        # enviroment_settings = Frame(selection_frame, width=200)
-        # enviroment_settings.grid(row=3, column=1)
-        #
-        # Label(enviroment_settings, text='Temperature: ').grid(row=0, column=0, sticky='w')
-        # self.temperature_entry = Spinbox(enviroment_settings, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
-        # self.temperature_entry.grid(row=0, column=1, padx=2, sticky='w', pady=10)
-        #
-        # Label(enviroment_settings, text='Volume: ').grid(row=1, column=0, sticky='w')
-        # self.volume_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
-        # self.volume_entry.grid(row=1, column=1, padx=2, sticky='w')
-        #
-        # Label(enviroment_settings, text='DT_FS: ').grid(row=2, column=0, sticky='w')
-        # self.DT_FS_entry = Entry(enviroment_settings, bd=1, relief=SOLID)
-        # self.DT_FS_entry.grid(row=2, column=1, padx=2, sticky='w', pady=10)
-        #
         self.next_button = Button(selection_frame, text='Next', relief=SOLID, bd=1,
                                    command=lambda: self.next())
         self.next_button.grid(row=5, column=0, sticky='w', pady=10)
 
         self._start_file_manager(file_manager)
         self._parse_files()
-
-        # StatusFrame(controller, self)
 
     def _start_file_manager(self, parent):
         inner_frame = parent
@@ -508,6 +479,7 @@ class FileManager(Frame):
 
         self.file_list.bind('<<TreeviewSelect>>', self._select_file)
         self.file_list.bind('<Double-1>', self.next)
+
         # set frame resize priorities
         inner_frame.rowconfigure(0, weight=1)
         inner_frame.columnconfigure(0, weight=1)
@@ -589,55 +561,6 @@ class FileManager(Frame):
             self.preview.delete('1.0', END)
             self.preview.insert('1.0', lines)
             self.preview.config(state=DISABLED)
-        # keys = cu.load_keys(path)
-        # self.check_list.set_list(keys)
-
-    # def _start_analysis(self, ev=None):
-    #     if self.selected.get():
-    #         if os.path.exists(self.selected.get()):
-    #             if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
-    #                 cu.CURRENT_FILE = self.selected.get()
-    #                 # load_process = LoadingWindow(cu.get_file_size(cu.CURRENT_FILE))
-    #                 if not cu.Data.loaded:
-    #                     psd_filter_w = float(self.filter_width_entry.get())
-    #                     cu.Data.psd_filter_width = psd_filter_w
-    #                     keys, description = self.check_list.get_list()
-    #
-    #                     if description.count('Heat current') == 1:
-    #                         if description.count('Temperature') <= 1:
-    #                             if keys:
-    #
-    #                                 temperature = float(self.temperature_entry.get())
-    #                                 volume = float(self.volume_entry.get())
-    #                                 DT_FS = float(self.DT_FS_entry.get())
-    #
-    #                                 if (temperature > 0 or description.count('Temperature') is 1) and volume > 0 and DT_FS > 0:
-    #                                     cu.load_data(self.selected.get(),
-    #                                         self.input_selector.get(),
-    #                                         keys,
-    #                                         descriptions=description,
-    #                                         temperature=temperature,
-    #                                         units='metal',
-    #                                         volume=volume,
-    #                                         psd_filter_w=psd_filter_w,
-    #                                         DT_FS=DT_FS)
-    #
-    #                                     ThermocepstrumGUI.show_frame(FStarSelector)
-    #                                     ThermocepstrumGUI.frame.update()
-    #                                 else:
-    #                                     msg.showerror('Value error', 'Temperature, volume and DT_FS can\'t be less than 0')
-    #                             else:
-    #                                 msg.showerror('No keys selected', 'You must select almost one header key!')
-    #                         else:
-    #                             msg.showerror('Value error', 'You can\'t assign more than one time the value "Temperature"')
-    #                     else:
-    #                         msg.showerror('Value error', 'You must assign only one "Heat current" value')
-    #             else:
-    #                 msg.showerror('Invalid format!', 'The file that you have selected has an invalid format!')
-    #         else:
-    #             msg.showerror('File doesn\'t exists!', 'The file that you have selected doesn\'t exists!')
-    #     else:
-    #         msg.showerror('No file selected!', 'You must select a data file!')
 
     def next(self, ev=None):
         if self.selected.get():
@@ -653,13 +576,6 @@ class FileManager(Frame):
                 msg.showerror('File doesn\'t exists!', 'The file that you have selected doesn\'t exists!')
         else:
             msg.showerror('No file selected!', 'You must select a data file!')
-
-
-    # def _update_status(self, ev):
-    #     if 'Temperature' in self.check_list.get_list()[1]:
-    #         self.temperature_entry.config(state=DISABLED)
-    #     else:
-    #         self.temperature_entry.config(state=NORMAL)
 
     def update(self):
         self.main_frame.canvas.yview_moveto(0)
@@ -988,6 +904,11 @@ class FStarSelector(Frame):
         elif response == False:
             cu.Data.fstar = 0.0
             cu.Data.loaded = False
+            cu.Data.temperature = 0.0
+            cu.Data.volume = 0.0
+            cu.Data.DT_FS = 0.0
+            cu.Data.psd_filter_width = 0.1
+
             self.graph.other_graph.clear()
             self.graph.graph.clear()
             self.graph.cut_line = 0
