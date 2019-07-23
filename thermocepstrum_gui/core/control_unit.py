@@ -31,15 +31,15 @@ class Data:
     keys = None
     description = None
 
-    temperature = 0
-    temperature_std = 0
+    temperature = 0.0
+    temperature_std = 0.0
     volume = 0
-    DT_FS = 0
+    DT_FS = 0.0
     currents = None
 
     fstar = 0.0
     old_fstar = 0.0
-    psd_filter_width = 0.0
+    psd_filter_width = 0.1
 
 
 gm = Graph.GraphManager()
@@ -215,7 +215,7 @@ def load_data(inputfile,input_format,selected_keys,temperature=None,NSTEPS=0,STA
     if NSTEPS == 0:
         NSTEPS = Data.jdata[list(Data.jdata.keys())[0]].shape[0]
     if True: #jindex is None:
-        heat_current, i = get_cor_index(selected_keys, descriptions, 'Heat current')
+        heat_current, i = get_cor_index(selected_keys, descriptions, 'Energy current')
         del descriptions[i]
         del selected_keys[i]
         currents_headers = [heat_current]

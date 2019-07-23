@@ -217,6 +217,7 @@ class GraphWidget(Frame):
 
         if toolbar:
             toolbar = NavigationToolbar2Tk(self.canvas, controller)
+            toolbar.pack(side=TOP, pady=10, padx=100)
             toolbar.update()
             self.canvas._tkcanvas.pack(side=TOP)
 
@@ -352,7 +353,7 @@ class CheckList(Frame):
                 frame = Frame(self.controller)
                 frame.grid(row=row, column=0, sticky='we', pady=2)
                 Label(frame, text=el, font="{} 12 bold".format(settings.FONT)).grid(row=0, column=0)
-                cmb = ttk.Combobox(frame, values=["None", "Heat current", "Other current", "Temperature"], state='readonly', width=12)
+                cmb = ttk.Combobox(frame, values=["None", "Energy current", "Other current", "Temperature"], state='readonly', width=12)
                 cmb.bind('<<ComboboxSelected>>', self.combo_func)
                 cmb.current(0)
                 cmb.grid(row=0, column=1, sticky='e')
@@ -557,6 +558,8 @@ class FileManager(Frame):
     def load_file_settings(self, path):
         with open(path, 'r') as file:
             lines = file.readlines()[0:settings.PREVIEW_LINES]
+            # todo: remove {}
+
             self.preview.config(state=NORMAL)
             self.preview.delete('1.0', END)
             self.preview.insert('1.0', lines)
@@ -598,7 +601,7 @@ class HeaderSelector(Frame):
         Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wn')
         Label(definitions_frame, text='Temperature: the header that will be used to calculate the temperature').grid(row=1, column=0, sticky='wn')
         # todo: put definition
-        Label(definitions_frame, text='Heat current: put definition').grid(row=2, column=0, sticky='wn')
+        Label(definitions_frame, text='Energy current: put definition').grid(row=2, column=0, sticky='wn')
         Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wn')
 
         header_list_frame = Frame(header_frame)
@@ -618,8 +621,8 @@ class HeaderSelector(Frame):
 
     def next(self):
         keys, description = self.check_list.get_list()
-        if 'Heat current' in description:
-            if description.count('Heat current') == 1:
+        if 'Energy current' in description:
+            if description.count('Energy current') == 1:
                 if description.count('Temperature') <= 1:
                     cu.Data.keys = keys
                     cu.Data.description = description
@@ -628,7 +631,7 @@ class HeaderSelector(Frame):
                 else:
                     msg.showerror('Value error', 'You can\'t assign more than one time the value "Temperature"')
             else:
-                msg.showerror('Value error', 'You must assign only one "Heat current" value')
+                msg.showerror('Value error', 'You must assign only one "Energy current" value')
         else:
             msg.showerror('No keys selected', 'You must select almost one header key!')
 
@@ -761,12 +764,22 @@ class OtherVariables(Frame):
         ThermocepstrumGUI.show_frame(HeaderSelector)
 
     def update(self):
+
+        self.temperature_entry.config(state=NORMAL)
+        self.temperature_entry.config(value=cu.Data.temperature)
+
         if 'Temperature' in cu.Data.description:
             self.temperature_entry.config(state=DISABLED)
             self.temp_advertise.config(text='The temperature will be automatically calculated')
         else:
             self.temperature_entry.config(state=NORMAL)
             self.temp_advertise.config(text='')
+
+        self.volume_entry.delete(0, END)
+        self.volume_entry.insert(0, cu.Data.volume)
+        self.DT_FS_entry.delete(0, END)
+        self.DT_FS_entry.insert(0, cu.Data.DT_FS)
+        self.filter_width_entry.config(value=cu.Data.psd_filter_width)
 
 
 class FStarSelector(Frame):
@@ -822,7 +835,8 @@ class FStarSelector(Frame):
         next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next())
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
-        Button(slider_frame, text='View', command=lambda: self._change_view()).grid(row=0, column=2, sticky='w')
+        self.change_view_button = Button(slider_frame, text='Zoom-in', command=lambda: self._change_view())
+        self.change_view_button.grid(row=0, column=2, sticky='w')
 
         self.info_section = Frame(main_frame)
         self.info_section.grid(row=0, column=2, sticky='n', pady=40)
@@ -848,8 +862,10 @@ class FStarSelector(Frame):
         if self.graph.cut_line > 0:
             if self.graph.show_selected_area:
                 self.graph.show_selected_area = False
+                self.change_view_button.config(text='Zoom-in')
             else:
                 self.graph.show_selected_area = True
+                self.change_view_button.config(text='Reset view')
 
             self.graph.change_view()
             self.graph.update_cut()
@@ -872,6 +888,7 @@ class FStarSelector(Frame):
     def _del_out_frames(self):
         for el in self.info_section.winfo_children():
             el.destroy()
+        log.set_func(None)
         self.logs = None
         self.info = None
         self.update()
