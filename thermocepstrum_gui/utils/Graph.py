@@ -104,7 +104,7 @@ class GraphManager:
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
-                axis.axvline(x=fstar_THz, ls='--', c='k')
+                axis.axvline(x=xf.Nyquist_f_THz, ls='--', c='k')
                 axis.set_xlim([0., x.Nyquist_f_THz])
             elif (freq_units == 'red'):
                 axis.axvline(x=0.5 / TSKIP, ls='--', c='k')

@@ -905,6 +905,9 @@ class FStarSelector(Frame):
 
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
+
+        self.graph.cut_line = cu.Data.xf.Nyquist_f_THz
+
         if self.graph.show_selected_area:
             self.graph.show_selected_area = True
             self.graph.change_view()
@@ -935,7 +938,7 @@ class FStarSelector(Frame):
 
     def next(self):
         self.resample()
-        cu.Data.fstar = float(self.value_entry.get())
+        cu.Data.fstar = cu.Data.xf.Nyquist_f_THz
         ThermocepstrumGUI.show_frame(PStarSelector)
 
     def update(self):
