@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+
 class PrintMethod:
 
     _print_func = None
