@@ -1,7 +1,7 @@
 import numpy as np
 
 #import matplotlib.pyplot as plt
-from thermocepstrum.utils import loadAfterPlt
+from thermocepstrum.utils.loadAfterPlt import plt
 
 from .tools import integrate_acf, runavefilter
 from scipy.signal import periodogram
@@ -43,6 +43,16 @@ class MDSample(object):
        - Nfreqs     number of trajectories, should be N/2+1
        - freqs      an array of frequencies, should be [0, 1/(2N*DT)]
        - freqs_THz  an array of frequencies, expressed in THz
+
+    MEMBERS:
+        self.DT_FS                  timestep in femtoseconds
+        self.fpsd                   dummy filtered periodogram (with the moving average window)
+        self.flogpsd                dummy filtered log periodogram
+        self.acf                    autocorrelation function
+        self.N_COMPONENTS           number of cartesian components (we will do an average on them)
+        self.MULTI_COMPONENT        True if we have more than one cartesian component
+        self.FILTER_WINDOW_WIDTH    width of the moving average filter (reduced units)
+        self.FILTER_WF              width of the moving average filter (number of samples)
 
     """
 
@@ -201,6 +211,100 @@ class MDSample(object):
         self.DF = 0.5 / (self.Nfreqs - 1)
         return
 
+
+    #overridden in HeatCurrent (will call, at the end, this method)
+    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True,
+                    normalize=False):   # yapf: disable
+        """
+        Compute the periodogram from the trajectory or the spectrum.
+        If a FILTER_WINDOW_WIDTH (red units) is known or given, the psd is also filtered.
+        The PSD is multiplied by DT_FS at the end.
+        """
+
+        if DT_FS is not None:
+            self.DT_FS = DT_FS
+        if (method == 'trajectory'):
+            if self.traj is None:
+                raise ValueError('Trajectory not defined.')
+            if self.MULTI_COMPONENT:
+                self.freqs, self.psdALL = periodogram(self.traj, detrend=None, axis=0)
+                self.psd = np.mean(self.psdALL, axis=1)
+            else:
+                self.freqs, self.psd = periodogram(self.traj, detrend=None)
+            self.psd[1:-1] = self.psd[1:-1] * 0.5
+            self.psd = self.DT_FS * self.psd
+            self.Nfreqs = self.freqs.size
+            self.DF = 0.5 / (self.Nfreqs - 1)
+        elif (method == 'spectrum'):
+            if self.spectr is None:
+                raise ValueError('Spectrum not defined.')
+            self.psd = self.DT_FS * np.abs(self.spectr)**2 / (2 * (self.Nfreqs - 1))
+            #self.psd[1:-1] = self.psd[1:-1] * 2.0   # factor 2 from one-sided psd
+            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
+        else:
+            raise KeyError('method not understood')
+        self.freqs_THz = self.freqs / self.DT_FS * 1000.
+        self.Nyquist_f_THz = self.freqs_THz[-1]
+        if normalize:
+            self.psd = self.psd / np.trapz(self.psd) / self.N / self.DT_FS
+        self.logpsd = np.log(self.psd)
+        self.psd_min = np.min(self.psd)
+        self.psd_power = np.trapz(self.psd)   # one-side PSD power
+        if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
+            self.filter_psd(FILTER_WINDOW_WIDTH)
+        return
+
+    def filter_psd(self, FILTER_WINDOW_WIDTH=None, window_type='rectangular', logpsd_filter_type=1):
+        """Filters the periodogram with the given FILTER_WINDOW_WIDTH [freq units]."""
+        if self.psd is None:
+            raise ValueError('Periodogram is not defined.')
+        if FILTER_WINDOW_WIDTH is not None:   # otherwise try to use the internal value
+            self.FILTER_WINDOW_WIDTH = FILTER_WINDOW_WIDTH
+        if self.FILTER_WINDOW_WIDTH is not None:
+            self.FILTER_WF = int(round(self.FILTER_WINDOW_WIDTH * self.Nfreqs * 2.))
+        else:
+            raise ValueError('Filter window width not defined.')
+        if (window_type == 'rectangular'):
+            self.fpsd = runavefilter(self.psd, self.FILTER_WF)
+            if self.cospectrum is not None:   #try to filter the other currents (if they are present)
+                self.fcospectrum = []
+                for i in range(self.cospectrum.shape[0]):
+                    self.fcospectrum.append([])
+                    for j in range(self.cospectrum.shape[1]):
+                        ffpsd = runavefilter(self.cospectrum[i, j], self.FILTER_WF)
+                        self.fcospectrum[i].append(ffpsd / self.L)
+                self.fcospectrum = np.asarray(self.fcospectrum)
+            #except AttributeError:
+            #    pass
+            if logpsd_filter_type == 1:
+                self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
+            else:
+                self.flogpsd = np.log(self.fpsd)
+        else:
+            raise KeyError('Window type unknown.')
+        return
+
+    def compute_acf(self, NLAGS=None):
+        """Computes the autocovariance function of the trajectory."""
+        if NLAGS is not None:
+            self.NLAGS = NLAGS
+        else:
+            self.NLAGS = self.N
+        self.acf = np.zeros((self.NLAGS, self.N_COMPONENTS))
+        for d in range(self.N_COMPONENTS):
+            self.acf[:, d] = acovf(self.traj[:, d], unbiased=True, fft=True)[:NLAGS]
+        self.acfm = np.mean(self.acf, axis=1)   # average acf
+        return
+
+    def compute_gkintegral(self):
+        """Compute the integral of the autocovariance function."""
+        if self.acf is None:
+            raise RuntimeError('Autocovariance is not defined.')
+        self.tau = integrate_acf(self.acf)
+        self.taum = np.mean(self.tau, axis=1)   # average tau
+        return
+
+    #this is called by HeatCurrent.
     def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None,
                             average_components=True, normalize=False, call_other=True):   # yapf: disable
         """
@@ -217,7 +321,7 @@ class MDSample(object):
         The elements of the matrix are multiplied by DT_FS at the end.
         others is a list of other object like this, with the other currents loaded.
 
-        example call (4 currents in total):
+        example call (4 currents in total, j1,j2,j3 are other MDSample objects):
         j.compute_kappa_multi(others=[j1,j2,j3], FILTER_WINDOW_WIDTH=FILTER_WINDOW_WIDTH)
         """
         # check if others is an array
@@ -271,16 +375,7 @@ class MDSample(object):
 
         if normalize:
             multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
-        #multi_logpsd = np.log(multi_psd)
-        #multi_psd_min = np.min(multi_psd)
-        #multi_psd_power = np.trapz(multi_psd)  # one-side PSD power
-        #if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
-        #    self.filter_psd( FILTER_WINDOW_WIDTH )
-        #multi_mdsample = MDSample(psd=multi_psd, freqs=self.freqs, DT_FS=self.DT_FS)
-        #multi_mdsample.covarALL = covarALL
-        #multi_mdsample.ndf_chi = ndf_chi
-        #multi_mdsample.cospectrum = cospectrum
-        #return multi_mdsample
+
 
         self.ndf_chi = ndf_chi
         self.psd = multi_psd
@@ -289,101 +384,6 @@ class MDSample(object):
         self.psd_power = np.trapz(self.psd)   # one-side PSD power
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
             self.filter_psd(FILTER_WINDOW_WIDTH)
-        return
-
-    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True,
-                    normalize=False):   # yapf: disable
-        """
-        Compute the periodogram from the trajectory or the spectrum.
-        If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
-        The PSD is multiplied by DT_FS at the end.
-        """
-        if self.multicomponent:
-            if self.otherMD is None:
-                raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
-            self.compute_kappa_multi(self.otherMD, FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
-            return
-        if DT_FS is not None:
-            self.DT_FS = DT_FS
-        if (method == 'trajectory'):
-            if self.traj is None:
-                raise ValueError('Trajectory not defined.')
-            if self.MULTI_COMPONENT:
-                self.freqs, self.psdALL = periodogram(self.traj, detrend=None, axis=0)
-                self.psd = np.mean(self.psdALL, axis=1)
-            else:
-                self.freqs, self.psd = periodogram(self.traj, detrend=None)
-            self.psd[1:-1] = self.psd[1:-1] * 0.5
-            self.psd = self.DT_FS * self.psd
-            self.Nfreqs = self.freqs.size
-            self.DF = 0.5 / (self.Nfreqs - 1)
-        elif (method == 'spectrum'):
-            if self.spectr is None:
-                raise ValueError('Spectrum not defined.')
-            self.psd = self.DT_FS * np.abs(self.spectr)**2 / (2 * (self.Nfreqs - 1))
-            #self.psd[1:-1] = self.psd[1:-1] * 2.0   # factor 2 from one-sided psd
-            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
-        else:
-            raise KeyError('method not understood')
-        self.freqs_THz = self.freqs / self.DT_FS * 1000.
-        self.Nyquist_f_THz = self.freqs_THz[-1]
-        if normalize:
-            self.psd = self.psd / np.trapz(self.psd) / self.N / self.DT_FS
-        self.logpsd = np.log(self.psd)
-        self.psd_min = np.min(self.psd)
-        self.psd_power = np.trapz(self.psd)   # one-side PSD power
-        if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
-            self.filter_psd(FILTER_WINDOW_WIDTH)
-        return
-
-    def filter_psd(self, FILTER_WINDOW_WIDTH=None, window_type='rectangular', logpsd_filter_type=1):
-        """Filters the periodogram with the given FILTER_WINDOW_WIDTH [freq units]."""
-        if self.psd is None:
-            raise ValueError('Periodogram is not defined.')
-        if FILTER_WINDOW_WIDTH is not None:   # otherwise try to use the internal value
-            self.FILTER_WINDOW_WIDTH = FILTER_WINDOW_WIDTH
-        if self.FILTER_WINDOW_WIDTH is not None:
-            self.FILTER_WF = int(round(self.FILTER_WINDOW_WIDTH * self.Nfreqs * 2.))
-        else:
-            raise ValueError('Filter window width not defined.')
-        if (window_type == 'rectangular'):
-            self.fpsd = runavefilter(self.psd, self.FILTER_WF)
-            try:   ## THIS IS HORRIBLE -- find another method to check its definition
-                self.fcospectrum = []
-                for i in range(self.cospectrum.shape[0]):
-                    self.fcospectrum.append([])
-                    for j in range(self.cospectrum.shape[1]):
-                        ffpsd = runavefilter(self.cospectrum[i, j], self.FILTER_WF)
-                        self.fcospectrum[i].append(ffpsd / self.L)
-                self.fcospectrum = np.asarray(self.fcospectrum)
-            except AttributeError:
-                pass
-            if logpsd_filter_type == 1:
-                self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
-            else:
-                self.flogpsd = np.log(self.fpsd)
-        else:
-            raise KeyError('Window type unknown.')
-        return
-
-    def compute_acf(self, NLAGS=None):
-        """Computes the autocovariance function of the trajectory."""
-        if NLAGS is not None:
-            self.NLAGS = NLAGS
-        else:
-            self.NLAGS = self.N
-        self.acf = np.zeros((self.NLAGS, self.N_COMPONENTS))
-        for d in range(self.N_COMPONENTS):
-            self.acf[:, d] = acovf(self.traj[:, d], unbiased=True, fft=True)[:NLAGS]
-        self.acfm = np.mean(self.acf, axis=1)   # average acf
-        return
-
-    def compute_gkintegral(self):
-        """Compute the integral of the autocovariance function."""
-        if self.acf is None:
-            raise RuntimeError('Autocovariance is not defined.')
-        self.tau = integrate_acf(self.acf)
-        self.taum = np.mean(self.tau, axis=1)   # average tau
         return
 
     ###################################

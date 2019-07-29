@@ -365,7 +365,7 @@ Contact: lercole@sissa.it
             binoutobj.j_logpsd = j.logpsd
             binoutobj.j_Nyquist_f_THz = j.Nyquist_f_THz
             binoutobj.j_PSD_FILTER_W_THz = psd_filter_w
-            if j.multicomponent:
+            if j.many_currents:
                 binoutobj.j_cospectrum = j.cospectrum
                 binoutobj.j_fcospectrum = j.fcospectrum
         #TODO: move all output in one place?
@@ -374,7 +374,7 @@ Contact: lercole@sissa.it
             outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
             outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
-            if j.multicomponent:
+            if j.many_currents:
                 outfile_name = output + '.cospectrum.dat'
                 outarray = np.c_[j.freqs_THz,
                                  j.cospectrum.reshape((j.cospectrum.shape[0] * j.cospectrum.shape[1],

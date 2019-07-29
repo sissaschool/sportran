@@ -37,22 +37,23 @@ class HeatCurrent(MDSample):
      - freq_units    frequency units   [THz or red] (optional)
     """
 
+
     def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
 
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)
         if (len(j.shape) == 3):
             if (j.shape[0] == 1):
-                self.multicomponent = False
+                self.many_currents = False
                 j = np.squeeze(j, axis=0)
             else:
-                self.multicomponent = True
+                self.many_currents = True
         elif (len(j.shape) <= 2):
-            self.multicomponent = False
+            self.many_currents = False
         else:
             raise ValueError('Shape of j {} not valid.'.format(j.shape))
 
-        if self.multicomponent:
+        if self.many_currents:
             log.write_log('Using multicomponent code.')
             MDSample.__init__(self, traj=j[0], DT_FS=DT_FS)
             # initialize other MDSample objects needed to make the work
@@ -66,18 +67,18 @@ class HeatCurrent(MDSample):
 
         if self.traj is not None:
             if PSD_FILTER_W is None:
-                if not self.multicomponent:
+                if not self.many_currents:
                     self.compute_psd()
                 else:
                     self.compute_kappa_multi(others=self.otherMD)
             else:
                 if (freq_units == 'thz') or (freq_units == 'THz'):
-                    if not self.multicomponent:
+                    if not self.many_currents:
                         self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
                     else:
                         self.compute_kappa_multi(self.otherMD, freq_THz_to_red(PSD_FILTER_W, DT_FS))
                 elif (freq_units == 'red'):
-                    if not self.multicomponent:
+                    if not self.many_currents:
                         self.compute_psd(PSD_FILTER_W)
                     else:
                         self.compute_kappa_multi(self.otherMD, PSD_FILTER_W)
@@ -95,6 +96,19 @@ class HeatCurrent(MDSample):
         if self.dct is not None:
             msg += self.dct.__repr__()
         return msg
+
+    #overrides MDSample methos
+    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True,
+                    normalize=False):
+        if self.many_currents:
+            if self.otherMD is None:
+                raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
+            self.compute_kappa_multi(self.otherMD, FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
+            return
+        super(HeatCurrent,self).compute_psd(FILTER_WINDOW_WIDTH,method,DT_FS,average_components,normalize)
+
+
+
 
     def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
         """
@@ -123,7 +137,7 @@ class HeatCurrent(MDSample):
         """
         Defines the parameters of the theoretical distribution of the cepstrum.
         """
-        if not self.multicomponent:
+        if not self.many_currents:
             self.ck_THEORY_var, self.psd_THEORY_mean = \
                 md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.N_COMPONENTS)
         else:
@@ -181,7 +195,7 @@ class HeatCurrent(MDSample):
         """
         # recompute PSD if needed
         if self.psd is None:
-            if not self.multicomponent:
+            if not self.many_currents:
                 self.compute_psd()
             else:
                 if self.otherMD is None:
@@ -393,7 +407,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     #    PSD_FILTER_W = x.FILTER_WINDOW_WIDTH * TSKIP
 
     # define new HeatCurrent
-    if not x.multicomponent:
+    if not x.many_currents:
         xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
     else:
         if x.otherMD is None:

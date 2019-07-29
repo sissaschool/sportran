@@ -1,6 +1,5 @@
 def test_example_NaCl():
     import numpy as np
-    import scipy as sp
     import os
     import thermocepstrum as tc
 
@@ -31,10 +30,10 @@ def test_example_NaCl():
     print('*********************\n   TEST:  passed.\n*********************\n')
 
 
+
+
 def test_example_SiO2():
 
-    import numpy as np
-    import scipy as sp
     import os
     import thermocepstrum as tc
 
