@@ -91,6 +91,8 @@ class ThermocepstrumGUI(Tk):
 
         ThermocepstrumGUI.frames = {}
 
+        self.topbar = TopBar(self,self)
+
         for F in (FileManager, HeaderSelector, OtherVariables, FStarSelector, PStarSelector):
             ThermocepstrumGUI.frame = F(container, self)
 
@@ -114,7 +116,7 @@ class TopBar(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
 
-        self.parent = parent
+#        self.parent = parent
 
         TopBar.show_logs = BooleanVar()
         TopBar.show_info = BooleanVar()
@@ -421,7 +423,7 @@ class FileManager(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        TopBar(parent, controller)
+        #TopBar(parent, controller)
 
         self.main_frame = ScrollFrame(controller, self)
 
@@ -591,7 +593,7 @@ class HeaderSelector(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
 
-        TopBar(parent, controller)
+        #TopBar(parent, controller)
         self.main_frame = ScrollFrame(controller, self)
 
         header_frame = Frame(self.main_frame.viewPort)
@@ -653,7 +655,7 @@ class OtherVariables(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
 
-        TopBar(parent, controller)
+        #TopBar(parent, controller)
 
         self.main_frame = ScrollFrame(controller, self)
 
@@ -789,7 +791,7 @@ class FStarSelector(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
 
-        TopBar(parent, controller)
+        #TopBar(parent, controller)
 
         self.parent = parent
         main_frame = Frame(self)
@@ -960,7 +962,7 @@ class PStarSelector(Frame):
 
         self.parent = parent
 
-        TopBar(parent, controller)
+        #TopBar(parent, controller)
 
         sections = Frame(self)
         sections.pack(side=LEFT, anchor='n')
