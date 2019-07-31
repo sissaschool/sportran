@@ -66,6 +66,7 @@ class MDSample(object):
         self.flogpsd = None
         self.acf = None
         self.NLAGS = None
+        self.cospectrum = None
 
         # other variables...
         self.FILTER_WINDOW_WIDTH = None
