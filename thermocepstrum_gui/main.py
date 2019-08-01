@@ -54,6 +54,7 @@ class ThermocepstrumGUI(Tk):
     frames = []
     frame = None
     root = None
+    container = None
 
     def __init__(self, version, dev_state, last_release, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
@@ -83,9 +84,14 @@ class ThermocepstrumGUI(Tk):
 
         # Creating the main frame
         container = Frame(self)
-        container.pack(side=TOP, fill=BOTH, expand=True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
+        ThermocepstrumGUI.container=container
+        container.grid(row=0, column=0, sticky='nsew')
+        #container=self
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        #container.pack(side=TOP, fill=BOTH, expand=True)
+        container.grid_rowconfigure(0, weight=10)
+        container.grid_columnconfigure(0, weight=10)
 
         # Setting up multiple window system
 
@@ -93,20 +99,32 @@ class ThermocepstrumGUI(Tk):
 
         self.topbar = TopBar(self,self)
 
-        for F in (FileManager, HeaderSelector, OtherVariables, FStarSelector, PStarSelector):
+        ThermocepstrumGUI.root.grid_propagate(True)
+        for F in ( HeaderSelector, OtherVariables, FStarSelector, PStarSelector, FileManager):
             ThermocepstrumGUI.frame = F(container, self)
+            #ThermocepstrumGUI.frame.grid(row=0, column=0, sticky='nsew')
+            #ThermocepstrumGUI.frame.grid_forget()
 
             ThermocepstrumGUI.frames[F] = ThermocepstrumGUI.frame
-            ThermocepstrumGUI.frame.grid(row=0, column=0, sticky='nsew')
 
         self.show_frame(FileManager)
 
     @staticmethod
     def show_frame(frame):
+        #ThermocepstrumGUI.frame.grid_forget()
+        #ThermocepstrumGUI.container.grid_forget()
+        #ThermocepstrumGUI.container.grid(row=0, column=0, sticky='nsew')
+        ThermocepstrumGUI.container.grid_rowconfigure(0, weight=0)
+        ThermocepstrumGUI.container.grid_columnconfigure(0, weight=0)
+
+        #ThermocepstrumGUI.container.grid(row=0, column=0, sticky='nsew')
         ThermocepstrumGUI.frame = ThermocepstrumGUI.frames[frame]
+        #ThermocepstrumGUI.frame.__init__(ThermocepstrumGUI.container,ThermocepstrumGUI.container)
+        ThermocepstrumGUI.frame.grid(row=0, column=0, sticky='nsew')
+        ThermocepstrumGUI.container.grid_rowconfigure(0, weight=1)
+        ThermocepstrumGUI.container.grid_columnconfigure(0, weight=1)
         ThermocepstrumGUI.frame.tkraise()
         ThermocepstrumGUI.frame.update()
-
 
 class TopBar(Frame):
 
@@ -389,17 +407,33 @@ class ScrollFrame(Frame):
     def __init__(self, parent, controller, width=0, height=0, bd=0):
         Frame.__init__(self, parent)
 
+        bgcol='#00FF00' # settings.BG_COLOR
+        bgcol2='#00FF66' # settings.BG_COLOR
+
         if width or height:
-            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=settings.BG_COLOR, width=width, height=height)
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol, width=width, height=height)
         else:
-            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=settings.BG_COLOR)
-        self.viewPort = Frame(self.canvas, background=settings.BG_COLOR)
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol)
+        self.viewPort = Frame(self.canvas, background=bgcol2)
         self.vsb = Scrollbar(controller, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
-        self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(fill=BOTH, expand=1)
+        #self.vsb.pack(side="right", fill="y")
+        #self.canvas.pack(fill=BOTH, expand=True)
+        self.vsb.grid(row=0,column=1,sticky='nse')
+        self.canvas.grid(row=0, column=0, sticky='nsew')
+        controller.rowconfigure(0,weight=10)
+        controller.columnconfigure(0,weight=10)
+        controller.columnconfigure(1,weight=0)
+        #self.viewPort.grid(row=0, column=0, sticky='nsew')
         self.canvas.create_window(0, 0, window=self.viewPort, tags="self.viewPort")
+        #self.viewPort.pack(fill=BOTH, side='left', expand=True)
+        self.viewPort.grid(row=0, column=0, sticky='nsew')
+        self.canvas.grid_rowconfigure(0, weight=1)
+        self.canvas.grid_columnconfigure(0, weight=1)
+        #self.viewPort.grid_rowconfigure(0, weight=1)
+        #self.viewPort.grid_columnconfigure(0, weight=1)
+
 
         self.viewPort.bind("<Configure>", self.on_frame_configure)
 
@@ -425,51 +459,66 @@ class FileManager(Frame):
         Frame.__init__(self, parent)
         #TopBar(parent, controller)
 
-        self.main_frame = ScrollFrame(controller, self)
+        self.main_frame = ScrollFrame(self, self)
 
-        file_manager = Frame(self.main_frame.viewPort)
-        file_manager.pack(fill=BOTH, expand=True, padx=100, pady=30)
+        file_manager = Frame(self.main_frame.viewPort, bg='#0000FF')
+        #file_manager.pack(fill=BOTH, expand=True, padx=100, pady=30)
+        file_manager.grid(column=0,row=0,sticky='nswe')
 
-        Label(file_manager, text='Select a file', font='Arial 11 bold').grid(row=0, column=0, sticky='w')
 
         prev_frame = Frame(self.main_frame.viewPort, height=10)
-        prev_frame.pack(fill=BOTH, expand=True, padx=100, pady=20)
+        #prev_frame.pack(fill=BOTH, expand=True, padx=100, pady=20)
+        prev_frame.grid(column=0,row=1,sticky='nswe')
 
-        Label(prev_frame, text='File preview', font='Arial 11 bold').pack(side=TOP, anchor='w')
+        Label(prev_frame, text='File preview', font='Arial 11 bold').pack(side=TOP, anchor='w',fill=BOTH,expand=True)
         self.preview = Text(prev_frame, bd=1, relief=SOLID, height=10)
-        self.preview.pack(fill=BOTH, expand=True, side=TOP)
+        self.preview.pack(fill=BOTH, expand=True, side=BOTTOM)
         self.preview.config(state=NORMAL)
 
-        settings_frame = Frame(self.main_frame.viewPort)
-        settings_frame.pack(fill=BOTH, expand=True, padx=100)
+        #settings_frame = Frame(self.main_frame.viewPort)
+        #settings_frame.pack(fill=BOTH, expand=True, padx=100)
+        #settings_frame.grid(column=0,row=2,sticky='nswe')
 
-        selection_frame = Frame(settings_frame)
-        selection_frame.pack(fill=BOTH, expand=True)
+        selection_frame = Frame(self.main_frame.viewPort)
+        #selection_frame.pack(fill=BOTH, expand=True)
+        selection_frame.grid(column=0,row=2,sticky='nswe')
 
         Label(selection_frame, text='Selected: ').grid(row=0, column=0, sticky='e')
 
         self.selected = Entry(selection_frame, width=60, relief=SOLID, bd=1)
-        self.selected.grid(row=0, column=1, ipadx=1, ipady=1, sticky='w')
+        self.selected.grid(row=0, column=1, ipadx=1, ipady=1, sticky='we')
 
         self.find_button = Button(selection_frame, text='...', relief=SOLID, bd=1,
                                   command=lambda: self._select_file_with_manager())
-        self.find_button.grid(row=0, column=2, padx=4, sticky='w')
+        self.find_button.grid(row=0, column=2, padx=4, sticky='we')
 
-        Label(selection_frame, text='Input format: ').grid(row=0, column=3, padx=5, sticky='e')
-        self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly')
+        Label(selection_frame, text='Input format: ').grid(row=0, column=3, padx=5, sticky='we')
+        self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly',width=10)
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
 
+
         self.next_button = Button(selection_frame, text='Next', relief=SOLID, bd=1,
                                    command=lambda: self.next())
-        self.next_button.grid(row=5, column=0, sticky='w', pady=10)
+        self.next_button.grid(row=1, column=0, sticky='w', pady=10)
+        selection_frame.rowconfigure(0,weight=1)
+        selection_frame.rowconfigure(1,weight=1)
 
         self._start_file_manager(file_manager)
         self._parse_files()
 
+        for i,w,m in zip(range(0,4),[2,6,1,2,2],[70,70,25,90,50]):
+            selection_frame.columnconfigure(i,weight=w,minsize=m)
+        for i, w, m in zip(range(0, 2), [7, 7, 4], [70, 70, 40]):
+            self.main_frame.viewPort.rowconfigure(i, weight=w, minsize=m)
+        self.main_frame.viewPort.columnconfigure(0, weight=1, minsize=300)
+
+
+
     def _start_file_manager(self, parent):
         inner_frame = parent
 
+        Label(inner_frame, text='Select a file', font='Arial 11 bold').grid(row=0, column=0, sticky='nswe')
         # create the tree and scrollbars
         self.headers = ('File name', 'File type', 'Size')
         self.file_list = ttk.Treeview(inner_frame, columns=self.headers,
@@ -479,14 +528,15 @@ class FileManager(Frame):
         self.file_list['yscroll'] = ysb.set
 
         # add scrollbars to frame
-        self.file_list.grid(row=1, column=0, sticky=NSEW)
-        ysb.grid(row=1, column=1, sticky='ns')
+        self.file_list.grid(row=1, column=0, sticky='nswe')
+        ysb.grid(row=1, column=1, sticky='nswe')
 
         self.file_list.bind('<<TreeviewSelect>>', self._select_file)
         self.file_list.bind('<Double-1>', self.next)
 
         # set frame resize priorities
-        inner_frame.rowconfigure(0, weight=1)
+        inner_frame.rowconfigure(0, weight=1,minsize=15)
+        inner_frame.rowconfigure(1, weight=4,minsize=40)
         inner_frame.columnconfigure(0, weight=1)
 
     def _parse_files(self):
@@ -588,34 +638,50 @@ class FileManager(Frame):
         self.main_frame.canvas.yview_moveto(0)
 
 
+        super().update()
+
+
 class HeaderSelector(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
 
         #TopBar(parent, controller)
-        self.main_frame = ScrollFrame(controller, self)
+        self.main_frame = ScrollFrame(self, self)
 
-        header_frame = Frame(self.main_frame.viewPort)
-        header_frame.pack(fill=BOTH, expand=1, padx=100, pady=20)
+        header_frame = self.main_frame.viewPort #Frame(self.main_frame.viewPort,bg='#FF0000')
+        #header_frame.pack(fill=BOTH, expand=True, padx=20, pady=20)
+        header_frame.grid(row=0, column=0, sticky='nswe')
+        #self.main_frame.viewPort.grid_rowconfigure(0, weight=1)
+        #self.main_frame.viewPort.grid_columnconfigure(0, weight=1)
 
         Label(header_frame, text='Define the use of the headers').grid(row=0, column=0, sticky='w')
         definitions_frame = Frame(header_frame)
-        definitions_frame.grid(row=1, column=1, sticky='n', padx=20)
-        Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wn')
-        Label(definitions_frame, text='Temperature: the header that will be used to calculate the temperature').grid(row=1, column=0, sticky='wn')
+        definitions_frame.grid(row=1, column=1, sticky='nswe', padx=20)
+        Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wns')
+        Label(definitions_frame, text='Temperature: the header that will be used to calculate the temperature').grid(row=1, column=0, sticky='wns')
         # todo: put definition
-        Label(definitions_frame, text='Energy current: put definition').grid(row=2, column=0, sticky='wn')
-        Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wn')
+        Label(definitions_frame, text='Energy current: put definition').grid(row=2, column=0, sticky='wns')
+        Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wns')
+        definitions_frame.columnconfigure(0,weight=1)
+        for i in range(0,3):
+            definitions_frame.rowconfigure(i,weight=1)
 
         header_list_frame = Frame(header_frame)
-        header_list_frame.grid(row=1, column=0, sticky='w', pady=10)
+        header_list_frame.grid(row=1, column=0, sticky='nswe', pady=10)
 
         scrollable_header_list = ScrollFrame(self.main_frame, header_list_frame, bd=1)
         self.check_list = CheckList(scrollable_header_list, scrollable_header_list.viewPort)
 
         button_frame = Frame(header_frame)
         button_frame.grid(row=2, column=0, sticky='w')
+
+
+        header_frame.rowconfigure(0,weight=1)
+        header_frame.rowconfigure(1,weight=10)
+        header_frame.rowconfigure(2,weight=1)
+        header_frame.columnconfigure(0,weight=1)
+        header_frame.columnconfigure(1,weight=1)
 
         Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.back()).grid(row=0, column=0)
@@ -648,6 +714,7 @@ class HeaderSelector(Frame):
     def update(self):
         keys = cu.load_keys(cu.Data.CURRENT_FILE)
         self.check_list.set_list(keys)
+        super().update()
 
 
 class OtherVariables(Frame):
@@ -660,7 +727,8 @@ class OtherVariables(Frame):
         self.main_frame = ScrollFrame(controller, self)
 
         variable_frame = Frame(self.main_frame.viewPort)
-        variable_frame.pack(fill=BOTH, expand=True, padx=100)
+        #variable_frame.pack(fill=BOTH, expand=True, padx=100)
+        variable_frame.grid(column=0,row=0,sticky='nswe')
 
         Label(variable_frame, text='Set variables', font='Arial 11 bold').grid(row=0, column=0, pady=2, sticky='w')
 
@@ -784,6 +852,9 @@ class OtherVariables(Frame):
         self.DT_FS_entry.delete(0, END)
         self.DT_FS_entry.insert(0, cu.Data.DT_FS)
         self.filter_width_entry.config(value=cu.Data.psd_filter_width)
+        self.main_frame.viewPort.columnconfigure(0,weight=1)
+        self.main_frame.viewPort.rowconfigure(0,weight=1)
+        super().update()
 
 
 class FStarSelector(Frame):
@@ -794,21 +865,22 @@ class FStarSelector(Frame):
         #TopBar(parent, controller)
 
         self.parent = parent
-        main_frame = Frame(self)
-        main_frame.pack(expand=True, fill=BOTH)
+        main_frame = self #Frame(self)
+        #main_frame.pack(expand=True, fill=BOTH)
+        main_frame.grid(column=0,row=0,sticky='nswe')
 
         sections = Frame(main_frame)
-        sections.grid(row=0, column=0, sticky='n')
+        sections.grid(row=0, column=0, sticky='nswe')
 
         self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
 
         self.slider_locked = False
 
         slider_frame = Frame(sections)
-        slider_frame.pack(side=TOP, anchor='w', padx=115)
+        slider_frame.pack(side=TOP, anchor='w', padx=10)
 
-        self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1, length=520)
-        self.slider.grid(row=0, column=0)
+        self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1)#, length=520)
+        self.slider.grid(row=0, column=0,sticky='we')
 
         lock_slider = Button(slider_frame, command=lambda: self._lock_unlock_slider(),
                              bd=1, relief=SOLID)
@@ -843,8 +915,11 @@ class FStarSelector(Frame):
         self.change_view_button.grid(row=0, column=2, sticky='w')
 
         self.info_section = Frame(main_frame)
-        self.info_section.grid(row=0, column=2, sticky='n', pady=40)
+        self.info_section.grid(row=0, column=1, sticky='nswe', pady=40)
 
+        main_frame.columnconfigure(0,weight=3)
+        main_frame.columnconfigure(1,weight=1)
+        main_frame.rowconfigure(0,weight=1)
         self.logs = None
         self.info = None
 
@@ -953,6 +1028,7 @@ class FStarSelector(Frame):
         if self.logs:
             log.set_func(self.logs.write)
         # self.graph.cut_line = cu.Data.fstar
+        super().update()
 
 
 class PStarSelector(Frame):
@@ -1087,6 +1163,7 @@ class PStarSelector(Frame):
             log.set_func(self.logs.write)
         self._reload()
         self.graph.update_cut()
+        super().update()
 
 
 class LoadingWindow(Tk):
