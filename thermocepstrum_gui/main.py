@@ -6,9 +6,10 @@
 
     Version: 0.0.1
     Release state: Beta
-    Last update: 26/06/2019
+    Last update: 08/2019
 
-    Developer: Sebastiano Bisacchi
+    Main Developer:     Sebastiano Bisacchi
+    Other developer:    Riccardo   Bertossa
 --------------------------------------------
 
 This file contains the GUI of the Thermocepstrum project developed at SISSA
@@ -225,7 +226,7 @@ class GraphWidget(Frame):
 
         self.canvas = FigureCanvasTkAgg(self.f, controller)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10)
+        self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10, fill=BOTH, expand=1)
 
         self.func = None
 
@@ -239,9 +240,9 @@ class GraphWidget(Frame):
 
         if toolbar:
             toolbar = NavigationToolbar2Tk(self.canvas, controller)
-            toolbar.pack(side=TOP, pady=10, padx=100)
+            toolbar.pack(side=TOP, pady=10, padx=50, fill=BOTH, expand=1)
             toolbar.update()
-            self.canvas._tkcanvas.pack(side=TOP)
+            self.canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
 
     def set_title(self, title):
         self.f.suptitle(title)
@@ -407,8 +408,8 @@ class ScrollFrame(Frame):
     def __init__(self, parent, controller, width=0, height=0, bd=0):
         Frame.__init__(self, parent)
 
-        bgcol='#00FF00' # settings.BG_COLOR
-        bgcol2='#00FF66' # settings.BG_COLOR
+        bgcol= settings.BG_COLOR
+        bgcol2=settings.BG_COLOR
 
         if width or height:
             self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol, width=width, height=height)
@@ -461,7 +462,7 @@ class FileManager(Frame):
 
         self.main_frame = ScrollFrame(self, self)
 
-        file_manager = Frame(self.main_frame.viewPort, bg='#0000FF')
+        file_manager = Frame(self.main_frame.viewPort)
         #file_manager.pack(fill=BOTH, expand=True, padx=100, pady=30)
         file_manager.grid(column=0,row=0,sticky='nswe')
 
@@ -661,7 +662,7 @@ class HeaderSelector(Frame):
         Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wns')
         Label(definitions_frame, text='Temperature: the header that will be used to calculate the temperature').grid(row=1, column=0, sticky='wns')
         # todo: put definition
-        Label(definitions_frame, text='Energy current: put definition').grid(row=2, column=0, sticky='wns')
+        Label(definitions_frame, text='Energy current: put definition ').grid(row=2, column=0, sticky='wns')
         Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wns')
         definitions_frame.columnconfigure(0,weight=1)
         for i in range(0,3):
@@ -757,7 +758,7 @@ class OtherVariables(Frame):
         self.filter_width_entry.grid(row=8, column=1, padx=2, sticky='w', pady=10)
 
         button_frame = Frame(variable_frame)
-        button_frame.grid(row=9, column=0, sticky='w')
+        button_frame.grid(row=9, column=0, sticky='ws')
 
         Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.back()).grid(row=0, column=0)
@@ -872,23 +873,30 @@ class FStarSelector(Frame):
         sections = Frame(main_frame)
         sections.grid(row=0, column=0, sticky='nswe')
 
-        self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
+        self.graph = GraphWidget(sections, sections, size=(7, 4), toolbar=True)
+        self.graph.pack(side=TOP, anchor='w', padx=10, fill=BOTH, expand=1)
 
         self.slider_locked = False
 
         slider_frame = Frame(sections)
-        slider_frame.pack(side=TOP, anchor='w', padx=10)
+        slider_frame.pack(side=TOP, anchor='w', padx=80, fill=BOTH, expand=1)
 
         self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1)#, length=520)
         self.slider.grid(row=0, column=0,sticky='we')
+        slider_frame.columnconfigure(0,weight=9)
 
         lock_slider = Button(slider_frame, command=lambda: self._lock_unlock_slider(),
                              bd=1, relief=SOLID)
         lock_slider.grid(row=0, column=1, padx=2)
+        slider_frame.columnconfigure(1,weight=1)
         self.graph.attach_slider(self.slider)
 
+        self.change_view_button = Button(slider_frame, text='Zoom-in', command=lambda: self._change_view())
+        self.change_view_button.grid(row=0, column=2, sticky='w')
+        slider_frame.columnconfigure(2,weight=1)
+
         value_frame = Frame(sections)
-        value_frame.pack(side=LEFT, pady=10, padx=100)
+        value_frame.pack(side=LEFT, pady=10, padx=20,fill=BOTH, expand=1)
 
         Label(value_frame, text='Selected value:').grid(row=0, column=0, sticky='w', pady=4)
         self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
@@ -903,7 +911,7 @@ class FStarSelector(Frame):
                command=self.resample).grid(row=2, column=0, sticky='w')
 
         button_frame = Frame(value_frame)
-        button_frame.grid(row=3, column=2)
+        button_frame.grid(row=3, column=0)
 
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
         back_button.grid(row=0, column=0, sticky='w', padx=5)
@@ -911,11 +919,10 @@ class FStarSelector(Frame):
         next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next())
         next_button.grid(row=0, column=1, sticky='w', padx=5)
 
-        self.change_view_button = Button(slider_frame, text='Zoom-in', command=lambda: self._change_view())
-        self.change_view_button.grid(row=0, column=2, sticky='w')
+
 
         self.info_section = Frame(main_frame)
-        self.info_section.grid(row=0, column=1, sticky='nswe', pady=40)
+        self.info_section.grid(row=0, column=1, sticky='nswe', pady=20)
 
         main_frame.columnconfigure(0,weight=3)
         main_frame.columnconfigure(1,weight=1)
@@ -1041,11 +1048,11 @@ class PStarSelector(Frame):
         #TopBar(parent, controller)
 
         sections = Frame(self)
-        sections.pack(side=LEFT, anchor='n')
+        sections.pack(side=LEFT, anchor='n', fill=BOTH, expand=1)
         self.graph = GraphWidget(parent, sections, size=(7, 4), toolbar=True)
 
         variable_frame = Frame(sections, bd=1, relief=SOLID)
-        variable_frame.pack(side=TOP, pady=3)
+        variable_frame.pack(side=TOP, pady=3, fill=BOTH, expand=1)
 
         Label(variable_frame, text='f*: ', font='Arial 12 bold').grid(row=0, column=0)
         self.fstar_label = Label(variable_frame, text='')
