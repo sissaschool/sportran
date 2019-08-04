@@ -35,7 +35,6 @@ class HeatCurrent(MDSample):
      - freq_units    frequency units   [THz or red] (optional)
     """
 
-
     def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
 
         # check if we have a multicomponent fluid
@@ -95,18 +94,15 @@ class HeatCurrent(MDSample):
             msg += self.dct.__repr__()
         return msg
 
-    #overrides MDSample methos
+    # overrides MDSample methos
     def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True,
-                    normalize=False):
+                    normalize=False):  # yapf: disable
         if self.many_currents:
             if self.otherMD is None:
-                raise ValueError('self.otherMD cannot be None (wrong/missing initialization?)')
+                raise RuntimeError('self.otherMD cannot be None (wrong/missing initialization?)')
             self.compute_kappa_multi(self.otherMD, FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
             return
-        super(HeatCurrent,self).compute_psd(FILTER_WINDOW_WIDTH,method,DT_FS,average_components,normalize)
-
-
-
+        super(HeatCurrent, self).compute_psd(FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
 
     def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
         """
