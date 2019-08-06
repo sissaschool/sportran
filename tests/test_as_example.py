@@ -30,8 +30,6 @@ def test_example_NaCl():
     print('*********************\n   TEST:  passed.\n*********************\n')
 
 
-
-
 def test_example_SiO2():
 
     import os
