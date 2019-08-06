@@ -126,19 +126,19 @@ class FStarSelector(Frame):
         self.update()
 
     def resample(self):
-        cu.Data.fstar = float(self.value_entry.get())
+        cu.data.fstar = float(self.value_entry.get())
         filter_width = float(self.filter_width.get())
-        cu.Data.psd_filter_width = filter_width
+        cu.data.psd_filter_width = filter_width
 
-        if cu.Data.fstar > 0:
-            self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
-                                 PSD_FILTER_W=cu.Data.psd_filter_width)
+        if cu.data.fstar > 0:
+            self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
+                                 PSD_FILTER_W=cu.data.psd_filter_width)
             self.graph.update_cut()
 
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
 
-        self.graph.cut_line = cu.Data.xf.Nyquist_f_THz
+        self.graph.cut_line = cu.data.xf.Nyquist_f_THz
 
         if self.graph.show_selected_area:
             self.graph.show_selected_area = True
@@ -158,26 +158,26 @@ class FStarSelector(Frame):
 
         log.set_func(None)
         if response:
-            cu.Data.fstar = float(self.value_entry.get())
-            cu.Data.loaded = True
-            if self.next_frame:
-                self.main.show_frame(self.next_frame)
+            cu.data.fstar = float(self.value_entry.get())
+            cu.data.loaded = True
+            if self.prev_frame:
+                self.main.show_frame(self.prev_frame)
             else:
                 raise ValueError('Prev frame isn\'t defined')
 
         elif not response:
-            cu.Data.fstar = 0.0
-            cu.Data.loaded = False
-            cu.Data.temperature = 0.0
-            cu.Data.volume = 0.0
-            cu.Data.DT_FS = 0.0
-            cu.Data.psd_filter_width = 0.1
+            cu.data.fstar = 0.0
+            cu.data.loaded = False
+            cu.data.temperature = 0.0
+            cu.data.volume = 0.0
+            cu.data.DT_FS = 0.0
+            cu.data.psd_filter_width = 0.1
 
             self.graph.other_graph.clear()
             self.graph.graph.clear()
             self.graph.cut_line = 0
-            if self.next_frame:
-                self.main.show_frame(self.next_frame)
+            if self.prev_frame:
+                self.main.show_frame(self.prev_frame)
             else:
                 raise ValueError('Prev frame isn\'t defined')
         else:
@@ -185,7 +185,7 @@ class FStarSelector(Frame):
 
     def next(self):
         self.resample()
-        cu.Data.fstar = cu.Data.xf.Nyquist_f_THz
+        cu.data.fstar = cu.data.xf.Nyquist_f_THz
         if self.next_frame:
             self.main.show_frame(self.next_frame)
         else:
@@ -194,7 +194,7 @@ class FStarSelector(Frame):
     def update(self):
         super().update()
 
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j, PSD_FILTER_W=cu.Data.psd_filter_width)
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width)
         self._init_output_frame()
         if self.info:
             cu.update_info(self.info)

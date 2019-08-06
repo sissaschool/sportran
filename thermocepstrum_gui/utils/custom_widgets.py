@@ -158,7 +158,7 @@ class GraphWidget(Frame):
                 self.entry.insert(0, self.cut_line)
 
             self.graph.clear()
-            cu.set_graph(self.graph, self.func, x=cu.Data.j, PSD_FILTER_W=cu.Data.psd_filter_width)
+            cu.set_graph(self.graph, self.func, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width)
             for graph in self.other_graph:
                 cu.set_graph(self.graph, graph[1], **graph[2])
 
@@ -214,6 +214,7 @@ class TextWidget(Frame):
         self.text_box = Text(text_frame, height=height, width=width, bd=0)
         self.text_box.pack(padx=4, pady=4)
         self.text_box.config(state=DISABLED)
+        self.text_box.see(END)
 
     def clear(self):
         self.text_box.config(state=NORMAL)
@@ -224,6 +225,7 @@ class TextWidget(Frame):
         self.text_box.config(state=NORMAL)
         self.text_box.insert(INSERT, str(text)+'\n')
         self.text_box.config(state=DISABLED)
+        self.text_box.see(END)
 
 
 class CheckList(Frame):

@@ -63,8 +63,8 @@ class HeaderSelector(Frame):
         if 'Energy current' in description:
             if description.count('Energy current') == 1:
                 if description.count('Temperature') <= 1:
-                    cu.Data.keys = keys
-                    cu.Data.description = description
+                    cu.data.keys = keys
+                    cu.data.description = description
 
                     if self.next_frame:
                         self.main.show_frame(self.next_frame)
@@ -78,8 +78,8 @@ class HeaderSelector(Frame):
             msg.showerror('No keys selected', 'You must select almost one header key!')
 
     def back(self):
-        cu.Data.keys = None
-        cu.Data.description = None
+        cu.data.keys = None
+        cu.data.description = None
 
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
@@ -88,5 +88,5 @@ class HeaderSelector(Frame):
 
     def update(self):
         super().update()
-        keys = cu.load_keys(cu.Data.CURRENT_FILE)
+        keys = cu.load_keys(cu.data.CURRENT_FILE)
         self.check_list.set_list(keys)

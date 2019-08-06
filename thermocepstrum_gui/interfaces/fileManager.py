@@ -11,7 +11,7 @@ This file contains the file manager interface and functionality.
 import os
 
 from tkinter import messagebox as msg
-import tkinter.filedialog as dialog
+import tkinter.filedialog as fdialog
 from tkinter.font import Font
 
 from thermocepstrum_gui.utils.custom_widgets import *
@@ -183,7 +183,7 @@ class FileManager(Frame):
         This function allow the user to search in a more accurately way the file
         by using the OS manager.
         """
-        path = dialog.askopenfile(initialdir=os.getcwd(),
+        path = fdialog.askopenfile(initialdir=os.getcwd(),
                                   title="Select file",
                                   filetypes=(("all files", "*.*"),))
 
@@ -241,8 +241,8 @@ class FileManager(Frame):
         if self.selected.get():
             if os.path.exists(self.selected.get()):
                 if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
-                    cu.Data.CURRENT_FILE = self.selected.get()
-                    cu.Data.inputformat = self.input_selector.get()
+                    cu.data.CURRENT_FILE = self.selected.get()
+                    cu.data.inputformat = self.input_selector.get()
 
                     # Show the next interface
                     if self.next_frame:

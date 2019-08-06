@@ -77,7 +77,7 @@ class OtherVariables(Frame):
         er = False
         msgs = []
         if temperature:
-            if temperature < 0 and 'Temperature' not in cu.Data.description:
+            if temperature < 0 and 'Temperature' not in cu.data.description:
                 msgs.append('Temperature can\'t be less than 0')
                 er = True
         else:
@@ -108,15 +108,15 @@ class OtherVariables(Frame):
             er = True
 
         if not er:
-            cu.Data.psd_filter_width = psd_filter_width
-            cu.load_data(cu.Data.CURRENT_FILE,
-                         cu.Data.inputformat,
-                         cu.Data.keys,
-                         descriptions=cu.Data.description,
+            cu.data.psd_filter_width = psd_filter_width
+            cu.load_data(cu.data.CURRENT_FILE,
+                         cu.data.inputformat,
+                         cu.data.keys,
+                         descriptions=cu.data.description,
                          temperature=temperature,
                          units='metal',
                          volume=volume,
-                         psd_filter_w=cu.Data.psd_filter_width,
+                         psd_filter_w=cu.data.psd_filter_width,
                          DT_FS=DT_FS)
 
             if self.next_frame:
@@ -128,7 +128,7 @@ class OtherVariables(Frame):
             msg.showerror('Value error', ermsg)
 
     def back(self):
-        cu.Data.psd_filter_width = 0.1
+        cu.data.psd_filter_width = 0.1
 
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
@@ -139,9 +139,9 @@ class OtherVariables(Frame):
         super().update()
 
         self.temperature_entry.config(state=NORMAL)
-        self.temperature_entry.config(value=cu.Data.temperature)
+        self.temperature_entry.config(value=cu.data.temperature)
 
-        if 'Temperature' in cu.Data.description:
+        if 'Temperature' in cu.data.description:
             self.temperature_entry.config(state=DISABLED)
             self.temp_advertise.config(text='The temperature will be automatically calculated')
         else:
@@ -149,9 +149,9 @@ class OtherVariables(Frame):
             self.temp_advertise.config(text='')
 
         self.volume_entry.delete(0, END)
-        self.volume_entry.insert(0, cu.Data.volume)
+        self.volume_entry.insert(0, cu.data.volume)
         self.DT_FS_entry.delete(0, END)
-        self.DT_FS_entry.insert(0, cu.Data.DT_FS)
-        self.filter_width_entry.config(value=cu.Data.psd_filter_width)
+        self.DT_FS_entry.insert(0, cu.data.DT_FS)
+        self.filter_width_entry.config(value=cu.data.psd_filter_width)
         self.main_frame.viewPort.columnconfigure(0, weight=1)
         self.main_frame.viewPort.rowconfigure(0, weight=1)

@@ -35,29 +35,35 @@ class Data:
     contains all the variables that the software use.
     """
 
-    CURRENT_FILE = ''
-    loaded = False
+    def __init__(self):
+        self.CURRENT_FILE = ''
+        self.loaded = False
 
-    inputformat = None
-    jfile = None
-    jdata = None
-    j = None
-    xf = None
-    axis = None
+        self.inputformat = None
+        self.jfile = None
+        self.jdata = None
+        self.j = None
+        self.xf = None
+        self.axis = None
 
-    keys = None
-    description = None
+        self.keys = None
+        self.description = None
 
-    temperature = 0.0
-    temperature_std = 0.0
-    volume = 0
-    DT_FS = 0.0
-    currents = None
+        self.temperature = 0.0
+        self.temperature_std = 0.0
+        self.volume = 0
+        self.DT_FS = 0.0
+        self.currents = None
 
-    fstar = 0.0
-    old_fstar = 0.0
-    psd_filter_width = 0.1
+        self.fstar = 0.0
+        self.old_fstar = 0.0
+        self.psd_filter_width = 0.1
 
+
+try:
+    data
+except:
+    data = Data()
 
 # -------- GRAPH SECTION --------
 
@@ -83,7 +89,7 @@ def set_graph(axis_, func, **kwargs):
     :return axis: the new graph.
     """
 
-    axis = func(axis=axis_, external_object=Data, **kwargs)
+    axis = func(axis=axis_, external_object=data, **kwargs)
     return axis
 
 
@@ -187,22 +193,22 @@ def load_data(inputfile, input_format, selected_keys, temperature=None, NSTEPS=0
               run_keyword='', units=None, DT_FS=None, volume=None, psd_filter_w=None, axis_=None,
               structurefile=None, descriptions=[]):
 
-    Data.temperature = temperature
-    Data.volume = volume
-    Data.DT_FS = DT_FS
-    Data.inputformat = input_format
+    data.temperature = temperature
+    data.volume = volume
+    data.DT_FS = DT_FS
+    data.inputformat = input_format
 
     if input_format == 'table':
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
-        Data.jfile = jfile
+        data.jfile = jfile
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
-        Data.jdata = jfile.data
+        data.jdata = jfile.data
     elif input_format == 'dict':
-        Data.jdata = np.load(inputfile)
+        data.jdata = np.load(inputfile)
     elif input_format == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
-        Data.jdata = jfile.data
+        data.jdata = jfile.data
     else:
         raise NotImplemented('input format not implemented.')
 
@@ -210,16 +216,16 @@ def load_data(inputfile, input_format, selected_keys, temperature=None, NSTEPS=0
 #    print(selected_keys, jindex)
 
     if descriptions.count('Temperature') == 1:
-        temperature = get_temp(Data.jdata, get_cor_index(selected_keys, descriptions, 'Temperature')[0])
-        Data.temperature = temperature
+        temperature = get_temp(data.jdata, get_cor_index(selected_keys, descriptions, 'Temperature')[0])
+        data.temperature = temperature
         i = get_cor_index(selected_keys, descriptions, 'Temperature')[1]
         del descriptions[i]
         del selected_keys[i]
     if volume is None:
-        volume = get_volume(Data.jdata, structurefile)
+        volume = get_volume(data.jdata, structurefile)
 
     if NSTEPS == 0:
-        NSTEPS = Data.jdata[list(Data.jdata.keys())[0]].shape[0]
+        NSTEPS = data.jdata[list(data.jdata.keys())[0]].shape[0]
     if True: #jindex is None:
         heat_current, i = get_cor_index(selected_keys, descriptions, 'Energy current')
         del descriptions[i]
@@ -228,7 +234,7 @@ def load_data(inputfile, input_format, selected_keys, temperature=None, NSTEPS=0
         for other in selected_keys:
             currents_headers.append(other)
 
-        currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in currents_headers])
+        currents = np.array([data.jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in currents_headers])
     else:
         pass
         # if sindex is None:
@@ -236,13 +242,13 @@ def load_data(inputfile, input_format, selected_keys, temperature=None, NSTEPS=0
         # else:
         #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - Data.jdata[key][START_STEP:(
         #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
-    Data.currents = currents
+    data.currents = currents
     # create HeatCurrent object
     emsgs = []
     if volume is not -1:
         if temperature is not -1:
-            Data.j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
-            gm.initialize(Data.j)
+            data.j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
+            gm.initialize(data.j)
         else:
             emsgs.append('Invalid temperature!')
             return -1, emsgs
@@ -323,17 +329,17 @@ def update_info(frame):
     """
 
     frame.clear()
-    frame.write('file name:        {}'.format(Data.jfile.filename))
-    frame.write('file size:        {}'.format(get_file_size(Data.jfile.filename)))
-    frame.write('input format:     {}'.format(Data.inputformat))
-    frame.write('data length:      {}'.format(Data.jfile.MAX_NSTEPS))
-    frame.write('selected ckeys:   {}'.format(Data.jfile.select_ckeys))
+    frame.write('file name:        {}'.format(data.jfile.filename))
+    frame.write('file size:        {}'.format(get_file_size(data.jfile.filename)))
+    frame.write('input format:     {}'.format(data.inputformat))
+    frame.write('data length:      {}'.format(data.jfile.MAX_NSTEPS))
+    frame.write('selected ckeys:   {}'.format(data.jfile.select_ckeys))
     frame.write('------------------------------------')
-    frame.write('Temperature:      {}'.format(Data.temperature))
-    frame.write('Volume:           {}'.format(Data.volume))
-    frame.write('DT_FS:            {}'.format(Data.DT_FS))
-    frame.write('psd filter width: {}'.format(Data.psd_filter_width))
-    frame.write('F*:               {}'.format(Data.fstar))
+    frame.write('Temperature:      {}'.format(data.temperature))
+    frame.write('Volume:           {}'.format(data.volume))
+    frame.write('DT_FS:            {}'.format(data.DT_FS))
+    frame.write('psd filter width: {}'.format(data.psd_filter_width))
+    frame.write('F*:               {}'.format(data.fstar))
     # if Data.xf.dct is not None:
     #     frame.write('aic type:         {}'.format(Data.xf.dct.aic_type))
     #     frame.write('aic min:          {}'.format(Data.xf.dct.aic_min))

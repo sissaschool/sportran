@@ -92,22 +92,22 @@ class PStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
-        if self.next_frame:
-            self.main.show_frame(self.next_frame)
+        if self.prev_frame:
+            self.main.show_frame(self.prev_frame)
         else:
             raise ValueError('Prev frame isn\'t defined')
 
     def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
-        cu.Data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor-1)
+        cu.data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor - 1)
 
     def _pstar(self):
-        self.value_entry.config(from_=2, to=cu.Data.xf.Nfreqs)
+        self.value_entry.config(from_=2, to=cu.data.xf.Nfreqs)
         self.value_entry.delete(0, END)
-        self.value_entry.insert(0, (cu.Data.xf.dct.aic_Kmin+1))
+        self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
 
-        self.fstar_label.config(text='{:4f}'.format(cu.Data.fstar))
-        self.pstar_label.config(text=f'{cu.Data.xf.dct.aic_Kmin+1}')
-        self.kmin_label.config(text='{:18f} +/- {:10f} W/mK'.format(cu.Data.xf.kappa_Kmin, cu.Data.xf.kappa_Kmin_std))
+        self.fstar_label.config(text='{:4f}'.format(cu.data.fstar))
+        self.pstar_label.config(text=f'{cu.data.xf.dct.aic_Kmin + 1}')
+        self.kmin_label.config(text='{:18f} +/- {:10f} W/mK'.format(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std))
 
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
@@ -115,29 +115,29 @@ class PStarSelector(Frame):
     def _reload(self):
         self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
         self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
-        self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.Data.xf)
+        self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
         self.graph.update_cut()
 
     def _setup_pstar(self):
-        cu.Data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
+        cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
         self._pstar()
 
     def update(self):
         super().update()
 
-        if cu.Data.fstar == cu.Data.old_fstar:
+        if cu.data.fstar == cu.data.old_fstar:
             self.setted = True
         else:
             self.setted = False
-            cu.Data.old_fstar = cu.Data.fstar
+            cu.data.old_fstar = cu.data.fstar
 
         if not self.setted:
             self.setted = True
             self._setup_pstar()
 
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.Data.j)
-        self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.Data.j, fstar_THz=cu.Data.fstar,
-                             PSD_FILTER_W=cu.Data.psd_filter_width)
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
+        self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
+                             PSD_FILTER_W=cu.data.psd_filter_width)
 
         self._init_output_frame()
         if self.info:
