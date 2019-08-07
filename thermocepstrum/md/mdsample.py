@@ -46,13 +46,13 @@ class MDSample(object):
 
     MEMBERS:
         self.DT_FS                  timestep in femtoseconds
-        self.fpsd                   dummy filtered periodogram (with the moving average window)
-        self.flogpsd                dummy filtered log periodogram
+        self.fpsd                   filtered periodogram
+        self.flogpsd                filtered log-periodogram
         self.acf                    autocorrelation function
-        self.N_COMPONENTS           number of cartesian components (we will do an average on them)
-        self.MULTI_COMPONENT        True if we have more than one cartesian component
-        self.FILTER_WINDOW_WIDTH    width of the moving average filter (reduced units)
-        self.FILTER_WF              width of the moving average filter (number of samples)
+        self.N_COMPONENTS           number of equivalent (cartesian) components (an average over them will be computed)
+        self.MULTI_COMPONENT        True if N_COMPONENTS > 1
+        self.FILTER_WINDOW_WIDTH    width of the moving average filter (reduced frequency units)
+        self.FILTER_WF              width of the moving average filter (number of frequencies)
 
     """
 
@@ -67,6 +67,7 @@ class MDSample(object):
         self.acf = None
         self.NLAGS = None
         self.cospectrum = None
+        self.fcospectrum = None
 
         # other variables...
         self.FILTER_WINDOW_WIDTH = None
@@ -212,13 +213,12 @@ class MDSample(object):
         self.DF = 0.5 / (self.Nfreqs - 1)
         return
 
-
     #overridden in HeatCurrent (will call, at the end, this method)
     def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True,
                     normalize=False):   # yapf: disable
         """
         Compute the periodogram from the trajectory or the spectrum.
-        If a FILTER_WINDOW_WIDTH (red units) is known or given, the psd is also filtered.
+        If a FILTER_WINDOW_WIDTH (reduced frequency units) is known or given, the psd is also filtered.
         The PSD is multiplied by DT_FS at the end.
         """
 
@@ -267,7 +267,7 @@ class MDSample(object):
             raise ValueError('Filter window width not defined.')
         if (window_type == 'rectangular'):
             self.fpsd = runavefilter(self.psd, self.FILTER_WF)
-            if self.cospectrum is not None:   #try to filter the other currents (if they are present)
+            if self.cospectrum is not None:   # try to filter the other currents (if present)
                 self.fcospectrum = []
                 for i in range(self.cospectrum.shape[0]):
                     self.fcospectrum.append([])
@@ -275,8 +275,6 @@ class MDSample(object):
                         ffpsd = runavefilter(self.cospectrum[i, j], self.FILTER_WF)
                         self.fcospectrum[i].append(ffpsd / self.L)
                 self.fcospectrum = np.asarray(self.fcospectrum)
-            #except AttributeError:
-            #    pass
             if logpsd_filter_type == 1:
                 self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
             else:
@@ -305,25 +303,24 @@ class MDSample(object):
         self.taum = np.mean(self.tau, axis=1)   # average tau
         return
 
-    #this is called by HeatCurrent.
+    # this is called by HeatCurrent.
     def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None,
                             average_components=True, normalize=False, call_other=True):   # yapf: disable
         """
-        Computes the real fourier transform of the temporal series, then computes the thermal conductivity coefficient
-        obtained from the cospectrum matrix. The results have almost the same statistical properties:
-        !!!!
-        !!!!  WARNING: the chi-square distribution have ndf=n-l+1, where n is the number of temporal series, l is the number of currents (stored in self.ndf_chi).
-        !!!!
-        If n<l this will not work.
-        In this routine it is already used the correct factor in the mean over the number of temporal series
-        (no need for different factors in front of the final result, apart of a 0.5 factor that is needed also in the one componet case).
-        The output arrays are the same as the one-component psd spectrum.
+        For multi-component (many current) systems: compute the cospectrum matrix and the transport coefficient.
+        The results have almost the same statistical properties. The chi-square distribution has ndf = n - l + 1,
+        where n is the number of time series, l is the number of currents (stored in self.ndf_chi).
+         ! NOTICE: if n < l this will not work.
+
+        In this routine the mean over the number of temporal series is already multiplied by the correct factor (the
+        transport coefficient will be obtained by multiplying the result by 0.5, as in the one-component case).
+        The output arrays are the same as in the one-component case.
         If a FILTER_WINDOW_WIDTH is known or given, the psd is also filtered.
         The elements of the matrix are multiplied by DT_FS at the end.
-        others is a list of other object like this, with the other currents loaded.
+        others is a list of other currents, i.e. MDSample objects. For example, in the case of 4 currents, of which
+        j is the energy current and j1, j2, j3 are mass currents (MDSample objects):
 
-        example call (4 currents in total, j1,j2,j3 are other MDSample objects):
-        j.compute_kappa_multi(others=[j1,j2,j3], FILTER_WINDOW_WIDTH=FILTER_WINDOW_WIDTH)
+           j.compute_kappa_multi(others=[j1,j2,j3], FILTER_WINDOW_WIDTH=FILTER_WINDOW_WIDTH)
         """
         # check if others is an array
         if not isinstance(others, (list, tuple, np.ndarray)):
@@ -352,31 +349,31 @@ class MDSample(object):
         else:
             return
 
-        # define the matrix. Its shape is (2,2,Nfreqs,n_spatial_dim)
-        #  [  self.spectrALL*self.spectrALL.conj()       self.spectrALL*other.spectrALL.conj() ]
-        #  [ other.spectrALL*self.spectrALL.conj()      other.spectrALL*other.spectrALL.conj() ]
+        # define the cospectrum matrix. Its shape is (2, 2, Nfreqs,n_spatial_dim)
+        #  [  self.spectrALL*self.spectrALL.conj()     self.spectrALL*other.spectrALL.conj() ]
+        #  [ other.spectrALL*self.spectrALL.conj()    other.spectrALL*other.spectrALL.conj() ]
         other_spectrALL = []
         for other in others:
             other_spectrALL.append(other.spectrALL)
 
-        # beautiful numpy function. The output is the matrix made of the outer product of only the first indexes of the two arrays
+        # compute the matrix defined by the outer product of only the first indexes of the two arrays
         covarALL = self.DT_FS / (2.*(self.Nfreqs - 1.)) *\
-                    np.einsum('a...,b...->ab...', np.array([self.spectrALL] + other_spectrALL), np.array([self.spectrALL] + other_spectrALL).conj())
+                    np.einsum('a...,b...->ab...', np.array([self.spectrALL] + other_spectrALL),
+                                                  np.array([self.spectrALL] + other_spectrALL).conj())
 
-        # compute number of degrees of freedom of the chi-square distribution of the psd
+        # number of degrees of freedom of the chi-square distribution of the psd
         ndf_chi = covarALL.shape[3] - len(other_spectrALL)
 
-        # compute the sum over the last axis (x,y,z components):
+        # compute the sum over the last axis (equivalent cartesian components):
         self.L = covarALL.shape[3]   ## isn't is == to N_CURRENTS?
         self.cospectrum = covarALL.sum(axis=3)
 
-        # compute the element 1/"(0,0) of the inverse" (aka the coefficient of thermal conductivity)
+        # compute the element 1/"(0,0) of the inverse" (aka the transport coefficient)
         # the diagonal elements of the inverse have very convenient statistical properties
         multi_psd = (np.linalg.inv(self.cospectrum.transpose((2, 0, 1)))[:, 0, 0]**-1).real / ndf_chi
 
         if normalize:
             multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
-
 
         self.ndf_chi = ndf_chi
         self.psd = multi_psd
