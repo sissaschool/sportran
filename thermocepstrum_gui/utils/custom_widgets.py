@@ -92,8 +92,8 @@ class GraphWidget(Frame):
 
         self.canvas = FigureCanvasTkAgg(self.f, controller)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10, fill=BOTH, expand=1)
-
+        self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10, fill=BOTH)
+        self.f.subplots_adjust(left=0.03, right=0.89, top=0.95, bottom=0.2)
         self.func = None
 
         self.other_graph = []
@@ -106,9 +106,9 @@ class GraphWidget(Frame):
 
         if toolbar:
             toolbar = NavigationToolbar2Tk(self.canvas, controller)
-            toolbar.pack(side=TOP, pady=10, padx=50, fill=BOTH, expand=1)
+            toolbar.pack(side=TOP, pady=10, padx=50, fill=BOTH)
             toolbar.update()
-            self.canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
+            self.canvas._tkcanvas.pack(side=TOP, fill=BOTH)
 
     def set_title(self, title):
         self.f.suptitle(title)
@@ -209,10 +209,10 @@ class TextWidget(Frame):
         Frame.__init__(self, parent, controller)
 
         text_frame = LabelFrame(controller, text=title, bd=1, relief=SOLID)
-        text_frame.pack(side=TOP)
+        text_frame.pack(side=TOP, fill='x', padx=20)
 
         self.text_box = Text(text_frame, height=height, width=width, bd=0)
-        self.text_box.pack(padx=4, pady=4)
+        self.text_box.pack(side=TOP, fill=BOTH, expand=1)
         self.text_box.config(state=DISABLED)
         self.text_box.see(END)
 

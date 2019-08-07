@@ -14,71 +14,89 @@ class FStarSelector(Frame):
         self.prev_frame = None
 
         self.parent = parent
-        main_frame = self
+        self.main_frame = self
 
-        main_frame.grid(column=0, row=0, sticky='nswe')
+        self.main_frame.grid(column=0, row=0, sticky='nsew')
 
-        sections = Frame(main_frame)
-        sections.grid(row=0, column=0, sticky='nswe')
+        # Label(self.main_frame, text='Select F*', font='Arial 14 bold').grid(row=0, column=0)
 
-        self.graph = GraphWidget(sections, sections, size=(7, 4), toolbar=True)
-        self.graph.pack(side=TOP, anchor='w', padx=10, fill=BOTH, expand=1)
+        self.sections = Frame(self.main_frame)
+        self.sections.grid(row=0, column=0, sticky='nsew', padx=20)
+
+        self.graph = GraphWidget(self.sections, self.sections, size=(7, 4), toolbar=True)
 
         self.slider_locked = False
 
-        slider_frame = Frame(sections)
-        slider_frame.pack(side=TOP, anchor='w', padx=80, fill=BOTH, expand=1)
+        slider_frame = Frame(self.sections)
+        slider_frame.pack(side=TOP, anchor='w', padx=20, fill=BOTH)
+
+        Label(slider_frame, text='Slide to select F* or write the value',
+              font='Arial 12').grid(row=0, column=0, sticky='w', padx=20)
 
         self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1)
-        self.slider.grid(row=0, column=0, sticky='we')
-        slider_frame.columnconfigure(0, weight=9)
-
-        lock_slider = Button(slider_frame, command=lambda: self._lock_unlock_slider(),
-                             bd=1, relief=SOLID)
-        lock_slider.grid(row=0, column=1, padx=2)
+        self.slider.grid(row=1, column=0, sticky='we', columnspan=1, padx=20, pady=5)
+        slider_frame.columnconfigure(0, weight=10)
         slider_frame.columnconfigure(1, weight=1)
         self.graph.attach_slider(self.slider)
 
-        self.change_view_button = Button(slider_frame, text='Zoom-in', command=lambda: self._change_view())
-        self.change_view_button.grid(row=0, column=2, sticky='w')
-        slider_frame.columnconfigure(2, weight=1)
+        slider_options_frame = Frame(slider_frame)
+        slider_options_frame.grid(row=2, column=0, sticky='w', padx=20, pady=2)
 
-        value_frame = Frame(sections)
-        value_frame.pack(side=LEFT, pady=10, padx=20, fill=BOTH, expand=1)
+        lock_slider = Button(slider_options_frame, command=lambda: self._lock_unlock_slider(),
+                             bd=1, relief=SOLID)
+        lock_slider.grid(row=0, column=0, padx=2, sticky='w')
 
-        Label(value_frame, text='Selected value:').grid(row=0, column=0, sticky='w', pady=4)
+        self.change_view_button = Button(slider_options_frame, text='Zoom-in', command=lambda: self._change_view())
+        self.change_view_button.grid(row=0, column=1, sticky='w', padx=2)
+
+        value_frame = Frame(self.sections)
+        value_frame.pack(side=TOP, pady=10, padx=20, fill=BOTH, expand=1)
+
+        ttk.Separator(value_frame, orient=HORIZONTAL).grid(row=0, column=0, sticky='we', columnspan=4, pady=5, padx=20)
+
+        Label(value_frame, text='Selected value:').grid(row=1, column=0, sticky='w', pady=4, padx=20)
         self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
-        self.value_entry.grid(row=0, column=1, sticky='w')
+        self.value_entry.grid(row=1, column=1, sticky='we', padx=20)
         self.graph.attach_entry(self.value_entry)
 
-        Label(value_frame, text='Filter width:').grid(row=1, column=0, sticky='w')
-        self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID)
-        self.filter_width.grid(row=1, column=1, sticky='w', pady=10)
+        value_frame.columnconfigure(1, weight=1, minsize=150)
+        value_frame.columnconfigure(2, weight=1, minsize=10)
+        value_frame.columnconfigure(3, weight=1, minsize=300)
+        value_frame.columnconfigure(4, weight=1, minsize=150)
 
-        Button(value_frame, text='Resample', bd=1, relief=SOLID,
-               command=self.resample).grid(row=2, column=0, sticky='w')
+        Label(value_frame, text='Filter width:').grid(row=2, column=0, sticky='w', padx=20)
+        self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID)
+        self.filter_width.grid(row=2, column=1, sticky='we', pady=10, padx=20)
+
+        self.fstar_screen = Label(value_frame, text='F*: ', font='Arial 14 bold', width=20, bd=1, relief=SOLID)
+        self.fstar_screen.grid(row=1, column=3, sticky='we', padx=50)
+
+        Button(value_frame, text='Resample', font='Arial 12 bold', bd=1, relief=SOLID,
+               command=self.resample, width=20).grid(row=2, column=3, sticky='wens', rowspan=1, padx=50)
 
         button_frame = Frame(value_frame)
-        button_frame.grid(row=3, column=0)
+        button_frame.grid(row=3, column=0, pady=10)
 
-        back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back())
-        back_button.grid(row=0, column=0, sticky='w', padx=5)
+        back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back(), width=10)
+        back_button.grid(row=0, column=0, sticky='we', padx=5)
 
-        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next())
-        next_button.grid(row=0, column=1, sticky='w', padx=5)
+        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next(), width=10)
+        next_button.grid(row=0, column=1, sticky='we', padx=5)
 
-        self.info_section = Frame(main_frame)
-        self.info_section.grid(row=0, column=1, sticky='nswe', pady=20)
+        self.info_section = Frame(self.main_frame)
+        self.info_section.grid(row=0, column=1, sticky='nswe')
 
-        main_frame.columnconfigure(0, weight=3)
-        main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(0, weight=1)
+        self.main_frame.columnconfigure(0, weight=3)
+        self.main_frame.columnconfigure(1, weight=4)
+        self.main_frame.rowconfigure(0, weight=1)
+
+        self.main_frame.columnconfigure(0, weight=1, minsize=720)
+        self.main_frame.columnconfigure(1, weight=1, minsize=200)
+
         self.logs = None
         self.info = None
 
         self._init_output_frame()
-
-        # StatusFrame(parent, controller)
 
     def _lock_unlock_slider(self, force=False):
         if self.slider_locked or not force:
@@ -103,16 +121,24 @@ class FStarSelector(Frame):
             self.graph.update_cut()
 
     def _init_output_frame(self):
+        if not TopBar.show_info.get() and not TopBar.show_logs.get():
+            self.info_section.grid_remove()
+            self.sections.grid(row=0, column=0, sticky='nsew', padx=20, columnspan=2)
+        else:
+            self.info_section.grid(row=0, column=1, sticky='nswe')
+            self.sections.grid(row=0, column=0, sticky='nsew', padx=20, columnspan=1)
+
         if TopBar.show_logs.get():
             if not self.logs:
-                self.logs = TextWidget(self.parent, self.info_section, 'Logs', 15, 45)
+                print('log')
+                self.logs = TextWidget(self.main_frame, self.info_section, 'Logs', 15, 25)
         else:
             if self.logs:
                 self._del_out_frames()
 
         if TopBar.show_info.get():
             if not self.info:
-                self.info = TextWidget(self.parent, self.info_section, 'Info', 10, 45)
+                self.info = TextWidget(self.main_frame, self.info_section, 'Info', 10, 25)
         else:
             if self.info:
                 self._del_out_frames()
@@ -139,6 +165,7 @@ class FStarSelector(Frame):
             msg.showwarning('Value error', 'F* must be greater than zero')
 
         self.graph.cut_line = cu.data.xf.Nyquist_f_THz
+        self.fstar_screen.config(text='F*: {}'.format(round(cu.data.xf.Nyquist_f_THz, 3)))
 
         if self.graph.show_selected_area:
             self.graph.show_selected_area = True

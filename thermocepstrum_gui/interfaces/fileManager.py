@@ -71,7 +71,7 @@ class FileManager(Frame):
 
         self.next_button = Button(selection_frame, text='Next', relief=SOLID, bd=1,
                                   command=lambda: self.next())
-        self.next_button.grid(row=1, column=0, sticky='w', pady=10)
+        self.next_button.grid(row=1, column=0, sticky='we', pady=10)
         selection_frame.rowconfigure(0, weight=1)
         selection_frame.rowconfigure(1, weight=1)
 

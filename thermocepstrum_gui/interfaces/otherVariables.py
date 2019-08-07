@@ -20,7 +20,10 @@ class OtherVariables(Frame):
 
         Label(variable_frame, text='Set variables', font='Arial 14 bold').grid(row=0, column=0, pady=2, sticky='w')
 
-        Label(variable_frame, text='Environment variables', font='Arial 11').grid(row=1, column=0, pady=20)
+        variable_frame.columnconfigure(0, weight=0, minsize=150)
+        variable_frame.columnconfigure(1, weight=1, minsize=200)
+
+        Label(variable_frame, text='Environment variables', font='Arial 11').grid(row=1, column=0, pady=20, sticky='w')
         Separator(variable_frame, orient=HORIZONTAL).grid(row=2, sticky='we', columnspan=3)
 
         Label(variable_frame, text='Temperature: ').grid(row=3, column=0, sticky='w')
@@ -48,10 +51,10 @@ class OtherVariables(Frame):
         button_frame.grid(row=9, column=0, sticky='ws', pady=10)
 
         Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
-               command=lambda: self.back()).grid(row=0, column=0)
+               command=lambda: self.back(), width=10).grid(row=0, column=0, sticky='we')
 
         Button(button_frame, text='Next', bd=1, relief=SOLID, font='Arial 12',
-               command=lambda: self.next()).grid(row=0, column=1, padx=5)
+               command=lambda: self.next(), width=10).grid(row=0, column=1, padx=5, sticky='we')
 
     def set_next_frame(self, frame):
         self.next_frame = frame
@@ -111,7 +114,7 @@ class OtherVariables(Frame):
             cu.data.psd_filter_width = psd_filter_width
             cu.load_data(cu.data.CURRENT_FILE,
                          cu.data.inputformat,
-                         cu.data.keys,
+                         selected_keys=cu.data.keys,
                          descriptions=cu.data.description,
                          temperature=temperature,
                          units='metal',

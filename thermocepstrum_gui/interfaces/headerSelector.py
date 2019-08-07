@@ -16,16 +16,17 @@ class HeaderSelector(Frame):
         header_frame = self.main_frame.viewPort
         header_frame.grid(row=0, column=0, sticky='nswe', padx=20, pady=5)
 
-        Label(header_frame, text='Define the use of the headers').grid(row=0, column=0, sticky='w')
+        Label(header_frame, text='Define the use of the headers',
+              font='Arial 14 bold').grid(row=0, column=0, sticky='w')
 
         definitions_frame = Frame(header_frame)
         definitions_frame.grid(row=1, column=1, sticky='wn', padx=20)
-        Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wns')
+        Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wn')
         Label(definitions_frame, text='Temperature: the header that will be used to calculate the temperature')\
-            .grid(row=1, column=0, sticky='wns')
+            .grid(row=1, column=0, sticky='wn')
         # todo: put definition
-        Label(definitions_frame, text='Energy current: put definition ').grid(row=2, column=0, sticky='wns')
-        Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wns')
+        Label(definitions_frame, text='Energy current: put definition ').grid(row=2, column=0, sticky='wn')
+        Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wn')
 
         definitions_frame.columnconfigure(0, weight=1)
         for i in range(0, 3):
@@ -43,14 +44,14 @@ class HeaderSelector(Frame):
         header_frame.rowconfigure(0, weight=1)
         header_frame.rowconfigure(1, weight=10)
         header_frame.rowconfigure(2, weight=1)
-        header_frame.columnconfigure(0, weight=1)
-        header_frame.columnconfigure(1, weight=1)
+        header_frame.columnconfigure(0, weight=1, minsize=300)
+        header_frame.columnconfigure(1, weight=1, minsize=500)
 
         Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
-               command=lambda: self.back()).grid(row=0, column=0)
+               command=lambda: self.back(), width=10).grid(row=0, column=0, sticky='we')
 
         Button(button_frame, text='Next', bd=1, relief=SOLID, font='Arial 12',
-               command=lambda: self.next()).grid(row=0, column=1, padx=5)
+               command=lambda: self.next(), width=10).grid(row=0, column=1, padx=5, sticky='we')
 
     def set_next_frame(self, frame):
         self.next_frame = frame

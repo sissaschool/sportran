@@ -4,9 +4,9 @@
 --------------------------------------------
     Thermocepstrum graphic user interface
 
-    Version: 0.0.1
+    Version: 0.0.2
     Release state: Beta
-    Last update: 08/2019
+    Last update: 09/2019
 
     Main Developer:     Sebastiano Bisacchi
     Other developer:    Riccardo   Bertossa
@@ -58,6 +58,8 @@ class ThermocepstrumGUI(Tk):
         self.dev_state = dev_state
         self.last_release = last_release
 
+        self.show_software_info()
+
         # Add the main window to the open windows
         ThermocepstrumGUI.open_windows.insert(0, self)
 
@@ -105,7 +107,20 @@ class ThermocepstrumGUI(Tk):
 
             ThermocepstrumGUI.frames[F] = ThermocepstrumGUI.frame
 
+        # Init the main interface
         self.show_frame(FileManager)
+
+    def show_software_info(self):
+        print('------------------- Thermocepstrum GUI -------------------')
+        print('')
+        print('\t\t\tVersion: {}'.format(self.version))
+        print('\t\t\tDev state: {}'.format(self.dev_state))
+        print('\t\t\tLast release: {}'.format(self.last_release))
+        print('')
+        print('This software is an open-source project')
+        print('developed at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY')
+        print('ADD OTHER INFOS')    # todo: Add other project infos
+        print('----------------------------------------------------------')
 
     @staticmethod
     def show_frame(frame):
@@ -138,7 +153,7 @@ def run():
     cu.load_path()
 
     # Start the software
-    app = ThermocepstrumGUI(version='0.0.1', dev_state='beta', last_release='dd/mm/yyyy')
+    app = ThermocepstrumGUI(version='0.0.2', dev_state='beta', last_release='dd/mm/yyyy')
     app.mainloop()
 
 
