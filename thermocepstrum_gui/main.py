@@ -154,7 +154,7 @@ def run():
     cu.load_path()
 
     # Start the software
-    app = ThermocepstrumGUI(version='0.0.2', dev_state='beta', last_release='dd/mm/yyyy')
+    app = ThermocepstrumGUI(version='0.0.2', dev_state='open beta', last_release='Not released')
     app.mainloop()
 
 

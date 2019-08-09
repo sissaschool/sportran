@@ -55,7 +55,11 @@ class TopBar(Frame):
         file_menu = Menu(top_menu, tearoff=False)
         top_menu.add_cascade(label='Info', menu=file_menu)
 
-        file_menu.add_command(label='Version', command=lambda: run_new_window(main.root, Version, main))
+        file_menu.add_command(label='Version',
+                              command=lambda: run_new_window(main.root, Version, main,
+                                                             version=main.root.version,
+                                                             dev_state=main.root.dev_state,
+                                                             last_release=main.root.last_release))
         file_menu.add_separator()
         file_menu.add_command(label='Developers', command=lambda: run_new_window(main.root, Developers, main))
         file_menu.add_command(label='Contacts', command=lambda: run_new_window(main.root, Contacts, main))
