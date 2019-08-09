@@ -47,8 +47,9 @@ class OtherVariables(Frame):
         self.filter_width_entry = Spinbox(variable_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
         self.filter_width_entry.grid(row=8, column=1, padx=2, sticky='w', pady=10)
 
+        variable_frame.rowconfigure(9, weight=1)
         button_frame = Frame(variable_frame)
-        button_frame.grid(row=9, column=0, sticky='ws', pady=10)
+        button_frame.grid(row=9, column=0, sticky='ws', pady=20)
 
         Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.back(), width=10).grid(row=0, column=0, sticky='we')
@@ -146,7 +147,7 @@ class OtherVariables(Frame):
 
         if 'Temperature' in cu.data.description:
             self.temperature_entry.config(state=DISABLED)
-            self.temp_advertise.config(text='The temperature will be automatically calculated')
+            self.temp_advertise.config(text='The temperature will be automatically calculated', fg='red')
         else:
             self.temperature_entry.config(state=NORMAL)
             self.temp_advertise.config(text='')

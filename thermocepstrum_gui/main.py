@@ -19,7 +19,7 @@ This file contains the GUI of the Thermocepstrum project developed at SISSA.
 
 from thermocepstrum_gui.interfaces import *
 from thermocepstrum_gui.utils.custom_widgets import *
-
+from thermocepstrum_gui.core.graphic_objects import WINDOW_ICON
 # Verify that thermocepstrum is installed
 try:
     import thermocepstrum
@@ -64,6 +64,7 @@ class ThermocepstrumGUI(Tk):
         ThermocepstrumGUI.open_windows.insert(0, self)
 
         # Configure the window
+        self.iconbitmap(WINDOW_ICON)
         self.title('Thermocepstrum')
         self.geometry('{}x{}+{}+{}'.format(settings.X_SIZE,
                                            settings.Y_SIZE,

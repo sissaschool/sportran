@@ -273,7 +273,12 @@ def secure_exit(main_window):
 
     # todo: Add multithread processes safe exit and a log file
     for process in main_window.open_windows:
-        process.destroy()
+        try:
+            process.destroy()
+        except AttributeError:
+            process.master.destroy()
+        except:
+            raise SystemExit('Unable to exit the program safely!')
 
     exit()
 

@@ -69,8 +69,9 @@ class PStarSelector(Frame):
         value_frame.columnconfigure(1, weight=1, minsize=150)
         value_frame.columnconfigure(2, weight=1, minsize=1)
 
-        button_frame = Frame(self.container_frame)
-        button_frame.pack(side=TOP, anchor='w', fill=BOTH, expand=1, padx=15)
+        self.main_frame.rowconfigure(1, weight=1)
+        button_frame = Frame(self.main_frame)
+        button_frame.grid(row=2, column=0, sticky='w', padx=10, pady=20)
 
         back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back(), width=10)
         back_button.grid(row=0, column=0, sticky='we', padx=5)

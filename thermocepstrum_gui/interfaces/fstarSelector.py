@@ -21,7 +21,7 @@ class FStarSelector(Frame):
         # Label(self.main_frame, text='Select F*', font='Arial 14 bold').grid(row=0, column=0)
 
         self.sections = Frame(self.main_frame)
-        self.sections.grid(row=0, column=0, sticky='nsew', padx=20)
+        self.sections.grid(row=0, column=0, sticky='nsew')
 
         self.graph = GraphWidget(self.sections, self.sections, size=(7, 4), toolbar=True)
 
@@ -74,6 +74,7 @@ class FStarSelector(Frame):
         Button(value_frame, text='Resample', font='Arial 12 bold', bd=1, relief=SOLID,
                command=self.resample, width=20).grid(row=2, column=3, sticky='wens', rowspan=1, padx=50)
 
+        value_frame.rowconfigure(3, weight=1)
         button_frame = Frame(value_frame)
         button_frame.grid(row=3, column=0, pady=10)
 

@@ -1,7 +1,5 @@
 from tkinter import *
 from tkinter import ttk
-from thermocepstrum_gui.core import control_unit as cu
-from thermocepstrum_gui.core import settings
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -9,6 +7,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.figure import Figure
 import matplotlib.patches as patches
+
+from thermocepstrum_gui.core import control_unit as cu
+from thermocepstrum_gui.core import settings
+from thermocepstrum_gui.core.graphic_objects import ICON, WINDOW_ICON
+
+import webbrowser
 
 
 class TopBar(Frame):
@@ -42,20 +46,22 @@ class TopBar(Frame):
         # Create the view section of the top menu
         view_menu = Menu(top_menu, tearoff=False)
         top_menu.add_cascade(label='View', menu=view_menu)
-        view_menu.add_checkbutton(label='Show logs', variable=TopBar.show_logs, onvalue=1, offvalue=0, command=self._update_window)
-        view_menu.add_checkbutton(label='Show info', variable=TopBar.show_info, onvalue=1, offvalue=0, command=self._update_window)
+        view_menu.add_checkbutton(label='Show logs', variable=TopBar.show_logs,
+                                  onvalue=1, offvalue=0, command=self._update_window)
+        view_menu.add_checkbutton(label='Show info', variable=TopBar.show_info,
+                                  onvalue=1, offvalue=0, command=self._update_window)
 
         # Create the info section of the top menu
         file_menu = Menu(top_menu, tearoff=False)
         top_menu.add_cascade(label='Info', menu=file_menu)
 
-        file_menu.add_command(label='Version')
+        file_menu.add_command(label='Version', command=lambda: run_new_window(main.root, Version, main))
         file_menu.add_separator()
-        file_menu.add_command(label='Developers')
-        file_menu.add_command(label='Contacts')
-        file_menu.add_command(label='About')
+        file_menu.add_command(label='Developers', command=lambda: run_new_window(main.root, Developers, main))
+        file_menu.add_command(label='Contacts', command=lambda: run_new_window(main.root, Contacts, main))
+        file_menu.add_command(label='About', command=lambda: run_new_window(main.root, About, main))
         file_menu.add_separator()
-        file_menu.add_command(label='Help')
+        file_menu.add_command(label='Help', command=lambda: run_new_window(main.root, Help, main))
 
     def _update_window(self):
         self.main.frame.update()
@@ -75,12 +81,12 @@ class StatusFrame(Frame):
 
 class GraphWidget(Frame):
 
-    def __init__(self, parent, controller, size=(4, 4), type=111, toolbar=False):
+    def __init__(self, parent, controller, size=(4, 4), type_=111, toolbar=False):
         Frame.__init__(self, parent)
 
         self.title = ''
         self.size = size
-        self.type = type
+        self.type_ = type_
 
         self.cut_line = 0
         self.max_x = 1
@@ -88,7 +94,7 @@ class GraphWidget(Frame):
         self.new_view_x = 1
 
         self.f = Figure(figsize=self.size, dpi=100)
-        self.graph = self.f.add_subplot(self.type)
+        self.graph = self.f.add_subplot(self.type_)
 
         self.canvas = FigureCanvasTkAgg(self.f, controller)
         self.canvas.draw()
@@ -244,7 +250,8 @@ class CheckList(Frame):
                 frame = Frame(self.controller)
                 frame.grid(row=row, column=0, sticky='we', pady=2)
                 Label(frame, text=el, font="{} 12 bold".format(settings.FONT)).grid(row=0, column=0)
-                cmb = ttk.Combobox(frame, values=["None", "Energy current", "Other current", "Temperature"], state='readonly', width=12)
+                cmb = ttk.Combobox(frame, values=["None", "Energy current", "Other current", "Temperature"],
+                                   state='readonly', width=12)
                 cmb.bind('<<ComboboxSelected>>', self.combo_func)
                 cmb.current(0)
                 cmb.grid(row=0, column=1, sticky='e')
@@ -280,7 +287,8 @@ class ScrollFrame(Frame):
         bgcol2 = settings.BG_COLOR
 
         if width or height:
-            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol, width=width, height=height)
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID,
+                                 highlightthickness=0, bg=bgcol, width=width, height=height)
         else:
             self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol)
         self.viewPort = Frame(self.canvas, background=bgcol2)
@@ -309,8 +317,215 @@ class ScrollFrame(Frame):
         self.canvas.yview_scroll(-1 * int((event.delta / 120)), "units")
 
     def on_frame_configure(self, event):
-        '''
+        """
         Reset the scroll region to encompass the inner frame
-        '''
+        """
 
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+
+
+def run_new_window(root, window, main=None, *args, **kwargs):
+    new_window = Toplevel(root)
+    window(new_window, main=main, *args, **kwargs)
+
+
+class Email:
+
+    def __init__(self, master, email):
+        self.email = email
+
+        self.email_link = Label(master, text=self.email, fg='blue', cursor='hand2')
+
+        self.email_link.bind('<Button-1>', lambda e: self.callback())
+
+    def grid(self, *args, **kwargs):
+        self.email_link.grid(*args, **kwargs)
+
+    def callback(self):
+        webbrowser.open('mailto:{}'.format(self.email))
+
+
+class Link:
+
+    def __init__(self, master, url, text=None):
+        self.url = url
+
+        if text:
+            self.link = Label(master, text=text, fg='blue', cursor='hand2')
+        else:
+            self.link = Label(master, text=self.url, fg='blue', cursor='hand2')
+
+        self.link.bind('<Button-1>', lambda e: self.callback())
+
+    def grid(self, *args, **kwargs):
+        self.link.grid(*args, **kwargs)
+
+    def callback(self):
+        webbrowser.open(self.url)
+
+
+class Version:
+
+    def __init__(self, master, main, version='0.0.1', dev_state='beta', last_release='Not released'):
+        self.master = master
+        self.main = main
+
+        self.master.geometry("350x165")
+        self.master.resizable(False, False)
+
+        self.master.iconbitmap(WINDOW_ICON)
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(side=LEFT, padx=20, pady=15)
+
+        Label(self.frame, text='Thermocepstrum GUI', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+        Label(self.frame, text='Version: {} ({})'.format(version, dev_state)).grid(row=2, column=0, sticky='w')
+        Label(self.frame, text='Last release: {}'.format(last_release)).grid(row=3, column=0, sticky='w', pady=5)
+
+        icon = PhotoImage(file=ICON)
+
+        image = Label(self.master)
+        image.image = icon
+        image.pack(side=RIGHT, padx=20, pady=15)
+        image.config(image=icon)
+
+        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=4, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()
+
+
+class Developers:
+
+    def __init__(self, master, main):
+        self.master = master
+        self.main = main
+
+        self.master.geometry("350x190")
+        self.master.resizable(False, False)
+
+        self.master.iconbitmap(WINDOW_ICON)
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
+
+        Label(self.frame, text='Developers', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+
+        Label(self.frame, text='Loris Ercole').grid(row=2, column=0, sticky='w', pady=5)
+
+        Label(self.frame, text='Riccardo Bertossa').grid(row=3, column=0, sticky='w')
+
+        Label(self.frame, text='Sebastiano Bisacchi').grid(row=4, column=0, sticky='w', pady=5)
+
+        self.frame.columnconfigure(0, weight=1)
+        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()
+
+
+class Contacts:
+
+    def __init__(self, master, main):
+        self.master = master
+        self.main = main
+
+        self.master.geometry("350x190")
+        self.master.resizable(False, False)
+
+        self.master.iconbitmap(WINDOW_ICON)
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
+
+        Label(self.frame, text='Contacts', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+
+        Email(self.frame, email='lorismail@mail.com').grid(row=2, column=0, pady=5, sticky='w')
+        Email(self.frame, email='riccardomail@mail.com').grid(row=3, column=0, sticky='w')
+        Email(self.frame, email='sebastianobisacchi@outlook.it').grid(row=4, column=0, pady=5, sticky='w')
+
+        self.frame.columnconfigure(0, weight=1)
+        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()
+
+
+class About:
+
+    def __init__(self, master, main):
+        self.master = master
+        self.main = main
+
+        self.master.geometry("350x190")
+        self.master.resizable(False, False)
+
+        self.master.iconbitmap(WINDOW_ICON)
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
+
+        Label(self.frame, text='About', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+
+        # todo: put description
+        Label(self.frame, text='').grid(row=2, column=0, pady=5, sticky='w')
+        Link(self.frame, url='https://github.com/lorisercole/thermocepstrum',
+             text='GitHub page').grid(row=3, column=0, sticky='w')
+
+        self.frame.columnconfigure(0, weight=1)
+        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()
+
+
+class Help:
+
+    def __init__(self, master, main):
+        self.master = master
+        self.main = main
+
+        self.master.geometry("350x190")
+        self.master.resizable(False, False)
+
+        self.master.iconbitmap(WINDOW_ICON)
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
+
+        Label(self.frame, text='Help', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+
+        # todo: put description
+        Label(self.frame, text='').grid(row=2, column=0, pady=5, sticky='w')
+
+        self.frame.columnconfigure(0, weight=1)
+        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()
+

@@ -70,8 +70,8 @@ class FileManager(Frame):
         self.input_selector.grid(row=0, column=4, sticky='w')
 
         self.next_button = Button(selection_frame, text='Next', relief=SOLID, bd=1,
-                                  command=lambda: self.next())
-        self.next_button.grid(row=1, column=0, sticky='we', pady=10)
+                                  command=lambda: self.next(), width=10)
+        self.next_button.grid(row=1, column=0, pady=20, sticky='w')
         selection_frame.rowconfigure(0, weight=1)
         selection_frame.rowconfigure(1, weight=1)
 
