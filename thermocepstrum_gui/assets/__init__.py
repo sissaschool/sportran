@@ -5,7 +5,9 @@ import json
 with resource_stream('thermocepstrum', 'setup.json') as JS:
     METADATA = json.load(JS)
 
-with open('assets/languages.json') as JS:
+with resource_stream(__name__, 'languages.json') as JS:
     LANGUAGES = json.load(JS)
 
 ICON = resource_string(__name__, 'icon.gif')
+
+README_MD = resource_string('thermocepstrum', 'README.md')

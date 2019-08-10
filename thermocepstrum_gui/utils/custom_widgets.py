@@ -11,7 +11,7 @@ import matplotlib.patches as patches
 
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core import settings
-from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES
+from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES, README_MD
 
 import webbrowser
 import markdown2
@@ -498,8 +498,8 @@ class About:
         Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['about'], font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
-        with open('H:\\progetti\\PyhtonProject\\thermocepstrum\\thermocepstrum\\README.md', 'r') as file:
-            html = markdown2.markdown(file.read())
+
+        html = markdown2.markdown(README_MD)
 
         html_view = HTMLScrolledText(self.frame, html=html)
         html_view.grid(row=2, column=0, sticky='wens')

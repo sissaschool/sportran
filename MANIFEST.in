@@ -2,8 +2,9 @@ recursive-include examples *
 include thermocepstrum/utils/plot_style.mplstyle
 include thermocepstrum/setup.json
 include thermocepstrum_gui/assets/icon.gif
+include thermocepstrum_gui/assets/languages.json
 include LICENSE.txt
-include README.md
+include thermocepstrum/README.md
 exclude thermocepstrum/utils/blocks.py
 exclude thermocepstrum/utils/blockanalysis.py
 prune thermocepstrum/old_src
