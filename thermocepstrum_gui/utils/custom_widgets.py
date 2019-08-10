@@ -10,7 +10,7 @@ import matplotlib.patches as patches
 
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core import settings
-from thermocepstrum_gui.core.graphic_objects import ICON, WINDOW_ICON
+from thermocepstrum_gui.assets import ICON, METADATA
 
 import webbrowser
 
@@ -366,14 +366,14 @@ class Link:
 
 class Version:
 
-    def __init__(self, master, main, version='0.0.1', dev_state='beta', last_release='Not released'):
+    def __init__(self, master, main):
         self.master = master
         self.main = main
 
         self.master.geometry("350x165")
         self.master.resizable(False, False)
 
-        self.master.iconbitmap(WINDOW_ICON)
+        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
@@ -382,10 +382,10 @@ class Version:
 
         Label(self.frame, text='Thermocepstrum GUI', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
-        Label(self.frame, text='Version: {} ({})'.format(version, dev_state)).grid(row=2, column=0, sticky='w')
-        Label(self.frame, text='Last release: {}'.format(last_release)).grid(row=3, column=0, sticky='w', pady=5)
+        Label(self.frame, text='Version: {} ({})'.format(METADATA['gui_version'], METADATA['dev_state'])).grid(row=2, column=0, sticky='w')
+        Label(self.frame, text='Last release: {}'.format(METADATA['release_date'])).grid(row=3, column=0, sticky='w', pady=5)
 
-        icon = PhotoImage(file=ICON)
+        icon = PhotoImage(data=ICON)
 
         image = Label(self.master)
         image.image = icon
@@ -409,7 +409,7 @@ class Developers:
         self.master.geometry("350x190")
         self.master.resizable(False, False)
 
-        self.master.iconbitmap(WINDOW_ICON)
+        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
@@ -443,7 +443,7 @@ class Contacts:
         self.master.geometry("350x190")
         self.master.resizable(False, False)
 
-        self.master.iconbitmap(WINDOW_ICON)
+        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
@@ -453,9 +453,9 @@ class Contacts:
         Label(self.frame, text='Contacts', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
-        Email(self.frame, email='lorismail@mail.com').grid(row=2, column=0, pady=5, sticky='w')
-        Email(self.frame, email='riccardomail@mail.com').grid(row=3, column=0, sticky='w')
-        Email(self.frame, email='sebastianobisacchi@outlook.it').grid(row=4, column=0, pady=5, sticky='w')
+        Email(self.frame, email=METADATA['author_email']).grid(row=2, column=0, pady=5, sticky='w')
+        #Email(self.frame, email='riccardomail@mail.com').grid(row=3, column=0, sticky='w')
+        #Email(self.frame, email='sebastianobisacchi@outlook.it').grid(row=4, column=0, pady=5, sticky='w')
 
         self.frame.columnconfigure(0, weight=1)
         self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
@@ -475,7 +475,7 @@ class About:
         self.master.geometry("350x190")
         self.master.resizable(False, False)
 
-        self.master.iconbitmap(WINDOW_ICON)
+        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
@@ -487,7 +487,7 @@ class About:
 
         # todo: put description
         Label(self.frame, text='').grid(row=2, column=0, pady=5, sticky='w')
-        Link(self.frame, url='https://github.com/lorisercole/thermocepstrum',
+        Link(self.frame, url=METADATA['url'],
              text='GitHub page').grid(row=3, column=0, sticky='w')
 
         self.frame.columnconfigure(0, weight=1)
@@ -508,7 +508,7 @@ class Help:
         self.master.geometry("350x190")
         self.master.resizable(False, False)
 
-        self.master.iconbitmap(WINDOW_ICON)
+        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 

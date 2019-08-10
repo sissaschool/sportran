@@ -19,7 +19,7 @@ This file contains the GUI of the Thermocepstrum project developed at SISSA.
 
 from thermocepstrum_gui.interfaces import *
 from thermocepstrum_gui.utils.custom_widgets import *
-from thermocepstrum_gui.core.graphic_objects import WINDOW_ICON
+from thermocepstrum_gui.assets import ICON, METADATA
 # Verify that thermocepstrum is installed
 try:
     import thermocepstrum
@@ -42,7 +42,7 @@ class ThermocepstrumGUI(Tk):
     root = None
     container = None
 
-    def __init__(self, version, dev_state, last_release, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
 
         ThermocepstrumGUI.root = self
@@ -53,10 +53,6 @@ class ThermocepstrumGUI(Tk):
         self.option_add("*selectBackground", "light blue")
         self.option_add("*selectForeground", "black")
 
-        # Define some info
-        self.version = version
-        self.dev_state = dev_state
-        self.last_release = last_release
 
         self.show_software_info()
 
@@ -64,7 +60,11 @@ class ThermocepstrumGUI(Tk):
         ThermocepstrumGUI.open_windows.insert(0, self)
 
         # Configure the window
-        self.iconbitmap(WINDOW_ICON)
+
+        window_icon = PhotoImage(master=self, data=ICON)
+        self.iconphoto(True, window_icon)
+        #self.tk.call('wm', 'iconphoto', self._w, window_icon)
+        #self.iconbitmap(bitmap=window_icon)
         self.title('Thermocepstrum')
         self.geometry('{}x{}+{}+{}'.format(settings.X_SIZE,
                                            settings.Y_SIZE,
@@ -114,13 +114,17 @@ class ThermocepstrumGUI(Tk):
     def show_software_info(self):
         print('------------------- Thermocepstrum GUI -------------------')
         print('')
-        print('\t\t\tVersion: {}'.format(self.version))
-        print('\t\t\tDev state: {}'.format(self.dev_state))
-        print('\t\t\tLast release: {}'.format(self.last_release))
+        print('\t\t\tGUI version: {}'.format(METADATA['gui_version']))
+        print('\t\t\tThermocepstrum version: {}'.format(METADATA['version']))
+        print('\t\t\tDev state: {}'.format(METADATA['dev_state']))
+        print('\t\t\tLast release: {}'.format(METADATA['release_date']))
+        print('\t\t\tDevelopers: {}'.format(METADATA['author']))
+        print('\t\t\tURL: {}'.format(METADATA['url']))
         print('')
-        print('This software is an open-source project')
-        print('developed at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY')
-        print('ADD OTHER INFOS')    # todo: Add other project infos
+        print('This software is an open-source project licensed under {}'.format(METADATA['license']))
+        print(METADATA['credits'])
+        print('')
+        print(METADATA['description'])    # todo: Add other project infos
         print('----------------------------------------------------------')
 
     @staticmethod
@@ -154,7 +158,7 @@ def run():
     cu.load_path()
 
     # Start the software
-    app = ThermocepstrumGUI(version='0.0.2', dev_state='beta', last_release='dd/mm/yyyy')
+    app = ThermocepstrumGUI()
     app.mainloop()
 
 
