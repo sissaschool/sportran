@@ -1,7 +1,7 @@
 from tkinter.ttk import Separator
 from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
-
+from thermocepstrum_gui.assets import LANGUAGES
 
 class OtherVariables(Frame):
 
@@ -18,15 +18,17 @@ class OtherVariables(Frame):
 
         variable_frame.grid(column=0, row=0, sticky='nswe', padx=20, pady=5)
 
-        Label(variable_frame, text='Set variables', font='Arial 14 bold').grid(row=0, column=0, pady=2, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['stp3'],
+              font='Arial 14 bold').grid(row=0, column=0, pady=2, sticky='w')
 
         variable_frame.columnconfigure(0, weight=0, minsize=150)
         variable_frame.columnconfigure(1, weight=1, minsize=200)
 
-        Label(variable_frame, text='Environment variables', font='Arial 11').grid(row=1, column=0, pady=20, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['e_v'],
+              font='Arial 11').grid(row=1, column=0, pady=20, sticky='w')
         Separator(variable_frame, orient=HORIZONTAL).grid(row=2, sticky='we', columnspan=3)
 
-        Label(variable_frame, text='Temperature: ').grid(row=3, column=0, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['tmp'] + ': ').grid(row=3, column=0, sticky='w')
         self.temperature_entry = Spinbox(variable_frame, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
         self.temperature_entry.grid(row=3, column=1, padx=2, sticky='w', pady=10)
         self.temp_advertise = Label(variable_frame, text='', font='Arial 10')
@@ -40,10 +42,11 @@ class OtherVariables(Frame):
         self.DT_FS_entry = Entry(variable_frame, bd=1, relief=SOLID)
         self.DT_FS_entry.grid(row=5, column=1, padx=2, sticky='w', pady=10)
 
-        Label(variable_frame, text='Filter variables', font='Arial 11').grid(row=6, column=0, pady=20, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_v'],
+              font='Arial 11').grid(row=6, column=0, pady=20, sticky='w')
         Separator(variable_frame, orient=HORIZONTAL).grid(row=7, sticky='we', columnspan=3)
 
-        Label(variable_frame, text='Filter width: ').grid(row=8, column=0, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_w']).grid(row=8, column=0, sticky='w')
         self.filter_width_entry = Spinbox(variable_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
         self.filter_width_entry.grid(row=8, column=1, padx=2, sticky='w', pady=10)
 
@@ -51,10 +54,10 @@ class OtherVariables(Frame):
         button_frame = Frame(variable_frame)
         button_frame.grid(row=9, column=0, sticky='ws', pady=20)
 
-        Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
+        Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'], bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.back(), width=10).grid(row=0, column=0, sticky='we')
 
-        Button(button_frame, text='Next', bd=1, relief=SOLID, font='Arial 12',
+        Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['next'], bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.next(), width=10).grid(row=0, column=1, padx=5, sticky='we')
 
     def set_next_frame(self, frame):

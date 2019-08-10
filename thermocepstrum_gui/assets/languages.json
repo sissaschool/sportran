@@ -1,0 +1,101 @@
+{
+  "en-EN": {
+    "exit": "Exit",
+    "back": "Back",
+    "next": "Next",
+    "resample": "Resample",
+    "recalculate": "Recalculate",
+    "zoom_in": "Zoom-in",
+    "reset_view": "Reset view",
+    "help": "Help",
+    "version": "Version",
+    "developers": "Developers",
+    "contacts": "Contacts",
+    "about": "About",
+    "info": "Info",
+    "view": "View",
+    "s_log": "Show logs",
+    "s_inf": "Show Info",
+    "f_nm": "File name",
+    "f_tp": "File type",
+    "size": "Size",
+
+    "stp1": "Select a file",
+    "f_prv": "File preview",
+    "in_frm": "Input format",
+    "slct": "Selected",
+
+    "stp2": "Define the use of the headers",
+    "nn": "None",
+    "en_cr": "Energy current",
+    "oth_cr": "Other current",
+    "tmp": "Temperature",
+
+    "df1": "None: the header will not be used",
+    "df2": "Temperature: the header will be used to calculate the teperature",
+    "df3": "Energy current: put definition",
+    "df4": "Other current: put definition",
+
+    "stp3": "Set variables",
+    "e_v": "Environment variables",
+    "vl": "Volume",
+    "fl_v": "Filter variables",
+    "fl_w": "Filter width",
+
+    "stp4": "Slide to select F* or write the value",
+    "slct_v": "Selected value",
+    "stp5": "P* selector",
+    "inc": "Increment by",
+
+    "lst_rl": "Last release",
+    "Errors": {}
+  },
+
+  "it-IT": {
+    "exit": "Esci",
+    "back": "Indietro",
+    "next": "Avanti",
+    "resample": "Resample",
+    "recalculate": "Ricalcola",
+    "zoom_in": "Zoom-in",
+    "reset_view": "Reimposta visuale",
+    "help": "Aiuto",
+    "version": "Versione",
+    "developers": "Sviluppatori",
+    "contacts": "Contatti",
+    "about": "Altro",
+    "info": "Info",
+    "view": "Visuale",
+    "s_log": "Mostra logs",
+    "s_inf": "Mostra Info",
+    "f_nm": "Nome del file",
+    "f_tp": "Tipo del file",
+    "size": "Dimensione",
+
+    "stp1": "Seleziona un file",
+    "f_prv": "Anteprima del file",
+    "in_frm": "Formato dell'input",
+    "slct": "Selezionato:",
+
+    "stp2": "Definisci l'uso delle colonne",
+    "tmp": "Temperatura",
+
+    "df1": "None: la colonna non verr\u00E0 usata",
+    "df2": "Temperatura: la colonna verr\u00E0 utilizzata per calcolare la temperatura",
+    "df3": "Energy current: aggiungere definizione",
+    "df4": "Other current: aggiungere definizione",
+
+    "stp3": "Imposta variabili",
+    "e_v": "Variabili dell'ambiente",
+    "vl": "Volume",
+    "fl_v": "Variabili del filtro",
+    "fl_w": "Larghezza del filtro",
+
+    "stp4": "Scorri per selezionare F* o inserisci il suo valore",
+    "slct_v": "Valore selezionato",
+    "stp5": "Selettore di P*",
+    "inc": "Incrementa di",
+
+    "lst_rl": "Ultima release"
+  }
+}

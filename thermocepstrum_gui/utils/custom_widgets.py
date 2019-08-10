@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tk_html_widgets import HTMLLabel, HTMLScrolledText
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -10,9 +11,10 @@ import matplotlib.patches as patches
 
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core import settings
-from thermocepstrum_gui.assets import ICON, METADATA
+from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES
 
 import webbrowser
+import markdown2
 
 
 class TopBar(Frame):
@@ -41,31 +43,32 @@ class TopBar(Frame):
         file_menu.add_separator()
         file_menu.add_command(label='Preferences')
         file_menu.add_separator()
-        file_menu.add_command(label='Exit', command=lambda: cu.secure_exit(main))
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['exit'], command=lambda: cu.secure_exit(main))
 
         # Create the view section of the top menu
         view_menu = Menu(top_menu, tearoff=False)
-        top_menu.add_cascade(label='View', menu=view_menu)
-        view_menu.add_checkbutton(label='Show logs', variable=TopBar.show_logs,
-                                  onvalue=1, offvalue=0, command=self._update_window)
-        view_menu.add_checkbutton(label='Show info', variable=TopBar.show_info,
-                                  onvalue=1, offvalue=0, command=self._update_window)
+        top_menu.add_cascade(label=LANGUAGES[settings.LANGUAGE]['view'], menu=view_menu)
+        view_menu.add_checkbutton(label=LANGUAGES[settings.LANGUAGE]['s_log'],
+                                  variable=TopBar.show_logs, onvalue=1, offvalue=0, command=self._update_window)
+        view_menu.add_checkbutton(label=LANGUAGES[settings.LANGUAGE]['s_inf'],
+                                  variable=TopBar.show_info, onvalue=1, offvalue=0, command=self._update_window)
 
         # Create the info section of the top menu
         file_menu = Menu(top_menu, tearoff=False)
-        top_menu.add_cascade(label='Info', menu=file_menu)
+        top_menu.add_cascade(label=LANGUAGES[settings.LANGUAGE]['info'], menu=file_menu)
 
-        file_menu.add_command(label='Version',
-                              command=lambda: run_new_window(main.root, Version, main,
-                                                             version=main.root.version,
-                                                             dev_state=main.root.dev_state,
-                                                             last_release=main.root.last_release))
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['version'],
+                              command=lambda: run_new_window(main.root, Version, main))
         file_menu.add_separator()
-        file_menu.add_command(label='Developers', command=lambda: run_new_window(main.root, Developers, main))
-        file_menu.add_command(label='Contacts', command=lambda: run_new_window(main.root, Contacts, main))
-        file_menu.add_command(label='About', command=lambda: run_new_window(main.root, About, main))
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['developers'],
+                              command=lambda: run_new_window(main.root, Developers, main))
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['contacts'],
+                              command=lambda: run_new_window(main.root, Contacts, main))
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['about'],
+                              command=lambda: run_new_window(main.root, About, main))
         file_menu.add_separator()
-        file_menu.add_command(label='Help', command=lambda: run_new_window(main.root, Help, main))
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['help'],
+                              command=lambda: run_new_window(main.root, Help, main))
 
     def _update_window(self):
         self.main.frame.update()
@@ -374,10 +377,8 @@ class Version:
         self.master = master
         self.main = main
 
-        self.master.geometry("350x165")
         self.master.resizable(False, False)
 
-        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
@@ -386,8 +387,17 @@ class Version:
 
         Label(self.frame, text='Thermocepstrum GUI', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
-        Label(self.frame, text='Version: {} ({})'.format(METADATA['gui_version'], METADATA['dev_state'])).grid(row=2, column=0, sticky='w')
-        Label(self.frame, text='Last release: {}'.format(METADATA['release_date'])).grid(row=3, column=0, sticky='w', pady=5)
+
+        Label(self.frame, text='Thermocepstrum {}: {}'
+              .format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['version'])
+              ).grid(row=2, column=0, sticky='w', pady=5)
+
+        Label(self.frame, text='GUI {}: {} ({})'
+              .format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['gui_version'], METADATA['dev_state'])
+              ).grid(row=3, column=0, sticky='w')
+
+        Label(self.frame, text='Last release: {}'.format(METADATA['release_date'])).grid(row=4,
+                                                                                         column=0, sticky='w', pady=5)
 
         icon = PhotoImage(data=ICON)
 
@@ -396,8 +406,9 @@ class Version:
         image.pack(side=RIGHT, padx=20, pady=15)
         image.config(image=icon)
 
-        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
-        self.quitButton.grid(row=4, column=0, sticky='w', pady=5)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
         del self.main.open_windows[self.main.open_windows.index(self)]
@@ -413,14 +424,14 @@ class Developers:
         self.master.geometry("350x190")
         self.master.resizable(False, False)
 
-        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text='Developers', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['developers'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         Label(self.frame, text='Loris Ercole').grid(row=2, column=0, sticky='w', pady=5)
@@ -430,7 +441,8 @@ class Developers:
         Label(self.frame, text='Sebastiano Bisacchi').grid(row=4, column=0, sticky='w', pady=5)
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -447,22 +459,23 @@ class Contacts:
         self.master.geometry("350x190")
         self.master.resizable(False, False)
 
-        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text='Contacts', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['contacts'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         Email(self.frame, email=METADATA['author_email']).grid(row=2, column=0, pady=5, sticky='w')
-        #Email(self.frame, email='riccardomail@mail.com').grid(row=3, column=0, sticky='w')
-        #Email(self.frame, email='sebastianobisacchi@outlook.it').grid(row=4, column=0, pady=5, sticky='w')
+        # Email(self.frame, email='riccardomail@mail.com').grid(row=3, column=0, sticky='w')
+        # Email(self.frame, email='sebastianobisacchi@outlook.it').grid(row=4, column=0, pady=5, sticky='w')
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -476,26 +489,25 @@ class About:
         self.master = master
         self.main = main
 
-        self.master.geometry("350x190")
-        self.master.resizable(False, False)
-
-        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text='About', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['about'], font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
-        # todo: put description
-        Label(self.frame, text='').grid(row=2, column=0, pady=5, sticky='w')
-        Link(self.frame, url=METADATA['url'],
-             text='GitHub page').grid(row=3, column=0, sticky='w')
+        with open('H:\\progetti\\PyhtonProject\\thermocepstrum\\thermocepstrum\\README.md', 'r') as file:
+            html = markdown2.markdown(file.read())
+
+        html_view = HTMLScrolledText(self.frame, html=html)
+        html_view.grid(row=2, column=0, sticky='wens')
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.frame.rowconfigure(2, weight=1)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -512,21 +524,22 @@ class Help:
         self.master.geometry("350x190")
         self.master.resizable(False, False)
 
-        #self.master.iconbitmap(WINDOW_ICON)
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
 
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text='Help', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['help'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         # todo: put description
         Label(self.frame, text='').grid(row=2, column=0, pady=5, sticky='w')
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text='Exit', command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):

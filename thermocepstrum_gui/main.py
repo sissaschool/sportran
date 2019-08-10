@@ -19,7 +19,7 @@ This file contains the GUI of the Thermocepstrum project developed at SISSA.
 
 from thermocepstrum_gui.interfaces import *
 from thermocepstrum_gui.utils.custom_widgets import *
-from thermocepstrum_gui.assets import ICON, METADATA
+from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES
 # Verify that thermocepstrum is installed
 try:
     import thermocepstrum
@@ -52,7 +52,6 @@ class ThermocepstrumGUI(Tk):
         self.option_add("*Background", "{}".format(settings.BG_COLOR))
         self.option_add("*selectBackground", "light blue")
         self.option_add("*selectForeground", "black")
-
 
         self.show_software_info()
 
@@ -110,6 +109,7 @@ class ThermocepstrumGUI(Tk):
 
         # Init the main interface
         self.show_frame(FileManager)
+
 
     def show_software_info(self):
         print('------------------- Thermocepstrum GUI -------------------')

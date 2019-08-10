@@ -16,17 +16,17 @@ class HeaderSelector(Frame):
         header_frame = self.main_frame.viewPort
         header_frame.grid(row=0, column=0, sticky='nswe', padx=20, pady=5)
 
-        Label(header_frame, text='Define the use of the headers',
+        Label(header_frame, text=LANGUAGES[settings.LANGUAGE]['stp2'],
               font='Arial 14 bold').grid(row=0, column=0, sticky='w')
 
         definitions_frame = Frame(header_frame)
         definitions_frame.grid(row=1, column=1, sticky='wn', padx=20)
-        Label(definitions_frame, text='None: the header will not be used').grid(row=0, column=0, sticky='wn')
-        Label(definitions_frame, text='Temperature: the header that will be used to calculate the temperature')\
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df1']).grid(row=0, column=0, sticky='wn')
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df2'])\
             .grid(row=1, column=0, sticky='wn')
         # todo: put definition
-        Label(definitions_frame, text='Energy current: put definition ').grid(row=2, column=0, sticky='wn')
-        Label(definitions_frame, text='Other current: put definition').grid(row=3, column=0, sticky='wn')
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df3']).grid(row=2, column=0, sticky='wn')
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df4']).grid(row=3, column=0, sticky='wn')
 
         definitions_frame.columnconfigure(0, weight=1)
         for i in range(0, 3):
@@ -47,10 +47,10 @@ class HeaderSelector(Frame):
         header_frame.columnconfigure(0, weight=1, minsize=300)
         header_frame.columnconfigure(1, weight=1, minsize=500)
 
-        Button(button_frame, text='Back', bd=1, relief=SOLID, font='Arial 12',
+        Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'], bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.back(), width=10).grid(row=0, column=0, sticky='we')
 
-        Button(button_frame, text='Next', bd=1, relief=SOLID, font='Arial 12',
+        Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['next'], bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.next(), width=10).grid(row=0, column=1, padx=5, sticky='we')
 
     def set_next_frame(self, frame):

@@ -15,6 +15,7 @@ import tkinter.filedialog as fdialog
 from tkinter.font import Font
 
 from thermocepstrum_gui.utils.custom_widgets import *
+from thermocepstrum_gui.assets import LANGUAGES
 
 
 class FileManager(Frame):
@@ -46,7 +47,8 @@ class FileManager(Frame):
         prev_frame.grid(column=0, row=1, sticky='nswe', padx=20)
 
         # Setup some widgets
-        Label(prev_frame, text='File preview', font='Arial 11 bold').pack(side=TOP, anchor='w', fill=BOTH, expand=True)
+        Label(prev_frame, text=LANGUAGES[settings.LANGUAGE]['f_prv'],
+              font='Arial 11 bold').pack(side=TOP, anchor='w', fill=BOTH, expand=True)
         self.preview = Text(prev_frame, bd=1, relief=SOLID, height=10)
         self.preview.pack(fill=BOTH, expand=True, side=BOTTOM)
         self.preview.config(state=NORMAL)
@@ -54,7 +56,7 @@ class FileManager(Frame):
         selection_frame = Frame(self.main_frame.viewPort)
         selection_frame.grid(column=0, row=2, sticky='nswe', padx=20, pady=5)
 
-        Label(selection_frame, text='Selected: ').grid(row=0, column=0, sticky='w')
+        Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['slct']).grid(row=0, column=0, sticky='w')
 
         self.selected = Entry(selection_frame, width=60, relief=SOLID, bd=1)
         self.selected.grid(row=0, column=1, ipadx=1, ipady=1, sticky='we')
@@ -63,13 +65,13 @@ class FileManager(Frame):
                                   command=lambda: self._select_file_with_manager())
         self.find_button.grid(row=0, column=2, padx=4, sticky='we')
 
-        Label(selection_frame, text='Input format: ').grid(row=0, column=3, padx=5, sticky='we')
+        Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['in_frm']).grid(row=0, column=3, padx=5, sticky='we')
         self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly',
                                            width=10)
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
-
-        self.next_button = Button(selection_frame, text='Next', relief=SOLID, bd=1,
+        print(LANGUAGES)
+        self.next_button = Button(selection_frame, text=LANGUAGES[settings.LANGUAGE]['next'], relief=SOLID, bd=1,
                                   command=lambda: self.next(), width=10)
         self.next_button.grid(row=1, column=0, pady=20, sticky='w')
         selection_frame.rowconfigure(0, weight=1)
@@ -95,10 +97,13 @@ class FileManager(Frame):
         """
         inner_frame = parent
 
-        Label(inner_frame, text='Select a file', font='Arial 11 bold').grid(row=0, column=0, sticky='nswe')
-        # create the tree and scrollbars
+        Label(inner_frame, text=LANGUAGES[settings.LANGUAGE]['stp1'],
+              font='Arial 11 bold').grid(row=0, column=0, sticky='nswe')
 
-        self.headers = ('File name', 'File type', 'Size')
+        # create the tree and scrollbars
+        self.headers = (LANGUAGES[settings.LANGUAGE]['f_nm'],
+                        LANGUAGES[settings.LANGUAGE]['f_tp'],
+                        LANGUAGES[settings.LANGUAGE]['size'])
         self.file_list = ttk.Treeview(inner_frame, columns=self.headers,
                                       show='headings')
 

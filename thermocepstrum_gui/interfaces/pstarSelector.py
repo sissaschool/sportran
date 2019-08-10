@@ -42,7 +42,8 @@ class PStarSelector(Frame):
         value_frame = Frame(self.container_frame)
         value_frame.pack(side=TOP, anchor='w', padx=20, fill=BOTH, expand=1)
 
-        Label(value_frame, text='P* selector', font='Arial 12 bold').grid(row=0, column=0, sticky='w')
+        Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['stp5'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='w')
         ttk.Separator(value_frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we', pady=10, columnspan=5)
 
         Label(value_frame, text='P*: ', font='Arial 12').grid(row=2, column=0, sticky='w')
@@ -50,7 +51,8 @@ class PStarSelector(Frame):
         self.value_entry.grid(row=2, column=1, sticky='w')
 
         self.increment = IntVar()
-        Label(value_frame, text='Increment by: ', font='Arial 12').grid(row=3, column=0, sticky='w', pady=10)
+        Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['inc'],
+              font='Arial 12').grid(row=3, column=0, sticky='w', pady=10)
 
         rdbt_frame = Frame(value_frame)
         rdbt_frame.grid(row=3, column=1, sticky='w')
@@ -62,7 +64,8 @@ class PStarSelector(Frame):
         Radiobutton(rdbt_frame, text='100', font='Arial 11 bold', variable=self.increment, value=100,
                     command=self._change_increment).pack(side=LEFT)
 
-        Button(value_frame, text='Recalculate', font='Arial 12 bold', bd=1, relief=SOLID,
+        Button(value_frame, text=LANGUAGES[settings.LANGUAGE]['recalculate'],
+               font='Arial 12 bold', bd=1, relief=SOLID,
                command=self._recalc, width=20).grid(row=2, column=2, sticky='wens', rowspan=2, padx=50)
 
         value_frame.columnconfigure(0, weight=1, minsize=110)
@@ -73,7 +76,8 @@ class PStarSelector(Frame):
         button_frame = Frame(self.main_frame)
         button_frame.grid(row=2, column=0, sticky='w', padx=10, pady=20)
 
-        back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back(), width=10)
+        back_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'],
+                             bd=1, relief=SOLID, command=lambda: self.back(), width=10)
         back_button.grid(row=0, column=0, sticky='we', padx=5)
 
         self.info_section = Frame(self.main_frame)

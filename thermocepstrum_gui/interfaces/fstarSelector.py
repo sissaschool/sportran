@@ -30,7 +30,7 @@ class FStarSelector(Frame):
         slider_frame = Frame(self.sections)
         slider_frame.pack(side=TOP, anchor='w', padx=20, fill=BOTH)
 
-        Label(slider_frame, text='Slide to select F* or write the value',
+        Label(slider_frame, text=LANGUAGES[settings.LANGUAGE]['stp4'],
               font='Arial 12').grid(row=0, column=0, sticky='w', padx=20)
 
         self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1)
@@ -54,7 +54,9 @@ class FStarSelector(Frame):
 
         ttk.Separator(value_frame, orient=HORIZONTAL).grid(row=0, column=0, sticky='we', columnspan=4, pady=5, padx=20)
 
-        Label(value_frame, text='Selected value:').grid(row=1, column=0, sticky='w', pady=4, padx=20)
+        Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['slct_v'] + ': ')\
+            .grid(row=1, column=0, sticky='w', pady=4, padx=20)
+
         self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
         self.value_entry.grid(row=1, column=1, sticky='we', padx=20)
         self.graph.attach_entry(self.value_entry)
@@ -64,24 +66,28 @@ class FStarSelector(Frame):
         value_frame.columnconfigure(3, weight=1, minsize=300)
         value_frame.columnconfigure(4, weight=1, minsize=150)
 
-        Label(value_frame, text='Filter width:').grid(row=2, column=0, sticky='w', padx=20)
+        Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['fl_w']+': ')\
+            .grid(row=2, column=0, sticky='w', padx=20)
         self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID)
         self.filter_width.grid(row=2, column=1, sticky='we', pady=10, padx=20)
 
         self.fstar_screen = Label(value_frame, text='F*: ', font='Arial 14 bold', width=20, bd=1, relief=SOLID)
         self.fstar_screen.grid(row=1, column=3, sticky='we', padx=50)
 
-        Button(value_frame, text='Resample', font='Arial 12 bold', bd=1, relief=SOLID,
+        Button(value_frame, text=LANGUAGES[settings.LANGUAGE]['resample'],
+               font='Arial 12 bold', bd=1, relief=SOLID,
                command=self.resample, width=20).grid(row=2, column=3, sticky='wens', rowspan=1, padx=50)
 
         value_frame.rowconfigure(3, weight=1)
         button_frame = Frame(value_frame)
         button_frame.grid(row=3, column=0, pady=10)
 
-        back_button = Button(button_frame, text='Back', bd=1, relief=SOLID, command=lambda: self.back(), width=10)
+        back_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'],
+                             bd=1, relief=SOLID, command=lambda: self.back(), width=10)
         back_button.grid(row=0, column=0, sticky='we', padx=5)
 
-        next_button = Button(button_frame, text='Next', bd=1, relief=SOLID, command=lambda: self.next(), width=10)
+        next_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['next'],
+                             bd=1, relief=SOLID, command=lambda: self.next(), width=10)
         next_button.grid(row=0, column=1, sticky='we', padx=5)
 
         self.info_section = Frame(self.main_frame)
@@ -116,7 +122,7 @@ class FStarSelector(Frame):
                 self.change_view_button.config(text='Zoom-in')
             else:
                 self.graph.show_selected_area = True
-                self.change_view_button.config(text='Reset view')
+                self.change_view_button.config(text=LANGUAGES[settings.LANGUAGE]['reset_view'])
 
             self.graph.change_view()
             self.graph.update_cut()
