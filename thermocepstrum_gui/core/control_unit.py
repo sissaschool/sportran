@@ -58,7 +58,7 @@ class Data:
         self.fstar = 0.0
         self.old_fstar = 0.0
         self.psd_filter_width = 0.1
-        self.units='metal'
+        self.units = 'metal'
 
 
 try:
@@ -227,7 +227,7 @@ def load_data(inputfile, input_format, selected_keys, temperature=None, NSTEPS=0
 
     if NSTEPS == 0:
         NSTEPS = data.jdata[list(data.jdata.keys())[0]].shape[0]
-    if True: #jindex is None:
+    if True:    # jindex is None:
         heat_current, i = get_cor_index(selected_keys, descriptions, 'Energy current')
         del descriptions[i]
         del selected_keys[i]

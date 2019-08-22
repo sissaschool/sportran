@@ -186,7 +186,7 @@ class FStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
-        response = msg.askyesnocancel('Back to file manager?',
+        response = msg.askyesno('Go back?',
                                       "Save changes?\nIf reopen the same file "
                                       "\nthe values that you chosed will not be deleted!")
 
@@ -199,7 +199,7 @@ class FStarSelector(Frame):
             else:
                 raise ValueError('Prev frame isn\'t defined')
 
-        elif not response:
+        elif response == 0:
             cu.data.fstar = 0.0
             cu.data.loaded = False
             cu.data.temperature = 0.0
