@@ -33,7 +33,7 @@
 
     "df1": "None: the header will not be used",
     "df2": "Temperature: the header will be used to calculate the teperature",
-    "df3": "Energy current: put definition",
+    "df3": "Energy current: defined as ",
     "df4": "Other current: put definition",
 
     "stp3": "Set variables",

@@ -1,6 +1,6 @@
 from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
-
+from thermocepstrum import HeatCurrent
 
 class HeaderSelector(Frame):
 
@@ -32,18 +32,27 @@ class HeaderSelector(Frame):
         for i in range(0, 3):
             definitions_frame.rowconfigure(i, weight=1)
 
-        header_list_frame = Frame(header_frame)
-        header_list_frame.grid(row=1, column=0, sticky='nswe', pady=10)
+        self.units_selector_frame=Frame(header_frame)
+        self.units_selector = ttk.Combobox(self.units_selector_frame, values=HeatCurrent.get_units_list(),state='readonly')
+        self.units_selector.current(0)
+        Label(self.units_selector_frame,text='Units: ').grid(row=0,column=0,sticky='we',pady=2)
+        self.units_selector.grid(row=0,column=1,sticky='we',pady=2)
+        self.units_selector_frame.grid(row=1,column=0,sticky='nswe',pady=2)
 
-        scrollable_header_list = ScrollFrame(self.main_frame, header_list_frame, bd=1)
-        self.check_list = CheckList(scrollable_header_list, scrollable_header_list.viewPort)
+        header_list_frame = Frame(header_frame)
+        header_list_frame.grid(row=2, column=0, sticky='nswe', pady=10)
+
+        scrollable_header_list = ScrollFrame(header_list_frame, header_list_frame, bd=1)
+        self.check_list = CheckList(scrollable_header_list.viewPort, scrollable_header_list.viewPort,start_row=1)
+
 
         button_frame = Frame(header_frame)
-        button_frame.grid(row=2, column=0, sticky='w')
+        button_frame.grid(row=3, column=0, sticky='w')
 
         header_frame.rowconfigure(0, weight=1)
-        header_frame.rowconfigure(1, weight=10)
-        header_frame.rowconfigure(2, weight=1)
+        header_frame.rowconfigure(1, weight=1)
+        header_frame.rowconfigure(2, weight=10)
+        header_frame.rowconfigure(3, weight=1)
         header_frame.columnconfigure(0, weight=1, minsize=300)
         header_frame.columnconfigure(1, weight=1, minsize=500)
 
@@ -66,7 +75,7 @@ class HeaderSelector(Frame):
                 if description.count('Temperature') <= 1:
                     cu.data.keys = keys
                     cu.data.description = description
-
+                    cu.units = self.units_selector.get()
                     if self.next_frame:
                         self.main.show_frame(self.next_frame)
                     else:

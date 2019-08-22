@@ -3,7 +3,11 @@ from tkinter import ttk
 from tk_html_widgets import HTMLLabel, HTMLScrolledText
 
 import matplotlib
-matplotlib.use('TkAgg')
+try:
+    matplotlib.use('TkAgg')
+except:
+    print ("Error: cannot load backend TkAgg. Are you inside a graphical session? Try to change terminal!")
+    raise
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.figure import Figure
@@ -243,10 +247,11 @@ class TextWidget(Frame):
 
 class CheckList(Frame):
 
-    def __init__(self, parent, controller, check_list=dict()):
+    def __init__(self, parent, controller, check_list=dict(),start_row=0):
         Frame.__init__(self, parent, controller)
 
         self.controller = controller
+        self.start_row=start_row
         self.combo_func = None
         if list:
             self.set_list(check_list)
@@ -255,7 +260,7 @@ class CheckList(Frame):
         self.clear_list()
         for row, el in enumerate(list(check_list.keys())):
                 frame = Frame(self.controller)
-                frame.grid(row=row, column=0, sticky='we', pady=2)
+                frame.grid(row=self.start_row+row, column=0, sticky='we', pady=2)
                 Label(frame, text=el, font="{} 12 bold".format(settings.FONT)).grid(row=0, column=0)
                 cmb = ttk.Combobox(frame, values=["None", "Energy current", "Other current", "Temperature"],
                                    state='readonly', width=12)
@@ -293,6 +298,8 @@ class ScrollFrame(Frame):
         bgcol = settings.BG_COLOR
         bgcol2 = settings.BG_COLOR
 
+        #todo: should I use self in place of controller???
+        #controller=self
         if width or height:
             self.canvas = Canvas(controller, bd=bd, relief=SOLID,
                                  highlightthickness=0, bg=bgcol, width=width, height=height)

@@ -28,6 +28,7 @@
         "matplotlib>=2.0.0",
         "future-fstrings",
 	    "setuptools",
+	"pillow>=5.4.0",
         "tk-html-widgets",
         "markdown2"
     ],

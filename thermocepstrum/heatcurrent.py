@@ -106,6 +106,10 @@ class HeatCurrent(MDSample):
             return
         super(HeatCurrent, self).compute_psd(FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
 
+    @staticmethod
+    def get_units_list():
+        return ['metal','real','qepw','gpumd','dlpoly']
+
     def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
         """
         Initializes the units and define the kappa_scale.

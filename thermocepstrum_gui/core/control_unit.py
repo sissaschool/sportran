@@ -58,6 +58,7 @@ class Data:
         self.fstar = 0.0
         self.old_fstar = 0.0
         self.psd_filter_width = 0.1
+        self.units='metal'
 
 
 try:

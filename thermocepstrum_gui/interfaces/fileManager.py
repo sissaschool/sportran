@@ -70,7 +70,6 @@ class FileManager(Frame):
                                            width=10)
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
-        print(LANGUAGES)
         self.next_button = Button(selection_frame, text=LANGUAGES[settings.LANGUAGE]['next'], relief=SOLID, bd=1,
                                   command=lambda: self.next(), width=10)
         self.next_button.grid(row=1, column=0, pady=20, sticky='w')
