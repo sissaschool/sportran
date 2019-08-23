@@ -118,8 +118,8 @@ class OtherVariables(Frame):
             cu.data.psd_filter_width = psd_filter_width
             cu.load_data(cu.data.CURRENT_FILE,
                          cu.data.inputformat,
-                         selected_keys=cu.data.keys,
-                         descriptions=cu.data.description,
+                         _selected_keys=cu.data.keys,
+                         _descriptions=cu.data.description,
                          temperature=temperature,
                          units=cu.units,
                          volume=volume,

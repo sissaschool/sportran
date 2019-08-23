@@ -190,10 +190,12 @@ def load_keys(inputfile):
     return jfile.all_ckeys
 
 
-def load_data(inputfile, input_format, selected_keys, temperature=None, NSTEPS=0, START_STEP=0,
+def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=0, START_STEP=0,
               run_keyword='', units=None, DT_FS=None, volume=None, psd_filter_w=None, axis_=None,
-              structurefile=None, descriptions=[]):
+              structurefile=None, _descriptions=[]):
 
+    selected_keys = _selected_keys.copy()
+    descriptions = _descriptions.copy()
     data.temperature = temperature
     data.volume = volume
     data.DT_FS = DT_FS
@@ -213,8 +215,8 @@ def load_data(inputfile, input_format, selected_keys, temperature=None, NSTEPS=0
     else:
         raise NotImplemented('input format not implemented.')
 
-        ## Define currents
-#    print(selected_keys, jindex)
+    ## Define currents
+    # print(selected_keys, jindex)
 
     if descriptions.count('Temperature') == 1:
         temperature = get_temp(data.jdata, get_cor_index(selected_keys, descriptions, 'Temperature')[0])
