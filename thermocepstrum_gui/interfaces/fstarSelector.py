@@ -37,7 +37,6 @@ class FStarSelector(Frame):
         self.slider.grid(row=1, column=0, sticky='we', columnspan=1, padx=20, pady=5)
         slider_frame.columnconfigure(0, weight=10)
         slider_frame.columnconfigure(1, weight=1)
-        self.graph.attach_slider(self.slider)
 
         slider_options_frame = Frame(slider_frame)
         slider_options_frame.grid(row=2, column=0, sticky='w', padx=20, pady=2)
@@ -59,7 +58,9 @@ class FStarSelector(Frame):
 
         self.value_entry = Entry(value_frame, bd=1, relief=SOLID)
         self.value_entry.grid(row=1, column=1, sticky='we', padx=20)
+
         self.graph.attach_entry(self.value_entry)
+        self.graph.attach_slider(self.slider)
 
         value_frame.columnconfigure(1, weight=1, minsize=150)
         value_frame.columnconfigure(2, weight=1, minsize=10)
@@ -168,11 +169,10 @@ class FStarSelector(Frame):
                                  PSD_FILTER_W=cu.data.psd_filter_width)
             self.graph.update_cut()
 
+            self.graph.cut_line = cu.data.xf.Nyquist_f_THz
+            self.fstar_screen.config(text='F*: {}'.format(round(cu.data.xf.Nyquist_f_THz, 3)))
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
-
-        self.graph.cut_line = cu.data.xf.Nyquist_f_THz
-        self.fstar_screen.config(text='F*: {}'.format(round(cu.data.xf.Nyquist_f_THz, 3)))
 
         if self.graph.show_selected_area:
             self.graph.show_selected_area = True
@@ -192,6 +192,7 @@ class FStarSelector(Frame):
 
         log.set_func(None)
         if response:
+            cu.data.changes = False
             cu.data.fstar = float(self.value_entry.get())
             cu.data.loaded = True
             if self.prev_frame:
@@ -200,13 +201,13 @@ class FStarSelector(Frame):
                 raise ValueError('Prev frame isn\'t defined')
 
         elif response == 0:
+            cu.data.changes = False
             cu.data.fstar = 0.0
             cu.data.loaded = False
             cu.data.temperature = 0.0
             cu.data.volume = 0.0
             cu.data.DT_FS = 0.0
             cu.data.psd_filter_width = 0.1
-
             self.graph.other_graph.clear()
             self.graph.graph.clear()
             self.graph.cut_line = 0
@@ -225,10 +226,21 @@ class FStarSelector(Frame):
         else:
             raise ValueError('Next frame isn\'t defined')
 
+    def recalculate(self):
+        cu.data.changes = False
+        self.graph.other_graph.clear()
+        self.graph.graph.clear()
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width)
+
+        if float(self.value_entry.get()):
+            self.resample()
+
     def update(self):
         super().update()
 
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width)
+        if cu.data.changes:
+            self.recalculate()
+
         self._init_output_frame()
         if self.info:
             cu.update_info(self.info)

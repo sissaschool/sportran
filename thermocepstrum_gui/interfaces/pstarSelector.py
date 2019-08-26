@@ -157,6 +157,12 @@ class PStarSelector(Frame):
         cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
         self._pstar()
 
+    def recalculate(self):
+        self._setup_pstar()
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
+        self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
+                             PSD_FILTER_W=cu.data.psd_filter_width)
+
     def update(self):
         super().update()
 
@@ -166,13 +172,9 @@ class PStarSelector(Frame):
             self.setted = False
             cu.data.old_fstar = cu.data.fstar
 
-        if not self.setted:
+        if not self.setted or cu.data.changes:
             self.setted = True
-            self._setup_pstar()
-
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
-        self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
-                             PSD_FILTER_W=cu.data.psd_filter_width)
+            self.recalculate()
 
         self._init_output_frame()
         if self.info:

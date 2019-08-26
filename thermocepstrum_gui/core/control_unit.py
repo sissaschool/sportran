@@ -38,6 +38,7 @@ class Data:
     def __init__(self):
         self.CURRENT_FILE = ''
         self.loaded = False
+        self.changes = False
 
         self.inputformat = None
         self.jfile = None
@@ -49,17 +50,84 @@ class Data:
         self.keys = None
         self.description = None
 
-        self.temperature = 0.0
+        self._temperature = 0.0
         self.temperature_std = 0.0
-        self.volume = 0
-        self.DT_FS = 0.0
+        self._volume = 0
+        self._DT_FS = 0.0
         self.currents = None
 
-        self.fstar = 0.0
+        self._fstar = 0.0
         self.old_fstar = 0.0
-        self.psd_filter_width = 0.1
-        self.units = 'metal'
+        self._psd_filter_width = 0.1
+        self._units = 'metal'
 
+    @property
+    def temperature(self):
+        return self._temperature
+
+    @temperature.setter
+    def temperature(self, value):
+        self._verify_changes(value, self.temperature)
+        self._temperature = value
+        print(self.changes, ' temperature')
+
+    @property
+    def volume(self):
+        return self._volume
+
+    @volume.setter
+    def volume(self, value):
+        self._verify_changes(value, self.volume)
+        self._volume = value
+        print(self.changes, ' volume')
+
+    @property
+    def DT_FS(self):
+        return self._DT_FS
+
+    @DT_FS.setter
+    def DT_FS(self, value):
+        self._verify_changes(value, self.DT_FS)
+        self._DT_FS = value
+        print(self.changes, ' DT_FS')
+
+    @property
+    def psd_filter_width(self):
+        return self._psd_filter_width
+
+    @psd_filter_width.setter
+    def psd_filter_width(self, value):
+        self._verify_changes(value, self.psd_filter_width)
+        self._psd_filter_width = value
+        print(self.changes, ' filter')
+
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, value):
+        self._verify_changes(value, self.units)
+        self._units = value
+        print(self.changes, ' units')
+
+    @property
+    def fstar(self):
+        return self._fstar
+
+    @fstar.setter
+    def fstar(self, value):
+        self._verify_changes(value, self.fstar)
+        self._fstar = value
+        print(self.changes, ' units')
+
+    def _verify_changes(self, val1, val2):
+        if not self.changes:
+            if val1 != val2:
+                self.changes = True
+
+# todo: add header property
+# todo: check if the behaviour is correct
 
 try:
     data
@@ -200,6 +268,7 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     data.volume = volume
     data.DT_FS = DT_FS
     data.inputformat = input_format
+    data.psd_filter_width = psd_filter_w
 
     if input_format == 'table':
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)

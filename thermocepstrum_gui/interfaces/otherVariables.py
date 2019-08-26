@@ -81,6 +81,7 @@ class OtherVariables(Frame):
         if self.DT_FS_entry.get():
             DT_FS = float(self.DT_FS_entry.get())
 
+
         er = False
         msgs = []
         if temperature:
@@ -115,7 +116,6 @@ class OtherVariables(Frame):
             er = True
 
         if not er:
-            cu.data.psd_filter_width = psd_filter_width
             cu.load_data(cu.data.CURRENT_FILE,
                          cu.data.inputformat,
                          _selected_keys=cu.data.keys,
@@ -135,7 +135,6 @@ class OtherVariables(Frame):
             msg.showerror('Value error', ermsg)
 
     def back(self):
-        cu.data.psd_filter_width = 0.1
 
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
