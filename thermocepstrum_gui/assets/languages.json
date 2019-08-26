@@ -32,9 +32,9 @@
     "tmp": "Temperature",
 
     "df1": "None: the header will not be used",
-    "df2": "Temperature: the header will be used to calculate the teperature",
-    "df3": "Energy current: defined as ",
-    "df4": "Other current: put definition",
+    "df2": "Temperature: the column identified by this header will be used to calculate the temperature",
+    "df3": "Energy current: extensive quantity defined as in LAMMPS, without the 1/V factor. The units are specified by the user.",
+    "df4": "Other current: can be any current. If the fluid has N diffusive components, you must provide N-1 independent currents. The units are not important, since they simplify in the formula. The most simple choice is the center of mass velocity of N-1 components. You can provide as many non diffusive currents as you want: they will make the spectrum less powerful (it can be useful in some cases, like DFT heat current). Note that if have too many 'Other current's, you have to split the trajectory to have more independent sampling of all the currents.",
 
     "stp3": "Set variables",
     "e_v": "Environment variables",
@@ -55,9 +55,9 @@
     "exit": "Esci",
     "back": "Indietro",
     "next": "Avanti",
-    "resample": "Resample",
+    "resample": "Ricampiona",
     "recalculate": "Ricalcola",
-    "zoom_in": "Zoom-in",
+    "zoom_in": "Ingrandisci",
     "reset_view": "Reimposta visuale",
     "help": "Aiuto",
     "version": "Versione",
@@ -82,8 +82,8 @@
 
     "df1": "None: la colonna non verr\u00E0 usata",
     "df2": "Temperatura: la colonna verr\u00E0 utilizzata per calcolare la temperatura",
-    "df3": "Energy current: aggiungere definizione",
-    "df4": "Other current: aggiungere definizione",
+    "df3": "Energy current: quantità estensiva definita come in LAMMPS, senza il fattore 1/V. Le unità di misura sono specificate dall'utente.",
+    "df4": "Other current: possono essere qualsiasi corrente. Se il fluido ha N componenti diffusive, l'utente deve utilizzare N-1 correnti indipendenti. La scelta più semplice è la velocità del centro di massa di N-1 componenti. Si possono inserire molte correnti non diffusive: lo spettro avrà una potenza minore (può essere utile in molti casi, come nel caso di una corrente di calore DFT). Nota che se si hanno troppe 'Other current', è necessario dividere la traiettoria per ottenere più campioni statisticamente indipendenti di tutte le correnti.",
 
     "stp3": "Imposta variabili",
     "e_v": "Variabili dell'ambiente",
