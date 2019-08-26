@@ -56,9 +56,9 @@ def main():
 This script performs the cepstral analysis. It outputs some results in the stdout and log file, and plots in pdf format.
 
 INPUT FORMAT:
- - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the lammps compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
+ - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the LAMMPS compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
  - dict   : a Numpy binary file containing a dictionary (e.g. obtained from the script i_o/read_lammps_log.py)
- - lammps : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
+ - LAMMPS : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
 The average temperature is computed if a column with the header 'Temp' is found; otherwise you have to specify it.
 You must provide the name of the heat flux compute. You can also provide additional currents if your system is a multi-component fluid.
 (Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
@@ -97,7 +97,8 @@ This software was written by Loris Ercole and extended by Riccardo Bertossa to h
 
 Please cite these references:
  - Ercole, Marcolongo, Baroni, Sci. Rep. 7, 15835 (2017), https://doi.org/10.1038/s41598-017-15843-2
- - for the multi-component analysis:  Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
+ - Bertossa, Grasselli, Ercole, Baroni Phys. Rev. Lett. 122, 255901 (2019), https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.255901
+ - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
 
 https://github.com/lorisercole/thermocepstrum
 Contact: lercole@sissa.it
