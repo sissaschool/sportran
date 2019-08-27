@@ -66,7 +66,7 @@ class PStarSelector(Frame):
 
         Button(value_frame, text=LANGUAGES[settings.LANGUAGE]['recalculate'],
                font='Arial 12 bold', bd=1, relief=SOLID,
-               command=self._recalc, width=20).grid(row=2, column=2, sticky='wens', rowspan=2, padx=50)
+               command=lambda: self._recalc(), width=20).grid(row=2, column=2, sticky='wens', rowspan=2, padx=50)
 
         value_frame.columnconfigure(0, weight=1, minsize=110)
         value_frame.columnconfigure(1, weight=1, minsize=150)
@@ -127,6 +127,7 @@ class PStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
+        cu.data.changes = False
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
         else:
@@ -149,7 +150,6 @@ class PStarSelector(Frame):
 
     def _recalc(self):
         self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
-        self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
         self.graph.update_cut()
 
@@ -158,21 +158,22 @@ class PStarSelector(Frame):
         self._pstar()
 
     def recalculate(self):
+        cu.data.changes = False
         self._setup_pstar()
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
+        self._recalc()
 
     def update(self):
         super().update()
 
-        if cu.data.fstar == cu.data.old_fstar:
-            self.setted = True
-        else:
+        if cu.data.changes:
             self.setted = False
-            cu.data.old_fstar = cu.data.fstar
+        else:
+            self.setted = True
 
-        if not self.setted or cu.data.changes:
+        if not self.setted:
             self.setted = True
             self.recalculate()
 
@@ -181,5 +182,5 @@ class PStarSelector(Frame):
             cu.update_info(self.info)
         if self.logs:
             log.set_func(self.logs.write)
-        self._recalc()
+
         self.graph.update_cut()

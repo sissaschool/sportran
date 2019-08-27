@@ -26,7 +26,7 @@ class GraphManager:
         self.psd = j.psd
 
     @staticmethod
-    def GUI_plot_periodogram(x, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, external_object=None,
+    def GUI_plot_periodogram(x, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, data=None,
                              FIGSIZE=None, **plot_kwargs):
         """
         Plot the periodogram.
@@ -91,10 +91,13 @@ class GraphManager:
         return axis
 
     def resample_current(self, x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz',
-                         FIGSIZE=None, axis=None, external_object=None):
+                         FIGSIZE=None, axis=None, data=None):
 
-        xf = x.resample_current(TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=False, PSD_FILTER_W=PSD_FILTER_W,
-                                freq_units=freq_units)
+        if data.changes:
+            xf = x.resample_current(TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=False,
+                                    PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units)
+        else:
+            xf = data.xf
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -109,11 +112,11 @@ class GraphManager:
             elif (freq_units == 'red'):
                 axis.axvline(x=0.5 / TSKIP, ls='--', c='k')
                 axis.set_xlim([0., 0.5 / TSKIP])
-        if external_object:
-            external_object.xf = xf
+        if data:
+            data.xf = xf
 
     @staticmethod
-    def plot_cepstral_spectrum(x, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None, external_object=None,
+    def plot_cepstral_spectrum(x, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None, data=None,
                                **plot_kwargs):
         if kappa_units:
             psd_scale = 0.5 * x.kappa_scale

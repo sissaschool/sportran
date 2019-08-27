@@ -104,6 +104,7 @@ class FStarSelector(Frame):
         self.logs = None
         self.info = None
 
+        self.setted = False
         self._init_output_frame()
 
     def _lock_unlock_slider(self, force=False):
@@ -177,7 +178,7 @@ class FStarSelector(Frame):
         if self.graph.show_selected_area:
             self.graph.show_selected_area = True
             self.graph.change_view()
-        
+
         cu.data.changes = False
         self.update()
 
@@ -221,21 +222,23 @@ class FStarSelector(Frame):
             pass
 
     def next(self):
+
         self.resample()
         cu.data.fstar = cu.data.xf.Nyquist_f_THz
+
         if self.next_frame:
             self.main.show_frame(self.next_frame)
         else:
             raise ValueError('Next frame isn\'t defined')
 
     def recalculate(self):
-        cu.data.changes = False
         self.graph.other_graph.clear()
         self.graph.graph.clear()
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width)
 
         if float(self.value_entry.get()):
             self.resample()
+        cu.data.changes = False
 
     def update(self):
         super().update()

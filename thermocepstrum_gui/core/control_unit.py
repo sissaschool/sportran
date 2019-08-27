@@ -158,7 +158,7 @@ def set_graph(axis_, func, **kwargs):
     :return axis: the new graph.
     """
 
-    axis = func(axis=axis_, external_object=data, **kwargs)
+    axis = func(axis=axis_, data=data, **kwargs)
     return axis
 
 
