@@ -4,7 +4,7 @@ include thermocepstrum/setup.json
 include thermocepstrum_gui/assets/icon.gif
 include thermocepstrum_gui/assets/languages.json
 include LICENSE.txt
-include thermocepstrum/README.md
+include thermocepstrum/README.mdz
 exclude thermocepstrum/utils/blocks.py
 exclude thermocepstrum/utils/blockanalysis.py
 prune thermocepstrum/old_src

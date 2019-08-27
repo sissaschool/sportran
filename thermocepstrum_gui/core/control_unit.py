@@ -35,9 +35,10 @@ class Data:
     contains all the variables that the software use.
     """
 
+    loaded = False
+
     def __init__(self):
-        self.CURRENT_FILE = ''
-        self.loaded = False
+        self._CURRENT_FILE = ''
         self.changes = False
 
         self.inputformat = None
@@ -48,7 +49,7 @@ class Data:
         self.axis = None
 
         self.keys = None
-        self.description = None
+        self._description = None
 
         self._temperature = 0.0
         self.temperature_std = 0.0
@@ -121,6 +122,30 @@ class Data:
         self._fstar = value
         print(self.changes, ' units')
 
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        self._verify_changes(self.description, value)
+        self._description = value
+        print(self.changes, ' descriptions')
+
+    @property
+    def CURRENT_FILE(self):
+        return self._CURRENT_FILE
+
+    @CURRENT_FILE.setter
+    def CURRENT_FILE(self, value):
+        self._verify_changes(self.CURRENT_FILE, value)
+        if self.CURRENT_FILE != value:
+            Data.loaded = False
+        else:
+            Data.loaded = True
+        self._CURRENT_FILE = value
+        print(self.changes, ' file')
+
     def _verify_changes(self, val1, val2):
         if not self.changes:
             if val1 != val2:
@@ -133,6 +158,12 @@ try:
     data
 except:
     data = Data()
+
+
+def new(main):
+    global data
+    data = Data()
+    main.show_frame(main.home)
 
 # -------- GRAPH SECTION --------
 

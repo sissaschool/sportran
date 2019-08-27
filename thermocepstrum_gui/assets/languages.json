@@ -48,6 +48,7 @@
     "inc": "Increment by",
 
     "lst_rl": "Last release",
+    "new_a": "New analysis",
     "Errors": {}
   },
 
@@ -96,6 +97,8 @@
     "stp5": "Selettore di P*",
     "inc": "Incrementa di",
 
-    "lst_rl": "Ultima release"
+    "lst_rl": "Ultima release",
+
+    "new_a": "Nuova analisi"
   }
 }

@@ -41,6 +41,7 @@ class ThermocepstrumGUI(Tk):
     frame = None
     root = None
     container = None
+    home = FileManager
 
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
@@ -108,8 +109,7 @@ class ThermocepstrumGUI(Tk):
             ThermocepstrumGUI.frames[F] = ThermocepstrumGUI.frame
 
         # Init the main interface
-        self.show_frame(FileManager)
-
+        self.show_frame(ThermocepstrumGUI.home)
 
     def show_software_info(self):
         print('------------------- Thermocepstrum GUI -------------------')

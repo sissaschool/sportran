@@ -1,6 +1,7 @@
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core.control_unit import log
+from uncertainties import ufloat
 
 
 class PStarSelector(Frame):
@@ -29,14 +30,14 @@ class PStarSelector(Frame):
         variable_frame = Frame(self.container_frame, bd=1, relief=SOLID)
         variable_frame.pack(side=TOP, anchor='w', padx=20, fill='x', expand=1, pady=20)
 
-        Label(variable_frame, text='f*: ', font='Arial 12 bold').grid(row=0, column=0, sticky='we')
-        self.fstar_label = Label(variable_frame, text='')
+        # Label(variable_frame, text='f*: ', font='Arial 24 bold').grid(row=0, column=0, sticky='we')
+        self.fstar_label = Label(variable_frame, text='', font=('Arial 24'))
         self.fstar_label.grid(row=0, column=1, sticky='we')
-        Label(variable_frame, text='P*: ', font='Arial 12 bold').grid(row=0, column=2, sticky='we')
-        self.pstar_label = Label(variable_frame, text='')
-        self.pstar_label.grid(row=0, column=3, sticky='we')
-        Label(variable_frame, text='\u03f0:', font='Arial 12 bold').grid(row=0, column=4, sticky='we')
-        self.kmin_label = Label(variable_frame, text='')
+        # Label(variable_frame, text='P*: ', font='Arial 24 bold').grid(row=0, column=2, sticky='we')
+        self.pstar_label = Label(variable_frame, text='', font=('Arial 24'))
+        self.pstar_label.grid(row=0, column=3, sticky='we', padx=20)
+        # Label(variable_frame, text='\u03f0:', font='Arial 24 bold').grid(row=0, column=4, sticky='we')
+        self.kmin_label = Label(variable_frame, text='', font=('Arial 24'))
         self.kmin_label.grid(row=0, column=5, sticky='we')
 
         value_frame = Frame(self.container_frame)
@@ -66,7 +67,7 @@ class PStarSelector(Frame):
 
         Button(value_frame, text=LANGUAGES[settings.LANGUAGE]['recalculate'],
                font='Arial 12 bold', bd=1, relief=SOLID,
-               command=lambda: self._recalc(), width=20).grid(row=2, column=2, sticky='wens', rowspan=2, padx=50)
+               command=self._recalc, width=20).grid(row=2, column=2, sticky='wens', rowspan=2, padx=50)
 
         value_frame.columnconfigure(0, weight=1, minsize=110)
         value_frame.columnconfigure(1, weight=1, minsize=150)
@@ -80,6 +81,10 @@ class PStarSelector(Frame):
                              bd=1, relief=SOLID, command=lambda: self.back(), width=10)
         back_button.grid(row=0, column=0, sticky='we', padx=5)
 
+        new_a = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['new_a'],
+                             bd=1, relief=SOLID, command=lambda: cu.new(self.main.root), width=10)
+        new_a.grid(row=0, column=1, sticky='we', padx=5)
+
         self.info_section = Frame(self.main_frame)
         self.info_section.grid(row=1, column=1, sticky='nswe')
 
@@ -89,7 +94,7 @@ class PStarSelector(Frame):
         self.logs = None
         self.info = None
 
-        self._init_output_frame()
+        # self._init_output_frame()
 
         self.setted = False
 
@@ -127,7 +132,6 @@ class PStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
-        cu.data.changes = False
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
         else:
@@ -141,15 +145,19 @@ class PStarSelector(Frame):
         self.value_entry.delete(0, END)
         self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
 
-        self.fstar_label.config(text='{:4f}'.format(cu.data.fstar))
-        self.pstar_label.config(text=f'{cu.data.xf.dct.aic_Kmin + 1}')
-        self.kmin_label.config(text='{:18f} +/- {:10f} W/mK'.format(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std))
+        self.fstar_label.config(text='F*: {:.3f}'.format(cu.data.fstar))
+        self.pstar_label.config(text=f'P*: {cu.data.xf.dct.aic_Kmin + 1}')
+ #       self.kmin_label.config(text=u'\u03f0: {:eP} \u00B1 {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
+        self.kmin_label.config(text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
 
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
 
     def _recalc(self):
-        self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
+        try:
+            self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
+        except ValueError:
+            self._get_pstar(aic_type='aic', Kmin_corrfactor=0)
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
         self.graph.update_cut()
 
@@ -158,23 +166,22 @@ class PStarSelector(Frame):
         self._pstar()
 
     def recalculate(self):
-        cu.data.changes = False
         self._setup_pstar()
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
         self._recalc()
+        self._pstar()
 
     def update(self):
         super().update()
 
         if cu.data.changes:
-            self.setted = False
+            self.setted = True
         else:
-            self.setted = True
+            self.setted = False
 
-        if not self.setted:
-            self.setted = True
+        if self.setted:
             self.recalculate()
 
         self._init_output_frame()
@@ -182,5 +189,5 @@ class PStarSelector(Frame):
             cu.update_info(self.info)
         if self.logs:
             log.set_func(self.logs.write)
-
+        self._recalc()
         self.graph.update_cut()

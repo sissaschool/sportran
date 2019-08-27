@@ -197,7 +197,7 @@ class FStarSelector(Frame):
         if response:
             cu.data.changes = False
             cu.data.fstar = float(self.value_entry.get())
-            cu.data.loaded = True
+            cu.Data.loaded = True
             if self.prev_frame:
                 self.main.show_frame(self.prev_frame)
             else:
@@ -206,7 +206,7 @@ class FStarSelector(Frame):
         elif response == 0:
             cu.data.changes = False
             cu.data.fstar = 0.0
-            cu.data.loaded = False
+            cu.Data.loaded = False
             cu.data.temperature = 0.0
             cu.data.volume = 0.0
             cu.data.DT_FS = 0.0
@@ -242,6 +242,8 @@ class FStarSelector(Frame):
 
     def update(self):
         super().update()
+
+        self.filter_width.config(value=cu.data.psd_filter_width)
 
         if cu.data.changes:
             self.recalculate()

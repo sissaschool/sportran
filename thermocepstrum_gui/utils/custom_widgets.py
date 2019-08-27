@@ -6,7 +6,7 @@ import matplotlib
 try:
     matplotlib.use('TkAgg')
 except:
-    print ("Error: cannot load backend TkAgg. Are you inside a graphical session? Try to change terminal!")
+    print("Error: cannot load backend TkAgg. Are you inside a graphical session? Try to change terminal!")
     raise
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.backend_bases import NavigationToolbar2
@@ -42,7 +42,7 @@ class TopBar(Frame):
         file_menu = Menu(top_menu, tearoff=False)
         top_menu.add_cascade(label='File', menu=file_menu)
 
-        file_menu.add_command(label='Import data')
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['new_a'], command=lambda: cu.new(main))
         file_menu.add_command(label='Export data')
         file_menu.add_separator()
         file_menu.add_command(label='Preferences')
@@ -186,6 +186,7 @@ class GraphWidget(Frame):
             self.graph.set_ylim([0, self.max_y])
             if self.show_selected_area:
                 self.graph.set_xlim([0, self.new_view_x])
+        self.graph.autoscale(True, axis='y')
         self.canvas.draw()
 
     def get_graph(self):
@@ -248,11 +249,11 @@ class TextWidget(Frame):
 
 class CheckList(Frame):
 
-    def __init__(self, parent, controller, check_list=dict(),start_row=0):
+    def __init__(self, parent, controller, check_list=dict(), start_row=0):
         Frame.__init__(self, parent, controller)
 
         self.controller = controller
-        self.start_row=start_row
+        self.start_row = start_row
         self.combo_func = None
         if list:
             self.set_list(check_list)

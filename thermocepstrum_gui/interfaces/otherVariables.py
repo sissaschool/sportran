@@ -135,6 +135,14 @@ class OtherVariables(Frame):
             msg.showerror('Value error', ermsg)
 
     def back(self):
+        if self.filter_width_entry.get():
+            cu.data.psd_filter_width = float(self.filter_width_entry.get())
+        if self.temperature_entry.get():
+            cu.data.temperature = float(self.temperature_entry.get())
+        if self.volume_entry.get():
+            cu.data.volume = float(self.volume_entry.get())
+        if self.DT_FS_entry.get():
+            cu.data.DT_FS = float(self.DT_FS_entry.get())
 
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)

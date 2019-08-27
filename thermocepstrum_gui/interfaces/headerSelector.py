@@ -2,6 +2,7 @@ from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum import HeatCurrent
 
+
 class HeaderSelector(Frame):
 
     def __init__(self, parent, main):
@@ -38,8 +39,8 @@ class HeaderSelector(Frame):
         header_list_frame = Frame(header_frame)
         header_list_frame.grid(row=1, column=0, sticky='nswe', pady=10)
 
-        scrollable_header_list = ScrollFrame(header_list_frame, header_list_frame, bd=1)
-        self.check_list = CheckList(scrollable_header_list.viewPort, scrollable_header_list.viewPort, start_row=1)
+        self.scrollable_header_list = ScrollFrame(header_list_frame, header_list_frame, bd=1)
+        self.check_list = CheckList(self.scrollable_header_list.viewPort, self.scrollable_header_list.viewPort, start_row=1)
 
         Label(header_frame, text='Select the unit to use', font='Arial 14 bold') \
             .grid(row=2, column=0, sticky='w', pady=10)
@@ -81,6 +82,7 @@ class HeaderSelector(Frame):
                 if description.count('Temperature') <= 1:
                     cu.data.keys = keys
                     cu.data.description = description
+                    cu.Data.loaded = True
                     cu.data.units = self.units_selector.get()
                     if self.next_frame:
                         self.main.show_frame(self.next_frame)
@@ -94,8 +96,9 @@ class HeaderSelector(Frame):
             msg.showerror('No keys selected', 'You must select almost one header key!')
 
     def back(self):
-        cu.data.keys = None
-        cu.data.description = None
+        keys, description = self.check_list.get_list()
+        cu.data.keys = keys
+        cu.data.description = description
 
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
@@ -104,5 +107,14 @@ class HeaderSelector(Frame):
 
     def update(self):
         super().update()
-        keys = cu.load_keys(cu.data.CURRENT_FILE)
+
+        if not cu.Data.loaded:
+            keys = cu.load_keys(cu.data.CURRENT_FILE)
+        else:
+            keys = {key: '' for key in cu.data.keys}
+
         self.check_list.set_list(keys)
+
+        if cu.Data.loaded:
+            for i, check in enumerate(self.check_list.controller.winfo_children()):
+                check.winfo_children()[1].current(["None", "Energy current", "Other current", "Temperature"].index(cu.data.description[i]))

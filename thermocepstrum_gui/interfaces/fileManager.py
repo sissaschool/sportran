@@ -246,10 +246,14 @@ class FileManager(Frame):
             if os.path.exists(self.selected.get()):
                 if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
                     cu.data.CURRENT_FILE = self.selected.get()
-                    cu.data.inputformat = self.input_selector.get()
 
                     # Show the next interface
                     if self.next_frame:
+                        if not cu.Data.loaded:
+                            cu.data = cu.Data()
+                            cu.data.CURRENT_FILE = self.selected.get()
+                            cu.data.inputformat = self.input_selector.get()
+
                         self.main.show_frame(self.next_frame)
                     else:
                         raise ValueError('Next frame isn\'t defined')
