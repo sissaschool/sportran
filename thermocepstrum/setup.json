@@ -30,7 +30,8 @@
 	    "setuptools",
 	"pillow>=5.4.0",
         "tk-html-widgets",
-        "markdown2"
+        "markdown2",
+        "uncertainties"
     ],
     "extras_require": {
         "pre-commit": [
