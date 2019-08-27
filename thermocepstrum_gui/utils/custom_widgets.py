@@ -281,7 +281,7 @@ class CheckList(Frame):
             header = el.winfo_children()[0]
             cmb = el.winfo_children()[1]
 
-            if cmb.get() is not None:
+            if cmb.get() is not None and cmb.get() != 'None':
                 check.append(header['text'])
                 combo.append(cmb.get())
 
