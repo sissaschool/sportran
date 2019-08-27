@@ -269,6 +269,7 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     data.DT_FS = DT_FS
     data.inputformat = input_format
     data.psd_filter_width = psd_filter_w
+    data.units = units
 
     if input_format == 'table':
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
@@ -319,7 +320,7 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     emsgs = []
     if volume is not -1:
         if temperature is not -1:
-            data.j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
+            data.j = tc.heatcurrent.HeatCurrent(currents, data.units, DT_FS, temperature, volume, psd_filter_w)
             gm.initialize(data.j)
         else:
             emsgs.append('Invalid temperature!')

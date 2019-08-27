@@ -21,12 +21,15 @@ class HeaderSelector(Frame):
 
         definitions_frame = Frame(header_frame)
         definitions_frame.grid(row=1, column=1, sticky='wn', padx=20)
-        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df1']).grid(row=0, column=0, sticky='wn')
-        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df2'])\
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df1'], wraplengt=500, justify=LEFT)\
+            .grid(row=0, column=0, sticky='wn')
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df2'], wraplengt=500, justify=LEFT)\
             .grid(row=1, column=0, sticky='wn')
         # todo: put definition
-        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df3']).grid(row=2, column=0, sticky='wn')
-        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df4']).grid(row=3, column=0, sticky='wn')
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df3'], wraplengt=500, justify=LEFT)\
+            .grid(row=2, column=0, sticky='wn')
+        Label(definitions_frame, text=LANGUAGES[settings.LANGUAGE]['df4'], wraplengt=500, justify=LEFT)\
+            .grid(row=3, column=0, sticky='wn')
 
         definitions_frame.columnconfigure(0, weight=1)
         for i in range(0, 3):
@@ -78,7 +81,7 @@ class HeaderSelector(Frame):
                 if description.count('Temperature') <= 1:
                     cu.data.keys = keys
                     cu.data.description = description
-                    cu.units = self.units_selector.get()
+                    cu.data.units = self.units_selector.get()
                     if self.next_frame:
                         self.main.show_frame(self.next_frame)
                     else:

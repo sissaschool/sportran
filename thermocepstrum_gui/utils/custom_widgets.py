@@ -182,6 +182,7 @@ class GraphWidget(Frame):
             rect = patches.Rectangle((0, 0), self.cut_line, self.max_y, linewidth=0, facecolor=(0.1, 0.2, 0.5, 0.3))
             self.graph.plot([self.cut_line, self.cut_line], [0, self.max_y])
             self.graph.add_patch(rect)
+
             self.graph.set_ylim([0, self.max_y])
             if self.show_selected_area:
                 self.graph.set_xlim([0, self.new_view_x])

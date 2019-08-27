@@ -177,6 +177,8 @@ class FStarSelector(Frame):
         if self.graph.show_selected_area:
             self.graph.show_selected_area = True
             self.graph.change_view()
+        
+        cu.data.changes = False
         self.update()
 
     def set_next_frame(self, frame):

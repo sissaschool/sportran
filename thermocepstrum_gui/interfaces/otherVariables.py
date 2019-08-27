@@ -121,7 +121,7 @@ class OtherVariables(Frame):
                          _selected_keys=cu.data.keys,
                          _descriptions=cu.data.description,
                          temperature=temperature,
-                         units=cu.units,
+                         units=cu.data.units,
                          volume=volume,
                          psd_filter_w=cu.data.psd_filter_width,
                          DT_FS=DT_FS)
