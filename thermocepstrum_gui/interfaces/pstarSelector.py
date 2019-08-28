@@ -30,15 +30,10 @@ class PStarSelector(Frame):
         variable_frame = Frame(self.container_frame, bd=1, relief=SOLID)
         variable_frame.pack(side=TOP, anchor='w', padx=20, fill='x', expand=1, pady=20)
 
-        # Label(variable_frame, text='f*: ', font='Arial 24 bold').grid(row=0, column=0, sticky='we')
         self.fstar_label = Label(variable_frame, text='', font=('Arial 24'))
-        self.fstar_label.grid(row=0, column=1, sticky='we')
-        # Label(variable_frame, text='P*: ', font='Arial 24 bold').grid(row=0, column=2, sticky='we')
-        self.pstar_label = Label(variable_frame, text='', font=('Arial 24'))
-        self.pstar_label.grid(row=0, column=3, sticky='we', padx=20)
-        # Label(variable_frame, text='\u03f0:', font='Arial 24 bold').grid(row=0, column=4, sticky='we')
+        self.fstar_label.grid(row=0, column=0, sticky='w')
         self.kmin_label = Label(variable_frame, text='', font=('Arial 24'))
-        self.kmin_label.grid(row=0, column=5, sticky='we')
+        self.kmin_label.grid(row=1, column=0, sticky='w')
 
         value_frame = Frame(self.container_frame)
         value_frame.pack(side=TOP, anchor='w', padx=20, fill=BOTH, expand=1)
@@ -94,7 +89,7 @@ class PStarSelector(Frame):
         self.logs = None
         self.info = None
 
-        # self._init_output_frame()
+        self._init_output_frame()
 
         self.setted = False
 
@@ -145,9 +140,7 @@ class PStarSelector(Frame):
         self.value_entry.delete(0, END)
         self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
 
-        self.fstar_label.config(text='F*: {:.3f}'.format(cu.data.fstar))
-        self.pstar_label.config(text=f'P*: {cu.data.xf.dct.aic_Kmin + 1}')
- #       self.kmin_label.config(text=u'\u03f0: {:eP} \u00B1 {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
+        self.fstar_label.config(text='f*: {:.3f}    P*: {}'.format(cu.data.fstar, cu.data.xf.dct.aic_Kmin + 1))
         self.kmin_label.config(text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
 
     def _change_increment(self):
@@ -160,6 +153,7 @@ class PStarSelector(Frame):
             self._get_pstar(aic_type='aic', Kmin_corrfactor=0)
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
         self.graph.update_cut()
+        self._pstar()
 
     def _setup_pstar(self):
         cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
@@ -171,7 +165,6 @@ class PStarSelector(Frame):
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
         self._recalc()
-        self._pstar()
 
     def update(self):
         super().update()
