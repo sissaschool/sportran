@@ -138,7 +138,10 @@ class PStarSelector(Frame):
     def _pstar(self):
         self.value_entry.config(from_=2, to=cu.data.xf.Nfreqs)
         self.value_entry.delete(0, END)
-        self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
+        if cu.data.xf.dct:
+            self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
+        else:
+            self._setup_pstar()
 
         self.fstar_label.config(text='f*: {:.3f}    P*: {}'.format(cu.data.fstar, cu.data.xf.dct.aic_Kmin + 1))
         self.kmin_label.config(text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
@@ -147,10 +150,7 @@ class PStarSelector(Frame):
         self.value_entry.config(increment=int(self.increment.get()))
 
     def _recalc(self):
-        try:
-            self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
-        except ValueError:
-            self._get_pstar(aic_type='aic', Kmin_corrfactor=0)
+        self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
         self.graph.update_cut()
         self._pstar()

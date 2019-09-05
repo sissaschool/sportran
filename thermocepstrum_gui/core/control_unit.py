@@ -164,6 +164,7 @@ def new(main):
     global data
     data = Data()
     main.show_frame(main.home)
+    log.set_method(None)
 
 # -------- GRAPH SECTION --------
 
