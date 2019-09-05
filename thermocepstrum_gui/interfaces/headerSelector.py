@@ -108,13 +108,22 @@ class HeaderSelector(Frame):
     def update(self):
         super().update()
 
-        if not cu.Data.loaded:
-            keys = cu.load_keys(cu.data.CURRENT_FILE)
-        else:
-            keys = {key: '' for key in cu.data.keys}
+        try:
+            if not cu.Data.loaded:
+                keys = cu.load_keys(cu.data.CURRENT_FILE)
+            else:
+                keys = {key: '' for key in cu.data.keys}
 
-        self.check_list.set_list(keys)
+            self.check_list.set_list(keys)
 
-        if cu.Data.loaded:
-            for i, check in enumerate(self.check_list.controller.winfo_children()):
-                check.winfo_children()[1].current(["None", "Energy current", "Other current", "Temperature"].index(cu.data.description[i]))
+            if cu.Data.loaded:
+                for i, check in enumerate(self.check_list.controller.winfo_children()):
+                    check.winfo_children()[1].current(
+                        ["None", "Energy current", "Other current", "Temperature"].index(cu.data.description[i]))
+        except:
+            cu.data.loaded = False
+            msg.showerror('Read error', 'Unable to read this file')
+            if self.prev_frame:
+                self.main.show_frame(self.prev_frame)
+            else:
+                raise ValueError('Prev frame isn\'t defined')

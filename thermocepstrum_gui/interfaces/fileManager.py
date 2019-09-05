@@ -132,9 +132,13 @@ class FileManager(Frame):
 
         # Get the info of each file
         for file in files:
-            file_name, file_type = file.split('.')
-            file_size = cu.get_file_size(os.path.join(settings.DATA_PATH, file))
-            self.loaded_files.append((file_name, file_type, file_size))
+            file_component = file.split('.')
+            if len(file_component) == 2:
+                file_name, file_type = file.split('.')
+                file_size = cu.get_file_size(os.path.join(settings.DATA_PATH, file))
+                self.loaded_files.append((file_name, file_type, file_size))
+            else:
+                continue
 
         # Set column header
         for header in self.headers:
@@ -210,25 +214,28 @@ class FileManager(Frame):
         """
 
         # Read the file
-        with open(path, 'r') as file:
-            lines = file.readlines()[0:settings.PREVIEW_LINES]
+        try:
+            with open(path, 'r') as file:
+                lines = file.readlines()[0:settings.PREVIEW_LINES]
 
-            # Clean the file
-            prev = []
-            for line in lines:
-                prev.append(line.replace('{', '').replace('}', ''))
+                # Clean the file
+                prev = []
+                for line in lines:
+                    prev.append(line.replace('{', '').replace('}', ''))
 
-            # Enable/disable a spacing between the lines of the preview
-            prev_spacing = False
-            if prev_spacing:
-                schr = '\n'
-            else:
-                schr = ''
+                # Enable/disable a spacing between the lines of the preview
+                prev_spacing = False
+                if prev_spacing:
+                    schr = '\n'
+                else:
+                    schr = ''
 
-            self.preview.config(state=NORMAL)
-            self.preview.delete('1.0', END)
-            self.preview.insert('1.0', schr.join(prev))
-            self.preview.config(state=DISABLED)
+                self.preview.config(state=NORMAL)
+                self.preview.delete('1.0', END)
+                self.preview.insert('1.0', schr.join(prev))
+                self.preview.config(state=DISABLED)
+        except:
+            msg.showerror('Read error', 'Unable to read this file!')
 
     def set_next_frame(self, frame):
         """
