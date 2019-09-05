@@ -28,17 +28,17 @@ class OtherVariables(Frame):
               font='Arial 11').grid(row=1, column=0, pady=20, sticky='w')
         Separator(variable_frame, orient=HORIZONTAL).grid(row=2, sticky='we', columnspan=3)
 
-        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['tmp'] + ': ').grid(row=3, column=0, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['tmp'] + ' (K):').grid(row=3, column=0, sticky='w')
         self.temperature_entry = Spinbox(variable_frame, from_=0, to=100000, increment=0.1, bd=1, relief=SOLID)
         self.temperature_entry.grid(row=3, column=1, padx=2, sticky='w', pady=10)
         self.temp_advertise = Label(variable_frame, text='', font='Arial 10')
         self.temp_advertise.grid(row=3, column=2, sticky='w')
 
-        Label(variable_frame, text='Volume: ').grid(row=4, column=0, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['volume']+' (angstrom^3):').grid(row=4, column=0, sticky='w')
         self.volume_entry = Entry(variable_frame, bd=1, relief=SOLID)
         self.volume_entry.grid(row=4, column=1, padx=2, sticky='w')
 
-        Label(variable_frame, text='DT_FS: ').grid(row=5, column=0, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['timestep']+' (fs):').grid(row=5, column=0, sticky='w')
         self.DT_FS_entry = Entry(variable_frame, bd=1, relief=SOLID)
         self.DT_FS_entry.grid(row=5, column=1, padx=2, sticky='w', pady=10)
 
@@ -46,7 +46,7 @@ class OtherVariables(Frame):
               font='Arial 11').grid(row=6, column=0, pady=20, sticky='w')
         Separator(variable_frame, orient=HORIZONTAL).grid(row=7, sticky='we', columnspan=3)
 
-        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_w']).grid(row=8, column=0, sticky='w')
+        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_w'] + ' (THz):').grid(row=8, column=0, sticky='w')
         self.filter_width_entry = Spinbox(variable_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID)
         self.filter_width_entry.grid(row=8, column=1, padx=2, sticky='w', pady=10)
 
