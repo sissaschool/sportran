@@ -142,6 +142,5 @@ class GraphManager:
             axis.set_ylabel(r'PSD')
         axis.xaxis.set_ticks_position('bottom')
         axis.set_xlabel(r'$f$ [THz]')
-        axis.set_ylabel(r'log(PSD)')
         axis.grid()
         return axis

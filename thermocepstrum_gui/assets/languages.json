@@ -30,6 +30,8 @@
     "en_cr": "Energy current",
     "oth_cr": "Other current",
     "tmp": "Temperature",
+    "timestep": "Timestep",
+    "volume": "Volume",
 
     "df1": "None: the header will not be used",
     "df2": "Temperature: the column identified by this header will be used to calculate the temperature",
@@ -80,6 +82,8 @@
 
     "stp2": "Definisci l'uso delle colonne",
     "tmp": "Temperatura",
+    "timestep": "Intervallo temporale",
+    "volume": "Volume",
 
     "df1": "None: la colonna non verr\u00E0 usata",
     "df2": "Temperatura: la colonna verr\u00E0 utilizzata per calcolare la temperatura",
