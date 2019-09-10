@@ -120,8 +120,9 @@ class HeaderSelector(Frame):
                 for i, check in enumerate(self.check_list.controller.winfo_children()):
                     check.winfo_children()[1].current(
                         ["None", "Energy current", "Other current", "Temperature"].index(cu.data.description[i]))
-        except:
+        except Exception as e:
             cu.data.loaded = False
+            print (e)
             msg.showerror('Read error', 'Unable to read this file')
             if self.prev_frame:
                 self.main.show_frame(self.prev_frame)

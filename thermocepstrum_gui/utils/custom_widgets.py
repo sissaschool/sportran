@@ -1,6 +1,9 @@
 from tkinter import *
 from tkinter import ttk
 from tk_html_widgets import HTMLLabel, HTMLScrolledText
+import tkinter.filedialog as fdialog
+from tkinter import messagebox as msg
+import os
 
 import matplotlib
 try:
@@ -43,7 +46,7 @@ class TopBar(Frame):
         top_menu.add_cascade(label='File', menu=file_menu)
 
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['new_a'], command=lambda: cu.new(main))
-        file_menu.add_command(label='Export data')
+        file_menu.add_command(label='Export data',command=lambda: self._exportData())
         file_menu.add_separator()
         file_menu.add_command(label='Preferences')
         file_menu.add_separator()
@@ -73,6 +76,14 @@ class TopBar(Frame):
         file_menu.add_separator()
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['help'],
                               command=lambda: run_new_window(main.root, Help, main))
+
+    def _exportData(self):
+        file = fdialog.asksaveasfilename(initialdir=os.getcwd())
+        if file:
+            if cu.export_data(file):
+                msg.showinfo('Export success','Numpy data exported to "{}"'.format(file))
+            else:
+                msg.showerror('Export fail','Cannot save numpy data to file "{}"'.format(file))
 
     def _update_window(self):
         self.main.frame.update()

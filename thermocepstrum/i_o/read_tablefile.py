@@ -7,7 +7,7 @@
 ###  a package that reads a table-style file and organizes it into a dictionary according to the column headers.
 ###  LAMMPS-style vector variables header are grouped together (only if group_vector = True).
 ###  If the name starts with "c_" or "v_", this is stripped away.
-###    e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux0' key
+###    e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux' key
 ###  Comments lines are ignored.
 ###
 ###  Lines are read SEQUENTIALLY with the method read_datalines.

@@ -285,9 +285,17 @@ def load_keys(inputfile):
     :param inputfile: the path of the selected file.
     :return:
     """
-
-    jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
-    return jfile.all_ckeys
+    if data.inputformat == 'table':
+        jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+        return jfile.all_ckeys
+    elif data.inputformat == 'dict':
+        data.jdata=np.load(inputfile,allow_pickle=True).tolist()
+        return { key: i for i,key in enumerate(data.jdata) }
+    elif data.inputformat == 'lammps':
+        jfile = tc.i_o.LAMMPSLogFile(inputfile)
+        return jfile.all_ckeys
+    else:
+        raise RuntimeError('inputformat {} not handled'.format(data.inputformat))
 
 
 def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=0, START_STEP=0,
@@ -309,7 +317,8 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         data.jdata = jfile.data
     elif input_format == 'dict':
-        data.jdata = np.load(inputfile)
+        pass
+        #data.jdata = np.load(inputfile) #already loaded at the header selector section
     elif input_format == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
@@ -369,6 +378,12 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
 This section contains some utility functions.
 """
 
+
+def export_data(fileout):
+    if data.jdata != None:
+        np.save(fileout,data.jdata)
+        return True
+    return False
 
 def secure_exit(main_window):
     '''
