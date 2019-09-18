@@ -17,12 +17,12 @@ It can execute most of the cepstral analysis routines, returning the results in 
 See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/) folder and the help (`python analysis.py --help`) for more information.
 
 ### Requirements
-## only cepstral analysis (command line interface)
+#### only cepstral analysis (command line interface)
  - Python 2.7 or 3.x
  - Numpy
  - Scipy
  - Matplotlib
-## graphical user interface
+#### graphical user interface
  - all the requirements of cepstral analysis
  - tkinter
  - future-fstrings

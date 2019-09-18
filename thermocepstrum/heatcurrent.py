@@ -60,6 +60,7 @@ class HeatCurrent(MDSample):
             for js in j[1:]:
                 self.otherMD.append(MDSample(traj=js, DT_FS=DT_FS))
         else:
+            log.write_log('Using single component code.')
             MDSample.__init__(self, traj=j, DT_FS=DT_FS)
 
         self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)

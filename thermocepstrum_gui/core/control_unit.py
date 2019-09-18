@@ -29,6 +29,12 @@ log = PrintMethod()
 
 # -------- DATA SECTION --------
 
+class Jfile:
+    def __init__(self,name,keys,nsteps):
+        self.filename=name
+        self.select_ckeys=keys
+        self.MAX_NSTEPS=nsteps
+
 class Data:
     """
     This class is used as a structure to
@@ -36,6 +42,7 @@ class Data:
     """
 
     loaded = False
+    options = ["None", "Energy current", "Other current", "Temperature (K)", "Volume (A^3)", "DT (fs)"]
 
     def __init__(self):
         self._CURRENT_FILE = ''
@@ -141,8 +148,6 @@ class Data:
         self._verify_changes(self.CURRENT_FILE, value)
         if self.CURRENT_FILE != value:
             Data.loaded = False
-        else:
-            Data.loaded = True
         self._CURRENT_FILE = value
         print(self.changes, ' file')
 
@@ -304,12 +309,16 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
 
     selected_keys = _selected_keys.copy()
     descriptions = _descriptions.copy()
-    data.temperature = temperature
-    data.volume = volume
-    data.DT_FS = DT_FS
+    if temperature is not None:
+        data.temperature = temperature
+    if volume is not None:
+        data.volume = volume
+    if DT_FS is not None:
+        data.DT_FS = DT_FS
     data.inputformat = input_format
     data.psd_filter_width = psd_filter_w
-    data.units = units
+    if units is not None:
+        data.units = units
 
     if input_format == 'table':
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
@@ -317,7 +326,8 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         data.jdata = jfile.data
     elif input_format == 'dict':
-        pass
+        data.jfile = Jfile(inputfile,_selected_keys.copy(),data.jdata[selected_keys[0]].shape[0])
+
         #data.jdata = np.load(inputfile) #already loaded at the header selector section
     elif input_format == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
@@ -329,33 +339,30 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     ## Define currents
     # print(selected_keys, jindex)
 
-    if descriptions.count('Temperature') == 1:
-        temperature = get_temp(data.jdata, get_cor_index(selected_keys, descriptions, 'Temperature')[0])
-        data.temperature = temperature
-        i = get_cor_index(selected_keys, descriptions, 'Temperature')[1]
-        del descriptions[i]
-        del selected_keys[i]
-    if volume is None:
-        volume = get_volume(data.jdata, structurefile)
+    if descriptions.count(Data.options[3]) == 1:
+        if data.inputformat != 'dict':
+            temperature = get_temp(data.jdata, get_cor_index(selected_keys, descriptions, Data.options[3])[0])
+            data.temperature = temperature
+    # if volume is None:
+    #     volume = get_volume(data.jdata, structurefile)
 
-    if NSTEPS == 0:
-        NSTEPS = data.jdata[list(data.jdata.keys())[0]].shape[0]
-    if True:    # jindex is None:
-        heat_current, i = get_cor_index(selected_keys, descriptions, 'Energy current')
-        del descriptions[i]
-        del selected_keys[i]
-        currents_headers = [heat_current]
-        for other in selected_keys:
+
+    #if True:    # jindex is None:
+    heat_current, i = get_cor_index(selected_keys, descriptions, Data.options[1])
+    currents_headers = [heat_current]
+    for i,other in enumerate(selected_keys):
+        if descriptions[i]==Data.options[2]:
             currents_headers.append(other)
-
-        currents = np.array([data.jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in currents_headers])
-    else:
-        pass
-        # if sindex is None:
-        #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] for key in selected_keys])
-        # else:
-        #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - Data.jdata[key][START_STEP:(
-        #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
+    if NSTEPS == 0:
+        NSTEPS = data.jdata[heat_current].shape[0]
+    currents = np.array([data.jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in currents_headers])
+    # else:
+    #     pass
+    #     # if sindex is None:
+    #     #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] for key in selected_keys])
+    #     # else:
+    #     #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - Data.jdata[key][START_STEP:(
+    #     #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
     data.currents = currents
     # create HeatCurrent object
     emsgs = []
@@ -381,6 +388,13 @@ This section contains some utility functions.
 
 def export_data(fileout):
     if data.jdata != None:
+        if Data.loaded:
+            if not 'Temperature' in data.jdata.keys() and data.temperature is not None:
+                data.jdata['Temperature'] = data.temperature
+            if not 'Volume_A' in data.jdata.keys() and data.volume is not None:
+                data.jdata['Volume_A'] = data.volume
+            if not 'DT_FS' in data.jdata.keys() and data.DT_FS is not None:
+                data.jdata['DT_FS'] = data.DT_FS
         np.save(fileout,data.jdata)
         return True
     return False

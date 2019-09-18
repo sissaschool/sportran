@@ -235,7 +235,7 @@ class FileManager(Frame):
                 self.preview.insert('1.0', schr.join(prev))
                 self.preview.config(state=DISABLED)
         except:
-            msg.showerror('Read error', 'Unable to read this file!')
+            msg.showinfo('Display error', 'Unable to show a preview of this file.')
 
     def set_next_frame(self, frame):
         """
@@ -257,7 +257,7 @@ class FileManager(Frame):
                     # Show the next interface
                     if self.next_frame:
                         if not cu.Data.loaded:
-                            cu.data = cu.Data()
+                            #cu.data = cu.Data()
                             cu.data.CURRENT_FILE = self.selected.get()
                             cu.data.inputformat = self.input_selector.get()
 

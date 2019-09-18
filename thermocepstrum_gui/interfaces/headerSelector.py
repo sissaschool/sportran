@@ -2,6 +2,8 @@ from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum import HeatCurrent
 
+import traceback
+
 
 class HeaderSelector(Frame):
 
@@ -109,6 +111,7 @@ class HeaderSelector(Frame):
         super().update()
 
         try:
+            print('cu.Data.loaded={}'.format(cu.Data.loaded))
             if not cu.Data.loaded:
                 keys = cu.load_keys(cu.data.CURRENT_FILE)
             else:
@@ -119,10 +122,11 @@ class HeaderSelector(Frame):
             if cu.Data.loaded:
                 for i, check in enumerate(self.check_list.controller.winfo_children()):
                     check.winfo_children()[1].current(
-                        ["None", "Energy current", "Other current", "Temperature"].index(cu.data.description[i]))
+                       cu.Data.options.index(cu.data.description[i]))
         except Exception as e:
-            cu.data.loaded = False
+            cu.Data.loaded = False
             print (e)
+            traceback.print_exc()
             msg.showerror('Read error', 'Unable to read this file')
             if self.prev_frame:
                 self.main.show_frame(self.prev_frame)

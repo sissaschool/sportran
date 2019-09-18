@@ -35,11 +35,11 @@ class OtherVariables(Frame):
         self.temp_advertise.grid(row=3, column=2, sticky='w')
 
         Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['volume']+' (angstrom^3):').grid(row=4, column=0, sticky='w')
-        self.volume_entry = Entry(variable_frame, bd=1, relief=SOLID)
+        self.volume_entry = Spinbox(variable_frame, increment=1, bd=1, relief=SOLID)
         self.volume_entry.grid(row=4, column=1, padx=2, sticky='w')
 
         Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['timestep']+' (fs):').grid(row=5, column=0, sticky='w')
-        self.DT_FS_entry = Entry(variable_frame, bd=1, relief=SOLID)
+        self.DT_FS_entry = Spinbox(variable_frame, increment=0.1, bd=1, relief=SOLID)
         self.DT_FS_entry.grid(row=5, column=1, padx=2, sticky='w', pady=10)
 
         Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_v'],
@@ -154,18 +154,40 @@ class OtherVariables(Frame):
 
         self.temperature_entry.config(state=NORMAL)
         self.temperature_entry.config(value=cu.data.temperature)
+        self.DT_FS_entry.config(state=NORMAL)
+        self.volume_entry.config(state=NORMAL)
 
-        if 'Temperature' in cu.data.description:
+        if cu.Data.options[3] in cu.data.description:
             self.temperature_entry.config(state=DISABLED)
             self.temp_advertise.config(text='The temperature will be automatically calculated', fg='red')
         else:
             self.temperature_entry.config(state=NORMAL)
             self.temp_advertise.config(text='')
 
-        self.volume_entry.delete(0, END)
-        self.volume_entry.insert(0, cu.data.volume)
-        self.DT_FS_entry.delete(0, END)
-        self.DT_FS_entry.insert(0, cu.data.DT_FS)
+        if cu.data.inputformat=='dict':
+            if True : #not cu.Data.loaded:
+                if cu.Data.options[3] in cu.data.description:
+                    temp = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[3])]]
+                    if type(temp) == float:
+                        self.temperature_entry.config(value=temp)
+                        cu.data.temperature = temp
+                    else:
+                        cu.data.temperature = temp.mean()
+                        cu.data.temperature_std = temp.std()
+                        self.temperature_entry.config(value=cu.data.temperature)
+                if cu.Data.options[4] in cu.data.description:
+                    vol = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[4])]]
+                    if type(vol) == float:
+                        cu.data.volume=vol
+                    else:
+                        cu.data.volume=vol.mean()
+                    self.volume_entry.config(state=DISABLED)
+                if cu.Data.options[4] in cu.data.description:
+                    cu.data.DT_FS=cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[5])]]
+                    self.DT_FS_entry.config(state=DISABLED)
+
+        self.volume_entry.config(value=cu.data.volume)
+        self.DT_FS_entry.config(value=cu.data.DT_FS)
         self.filter_width_entry.config(value=cu.data.psd_filter_width)
         self.main_frame.viewPort.columnconfigure(0, weight=1)
         self.main_frame.viewPort.rowconfigure(0, weight=1)

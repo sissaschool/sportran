@@ -260,6 +260,7 @@ class TextWidget(Frame):
 
 class CheckList(Frame):
 
+
     def __init__(self, parent, controller, check_list=dict(), start_row=0):
         Frame.__init__(self, parent, controller)
 
@@ -275,10 +276,18 @@ class CheckList(Frame):
                 frame = Frame(self.controller)
                 frame.grid(row=self.start_row+row, column=0, sticky='we', pady=2)
                 Label(frame, text=el, font="{} 12 bold".format(settings.FONT)).grid(row=0, column=0)
-                cmb = ttk.Combobox(frame, values=["None", "Energy current", "Other current", "Temperature"],
+                cmb = ttk.Combobox(frame, values=cu.Data.options,
                                    state='readonly', width=12)
                 cmb.bind('<<ComboboxSelected>>', self.combo_func)
-                cmb.current(0)
+
+                if el.upper() == 'TEMP' or el.upper() == 'TEMPERATURE':
+                    cmb.current(3)
+                elif el.upper() == 'VOL_A' or el.upper() == 'VOLUME_A':
+                    cmb.current(4)
+                elif el.upper() == 'DT_FS':
+                    cmb.current(5)
+                else:
+                    cmb.current(0)
                 cmb.grid(row=0, column=1, sticky='e')
 
     def clear_list(self):
