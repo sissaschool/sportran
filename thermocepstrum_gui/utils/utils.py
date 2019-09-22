@@ -3,20 +3,17 @@ class PrintMethod:
     _print_func = None
     _METHOD = 'bash'
 
-    def __init__(self):
-        pass
-
     @classmethod
-    def write_log(cls, s, *args, **kwargs):
+    def write_log(cls, s, s2='', *args, **kwargs):
         if cls._METHOD == 'bash':
             print(s, *args, **kwargs)
         elif cls._METHOD == 'other':
             if cls._print_func:
-                cls._print_func(s, *args, **kwargs)
+                cls._print_func(s, s2, *args, **kwargs)
             else:
-                print(s, *args, **kwargs)
+                print(s, s2, *args, **kwargs)
         else:
-            print(s, *args, **kwargs)
+            print(s, s2, *args, **kwargs)
 
     @classmethod
     def set_func(cls, func):

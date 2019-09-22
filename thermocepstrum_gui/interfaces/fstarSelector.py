@@ -1,6 +1,6 @@
 from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
-from thermocepstrum_gui.core.control_unit import log
+from thermocepstrum_gui.core.control_unit import info
 
 
 class FStarSelector(Frame):
@@ -91,9 +91,6 @@ class FStarSelector(Frame):
                              bd=1, relief=SOLID, command=lambda: self.next(), width=10)
         next_button.grid(row=0, column=1, sticky='we', padx=5)
 
-        self.info_section = Frame(self.main_frame)
-        self.info_section.grid(row=0, column=1, sticky='nswe')
-
         self.main_frame.columnconfigure(0, weight=3)
         self.main_frame.columnconfigure(1, weight=4)
         self.main_frame.rowconfigure(0, weight=1)
@@ -101,11 +98,9 @@ class FStarSelector(Frame):
         self.main_frame.columnconfigure(0, weight=1, minsize=720)
         self.main_frame.columnconfigure(1, weight=1, minsize=200)
 
-        self.logs = None
-        self.info = None
-
         self.setted = False
-        self._init_output_frame()
+        if info:
+            cu.update_info(info)
 
     def _lock_unlock_slider(self, force=False):
         if self.slider_locked or not force:
@@ -128,37 +123,6 @@ class FStarSelector(Frame):
 
             self.graph.change_view()
             self.graph.update_cut()
-
-    def _init_output_frame(self):
-        if not TopBar.show_info.get() and not TopBar.show_logs.get():
-            self.info_section.grid_remove()
-            self.sections.grid(row=0, column=0, sticky='nsew', padx=20, columnspan=2)
-        else:
-            self.info_section.grid(row=0, column=1, sticky='nswe')
-            self.sections.grid(row=0, column=0, sticky='nsew', padx=20, columnspan=1)
-
-        if TopBar.show_logs.get():
-            if not self.logs:
-                print('log')
-                self.logs = TextWidget(self.main_frame, self.info_section, 'Logs', 15, 25)
-        else:
-            if self.logs:
-                self._del_out_frames()
-
-        if TopBar.show_info.get():
-            if not self.info:
-                self.info = TextWidget(self.main_frame, self.info_section, 'Info', 10, 25)
-        else:
-            if self.info:
-                self._del_out_frames()
-
-    def _del_out_frames(self):
-        for el in self.info_section.winfo_children():
-            el.destroy()
-        log.set_func(None)
-        self.logs = None
-        self.info = None
-        self.update()
 
     def resample(self):
         cu.data.fstar = float(self.value_entry.get())
@@ -239,6 +203,8 @@ class FStarSelector(Frame):
         if float(self.value_entry.get()):
             self.resample()
         cu.data.changes = False
+        if info:
+            cu.update_info(info)
 
     def update(self):
         super().update()
@@ -248,8 +214,5 @@ class FStarSelector(Frame):
         if cu.data.changes:
             self.recalculate()
 
-        self._init_output_frame()
-        if self.info:
-            cu.update_info(self.info)
-        if self.logs:
-            log.set_func(self.logs.write)
+        if info:
+            cu.update_info(info)

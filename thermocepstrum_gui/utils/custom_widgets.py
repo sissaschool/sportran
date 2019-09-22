@@ -19,7 +19,7 @@ import matplotlib.patches as patches
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core import settings
 from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES, README_MD
-
+from thermocepstrum_gui.core.control_unit import log
 import webbrowser
 import markdown2
 
@@ -33,9 +33,6 @@ class TopBar(Frame):
         Frame.__init__(self, parent)
 
         self.main = main
-        
-        TopBar.show_logs = BooleanVar()
-        TopBar.show_info = BooleanVar()
 
         # Setup the top menu
         top_menu = Menu(self)
@@ -55,10 +52,10 @@ class TopBar(Frame):
         # Create the view section of the top menu
         view_menu = Menu(top_menu, tearoff=False)
         top_menu.add_cascade(label=LANGUAGES[settings.LANGUAGE]['view'], menu=view_menu)
-        view_menu.add_checkbutton(label=LANGUAGES[settings.LANGUAGE]['s_log'],
-                                  variable=TopBar.show_logs, onvalue=1, offvalue=0, command=self._update_window)
-        view_menu.add_checkbutton(label=LANGUAGES[settings.LANGUAGE]['s_inf'],
-                                  variable=TopBar.show_info, onvalue=1, offvalue=0, command=self._update_window)
+        view_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['s_log'],
+                                  command=lambda: run_new_window(main.root, Logs, main))
+        view_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['s_inf'],
+                              command=lambda: run_new_window(main.root, Info, main))
 
         # Create the info section of the top menu
         file_menu = Menu(top_menu, tearoff=False)
@@ -251,15 +248,14 @@ class TextWidget(Frame):
         self.text_box.delete('0.1', END)
         self.text_box.config(state=DISABLED)
 
-    def write(self, text):
+    def write(self, text, text2='', *args, **kwargs):
         self.text_box.config(state=NORMAL)
-        self.text_box.insert(INSERT, str(text)+'\n')
+        self.text_box.insert(INSERT, str(text) + str(text2) + '\n')
         self.text_box.config(state=DISABLED)
         self.text_box.see(END)
 
 
 class CheckList(Frame):
-
 
     def __init__(self, parent, controller, check_list=dict(), start_row=0):
         Frame.__init__(self, parent, controller)
@@ -575,3 +571,70 @@ class Help:
         del self.main.open_windows[self.main.open_windows.index(self)]
         self.master.destroy()
 
+
+class Info:
+
+    def __init__(self, master, main):
+        self.master = master
+        self.main = main
+
+        self.master.resizable(False, False)
+
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
+
+        Label(self.frame, text='Info',
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+        info_frame = Frame(self.frame)
+        info_frame.grid(row=3, column=0, sticky='nsew')
+        self.info = TextWidget(info_frame, info_frame, 'Info', 10, 45)
+
+        cu.info = self.info
+
+        self.frame.columnconfigure(0, weight=1)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+        cu.info = None
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()
+
+
+class Logs:
+
+    def __init__(self, master, main):
+        self.master = master
+        self.main = main
+
+        self.master.resizable(False, False)
+
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
+
+        Label(self.frame, text='Logs',
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+
+        log_frame = Frame(self.frame)
+        log_frame.grid(row=3, column=0, sticky='nsew')
+        self.logs = TextWidget(log_frame, log_frame, 'Logs', 20, 40)
+
+        log.set_func(self.logs.write)
+        self.frame.columnconfigure(0, weight=1)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+        log.set_func(None)
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()

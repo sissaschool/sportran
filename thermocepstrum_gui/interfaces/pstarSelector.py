@@ -1,6 +1,6 @@
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.core import control_unit as cu
-from thermocepstrum_gui.core.control_unit import log
+from thermocepstrum_gui.core.control_unit import info
 from uncertainties import ufloat
 
 
@@ -80,48 +80,12 @@ class PStarSelector(Frame):
                              bd=1, relief=SOLID, command=lambda: cu.new(self.main.root), width=10)
         new_a.grid(row=0, column=1, sticky='we', padx=5)
 
-        self.info_section = Frame(self.main_frame)
-        self.info_section.grid(row=1, column=1, sticky='nswe')
-
         self.main_frame.columnconfigure(0, weight=1, minsize=500)
-        self.main_frame.columnconfigure(1, weight=1, minsize=200)
-
-        self.logs = None
-        self.info = None
-
-        self._init_output_frame()
 
         self.setted = False
 
-    def _init_output_frame(self):
-        if not TopBar.show_info.get() and not TopBar.show_logs.get():
-            self.container_frame.grid(row=1, column=0, sticky='nsew', columnspan=2)
-            self.info_section.grid_remove()
-        else:
-            self.container_frame.grid(row=1, column=0, sticky='nsew', columnspan=1)
-            self.info_section.grid(row=1, column=1, sticky='nswe')
-
-        if TopBar.show_logs.get():
-            if not self.logs:
-                self.logs = TextWidget(self.main_frame, self.info_section, 'Logs', 5, 45)
-        else:
-            if self.logs:
-                self._del_out_frames()
-
-        if TopBar.show_info.get():
-            if not self.info:
-                self.info = TextWidget(self.main_frame, self.info_section, 'Info', 5, 45)
-        else:
-            if self.info:
-                self._del_out_frames()
-
-    def _del_out_frames(self):
-        for el in self.info_section.winfo_children():
-            el.destroy()
-        log.set_func(None)
-        self.logs = None
-        self.info = None
-        self.update()
+        if info:
+            cu.update_info(info)
 
     def set_prev_frame(self, frame):
         self.prev_frame = frame
@@ -150,7 +114,11 @@ class PStarSelector(Frame):
         self.value_entry.config(increment=int(self.increment.get()))
 
     def _recalc(self):
-        self._get_pstar(aic_type='aic', Kmin_corrfactor=int(self.value_entry.get()))
+        if self.value_entry.get():
+            kmin_c = int(self.value_entry.get())
+        else:
+            kmin_c = 0
+        self._get_pstar(aic_type='aic', Kmin_corrfactor=kmin_c)
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
         self.graph.update_cut()
         self._pstar()
@@ -166,6 +134,9 @@ class PStarSelector(Frame):
                              PSD_FILTER_W=cu.data.psd_filter_width)
         self._recalc()
 
+        if info:
+            cu.update_info(info)
+
     def update(self):
         super().update()
 
@@ -177,10 +148,8 @@ class PStarSelector(Frame):
         if self.setted:
             self.recalculate()
 
-        self._init_output_frame()
-        if self.info:
-            cu.update_info(self.info)
-        if self.logs:
-            log.set_func(self.logs.write)
+        if info:
+            cu.update_info(info)
+
         self._recalc()
         self.graph.update_cut()

@@ -25,15 +25,17 @@ except ImportError:
 
 # Init print method
 log = PrintMethod()
-
+info = None
 
 # -------- DATA SECTION --------
 
+
 class Jfile:
-    def __init__(self,name,keys,nsteps):
-        self.filename=name
-        self.select_ckeys=keys
-        self.MAX_NSTEPS=nsteps
+    def __init__(self, name, keys, nsteps):
+        self.filename = name
+        self.select_ckeys = keys
+        self.MAX_NSTEPS = nsteps
+
 
 class Data:
     """
