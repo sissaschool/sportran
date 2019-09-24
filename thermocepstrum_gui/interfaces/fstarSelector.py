@@ -99,8 +99,8 @@ class FStarSelector(Frame):
         self.main_frame.columnconfigure(1, weight=1, minsize=200)
 
         self.setted = False
-        if info:
-            cu.update_info(info)
+        if cu.info:
+            cu.update_info(cu.info)
 
     def _lock_unlock_slider(self, force=False):
         if self.slider_locked or not force:
@@ -126,7 +126,7 @@ class FStarSelector(Frame):
 
     def resample(self):
         cu.data.fstar = float(self.value_entry.get())
-        filter_width = float(self.filter_width.get())
+        filter_width = float(self.filter_width_var.get())
         cu.data.psd_filter_width = filter_width
 
         if cu.data.fstar > 0:
@@ -203,8 +203,8 @@ class FStarSelector(Frame):
         if float(self.value_entry.get()):
             self.resample()
         cu.data.changes = False
-        if info:
-            cu.update_info(info)
+        if cu.info:
+            cu.update_info(cu.info)
 
     def update(self):
         super().update()
@@ -214,5 +214,5 @@ class FStarSelector(Frame):
         if cu.data.changes:
             self.recalculate()
 
-        if info:
-            cu.update_info(info)
+        if cu.info:
+            cu.update_info(cu.info)

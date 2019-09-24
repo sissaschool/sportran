@@ -469,6 +469,7 @@ def update_info(frame):
     :param frame: the info screen.
     """
 
+    print('Info')
     frame.clear()
     frame.write('file name:        {}'.format(data.jfile.filename))
     frame.write('file size:        {}'.format(get_file_size(data.jfile.filename)))
@@ -481,7 +482,8 @@ def update_info(frame):
     frame.write('DT_FS:            {}'.format(data.DT_FS))
     frame.write('psd filter width: {}'.format(data.psd_filter_width))
     frame.write('F*:               {}'.format(data.fstar))
-    # if Data.xf.dct is not None:
-    #     frame.write('aic type:         {}'.format(Data.xf.dct.aic_type))
-    #     frame.write('aic min:          {}'.format(Data.xf.dct.aic_min))
-    #     frame.write('P*:               {}'.format(Data.xf.dct.aic_Kmin + 1))
+
+    if data.xf is not None and data.xf.dct is not None:
+        frame.write('aic type:         {}'.format(data.xf.dct.aic_type))
+        frame.write('aic min:          {}'.format(data.xf.dct.aic_min))
+        frame.write('P*:               {}'.format(data.xf.dct.aic_Kmin + 1))

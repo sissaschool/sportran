@@ -1,6 +1,5 @@
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.core import control_unit as cu
-from thermocepstrum_gui.core.control_unit import info
 from uncertainties import ufloat
 
 
@@ -84,8 +83,8 @@ class PStarSelector(Frame):
 
         self.setted = False
 
-        if info:
-            cu.update_info(info)
+        if cu.info:
+            cu.update_info(cu.info)
 
     def set_prev_frame(self, frame):
         self.prev_frame = frame
@@ -101,14 +100,13 @@ class PStarSelector(Frame):
 
     def _pstar(self):
         self.value_entry.config(from_=2, to=cu.data.xf.Nfreqs)
-        self.value_entry.delete(0, END)
-        if cu.data.xf.dct:
-            self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
-        else:
-            self._setup_pstar()
 
-        self.fstar_label.config(text='f*: {:.3f}    P*: {}'.format(cu.data.fstar, cu.data.xf.dct.aic_Kmin + 1))
-        self.kmin_label.config(text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
+        if cu.data.xf.dct:
+            self.value_entry.delete(0, END)
+            self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
+            self.fstar_label.config(text='f*: {:.3f}    P*: {}'.format(cu.data.fstar, cu.data.xf.dct.aic_Kmin + 1))
+            self.kmin_label.config(
+                text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
 
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
@@ -120,22 +118,27 @@ class PStarSelector(Frame):
             kmin_c = 0
         self._get_pstar(aic_type='aic', Kmin_corrfactor=kmin_c)
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
+        xf = cu.data.xf
         self.graph.update_cut()
+        cu.data.xf = xf
         self._pstar()
 
     def _setup_pstar(self):
         cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
         self._pstar()
 
-    def recalculate(self):
-        self._setup_pstar()
+    def _draw_graph(self):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
+
+    def recalculate(self):
+        self._setup_pstar()
+        self._draw_graph()
         self._recalc()
 
-        if info:
-            cu.update_info(info)
+        if cu.info:
+            cu.update_info(cu.info)
 
     def update(self):
         super().update()
@@ -148,8 +151,8 @@ class PStarSelector(Frame):
         if self.setted:
             self.recalculate()
 
-        if info:
-            cu.update_info(info)
+        if cu.info:
+            cu.update_info(cu.info)
 
         self._recalc()
         self.graph.update_cut()
