@@ -30,8 +30,10 @@ class FStarSelector(Frame):
         slider_frame = Frame(self.sections)
         slider_frame.pack(side=TOP, anchor='w', padx=20, fill=BOTH)
 
-        Label(slider_frame, text=LANGUAGES[settings.LANGUAGE]['stp4'],
-              font='Arial 12').grid(row=0, column=0, sticky='w', padx=20)
+        Label(slider_frame, text=LANGUAGES[settings.LANGUAGE]['stp4'], font='Arial 12').grid(row=0,
+                                                                                             column=0,
+                                                                                             sticky='w',
+                                                                                             padx=20)
 
         self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1)
         self.slider.grid(row=1, column=0, sticky='we', columnspan=1, padx=20, pady=5)
@@ -41,8 +43,7 @@ class FStarSelector(Frame):
         slider_options_frame = Frame(slider_frame)
         slider_options_frame.grid(row=2, column=0, sticky='w', padx=20, pady=2)
 
-        lock_slider = Button(slider_options_frame, command=lambda: self._lock_unlock_slider(),
-                             bd=1, relief=SOLID)
+        lock_slider = Button(slider_options_frame, command=lambda: self._lock_unlock_slider(), bd=1, relief=SOLID)
         lock_slider.grid(row=0, column=0, padx=2, sticky='w')
 
         self.change_view_button = Button(slider_options_frame, text='Zoom-in', command=lambda: self._change_view())
@@ -75,20 +76,32 @@ class FStarSelector(Frame):
         self.fstar_screen = Label(value_frame, text='F*: ', font='Arial 14 bold', width=20, bd=1, relief=SOLID)
         self.fstar_screen.grid(row=1, column=3, sticky='we', padx=50)
 
-        Button(value_frame, text=LANGUAGES[settings.LANGUAGE]['resample'],
-               font='Arial 12 bold', bd=1, relief=SOLID,
-               command=self.resample, width=20).grid(row=2, column=3, sticky='wens', rowspan=1, padx=50)
+        Button(value_frame,
+               text=LANGUAGES[settings.LANGUAGE]['resample'],
+               font='Arial 12 bold',
+               bd=1,
+               relief=SOLID,
+               command=self.resample,
+               width=20).grid(row=2, column=3, sticky='wens', rowspan=1, padx=50)
 
         value_frame.rowconfigure(3, weight=1)
         button_frame = Frame(value_frame)
         button_frame.grid(row=3, column=0, pady=10)
 
-        back_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'],
-                             bd=1, relief=SOLID, command=lambda: self.back(), width=10)
+        back_button = Button(button_frame,
+                             text=LANGUAGES[settings.LANGUAGE]['back'],
+                             bd=1,
+                             relief=SOLID,
+                             command=lambda: self.back(),
+                             width=10)
         back_button.grid(row=0, column=0, sticky='we', padx=5)
 
-        next_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['next'],
-                             bd=1, relief=SOLID, command=lambda: self.next(), width=10)
+        next_button = Button(button_frame,
+                             text=LANGUAGES[settings.LANGUAGE]['next'],
+                             bd=1,
+                             relief=SOLID,
+                             command=lambda: self.next(),
+                             width=10)
         next_button.grid(row=0, column=1, sticky='we', padx=5)
 
         self.main_frame.columnconfigure(0, weight=3)
@@ -126,11 +139,14 @@ class FStarSelector(Frame):
 
     def resample(self):
         cu.data.fstar = float(self.value_entry.get())
-        filter_width = float(self.filter_width_var.get())
+        filter_width = float(self.filter_width.get())
         cu.data.psd_filter_width = filter_width
 
         if cu.data.fstar > 0:
-            self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
+            self.graph.add_graph(cu.gm.resample_current,
+                                 'resample',
+                                 x=cu.data.j,
+                                 fstar_THz=cu.data.fstar,
                                  PSD_FILTER_W=cu.data.psd_filter_width)
             self.graph.update_cut()
 
@@ -153,9 +169,9 @@ class FStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
-        response = msg.askyesno('Go back?',
-                                      "Save changes?\nIf reopen the same file "
-                                      "\nthe values that you chosed will not be deleted!")
+        response = msg.askyesno(
+            'Go back?', 'Save changes?\nIf reopen the same file '
+            '\nthe values that you chosed will not be deleted!')
 
         log.set_func(None)
         if response:
