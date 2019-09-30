@@ -223,10 +223,10 @@ def get_file_size(path):
     file_size = os.path.getsize(path)
     if file_size >= 1000000:
         file_size //= 1000000
-        return f"{file_size} KB"
+        return f"{file_size} MB"
     else:
         file_size //= 1000
-        return f"{file_size} MB"
+        return f"{file_size} KB"
 
 
 def load_path():
