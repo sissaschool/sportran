@@ -9,7 +9,7 @@ import matplotlib
 try:
     matplotlib.use('TkAgg')
 except:
-    print("Error: cannot load backend TkAgg. Are you inside a graphical session? Try to change terminal!")
+    print('Error: cannot load backend TkAgg. Are you inside a graphical session? Try to change terminal!')
     raise
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.backend_bases import NavigationToolbar2
@@ -19,7 +19,6 @@ import matplotlib.patches as patches
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core import settings
 from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES, README_MD
-from thermocepstrum_gui.core.control_unit import log
 import webbrowser
 import markdown2
 
@@ -43,7 +42,7 @@ class TopBar(Frame):
         top_menu.add_cascade(label='File', menu=file_menu)
 
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['new_a'], command=lambda: cu.new(main))
-        file_menu.add_command(label='Export data',command=lambda: self._exportData())
+        file_menu.add_command(label='Export data', command=lambda: self._exportData())
         file_menu.add_separator()
         file_menu.add_command(label='Preferences')
         file_menu.add_separator()
@@ -53,7 +52,7 @@ class TopBar(Frame):
         view_menu = Menu(top_menu, tearoff=False)
         top_menu.add_cascade(label=LANGUAGES[settings.LANGUAGE]['view'], menu=view_menu)
         view_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['s_log'],
-                                  command=lambda: run_new_window(main.root, Logs, main))
+                              command=lambda: run_new_window(main.root, Logs, main))
         view_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['s_inf'],
                               command=lambda: run_new_window(main.root, Info, main))
 
@@ -78,9 +77,9 @@ class TopBar(Frame):
         file = fdialog.asksaveasfilename(initialdir=os.getcwd())
         if file:
             if cu.export_data(file):
-                msg.showinfo('Export success','Numpy data exported to "{}"'.format(file))
+                msg.showinfo('Export success', 'Numpy data exported to "{}"'.format(file))
             else:
-                msg.showerror('Export fail','Cannot save numpy data to file "{}"'.format(file))
+                msg.showerror('Export fail', 'Cannot save numpy data to file "{}"'.format(file))
 
     def _update_window(self):
         self.main.frame.update()
@@ -269,22 +268,21 @@ class CheckList(Frame):
     def set_list(self, check_list):
         self.clear_list()
         for row, el in enumerate(list(check_list.keys())):
-                frame = Frame(self.controller)
-                frame.grid(row=self.start_row+row, column=0, sticky='we', pady=2)
-                Label(frame, text=el, font="{} 12 bold".format(settings.FONT)).grid(row=0, column=0)
-                cmb = ttk.Combobox(frame, values=cu.Data.options,
-                                   state='readonly', width=12)
-                cmb.bind('<<ComboboxSelected>>', self.combo_func)
+            frame = Frame(self.controller)
+            frame.grid(row=self.start_row + row, column=0, sticky='we', pady=2)
+            Label(frame, text=el, font='{} 12 bold'.format(settings.FONT)).grid(row=0, column=0)
+            cmb = ttk.Combobox(frame, values=cu.Data.options, state='readonly', width=12)
+            cmb.bind('<<ComboboxSelected>>', self.combo_func)
 
-                if el.upper() == 'TEMP' or el.upper() == 'TEMPERATURE':
-                    cmb.current(3)
-                elif el.upper() == 'VOL_A' or el.upper() == 'VOLUME_A':
-                    cmb.current(4)
-                elif el.upper() == 'DT_FS':
-                    cmb.current(5)
-                else:
-                    cmb.current(0)
-                cmb.grid(row=0, column=1, sticky='e')
+            if el.upper() == 'TEMP' or el.upper() == 'TEMPERATURE':
+                cmb.current(3)
+            elif el.upper() == 'VOL_A' or el.upper() == 'VOLUME_A':
+                cmb.current(4)
+            elif el.upper() == 'DT_FS':
+                cmb.current(5)
+            else:
+                cmb.current(0)
+            cmb.grid(row=0, column=1, sticky='e')
 
     def clear_list(self):
         for el in self.controller.winfo_children():
@@ -319,12 +317,17 @@ class ScrollFrame(Frame):
         #todo: should I use self in place of controller???
         #controller=self
         if width or height:
-            self.canvas = Canvas(controller, bd=bd, relief=SOLID,
-                                 highlightthickness=0, bg=bgcol, width=width, height=height)
+            self.canvas = Canvas(controller,
+                                 bd=bd,
+                                 relief=SOLID,
+                                 highlightthickness=0,
+                                 bg=bgcol,
+                                 width=width,
+                                 height=height)
         else:
             self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol)
         self.viewPort = Frame(self.canvas, background=bgcol2)
-        self.vsb = Scrollbar(controller, orient="vertical", command=self.canvas.yview)
+        self.vsb = Scrollbar(controller, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
         self.vsb.grid(row=0, column=1, sticky='nse')
@@ -334,19 +337,19 @@ class ScrollFrame(Frame):
         controller.columnconfigure(0, weight=10)
         controller.columnconfigure(1, weight=0)
 
-        self.canvas.create_window(0, 0, window=self.viewPort, tags="self.viewPort")
+        self.canvas.create_window(0, 0, window=self.viewPort, tags='self.viewPort')
         self.viewPort.grid(row=0, column=0, sticky='nsew')
         self.canvas.grid_rowconfigure(0, weight=1)
         self.canvas.grid_columnconfigure(0, weight=1)
 
-        self.viewPort.bind("<Configure>", self.on_frame_configure)
+        self.viewPort.bind('<Configure>', self.on_frame_configure)
 
-        self.viewPort.bind("<MouseWheel>", self._on_mousewheel)
-        self.viewPort.bind("<Button-4>", self._on_mousewheel)
-        self.viewPort.bind("<Button-5>", self._on_mousewheel)
+        self.viewPort.bind('<MouseWheel>', self._on_mousewheel)
+        self.viewPort.bind('<Button-4>', self._on_mousewheel)
+        self.viewPort.bind('<Button-5>', self._on_mousewheel)
 
     def _on_mousewheel(self, event):
-        self.canvas.yview_scroll(-1 * int((event.delta / 120)), "units")
+        self.canvas.yview_scroll(-1 * int((event.delta / 120)), 'units')
 
     def on_frame_configure(self, event):
         """
@@ -413,16 +416,18 @@ class Version:
         Label(self.frame, text='Thermocepstrum GUI', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
-        Label(self.frame, text='Thermocepstrum {}: {}'
-              .format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['version'])
-              ).grid(row=2, column=0, sticky='w', pady=5)
+        Label(self.frame,
+              text='Thermocepstrum {}: {}'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(),
+                                                  METADATA['version'])).grid(row=2, column=0, sticky='w', pady=5)
 
-        Label(self.frame, text='GUI {}: {} ({})'
-              .format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['gui_version'], METADATA['dev_state'])
-              ).grid(row=3, column=0, sticky='w')
+        Label(self.frame,
+              text='GUI {}: {} ({})'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['gui_version'],
+                                            METADATA['dev_state'])).grid(row=3, column=0, sticky='w')
 
         Label(self.frame, text='Last release: {}'.format(METADATA['release_date'])).grid(row=4,
-                                                                                         column=0, sticky='w', pady=5)
+                                                                                         column=0,
+                                                                                         sticky='w',
+                                                                                         pady=5)
 
         icon = PhotoImage(data=ICON)
 
@@ -431,8 +436,12 @@ class Version:
         image.pack(side=RIGHT, padx=20, pady=15)
         image.config(image=icon)
 
-        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -446,7 +455,7 @@ class Developers:
         self.master = master
         self.main = main
 
-        self.master.geometry("350x190")
+        self.master.geometry('350x190')
         self.master.resizable(False, False)
 
         self.main.open_windows.insert(0, self)
@@ -455,8 +464,10 @@ class Developers:
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['developers'],
-              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['developers'], font='Arial 12 bold').grid(row=0,
+                                                                                                      column=0,
+                                                                                                      sticky='we',
+                                                                                                      pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         Label(self.frame, text='Loris Ercole').grid(row=2, column=0, sticky='w', pady=5)
@@ -466,8 +477,12 @@ class Developers:
         Label(self.frame, text='Sebastiano Bisacchi').grid(row=4, column=0, sticky='w', pady=5)
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -481,7 +496,7 @@ class Contacts:
         self.master = master
         self.main = main
 
-        self.master.geometry("350x190")
+        self.master.geometry('350x190')
         self.master.resizable(False, False)
 
         self.main.open_windows.insert(0, self)
@@ -490,8 +505,10 @@ class Contacts:
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['contacts'],
-              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['contacts'], font='Arial 12 bold').grid(row=0,
+                                                                                                    column=0,
+                                                                                                    sticky='we',
+                                                                                                    pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         Email(self.frame, email=METADATA['author_email']).grid(row=2, column=0, pady=5, sticky='w')
@@ -499,8 +516,12 @@ class Contacts:
         # Email(self.frame, email='sebastianobisacchi@outlook.it').grid(row=4, column=0, pady=5, sticky='w')
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -520,9 +541,11 @@ class About:
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['about'], font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['about'], font='Arial 12 bold').grid(row=0,
+                                                                                                 column=0,
+                                                                                                 sticky='we',
+                                                                                                 pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
-
 
         html = markdown2.markdown(README_MD)
 
@@ -531,8 +554,12 @@ class About:
 
         self.frame.columnconfigure(0, weight=1)
         self.frame.rowconfigure(2, weight=1)
-        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -546,7 +573,7 @@ class Help:
         self.master = master
         self.main = main
 
-        self.master.geometry("350x190")
+        self.master.geometry('350x190')
         self.master.resizable(False, False)
 
         self.main.open_windows.insert(0, self)
@@ -555,16 +582,22 @@ class Help:
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['help'],
-              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['help'], font='Arial 12 bold').grid(row=0,
+                                                                                                column=0,
+                                                                                                sticky='we',
+                                                                                                pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         # todo: put description
         Label(self.frame, text='').grid(row=2, column=0, pady=5, sticky='w')
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -586,8 +619,7 @@ class Info:
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text='Info',
-              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text='Info', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
         info_frame = Frame(self.frame)
         info_frame.grid(row=3, column=0, sticky='nsew')
@@ -596,8 +628,12 @@ class Info:
         cu.info = self.info
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -620,21 +656,26 @@ class Logs:
         self.frame = Frame(self.master)
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
-        Label(self.frame, text='Logs',
-              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        Label(self.frame, text='Logs', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         log_frame = Frame(self.frame)
         log_frame.grid(row=3, column=0, sticky='nsew')
         self.logs = TextWidget(log_frame, log_frame, 'Logs', 20, 40)
 
-        log.set_func(self.logs.write)
+        cu.log.set_func(self.logs.write)
+        cu.log.set_method('other')
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows, width=10, bd=1, relief=SOLID)
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
-        log.set_func(None)
+
+        cu.log.set_func(None)
         del self.main.open_windows[self.main.open_windows.index(self)]
         self.master.destroy()
