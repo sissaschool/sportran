@@ -1,6 +1,4 @@
-from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
-from thermocepstrum_gui.core.control_unit import info
 
 
 class FStarSelector(Frame):
@@ -112,6 +110,7 @@ class FStarSelector(Frame):
         self.main_frame.columnconfigure(1, weight=1, minsize=200)
 
         self.setted = False
+
         if cu.info:
             cu.update_info(cu.info)
 
@@ -173,7 +172,7 @@ class FStarSelector(Frame):
             'Go back?', 'Save changes?\nIf reopen the same file '
             '\nthe values that you chosed will not be deleted!')
 
-        log.set_func(None)
+        #cu.log.set_func(None)
         if response:
             cu.data.changes = False
             cu.data.fstar = float(self.value_entry.get())

@@ -1,5 +1,4 @@
 # -*- coding: future_fstrings -*-
-
 """
 --------------------------------------------
     Thermocepstrum graphic user interface
@@ -31,6 +30,7 @@ info = None
 
 
 class Jfile:
+
     def __init__(self, name, keys, nsteps):
         self.filename = name
         self.select_ckeys = keys
@@ -44,7 +44,7 @@ class Data:
     """
 
     loaded = False
-    options = ["None", "Energy current", "Other current", "Temperature (K)", "Volume (A^3)", "DT (fs)"]
+    options = ['None', 'Energy current', 'Other current', 'Temperature (K)', 'Volume (A^3)', 'DT (fs)']
 
     def __init__(self):
         self._CURRENT_FILE = ''
@@ -158,6 +158,7 @@ class Data:
             if val1 != val2:
                 self.changes = True
 
+
 # todo: add header property
 # todo: check if the behaviour is correct
 
@@ -169,18 +170,17 @@ except:
 
 def new(main):
     global data
+    global log
     data = Data()
     main.show_frame(main.home)
     log.set_method(None)
 
+
 # -------- GRAPH SECTION --------
-
-
 """
 This section contains the functions that deal with
 the graph manager.
 """
-
 
 # Setup graph manager
 gm = Graph.GraphManager()
@@ -202,8 +202,6 @@ def set_graph(axis_, func, **kwargs):
 
 
 # -------- FILES AND LOAD SECTION --------
-
-
 """
 In this section there are the functions that are used to load the data
 that the software will use and some functions to work with files.
@@ -223,10 +221,10 @@ def get_file_size(path):
     file_size = os.path.getsize(path)
     if file_size >= 1000000:
         file_size //= 1000000
-        return f"{file_size} KB"
+        return f'{file_size} KB'
     else:
         file_size //= 1000
-        return f"{file_size} MB"
+        return f'{file_size} MB'
 
 
 def load_path():
@@ -270,9 +268,7 @@ def set_defaults():
     """
     # Create the file
     with open('thcp.ini', 'w') as file:
-        defaults = (('DP', 'data'),
-                    ('OP', 'outputs'),
-                    ('LP', 'logs'))
+        defaults = (('DP', 'data'), ('OP', 'outputs'), ('LP', 'logs'))
 
         # Write the defaults paths
         for setting in defaults:
@@ -280,7 +276,7 @@ def set_defaults():
                 os.mkdir(os.path.join(settings.BASE_PATH, setting[1]))
             except:
                 pass
-            file.write(f"{setting[0]}:{os.path.join(settings.BASE_PATH, setting[1])}\n")
+            file.write(f'{setting[0]}:{os.path.join(settings.BASE_PATH, setting[1])}\n')
 
     load_path()
 
@@ -292,12 +288,13 @@ def load_keys(inputfile):
     :param inputfile: the path of the selected file.
     :return:
     """
+    global data
     if data.inputformat == 'table':
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
         return jfile.all_ckeys
     elif data.inputformat == 'dict':
-        data.jdata=np.load(inputfile,allow_pickle=True).tolist()
-        return { key: i for i,key in enumerate(data.jdata) }
+        data.jdata = np.load(inputfile, allow_pickle=True).tolist()
+        return {key: i for i, key in enumerate(data.jdata)}
     elif data.inputformat == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile)
         return jfile.all_ckeys
@@ -305,10 +302,22 @@ def load_keys(inputfile):
         raise RuntimeError('inputformat {} not handled'.format(data.inputformat))
 
 
-def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=0, START_STEP=0,
-              run_keyword='', units=None, DT_FS=None, volume=None, psd_filter_w=None, axis_=None,
-              structurefile=None, _descriptions=[]):
+def load_data(inputfile,
+              input_format,
+              _selected_keys,
+              temperature=None,
+              NSTEPS=0,
+              START_STEP=0,
+              run_keyword='',
+              units=None,
+              DT_FS=None,
+              volume=None,
+              psd_filter_w=None,
+              axis_=None,
+              structurefile=None,
+              _descriptions=[]):
 
+    global data
     selected_keys = _selected_keys.copy()
     descriptions = _descriptions.copy()
     if temperature is not None:
@@ -328,7 +337,7 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         data.jdata = jfile.data
     elif input_format == 'dict':
-        data.jfile = Jfile(inputfile,_selected_keys.copy(),data.jdata[selected_keys[0]].shape[0])
+        data.jfile = Jfile(inputfile, _selected_keys.copy(), data.jdata[selected_keys[0]].shape[0])
 
         #data.jdata = np.load(inputfile) #already loaded at the header selector section
     elif input_format == 'lammps':
@@ -348,12 +357,11 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     # if volume is None:
     #     volume = get_volume(data.jdata, structurefile)
 
-
     #if True:    # jindex is None:
     heat_current, i = get_cor_index(selected_keys, descriptions, Data.options[1])
     currents_headers = [heat_current]
-    for i,other in enumerate(selected_keys):
-        if descriptions[i]==Data.options[2]:
+    for i, other in enumerate(selected_keys):
+        if descriptions[i] == Data.options[2]:
             currents_headers.append(other)
     if NSTEPS == 0:
         NSTEPS = data.jdata[heat_current].shape[0]
@@ -381,8 +389,6 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
 
 
 # -------- UTILITY SECTION --------
-
-
 """
 This section contains some utility functions.
 """
@@ -397,9 +403,10 @@ def export_data(fileout):
                 data.jdata['Volume_A'] = data.volume
             if not 'DT_FS' in data.jdata.keys() and data.DT_FS is not None:
                 data.jdata['DT_FS'] = data.DT_FS
-        np.save(fileout,data.jdata)
+        np.save(fileout, data.jdata)
         return True
     return False
+
 
 def secure_exit(main_window):
     '''
