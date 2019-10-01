@@ -325,38 +325,66 @@ class ScrollFrame(Frame):
                                  width=width,
                                  height=height)
         else:
-            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol)
-        self.viewPort = Frame(self.canvas, background=bgcol2)
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0,bg=bgcol)#'#00FF00')# bg=bgcol)
+        self.viewPort = Frame(self.canvas, background=bgcol2)#"#FF0000")#background=bgcol2)
         self.vsb = Scrollbar(controller, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
         self.vsb.grid(row=0, column=1, sticky='nse')
-        self.canvas.grid(row=0, column=0, sticky='nsew')
+        self.canvas.grid(row=0, column=0, sticky='nwse')
         controller.rowconfigure(0, weight=10)
 
         controller.columnconfigure(0, weight=10)
         controller.columnconfigure(1, weight=0)
 
-        self.canvas.create_window(0, 0, window=self.viewPort, tags='self.viewPort')
-        self.viewPort.grid(row=0, column=0, sticky='nsew')
+        self.viewPort_id = self.canvas.create_window(0, 0, window=self.viewPort, tags='self.viewPort',anchor="n")
+        #self.viewPort.grid(row=0, column=0, sticky='nsew')
+        #THE VIEWPORT MUST NOT BE "GRIDDED" OR "PACKED"
         self.canvas.grid_rowconfigure(0, weight=1)
         self.canvas.grid_columnconfigure(0, weight=1)
 
         self.viewPort.bind('<Configure>', self.on_frame_configure)
+        self.canvas.bind('<Configure>', self.on_canvas_configure)
 
         self.viewPort.bind('<MouseWheel>', self._on_mousewheel)
         self.viewPort.bind('<Button-4>', self._on_mousewheel)
         self.viewPort.bind('<Button-5>', self._on_mousewheel)
 
     def _on_mousewheel(self, event):
-        self.canvas.yview_scroll(-1 * int((event.delta / 120)), 'units')
+        if event.delta:
+            self.canvas.yview_scroll( int(-1 *(event.delta / 120)), 'units')
+        else:
+            if event.num == 5:
+                move=1
+            else:
+                move=-1
+            self.canvas.yview_scroll(move,"units")
+
+    def update_view(self):
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+        self.canvas.itemconfig(self.viewPort_id,width=self.canvas.winfo_width())
+        #
+        print ('viewPort height: {}\ncanvas height: {}'.format(self.viewPort.winfo_height(),self.canvas.winfo_height()))
+        if self.canvas.winfo_height() > self.viewPort.winfo_height():
+            self.canvas.itemconfig(self.viewPort_id,height=self.canvas.winfo_height())
+
+    def on_canvas_configure(self, event):
+        """
+        Reset the scroll region to encompass the inner frame
+        """
+
+        #print ("on_canvas_configure: {}".format(self.canvas.winfo_width()))
+        self.canvas.itemconfig(self.viewPort_id, width=event.width)
 
     def on_frame_configure(self, event):
         """
         Reset the scroll region to encompass the inner frame
         """
 
+        #print ("on_frame_configure: {} {}".format(self.canvas.winfo_width(),self.viewPort.winfo_width()))
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+        self.canvas.itemconfig(self.viewPort_id, width=event.width)
+        #print ("after on_frame_configure: {} {}".format(self.canvas.winfo_width(),self.viewPort.winfo_width()))
 
 
 def run_new_window(root, window, main=None, *args, **kwargs):

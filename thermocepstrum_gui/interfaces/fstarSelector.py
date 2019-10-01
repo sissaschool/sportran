@@ -12,9 +12,10 @@ class FStarSelector(Frame):
         self.prev_frame = None
 
         self.parent = parent
-        self.main_frame = self
+        self.main_frame_scroll=ScrollFrame(self, self)
+        self.main_frame = self.main_frame_scroll.viewPort
 
-        self.main_frame.grid(column=0, row=0, sticky='nsew')
+        #self.main_frame.grid(column=0, row=0, sticky='nsew')
 
         # Label(self.main_frame, text='Select F*', font='Arial 14 bold').grid(row=0, column=0)
 
@@ -102,12 +103,8 @@ class FStarSelector(Frame):
                              width=10)
         next_button.grid(row=0, column=1, sticky='we', padx=5)
 
-        self.main_frame.columnconfigure(0, weight=3)
-        self.main_frame.columnconfigure(1, weight=4)
         self.main_frame.rowconfigure(0, weight=1)
-
-        self.main_frame.columnconfigure(0, weight=1, minsize=720)
-        self.main_frame.columnconfigure(1, weight=1, minsize=200)
+        self.main_frame.columnconfigure(0, weight=1)#, minsize=720)
 
         self.setted = False
 
@@ -231,3 +228,5 @@ class FStarSelector(Frame):
 
         if cu.info:
             cu.update_info(cu.info)
+
+        self.main_frame_scroll.update_view()

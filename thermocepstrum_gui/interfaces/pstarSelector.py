@@ -14,9 +14,10 @@ class PStarSelector(Frame):
         self.prev_frame = None
 
         self.parent = parent
-        self.main_frame = self
+        self.main_frame_scroll=ScrollFrame(self, self)
+        self.main_frame = self.main_frame_scroll.viewPort
 
-        self.main_frame.grid(column=0, row=0, sticky='nsew', padx=20)
+        #self.main_frame.grid(column=0, row=0, sticky='nsew')
 
         sections = Frame(self.main_frame)
         sections.grid(row=0, column=0, sticky='nsew', padx=20, columnspan=2)
@@ -156,3 +157,5 @@ class PStarSelector(Frame):
 
         self._recalc()
         self.graph.update_cut()
+
+        self.main_frame_scroll.update_view()

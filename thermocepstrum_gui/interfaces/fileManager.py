@@ -277,3 +277,4 @@ class FileManager(Frame):
         """
         super().update()
         self.main_frame.canvas.yview_moveto(0)
+        self.main_frame.update_view()

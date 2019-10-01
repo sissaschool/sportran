@@ -17,7 +17,7 @@ class HeaderSelector(Frame):
         self.main_frame = ScrollFrame(self, self)
 
         header_frame = self.main_frame.viewPort
-        header_frame.grid(row=0, column=0, sticky='nswe', padx=20, pady=5)
+        #header_frame.grid(row=0, column=0, sticky='nswe', padx=20, pady=5)
 
         Label(header_frame, text=LANGUAGES[settings.LANGUAGE]['stp2'],
               font='Arial 14 bold').grid(row=0, column=0, sticky='w')
@@ -109,6 +109,8 @@ class HeaderSelector(Frame):
 
     def update(self):
         super().update()
+        self.main_frame.update_view()
+
 
         try:
             print('cu.Data.loaded={}'.format(cu.Data.loaded))

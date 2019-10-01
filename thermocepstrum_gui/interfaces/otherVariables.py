@@ -13,6 +13,7 @@ class OtherVariables(Frame):
         self.prev_frame = None
 
         self.main_frame = ScrollFrame(self, self)
+        self.main_frame.grid(row=0,column=0,sticky='nswe')
 
         variable_frame = Frame(self.main_frame.viewPort)
 
@@ -191,3 +192,4 @@ class OtherVariables(Frame):
         self.filter_width_entry.config(value=cu.data.psd_filter_width)
         self.main_frame.viewPort.columnconfigure(0, weight=1)
         self.main_frame.viewPort.rowconfigure(0, weight=1)
+        self.main_frame.update_view()
