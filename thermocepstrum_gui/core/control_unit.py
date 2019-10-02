@@ -249,7 +249,7 @@ def get_file_size(path):
         return f"{file_size} KB"
 
 
-def load_path():
+def load_settings():
     """
     This function loads from the .ini file the paths
     where the file will be stored.
@@ -280,6 +280,12 @@ def load_path():
                         settings.LOG_PATH = val
                         if not os.path.exists(settings.LOG_PATH):
                             os.mkdir(settings.LOG_PATH)
+                    elif var == 'FS':
+                        settings.FONT_SIZE = val
+                    elif var == 'PL':
+                        settings.PREVIEW_LINES = val
+                    elif var == 'LANG':
+                        settings.LANGUAGE = val
         else:
             set_defaults()
 
@@ -301,7 +307,12 @@ def set_defaults():
                 pass
             file.write(f'{setting[0]}:{os.path.join(settings.BASE_PATH, setting[1])}\n')
 
-    load_path()
+        # Write default preferences
+        defaults = (('FS', 11), ('PL', 10), ('LANG', 'en-EN'))
+        for setting in defaults:
+            file.write(f'{setting[0]}:{setting[1]}\n')
+
+    load_settings()
 
 
 def load_keys(inputfile):

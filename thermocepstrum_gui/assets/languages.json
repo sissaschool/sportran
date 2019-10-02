@@ -51,6 +51,10 @@
 
     "lst_rl": "Last release",
     "new_a": "New analysis",
+    "fs": "Font size",
+    "pl": "Preview lines",
+    "save": "Save",
+    "lang": "Language",
     "Errors": {}
   },
 
@@ -103,6 +107,10 @@
 
     "lst_rl": "Ultima release",
 
-    "new_a": "Nuova analisi"
+    "new_a": "Nuova analisi",
+    "fs": "Dimensione font",
+    "pl": "Linee di preview",
+    "save": "Salva",
+    "lang": "Lingua"
   }
 }

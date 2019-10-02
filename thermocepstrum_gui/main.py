@@ -155,7 +155,7 @@ def run():
     """
 
     # Load data
-    cu.load_path()
+    cu.load_settings()
 
     # Start the software
     app = ThermocepstrumGUI()
