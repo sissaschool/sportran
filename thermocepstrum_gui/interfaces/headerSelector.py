@@ -121,6 +121,13 @@ class HeaderSelector(Frame):
 
             self.check_list.set_list(keys)
 
+            #try to set units (if given)
+            try:
+                self.units_selector.current( HeatCurrent.get_units_list().index( cu.data.jdata['_UNITS'] ) )
+                cu.log.write_log('units loaded from input file ({})'.format(cu.data.jdata['_UNITS']))
+            except:
+                pass
+
             if cu.Data.loaded:
                 for i, check in enumerate(self.check_list.controller.winfo_children()):
                     check.winfo_children()[1].current(

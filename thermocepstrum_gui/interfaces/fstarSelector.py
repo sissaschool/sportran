@@ -207,12 +207,12 @@ class FStarSelector(Frame):
         else:
             raise ValueError('Next frame isn\'t defined')
 
-    def recalculate(self):
+    def recalculate(self,slider_config=None):
         self.graph.other_graph.clear()
         self.graph.graph.clear()
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width)
-
+        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,slider_config=slider_config)
         if float(self.value_entry.get()):
+            print ("resampled")
             self.resample()
         cu.data.changes = False
         if cu.info:
@@ -223,7 +223,13 @@ class FStarSelector(Frame):
 
         self.filter_width.config(value=cu.data.psd_filter_width)
 
-        if cu.data.changes:
+        if (cu.data.first_fstar and '_FSTAR' in cu.data.jdata.keys() ):
+            cu.data.fstar=cu.data.jdata['_FSTAR']
+            self.value_entry.delete(0,END)
+            self.value_entry.insert(0,cu.data.fstar)
+            cu.log.write_log('F* loaded from input file ({})'.format(cu.data.jdata['_FSTAR']))
+            self.recalculate(slider_config=cu.data.fstar)
+        elif cu.data.changes:
             self.recalculate()
 
         if cu.info:

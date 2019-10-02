@@ -149,7 +149,7 @@ class GraphWidget(Frame):
         else:
             return 1.0
 
-    def show(self, func, **kwargs):
+    def show(self, func,slider_config=None, **kwargs):
         self.func = func
         cu.set_graph(self.graph, func, **kwargs)
         self.max_x = self.get_max_x()
@@ -159,6 +159,8 @@ class GraphWidget(Frame):
                 self.change_view()
             else:
                 self.slider.config(to_=self.max_x)
+            if slider_config is not None:
+                self.slider.set(slider_config)
         self.update_cut()
 
     def add_graph(self, func, name, **kwargs):
@@ -267,21 +269,38 @@ class CheckList(Frame):
 
     def set_list(self, check_list):
         self.clear_list()
+        hidden_cont = 0
         for row, el in enumerate(list(check_list.keys())):
+            if el[0]=="_":
+                hidden_cont=hidden_cont+1
+                continue
             frame = Frame(self.controller)
-            frame.grid(row=self.start_row + row, column=0, sticky='we', pady=2)
+            frame.grid(row=self.start_row + row-hidden_cont, column=0, sticky='we', pady=2)
             Label(frame, text=el, font='{} 12 bold'.format(settings.FONT)).grid(row=0, column=0)
             cmb = ttk.Combobox(frame, values=cu.Data.options, state='readonly', width=12)
-            cmb.bind('<<ComboboxSelected>>', self.combo_func)
+            cmb.bind('<<ComboboxSelected>>', self.combo_func) # cu.data.inputformat == 'dict':
 
-            if el.upper() == 'TEMP' or el.upper() == 'TEMPERATURE':
-                cmb.current(3)
-            elif el.upper() == 'VOL_A' or el.upper() == 'VOLUME_A':
-                cmb.current(4)
-            elif el.upper() == 'DT_FS':
-                cmb.current(5)
-            else:
-                cmb.current(0)
+            try:
+                cmb.current(
+                    cu.Data.options.index(
+                        cu.data.jdata['_HEADERS']['description'][
+                            cu.data.jdata['_HEADERS']['keys'].index(el)
+                        ]
+                    )
+                )
+                cu.log.write_log('{} description loaded from input file ({})'.format(el,cu.data.jdata['_HEADERS']['description'][cu.data.jdata['_HEADERS']['keys'].index(el)]))
+
+            except: #try to guess
+                if el.upper() == 'TEMP' or el.upper() == 'TEMPERATURE':
+                    cmb.current(3)
+                elif el.upper() == 'VOL_A' or el.upper() == 'VOLUME_A':
+                    cmb.current(4)
+                elif el.upper() == 'DT_FS':
+                    cmb.current(5)
+                else:
+                    cmb.current(0)
+            #else:
+            #    cmb.current(0)
             cmb.grid(row=0, column=1, sticky='e')
 
     def clear_list(self):
@@ -299,6 +318,10 @@ class CheckList(Frame):
             if cmb.get() is not None and cmb.get() != 'None':
                 check.append(header['text'])
                 combo.append(cmb.get())
+
+
+        print (check)
+        print (combo)
 
         return check, combo
 

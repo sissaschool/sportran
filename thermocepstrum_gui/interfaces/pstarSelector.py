@@ -127,6 +127,7 @@ class PStarSelector(Frame):
     def _setup_pstar(self):
         cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
         self._pstar()
+        cu.data.pstar=int(self.value_entry.get())
 
     def _draw_graph(self):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
@@ -143,6 +144,7 @@ class PStarSelector(Frame):
 
     def update(self):
         super().update()
+
 
         if cu.data.changes:
             self.setted = True

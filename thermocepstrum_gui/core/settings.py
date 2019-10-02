@@ -27,6 +27,7 @@ FILE_EXTENSIONS = ['dat', 'log', 'txt', 'bin','npy']
 STATUS = ['Loading', 'Configuring', 'Calculating', 'Idle', 'Sleep']
 STATUS_NOW = STATUS[0]
 PREVIEW_LINES = 10
+OVERWRITE = False
 
 LANGUAGE = 'en-EN'
 

@@ -49,6 +49,7 @@ class Data:
     def __init__(self):
         self._CURRENT_FILE = ''
         self.changes = False
+        self._first_fstar = True
 
         self.inputformat = None
         self.jfile = None
@@ -67,6 +68,7 @@ class Data:
         self.currents = None
 
         self._fstar = 0.0
+        self._pstar = 0
         self.old_fstar = 0.0
         self._psd_filter_width = 0.1
         self._units = 'metal'
@@ -129,7 +131,17 @@ class Data:
     def fstar(self, value):
         self._verify_changes(value, self.fstar)
         self._fstar = value
-        print(self.changes, ' units')
+        print(self.changes, ' fstar')
+
+    @property
+    def pstar(self):
+        return self._pstar
+
+    @pstar.setter
+    def pstar(self, value):
+        self._pstar = value
+        #we don't have to recalculate anything if we change this
+        print (self.changes, ' pstar')
 
     @property
     def description(self):
@@ -151,6 +163,7 @@ class Data:
         if self.CURRENT_FILE != value:
             Data.loaded = False
         self._CURRENT_FILE = value
+        self._first_fstar = True
         print(self.changes, ' file')
 
     def _verify_changes(self, val1, val2):
@@ -158,6 +171,15 @@ class Data:
             if val1 != val2:
                 self.changes = True
 
+    @property
+    def first_fstar(self):
+        res = False
+        res, self._first_fstar = self._first_fstar, res
+        return res
+
+    @first_fstar.setter
+    def first_fstar(self,value):
+        self._first_fstar=value
 
 # todo: add header property
 # todo: check if the behaviour is correct
@@ -232,7 +254,7 @@ def load_path():
     This function loads from the .ini file the paths
     where the file will be stored.
     """
-
+    global settings
     # Verify that the file exists otherwise generate it
     if not os.path.exists('thcp.ini'):
         set_defaults()
@@ -266,6 +288,7 @@ def set_defaults():
     """
     This function is used to set the default values of the .ini file
     """
+    global settings
     # Create the file
     with open('thcp.ini', 'w') as file:
         defaults = (('DP', 'data'), ('OP', 'outputs'), ('LP', 'logs'))
@@ -395,14 +418,26 @@ This section contains some utility functions.
 
 
 def export_data(fileout):
+    global data
     if data.jdata != None:
         if Data.loaded:
-            if not 'Temperature' in data.jdata.keys() and data.temperature is not None:
+            if (not 'Temperature' in data.jdata.keys() or settings.OVERWRITE ) and data.temperature is not None:
                 data.jdata['Temperature'] = data.temperature
-            if not 'Volume_A' in data.jdata.keys() and data.volume is not None:
+            if (not 'Volume_A' in data.jdata.keys() or settings.OVERWRITE ) and data.volume is not None:
                 data.jdata['Volume_A'] = data.volume
-            if not 'DT_FS' in data.jdata.keys() and data.DT_FS is not None:
+            if (not 'DT_FS' in data.jdata.keys() or settings.OVERWRITE ) and data.DT_FS is not None:
                 data.jdata['DT_FS'] = data.DT_FS
+            if (not '_UNITS' in data.jdata.keys() or settings.OVERWRITE ) and data.units is not None:
+                data.jdata['_UNITS'] = data.units
+            if (not '_HEADERS' in data.jdata.keys() or settings.OVERWRITE ) and data.keys is not None and data.description is not None:
+                data.jdata['_HEADERS']={}
+                data.jdata['_HEADERS']['keys']=data.keys
+                data.jdata['_HEADERS']['description']=data.description
+            if (not '_FSTAR' in data.jdata.keys() or settings.OVERWRITE ) and data.fstar != 0.0:
+                data.jdata['_FSTAR']=data.fstar
+            if (not '_PSTAR' in data.jdata.keys() or settings.OVERWRITE ) and data.pstar != 0:
+                data.jdata['_PSTAR']=data.pstar
+
         np.save(fileout, data.jdata)
         return True
     return False
