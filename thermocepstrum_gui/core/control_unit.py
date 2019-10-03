@@ -48,7 +48,8 @@ class Data:
 
     def __init__(self):
         self._CURRENT_FILE = ''
-        self.changes = False
+        self.changes = True
+        self.recalc_pstar = True
         self._first_fstar = True
 
         self.inputformat = None
@@ -129,7 +130,7 @@ class Data:
 
     @fstar.setter
     def fstar(self, value):
-        self._verify_changes(value, self.fstar)
+        self._verify_changes(value, self.fstar,set_changes=False)
         self._fstar = value
         print(self.changes, ' fstar')
 
@@ -139,8 +140,8 @@ class Data:
 
     @pstar.setter
     def pstar(self, value):
+        self._verify_changes(value, self._pstar,set_changes=False)
         self._pstar = value
-        #we don't have to recalculate anything if we change this
         print (self.changes, ' pstar')
 
     @property
@@ -166,10 +167,11 @@ class Data:
         self._first_fstar = True
         print(self.changes, ' file')
 
-    def _verify_changes(self, val1, val2):
-        if not self.changes:
-            if val1 != val2:
+    def _verify_changes(self, val1, val2, set_changes=True):
+        if val1 != val2:
+            if set_changes:
                 self.changes = True
+            self.recalc_pstar = True
 
     @property
     def first_fstar(self):

@@ -2,6 +2,17 @@ from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.core import control_unit as cu
 from uncertainties import ufloat
 
+INDENT=0
+def print_name(func):
+    def inner(*args,**kwargs):
+        global INDENT
+        print ('{}BEGIN {}'.format(" "*INDENT,func.__name__))
+        INDENT=INDENT+1
+        func(*args, **kwargs)
+        INDENT=INDENT-1
+        print('{}END   {}'.format(" "*INDENT,func.__name__))
+    return inner
+
 
 class PStarSelector(Frame):
 
@@ -96,8 +107,10 @@ class PStarSelector(Frame):
         else:
             raise ValueError('Prev frame isn\'t defined')
 
+
     def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
         cu.data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor - 1)
+
 
     def _pstar(self):
         self.value_entry.config(from_=2, to=cu.data.xf.Nfreqs)
@@ -109,8 +122,10 @@ class PStarSelector(Frame):
             self.kmin_label.config(
                 text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
 
+
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
+
 
     def _recalc(self):
         if self.value_entry.get():
@@ -124,15 +139,18 @@ class PStarSelector(Frame):
         cu.data.xf = xf
         self._pstar()
 
+
     def _setup_pstar(self):
         cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
         self._pstar()
         cu.data.pstar=int(self.value_entry.get())
 
+
     def _draw_graph(self):
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
+
 
     def recalculate(self):
         self._setup_pstar()
@@ -142,14 +160,11 @@ class PStarSelector(Frame):
         if cu.info:
             cu.update_info(cu.info)
 
+
     def update(self):
         super().update()
 
-
-        if cu.data.changes:
-            self.setted = True
-        else:
-            self.setted = False
+        self.setted=cu.data.recalc_pstar
 
         if self.setted:
             self.recalculate()
