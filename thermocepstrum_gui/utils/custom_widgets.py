@@ -44,7 +44,7 @@ class TopBar(Frame):
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['new_a'], command=lambda: cu.new(main))
         file_menu.add_command(label='Export data', command=lambda: self._exportData())
         file_menu.add_separator()
-        file_menu.add_command(label='Preferences')
+        file_menu.add_command(label='Settings', command=lambda: run_new_window(main.root, Settings, main))
         file_menu.add_separator()
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['exit'], command=lambda: cu.secure_exit(main))
 
@@ -724,6 +724,131 @@ class Logs:
                                  bd=1,
                                  relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def close_windows(self):
+
+        cu.log.set_func(None)
+        del self.main.open_windows[self.main.open_windows.index(self)]
+        self.master.destroy()
+
+
+class Settings:
+
+    def __init__(self, master, main):
+        self.master = master
+        self.main = main
+
+        self.master.resizable(False, False)
+
+        self.main.open_windows.insert(0, self)
+        self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
+
+        self.frame = Frame(self.master)
+        self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
+
+        Label(self.frame, text='Settings', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
+        ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
+
+        tabs = ttk.Notebook(self.frame)
+        tabs.grid(row=2, column=0, sticky='nsew')
+
+        general_settings = Frame(tabs)
+        self.font_size_var = IntVar(value=settings.FONT_SIZE)
+        self.preview_lines_var = IntVar(value=settings.PREVIEW_LINES)
+        if settings.LANGUAGE == 'en-EN':
+            self.language_var = StringVar(value="English")
+        elif settings.LANGUAGE == 'it-IT':
+            self.language_var = StringVar(value="Italian")
+        else:
+            self.language_var = StringVar(value="English")
+
+        cbx_values = ["English", "Italiano"]
+
+        Label(general_settings, text=LANGUAGES[settings.LANGUAGE]['fs']).grid(row=0, column=0, sticky='w')
+        font_size = Spinbox(general_settings, from_=11, to=15, textvariable=self.font_size_var)
+        font_size.grid(row=0, column=1, sticky='w')
+
+        Label(general_settings, text=LANGUAGES[settings.LANGUAGE]['pl']).grid(row=1, column=0, sticky='w')
+        preview_line = Spinbox(general_settings, from_=1, to=100, textvariable=self.preview_lines_var)
+        preview_line.grid(row=1, column=1, sticky='w')
+
+        Label(general_settings, text=LANGUAGES[settings.LANGUAGE]['lang']).grid(row=2, column=0, sticky='w')
+        language = ttk.Combobox(general_settings, values=cbx_values, textvariable=self.language_var, state="readonly")
+        language.grid(row=2, column=1, sticky='w')
+
+        paths_settings = Frame(tabs)
+        self.data_path_var = StringVar(value=settings.DATA_PATH)
+        self.logs_path_var = StringVar(value=settings.LOG_PATH)
+        self.output_path_var = StringVar(value=settings.OUTPUT_PATH)
+
+        Label(paths_settings, text="Data path").grid(row=0, column=0, sticky='w')
+        self.data_dir_entry = Entry(paths_settings, textvariable=self.data_path_var)
+        self.data_dir_entry.grid(row=0, column=1, sticky='w', padx=10)
+        Button(paths_settings, text="...", relief=SOLID, bd=1,
+               command=lambda: self.chose_path('dat')).grid(row=0, column=2, sticky='w')
+
+        Label(paths_settings, text="Logs path").grid(row=1, column=0, sticky='w')
+        self.logs_dir_entry = Entry(paths_settings, textvariable=self.logs_path_var)
+        self.logs_dir_entry.grid(row=1, column=1, sticky='w', padx=10)
+        Button(paths_settings, text="...", relief=SOLID, bd=1,
+               command=lambda: self.chose_path('log')).grid(row=1, column=2, sticky='w')
+
+        Label(paths_settings, text="Outputs path").grid(row=2, column=0, sticky='w')
+        self.out_dir_entry = Entry(paths_settings, textvariable=self.output_path_var)
+        self.out_dir_entry.grid(row=2, column=1, sticky='w', padx=10)
+        Button(paths_settings, text="...", relief=SOLID, bd=1,
+               command=lambda: self.chose_path('out')).grid(row=2, column=2, sticky='w')
+
+        tabs.add(general_settings, text='General')
+        tabs.add(paths_settings, text='Paths')
+        self.frame.columnconfigure(0, weight=1)
+        self.saveButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['save'],
+                                 command=self.save,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
+        self.saveButton.grid(row=5, column=1, sticky='w', pady=5)
+
+        self.quitButton = Button(self.frame,
+                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
+                                 command=self.close_windows,
+                                 width=10,
+                                 bd=1,
+                                 relief=SOLID)
+        self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
+
+    def chose_path(self, var):
+
+        path = fdialog.askdirectory()
+
+        if var == 'dat':
+            self.data_path_var.set(path)
+        elif var == 'log':
+            self.logs_path_var.set(path)
+        elif var == 'out':
+            self.output_path_var.set(path)
+
+    def save(self):
+        global settings
+
+        settings.FONT_SIZE = int(self.font_size_var.get())
+        settings.PREVIEW_LINES = int(self.preview_lines_var.get())
+        settings.DATA_PATH = self.data_path_var.get()
+        settings.LOG_PATH = self.logs_path_var.get()
+        settings.OUTPUT_PATH = self.output_path_var.get()
+        if self.language_var.get() == "English":
+            settings.LANGUAGE = "en-EN"
+        if self.language_var.get() == "Italiano":
+            settings.LANGUAGE = "it-IT"
+
+        with open("thcp.ini", "w") as settings_file:
+            settings_file.write("DP:{}\n".format(settings.DATA_PATH))
+            settings_file.write("LP:{}\n".format(settings.LOG_PATH))
+            settings_file.write("OP:{}\n".format(settings.OUTPUT_PATH))
+            settings_file.write("FS:{}\n".format(settings.FONT_SIZE))
+            settings_file.write("PL:{}\n".format(settings.PREVIEW_LINES))
+            settings_file.write("LANG:{}\n".format(settings.LANGUAGE))
 
     def close_windows(self):
 
