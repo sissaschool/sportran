@@ -411,8 +411,14 @@ class ScrollFrame(Frame):
 
 
 def run_new_window(root, window, main=None, *args, **kwargs):
+
+    for instance_window in main.open_windows:
+        if isinstance(instance_window, window):
+            return False
+
     new_window = Toplevel(root)
     window(new_window, main=main, *args, **kwargs)
+    return True
 
 
 class Email:

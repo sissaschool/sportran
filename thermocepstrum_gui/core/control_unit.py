@@ -180,7 +180,7 @@ class Data:
         return res
 
     @first_fstar.setter
-    def first_fstar(self,value):
+    def first_fstar(self, value):
         self._first_fstar=value
 
 # todo: add header property
