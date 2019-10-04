@@ -12,7 +12,7 @@ class FStarSelector(Frame):
         self.prev_frame = None
 
         self.parent = parent
-        self.main_frame_scroll=ScrollFrame(self, self)
+        self.main_frame_scroll = ScrollFrame(self, self)
         self.main_frame = self.main_frame_scroll.viewPort
 
         #self.main_frame.grid(column=0, row=0, sticky='nsew')
@@ -104,7 +104,7 @@ class FStarSelector(Frame):
         next_button.grid(row=0, column=1, sticky='we', padx=5)
 
         self.main_frame.rowconfigure(0, weight=1)
-        self.main_frame.columnconfigure(0, weight=1)#, minsize=720)
+        self.main_frame.columnconfigure(0, weight=1)   #, minsize=720)
 
         self.setted = False
 
@@ -148,6 +148,7 @@ class FStarSelector(Frame):
 
             self.graph.cut_line = cu.data.xf.Nyquist_f_THz
             self.fstar_screen.config(text='F*: {}'.format(round(cu.data.xf.Nyquist_f_THz, 3)))
+            cu.data.changes = False
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
 
@@ -155,7 +156,6 @@ class FStarSelector(Frame):
             self.graph.show_selected_area = True
             self.graph.change_view()
 
-        cu.data.changes = False
         self.update()
 
     def set_next_frame(self, frame):
@@ -165,12 +165,11 @@ class FStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
-        response = msg.askyesno(
-            LANGUAGES[settings.LANGUAGE]["back_reset"], LANGUAGES[settings.LANGUAGE]["back_reset_t"])
+        response = msg.askyesno(LANGUAGES[settings.LANGUAGE]['back_reset'],
+                                LANGUAGES[settings.LANGUAGE]['back_reset_t'])
 
         #cu.log.set_func(None)
         if response:
-            cu.data.changes = False
             cu.data.fstar = float(self.value_entry.get())
             cu.Data.loaded = True
             if self.prev_frame:
@@ -179,7 +178,7 @@ class FStarSelector(Frame):
                 raise ValueError('Prev frame isn\'t defined')
 
         elif response == 0:
-            cu.data.changes = False
+            #cu.data.changes = False
             cu.data.fstar = 0.0
             cu.Data.loaded = False
             cu.data.temperature = 0.0
@@ -199,21 +198,23 @@ class FStarSelector(Frame):
     def next(self):
 
         self.resample()
-        cu.data.fstar = cu.data.xf.Nyquist_f_THz
+        #cu.data.fstar = cu.data.xf.Nyquist_f_THz
 
         if self.next_frame:
             self.main.show_frame(self.next_frame)
         else:
             raise ValueError('Next frame isn\'t defined')
 
-    def recalculate(self,slider_config=None):
+    def recalculate(self, slider_config=None):
         self.graph.other_graph.clear()
         self.graph.graph.clear()
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,slider_config=slider_config)
+        self.graph.show(cu.gm.GUI_plot_periodogram,
+                        x=cu.data.j,
+                        PSD_FILTER_W=cu.data.psd_filter_width,
+                        slider_config=slider_config)
         if float(self.value_entry.get()):
-            print ("resampled")
+            print('resampled')
             self.resample()
-        cu.data.changes = False
         if cu.info:
             cu.update_info(cu.info)
 
@@ -221,12 +222,13 @@ class FStarSelector(Frame):
         super().update()
 
         self.filter_width.config(value=cu.data.psd_filter_width)
+        cu.data.fstar = float(self.value_entry.get())
 
-        if (cu.data.first_fstar and '_FSTAR' in cu.data.jdata.keys() ):
-            cu.data.fstar=cu.data.jdata['_FSTAR']
-            self.value_entry.delete(0,END)
-            self.value_entry.insert(0,cu.data.fstar)
-            cu.log.write_log(LANGUAGES[settings.LANGUAGE]["fs_loaded"].format(cu.data.jdata['_FSTAR']))
+        if (cu.data.first_fstar and '_FSTAR' in cu.data.jdata.keys()):
+            cu.data.fstar = cu.data.jdata['_FSTAR']
+            self.value_entry.delete(0, END)
+            self.value_entry.insert(0, cu.data.fstar)
+            cu.log.write_log(LANGUAGES[settings.LANGUAGE]['fs_loaded'].format(cu.data.jdata['_FSTAR']))
             self.recalculate(slider_config=cu.data.fstar)
         elif cu.data.changes:
             self.recalculate()

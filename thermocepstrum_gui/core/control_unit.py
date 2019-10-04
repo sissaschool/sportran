@@ -130,7 +130,7 @@ class Data:
 
     @fstar.setter
     def fstar(self, value):
-        self._verify_changes(value, self.fstar,set_changes=False)
+        self._verify_changes(value, self.fstar)
         self._fstar = value
         print(self.changes, ' fstar')
 
@@ -140,9 +140,9 @@ class Data:
 
     @pstar.setter
     def pstar(self, value):
-        self._verify_changes(value, self._pstar,set_changes=False)
+        self._verify_changes(value, self._pstar, set_changes=False)
         self._pstar = value
-        print (self.changes, ' pstar')
+        print(self.changes, ' pstar')
 
     @property
     def description(self):
@@ -181,7 +181,8 @@ class Data:
 
     @first_fstar.setter
     def first_fstar(self, value):
-        self._first_fstar=value
+        self._first_fstar = value
+
 
 # todo: add header property
 # todo: check if the behaviour is correct
@@ -245,10 +246,10 @@ def get_file_size(path):
     file_size = os.path.getsize(path)
     if file_size >= 1000000:
         file_size //= 1000000
-        return f"{file_size} MB"
+        return f'{file_size} MB'
     else:
         file_size //= 1000
-        return f"{file_size} KB"
+        return f'{file_size} KB'
 
 
 def load_settings():
@@ -352,7 +353,6 @@ def load_data(inputfile,
               axis_=None,
               structurefile=None,
               _descriptions=[]):
-
     global data
     selected_keys = _selected_keys.copy()
     descriptions = _descriptions.copy()
@@ -375,7 +375,7 @@ def load_data(inputfile,
     elif input_format == 'dict':
         data.jfile = Jfile(inputfile, _selected_keys.copy(), data.jdata[selected_keys[0]].shape[0])
 
-        #data.jdata = np.load(inputfile) #already loaded at the header selector section
+        # data.jdata = np.load(inputfile) #already loaded at the header selector section
     elif input_format == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
@@ -393,7 +393,7 @@ def load_data(inputfile,
     # if volume is None:
     #     volume = get_volume(data.jdata, structurefile)
 
-    #if True:    # jindex is None:
+    # if True:    # jindex is None:
     heat_current, i = get_cor_index(selected_keys, descriptions, Data.options[1])
     currents_headers = [heat_current]
     for i, other in enumerate(selected_keys):
@@ -434,22 +434,23 @@ def export_data(fileout):
     global data
     if data.jdata != None:
         if Data.loaded:
-            if (not 'Temperature' in data.jdata.keys() or settings.OVERWRITE ) and data.temperature is not None:
+            if (not 'Temperature' in data.jdata.keys() or settings.OVERWRITE) and data.temperature is not None:
                 data.jdata['Temperature'] = data.temperature
-            if (not 'Volume_A' in data.jdata.keys() or settings.OVERWRITE ) and data.volume is not None:
+            if (not 'Volume_A' in data.jdata.keys() or settings.OVERWRITE) and data.volume is not None:
                 data.jdata['Volume_A'] = data.volume
-            if (not 'DT_FS' in data.jdata.keys() or settings.OVERWRITE ) and data.DT_FS is not None:
+            if (not 'DT_FS' in data.jdata.keys() or settings.OVERWRITE) and data.DT_FS is not None:
                 data.jdata['DT_FS'] = data.DT_FS
-            if (not '_UNITS' in data.jdata.keys() or settings.OVERWRITE ) and data.units is not None:
+            if (not '_UNITS' in data.jdata.keys() or settings.OVERWRITE) and data.units is not None:
                 data.jdata['_UNITS'] = data.units
-            if (not '_HEADERS' in data.jdata.keys() or settings.OVERWRITE ) and data.keys is not None and data.description is not None:
-                data.jdata['_HEADERS']={}
-                data.jdata['_HEADERS']['keys']=data.keys
-                data.jdata['_HEADERS']['description']=data.description
-            if (not '_FSTAR' in data.jdata.keys() or settings.OVERWRITE ) and data.fstar != 0.0:
-                data.jdata['_FSTAR']=data.fstar
-            if (not '_PSTAR' in data.jdata.keys() or settings.OVERWRITE ) and data.pstar != 0:
-                data.jdata['_PSTAR']=data.pstar
+            if (not '_HEADERS' in data.jdata.keys() or
+                    settings.OVERWRITE) and data.keys is not None and data.description is not None:
+                data.jdata['_HEADERS'] = {}
+                data.jdata['_HEADERS']['keys'] = data.keys
+                data.jdata['_HEADERS']['description'] = data.description
+            if (not '_FSTAR' in data.jdata.keys() or settings.OVERWRITE) and data.fstar != 0.0:
+                data.jdata['_FSTAR'] = data.fstar
+            if (not '_PSTAR' in data.jdata.keys() or settings.OVERWRITE) and data.pstar != 0:
+                data.jdata['_PSTAR'] = data.pstar
 
         np.save(fileout, data.jdata)
         return True
