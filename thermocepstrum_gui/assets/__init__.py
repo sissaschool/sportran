@@ -11,3 +11,4 @@ with resource_stream(__name__, 'languages.json') as JS:
 ICON = resource_string(__name__, 'icon.gif')
 
 README_MD = resource_string('thermocepstrum', 'README.md')
+README_GUI_MD = resource_string('thermocepstrum', 'README_GUI.md')

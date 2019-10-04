@@ -87,33 +87,33 @@ class OtherVariables(Frame):
         msgs = []
         if temperature:
             if temperature < 0 and 'Temperature' not in cu.data.description:
-                msgs.append('Temperature can\'t be less than 0')
+                msgs.append(LANGUAGES[settings.LANGUAGE]["temp_low"])
                 er = True
         else:
-            msgs.append('Temperature can\'t be void')
+            msgs.append(LANGUAGES[settings.LANGUAGE]["temp_void"])
 
         if volume:
             if volume < 0:
-                msgs.append('Volume can\'t be less than 0')
+                msgs.append(LANGUAGES[settings.LANGUAGE]["vol_low"])
                 er = True
         else:
-            msgs.append('Volume can\'t be void')
+            msgs.append(LANGUAGES[settings.LANGUAGE]["vol_void"])
             er = True
 
         if DT_FS:
             if DT_FS < 0:
-                msgs.append('DT_FS can\'t be less than 0')
+                msgs.append(LANGUAGES[settings.LANGUAGE]["DT_low"])
                 er = True
         else:
-            msgs.append('DT_FS can\'t be void')
+            msgs.append(LANGUAGES[settings.LANGUAGE]["DT_void"])
             er = True
 
         if psd_filter_width:
             if psd_filter_width < 0:
-                msgs.append('Filter width can\'t be less than 0')
+                msgs.append(LANGUAGES[settings.LANGUAGE]["fw_low"])
                 er = True
         else:
-            msgs.append('Filter width can\'t be void')
+            msgs.append(LANGUAGES[settings.LANGUAGE]["fw_void"])
             er = True
 
         if not er:
@@ -133,7 +133,7 @@ class OtherVariables(Frame):
                 raise ValueError('Next frame isn\'t defined')
         else:
             ermsg = '\n'.join(mser for mser in msgs)
-            msg.showerror('Value error', ermsg)
+            msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], ermsg)
 
     def back(self):
         if self.filter_width_entry.get():
@@ -160,7 +160,7 @@ class OtherVariables(Frame):
 
         if cu.Data.options[3] in cu.data.description:
             self.temperature_entry.config(state=DISABLED)
-            self.temp_advertise.config(text='The temperature will be automatically calculated', fg='red')
+            self.temp_advertise.config(text=LANGUAGES[settings.LANGUAGE]["automatic_T"], fg='red')
         else:
             self.temperature_entry.config(state=NORMAL)
             self.temp_advertise.config(text='')

@@ -18,7 +18,7 @@ import matplotlib.patches as patches
 
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core import settings
-from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES, README_MD
+from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES, README_MD, README_GUI_MD
 import webbrowser
 import markdown2
 
@@ -42,9 +42,9 @@ class TopBar(Frame):
         top_menu.add_cascade(label='File', menu=file_menu)
 
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['new_a'], command=lambda: cu.new(main))
-        file_menu.add_command(label='Export data', command=lambda: self._exportData())
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['export_data'], command=lambda: self._exportData())
         file_menu.add_separator()
-        file_menu.add_command(label='Settings', command=lambda: run_new_window(main.root, Settings, main))
+        file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['settings'], command=lambda: run_new_window(main.root, Settings, main))
         file_menu.add_separator()
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['exit'], command=lambda: cu.secure_exit(main))
 
@@ -77,9 +77,9 @@ class TopBar(Frame):
         file = fdialog.asksaveasfilename(initialdir=os.getcwd())
         if file:
             if cu.export_data(file):
-                msg.showinfo('Export success', 'Numpy data exported to "{}"'.format(file))
+                msg.showinfo(LANGUAGES[settings.LANGUAGE]["export_success"], LANGUAGES[settings.LANGUAGE]["export_success_t"].format(file))
             else:
-                msg.showerror('Export fail', 'Cannot save numpy data to file "{}"'.format(file))
+                msg.showerror(LANGUAGES[settings.LANGUAGE]["export_fail"], LANGUAGES[settings.LANGUAGE]["export_fail_t"].format(file))
 
     def _update_window(self):
         self.main.frame.update()
@@ -288,7 +288,7 @@ class CheckList(Frame):
                         ]
                     )
                 )
-                cu.log.write_log('{} description loaded from input file ({})'.format(el,cu.data.jdata['_HEADERS']['description'][cu.data.jdata['_HEADERS']['keys'].index(el)]))
+                cu.log.write_log(LANGUAGES[settings.LANGUAGE]["description_loaded"].format(el,cu.data.jdata['_HEADERS']['description'][cu.data.jdata['_HEADERS']['keys'].index(el)]))
 
             except: #try to guess
                 if el.upper() == 'TEMP' or el.upper() == 'TEMPERATURE':
@@ -481,7 +481,7 @@ class Version:
               text='GUI {}: {} ({})'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['gui_version'],
                                             METADATA['dev_state'])).grid(row=3, column=0, sticky='w')
 
-        Label(self.frame, text='Last release: {}'.format(METADATA['release_date'])).grid(row=4,
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]["last_release"].format(METADATA['release_date'])).grid(row=4,
                                                                                          column=0,
                                                                                          sticky='w',
                                                                                          pady=5)
@@ -630,8 +630,7 @@ class Help:
         self.master = master
         self.main = main
 
-        self.master.geometry('350x190')
-        self.master.resizable(False, False)
+
 
         self.main.open_windows.insert(0, self)
         self.master.protocol('WM_DELETE_WINDOW', func=lambda: self.close_windows())
@@ -645,10 +644,14 @@ class Help:
                                                                                                 pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
-        # todo: put description
-        Label(self.frame, text='').grid(row=2, column=0, pady=5, sticky='w')
+
+        html = markdown2.markdown(README_GUI_MD)
+
+        html_view = HTMLScrolledText(self.frame, html=html)
+        html_view.grid(row=2, column=0, sticky='wens')
 
         self.frame.columnconfigure(0, weight=1)
+        self.frame.rowconfigure(2, weight=1)
         self.quitButton = Button(self.frame,
                                  text=LANGUAGES[settings.LANGUAGE]['exit'],
                                  command=self.close_windows,

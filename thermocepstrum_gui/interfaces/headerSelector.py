@@ -44,13 +44,13 @@ class HeaderSelector(Frame):
         self.scrollable_header_list = ScrollFrame(header_list_frame, header_list_frame, bd=1)
         self.check_list = CheckList(self.scrollable_header_list.viewPort, self.scrollable_header_list.viewPort, start_row=1)
 
-        Label(header_frame, text='Select the unit to use', font='Arial 14 bold') \
+        Label(header_frame, text=LANGUAGES[settings.LANGUAGE]["select_units"], font='Arial 14 bold') \
             .grid(row=2, column=0, sticky='w', pady=10)
         self.units_selector_frame = Frame(header_frame)
         self.units_selector = ttk.Combobox(self.units_selector_frame,
                                            values=HeatCurrent.get_units_list(), state='readonly')
         self.units_selector.current(0)
-        Label(self.units_selector_frame, text='Units: ').grid(row=0, column=0, sticky='we', pady=2)
+        Label(self.units_selector_frame, text=LANGUAGES[settings.LANGUAGE]["units"]).grid(row=0, column=0, sticky='we', pady=2)
         self.units_selector.grid(row=0, column=1, sticky='we', pady=2)
         self.units_selector_frame.grid(row=3, column=0, sticky='nswe', pady=2)
 
@@ -91,11 +91,11 @@ class HeaderSelector(Frame):
                     else:
                         raise ValueError('Next frame isn\'t defined')
                 else:
-                    msg.showerror('Value error', 'You can\'t assign more than one time the value "Temperature"')
+                    msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_T"])
             else:
-                msg.showerror('Value error', 'You must assign only one "Energy current" value')
+                msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_E"])
         else:
-            msg.showerror('No keys selected', 'You must select almost one header key!')
+            msg.showerror(LANGUAGES[settings.LANGUAGE]["no_key"], LANGUAGES[settings.LANGUAGE]["no_key_t"])
 
     def back(self):
         keys, description = self.check_list.get_list()
@@ -124,7 +124,7 @@ class HeaderSelector(Frame):
             #try to set units (if given)
             try:
                 self.units_selector.current( HeatCurrent.get_units_list().index( cu.data.jdata['_UNITS'] ) )
-                cu.log.write_log('units loaded from input file ({})'.format(cu.data.jdata['_UNITS']))
+                cu.log.write_log(LANGUAGES[settings.LANGUAGE]["units_loaded"].format(cu.data.jdata['_UNITS']))
             except:
                 pass
 
@@ -134,9 +134,9 @@ class HeaderSelector(Frame):
                        cu.Data.options.index(cu.data.description[i]))
         except Exception as e:
             cu.Data.loaded = False
-            print (e)
+            cu.log.write_log(str(e))
             traceback.print_exc()
-            msg.showerror('Read error', 'Unable to read this file')
+            msg.showerror(LANGUAGES[settings.LANGUAGE]["read_error"], LANGUAGES[settings.LANGUAGE]["read_error_t"])
             if self.prev_frame:
                 self.main.show_frame(self.prev_frame)
             else:

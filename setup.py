@@ -1,6 +1,11 @@
 from setuptools import setup, find_packages
 import json
 
+with open('README_GUI.md', 'r') as fh:
+    long_description = fh.read()
+    with open('thermocepstrum/README_GUI.md', 'w') as fc:
+        fc.write(long_description)
+
 with open('README.md', 'r') as fh:
     long_description = fh.read()
     with open('thermocepstrum/README.md', 'w') as fc:

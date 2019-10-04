@@ -166,8 +166,7 @@ class FStarSelector(Frame):
 
     def back(self):
         response = msg.askyesno(
-            'Go back?', 'Save changes?\nIf reopen the same file '
-            '\nthe values that you chosed will not be deleted!')
+            LANGUAGES[settings.LANGUAGE]["back_reset"], LANGUAGES[settings.LANGUAGE]["back_reset_t"])
 
         #cu.log.set_func(None)
         if response:
@@ -227,7 +226,7 @@ class FStarSelector(Frame):
             cu.data.fstar=cu.data.jdata['_FSTAR']
             self.value_entry.delete(0,END)
             self.value_entry.insert(0,cu.data.fstar)
-            cu.log.write_log('F* loaded from input file ({})'.format(cu.data.jdata['_FSTAR']))
+            cu.log.write_log(LANGUAGES[settings.LANGUAGE]["fs_loaded"].format(cu.data.jdata['_FSTAR']))
             self.recalculate(slider_config=cu.data.fstar)
         elif cu.data.changes:
             self.recalculate()

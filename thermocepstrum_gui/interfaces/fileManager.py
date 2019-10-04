@@ -216,7 +216,7 @@ class FileManager(Frame):
         # Read the file
         try:
             with open(path, 'r') as file:
-                lines = file.readlines()[0:settings.PREVIEW_LINES]
+                lines = file.readlines()[0:int(settings.PREVIEW_LINES)]
 
                 # Clean the file
                 prev = []
@@ -234,8 +234,9 @@ class FileManager(Frame):
                 self.preview.delete('1.0', END)
                 self.preview.insert('1.0', schr.join(prev))
                 self.preview.config(state=DISABLED)
-        except:
-            msg.showinfo('Display error', 'Unable to show a preview of this file.')
+        except Exception as e:
+            cu.log.write_log(str(e))
+            msg.showinfo(LANGUAGES[settings.LANGUAGE]["display_error"], LANGUAGES[settings.LANGUAGE]["display_error_t"])
 
     def set_next_frame(self, frame):
         """
@@ -265,11 +266,11 @@ class FileManager(Frame):
                     else:
                         raise ValueError('Next frame isn\'t defined')
                 else:
-                    msg.showerror('Invalid format!', 'The file that you have selected has an invalid format!')
+                    msg.showerror(LANGUAGES[settings.LANGUAGE]["invalid_format"], LANGUAGES[settings.LANGUAGE]["invalid_format_t"])
             else:
-                msg.showerror('File doesn\'t exists!', 'The file that you have selected doesn\'t exists!')
+                msg.showerror(LANGUAGES[settings.LANGUAGE]["file_not_exist"], LANGUAGES[settings.LANGUAGE]["file_not_exist_t"])
         else:
-            msg.showerror('No file selected!', 'You must select a data file!')
+            msg.showerror(LANGUAGES[settings.LANGUAGE]["no_file"], LANGUAGES[settings.LANGUAGE]["no_file_t"])
 
     def update(self):
         """
