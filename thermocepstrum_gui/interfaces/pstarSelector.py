@@ -147,6 +147,7 @@ class PStarSelector(Frame):
 
 
     def _draw_graph(self):
+        self.graph.graph.clear()
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
