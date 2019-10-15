@@ -41,7 +41,7 @@ Per rendere tutto più lineare (dall'alto in basso) metterei:
 
 - [ ] il sistema zoom-in reset-view può essere un po' macchinoso. Manca la possibilità di fare zoom-in più volte e zoom-out.
 
-- [ ] BUG: se seleziono una zona e clicco zoom-in, poi clicco Back le variabili tornano a zero (se il file è di tipo Table). Oltre a questo, se ora imposto le variabili (o tengo quelle già presenti) e vado avanti, $f^*$ rimane bloccata su zero, e lo slider non funziona. L'unico modo per sistemarlo è impostare manualmente un nuovo $f^*$ nella casella.
+- [x] BUG: se seleziono una zona e clicco zoom-in, poi clicco Back le variabili tornano a zero (se il file è di tipo Table). Oltre a questo, se ora imposto le variabili (o tengo quelle già presenti) e vado avanti, $f^*$ rimane bloccata su zero, e lo slider non funziona. L'unico modo per sistemarlo è impostare manualmente un nuovo $f^*$ nella casella.
 
 - [ ] Se uno decide di utilizzare i bottoni del grafico per zommare/pannare, appena tocca lo slider lo zoom torna a quello di default. Questo comportamento potrebbe essere fastidioso... non so se si può risolvere (ad esempio forse si possono ottenere i nuovi limiti del grafico con `plt.xlim()`).
 

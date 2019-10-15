@@ -188,6 +188,8 @@ class FStarSelector(Frame):
             self.graph.other_graph.clear()
             self.graph.graph.clear()
             self.graph.cut_line = 0
+            self.graph.show_selected_area = False
+            self.change_view_button.config(text='Zoom-in')
             if self.prev_frame:
                 self.main.show_frame(self.prev_frame)
             else:
