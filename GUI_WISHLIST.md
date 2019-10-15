@@ -21,9 +21,9 @@ Per rendere tutto più lineare (dall'alto in basso) metterei:
 - [ ] C'è un modo per far sì che se chiudo e riapro il programma vada ad aprire direttamente la cartella dell'ultimo file usato, senza ripartire sempre dalla Home?
 
 ### schermata *define headers*
-- [ ] BUG: Se uso il file binario data/Silica.npy, setto `Temperature: None`, clicco next, poi back: Temperature sparisce :)
+- [x] BUG: Se uso il file binario data/Silica.npy, setto `Temperature: None`, clicco next, poi back: Temperature sparisce :)
 
-- [ ] BUG: il programma permette di settare più colonne `Temperature`, `Volume`, o `DT_FS`
+- [x] BUG: il programma permette di settare più colonne `Temperature`, `Volume`, o `DT_FS`
 
 - [ ] Vanno chiarite le unità di misura.
 

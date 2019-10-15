@@ -79,17 +79,23 @@ class HeaderSelector(Frame):
 
     def next(self):
         keys, description = self.check_list.get_list()
-        if 'Energy current' in description:
-            if description.count('Energy current') == 1:
-                if description.count('Temperature') <= 1:
-                    cu.data.keys = keys
-                    cu.data.description = description
-                    cu.Data.loaded = True
-                    cu.data.units = self.units_selector.get()
-                    if self.next_frame:
-                        self.main.show_frame(self.next_frame)
+        if cu.Data.options[1] in description:                   #energy current
+            if description.count(cu.Data.options[1]) == 1:
+                if description.count(cu.Data.options[3]) <= 1:  #temperature
+                    if description.count(cu.Data.options[4]) <= 1:
+                        if description.count(cu.Data.options[5]) <= 1:
+                            cu.data.keys = keys
+                            cu.data.description = description
+                            cu.Data.loaded = True
+                            cu.data.units = self.units_selector.get()
+                            if self.next_frame:
+                                self.main.show_frame(self.next_frame)
+                            else:
+                                raise ValueError('Next frame isn\'t defined')
+                        else:
+                            msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_DT"])
                     else:
-                        raise ValueError('Next frame isn\'t defined')
+                        msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_Volume"])
                 else:
                     msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_T"])
             else:
