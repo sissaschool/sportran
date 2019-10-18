@@ -607,14 +607,15 @@ def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_ti
     if k_SI_min is None:
         k_SI_min = -k_SI_max
 
-    plt.figure(figsize=(3.8, 2.3))
-    plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[3], lw=1.0, zorder=1)
-    plt.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[2], lw=1.0, zorder=1)
+    figure=plt.figure(figsize=(3.8, 2.3))
+    ax=figure.add_subplots()
+    ax.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[3], lw=1.0, zorder=1)
+    ax.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[2], lw=1.0, zorder=1)
 
-    plt.ylim([k_SI_min, k_SI_max])
-    plt.xlim([0, f_THz_max])
-    plt.xlabel(r'$\omega/2\pi$ (THz)')
-    plt.ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
+    ax.set_ylim([k_SI_min, k_SI_max])
+    ax.set_xlim([0, f_THz_max])
+    ax.set_xlabel(r'$\omega/2\pi$ (THz)')
+    ax.set_ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
 
     if f_tick is None:
         dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
@@ -627,10 +628,10 @@ def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_ti
         dy1 = k_tick
         dy2 = dy1 / 2
 
-    plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
-    plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
-    plt.axes().yaxis.set_major_locator(MultipleLocator(dy1))
-    plt.axes().yaxis.set_minor_locator(MultipleLocator(dy2))
+    ax.xaxis.set_major_locator(MultipleLocator(dx1))
+    ax.xaxis.set_minor_locator(MultipleLocator(dx2))
+    ax.yaxis.set_major_locator(MultipleLocator(dy1))
+    ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
 
 def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
@@ -652,9 +653,10 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
         k_SI_max = np.max(
             jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.kappa_scale * 0.5) * 1.3
 
-    plt.figure(figsize=(3.8, 2.3))
-    plt.plot(jf.freqs_THz, jf.psd * jf.kappa_scale * 0.5, lw=0.2, c='0.8', zorder=0)
-    plt.plot(jf.freqs_THz, jf.fpsd * jf.kappa_scale * 0.5, c=c[0], zorder=2)
+    figure=plt.figure(figsize=(3.8, 2.3))
+    ax=figure.add_subplot()
+    ax.plot(jf.freqs_THz, jf.psd * jf.kappa_scale * 0.5, lw=0.2, c='0.8', zorder=0)
+    ax.plot(jf.freqs_THz, jf.fpsd * jf.kappa_scale * 0.5, c=c[0], zorder=2)
     if j2 is not None:
         plt.axvline(x=j2.Nyquist_f_THz, ls='--', c='k', dashes=(1.4, 0.6), zorder=3)
     if j2pl is not None:
@@ -664,10 +666,10 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
     except:
         pass
 
-    plt.ylim([0, k_SI_max])
-    plt.xlim([0, f_THz_max])
-    plt.xlabel(r'$\omega/2\pi$ (THz)')
-    plt.ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
+    ax.set_ylim([0, k_SI_max])
+    ax.set_xlim([0, f_THz_max])
+    ax.set_xlabel(r'$\omega/2\pi$ (THz)')
+    ax.set_ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
 
     if f_tick is None:
         dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
@@ -680,10 +682,10 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
         dy1 = k_tick
         dy2 = dy1 / 2
 
-    plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
-    plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
-    plt.axes().yaxis.set_major_locator(MultipleLocator(dy1))
-    plt.axes().yaxis.set_minor_locator(MultipleLocator(dy2))
+    ax.xaxis.set_major_locator(MultipleLocator(dx1))
+    ax.xaxis.set_minor_locator(MultipleLocator(dx2))
+    ax.yaxis.set_major_locator(MultipleLocator(dy1))
+    ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
 
 def n_tick_in_range(beg, end, n):
