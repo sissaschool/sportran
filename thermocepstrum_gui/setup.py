@@ -1,18 +1,15 @@
 from setuptools import setup, find_packages
 import json
 
-with open('README_GUI.md', 'r') as fh:
-    long_description = fh.read()
-    with open('thermocepstrum/README_GUI.md', 'w') as fc:
-        fc.write(long_description)
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
-    with open('thermocepstrum/README.md', 'w') as fc:
-        fc.write(long_description)
+try:
+    with open('thermocepstrum_gui/README.md', 'r') as fh:
+        long_description = fh.read()
+except:
+    raise RuntimeError("Maybe you must run 'copy_readmes_in_packages.sh' in the parent directory to prepare the file tree?")
 
 if __name__ == '__main__':
-    with open('thermocepstrum/setup.json', 'r') as info:
+    with open('thermocepstrum_gui/setup.json', 'r') as info:
         kwargs = json.load(info)
 
     setup(include_package_data=True,

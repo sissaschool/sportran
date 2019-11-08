@@ -1,0 +1,6 @@
+include thermocepstrum_gui/assets/icon.gif
+include thermocepstrum_gui/assets/languages.json
+include thermocepstrum_gui/LICENSE.txt
+include thermocepstrum_gui/README.md
+include thermocepstrum_gui/README_GUI.md
+include thermocepstrum_gui/setup.json

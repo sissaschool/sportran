@@ -1,0 +1,6 @@
+include thermocepstrum/utils/plot_style.mplstyle
+include thermocepstrum/setup.json
+include thermocepstrum/LICENSE.txt
+include thermocepstrum/README.md
+exclude thermocepstrum/utils/blocks.py
+exclude thermocepstrum/utils/blockanalysis.py

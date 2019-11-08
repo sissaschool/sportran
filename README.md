@@ -24,6 +24,7 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
  - Matplotlib
 #### graphical user interface
  - all the requirements of cepstral analysis
+ - python 3 only
  - tkinter
  - future-fstrings
  - pillow (you may need to run `pip install pillow --upgrade` )
@@ -31,8 +32,9 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
  - markdown2
 
 ### Installation
+  We provide two python packages. The core library and the command line interface are in the subdirectory `thermocepstrum`, while the GUI is in the `thermocepstrum_gui` subdirectory.
   You can simply pip-install thermocepstrum with `pip install thermocepstrum`.
-
+  
   Alternatively:
   1. Clone this repository: `git clone https://github.com/lorisercole/thermocepstrum.git`
   2. Install the package with pip (dependencies will be automatically downloaded). For example:
@@ -40,12 +42,15 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
 cd thermocepstrum
 pip install .
 ```
-
+  or
+```
+cd thermocepstrum_gui
+pip install .
+```
+  or, if you are on a unix system, simply run `setup.sh`
   You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
 
-  The graphical user interface is started with the command `thermocepstrum-gui`.
-
-  If you want to install the package with pip but you don't want the user interface because you have a particular system and not all packages are available, you can modify the file `thermocepstrum/setup.json`, remove the dependencies of the GUI and use the program from the command line or as a library.
+  The graphical user interface is started with the command `thermocepstrum-gui` (only if you installed it)000000000000.
 
 ### Issues
   You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/thermocepstrum/issues) GitHub issues page.

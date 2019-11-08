@@ -274,15 +274,18 @@ def load_settings():
                     if var == 'DP':
                         settings.DATA_PATH = val
                         if not os.path.exists(settings.DATA_PATH):
-                            os.mkdir(settings.DATA_PATH)
+                            settings.DATA_PATH='./'
+                            #os.mkdir(settings.DATA_PATH)
                     elif var == 'OP':
                         settings.OUTPUT_PATH = val
                         if not os.path.exists(settings.OUTPUT_PATH):
-                            os.mkdir(settings.OUTPUT_PATH)
+                            settings.OUTPUT_PATH='./'
+                            #os.mkdir(settings.OUTPUT_PATH)
                     elif var == 'LP':
                         settings.LOG_PATH = val
                         if not os.path.exists(settings.LOG_PATH):
-                            os.mkdir(settings.LOG_PATH)
+                            settings.LOG_PATH='./'
+                            #os.mkdir(settings.LOG_PATH)
                     elif var == 'FS':
                         settings.FONT_SIZE = val
                     elif var == 'PL':
@@ -305,7 +308,8 @@ def set_defaults():
         # Write the defaults paths
         for setting in defaults:
             try:
-                os.mkdir(os.path.join(settings.BASE_PATH, setting[1]))
+                #os.mkdir(os.path.join(settings.BASE_PATH, setting[1]))
+                pass
             except:
                 pass
             file.write(f'{setting[0]}:{os.path.join(settings.BASE_PATH, setting[1])}\n')
