@@ -126,7 +126,12 @@ class FileManager(Frame):
         This function is used to parse the files in
         the selected directory and display them in the file manager.
         """
-        files = os.listdir(settings.DATA_PATH)
+        global settings
+        try:
+            files = os.listdir(settings.DATA_PATH)
+        except:
+            settings.DATA_PATH='./'
+            files = os.listdir(settings.DATA_PATH)
 
         self.loaded_files = []
 

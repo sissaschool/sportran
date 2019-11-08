@@ -151,12 +151,14 @@ class FStarSelector(Frame):
             cu.data.changes = False
         else:
             msg.showwarning('Value error', 'F* must be greater than zero')
+            return False
 
         if self.graph.show_selected_area:
             self.graph.show_selected_area = True
             self.graph.change_view()
 
         self.update()
+        return True
 
     def set_next_frame(self, frame):
         self.next_frame = frame
@@ -199,13 +201,13 @@ class FStarSelector(Frame):
 
     def next(self):
 
-        self.resample()
-        #cu.data.fstar = cu.data.xf.Nyquist_f_THz
+        if (self.resample()):
+            #cu.data.fstar = cu.data.xf.Nyquist_f_THz
 
-        if self.next_frame:
-            self.main.show_frame(self.next_frame)
-        else:
-            raise ValueError('Next frame isn\'t defined')
+            if self.next_frame:
+                self.main.show_frame(self.next_frame)
+            else:
+                raise ValueError('Next frame isn\'t defined')
 
     def recalculate(self, slider_config=None):
         self.graph.other_graph.clear()

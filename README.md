@@ -19,33 +19,32 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
 ### Requirements
 #### only cepstral analysis (command line interface)
  - Python 2.7 or 3.x
- - Numpy
- - Scipy
- - Matplotlib
+ - numpy
+ - ncipy
+ - matplotlib
 #### graphical user interface
  - all the requirements of cepstral analysis
+ - Python 3 only
  - tkinter
  - future-fstrings
- - pillow (you may need to run `pip install pillow --upgrade` )
+ - pillow (you may need upgrade it)
  - tk-html-widgets
  - markdown2
 
 ### Installation
-  You can simply pip-install thermocepstrum with `pip install thermocepstrum`.
+  You can simply pip-install thermocepstrum downloading it from PyPI with `pip install thermocepstrum`.
 
   Alternatively:
+
   1. Clone this repository: `git clone https://github.com/lorisercole/thermocepstrum.git`
   2. Install the package with pip (dependencies will be automatically downloaded). For example:
 ```
 cd thermocepstrum
 pip install .
 ```
-
   You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
 
-  The graphical user interface is started with the command `thermocepstrum-gui`.
-
-  If you want to install the package with pip but you don't want the user interface because you have a particular system and not all packages are available, you can modify the file `thermocepstrum/setup.json`, remove the dependencies of the GUI and use the program from the command line or as a library.
+  If you use Python 3, the Graphical User Interface will be installed and can be started with the command `thermocepstrum-gui`.
 
 ### Issues
   You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/thermocepstrum/issues) GitHub issues page.
