@@ -50,7 +50,7 @@ pip install .
   or, if you are on a unix system, simply run `setup.sh`
   You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
 
-  The graphical user interface is started with the command `thermocepstrum-gui` (only if you installed it)000000000000.
+  The graphical user interface is started with the command `thermocepstrum-gui` (only if you installed it).
 
 ### Issues
   You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/thermocepstrum/issues) GitHub issues page.
