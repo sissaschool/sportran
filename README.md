@@ -32,25 +32,25 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
  - markdown2
 
 ### Installation
-  We provide two python packages. The core library and the command line interface are in the subdirectory `thermocepstrum`, while the GUI is in the `thermocepstrum_gui` subdirectory.
-  You can simply pip-install thermocepstrum with `pip install thermocepstrum`.
+We provide two python packages. The core library and the command line interface are in the subdirectory `thermocepstrum`, while the GUI is in the `thermocepstrum_gui` subdirectory. Remember that the GUI requires python 3, while the library and the command line interface don't. That's why we have two packages.
+  You can simply pip-install thermocepstrum with `pip install thermocepstrum` from the pypi repository.
   
   Alternatively:
-  1. Clone this repository: `git clone https://github.com/lorisercole/thermocepstrum.git`
-  2. Install the package with pip (dependencies will be automatically downloaded). For example:
-```
-cd thermocepstrum
-pip install .
-```
-  or
-```
-cd thermocepstrum_gui
-pip install .
-```
-  or, if you are on a unix system, simply run `setup.sh`
-  You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
 
-  The graphical user interface is started with the command `thermocepstrum-gui` (only if you installed it).
+  1. Clone this repository: `git clone https://github.com/lorisercole/thermocepstrum.git`
+  2. cd into the new directory created by git
+   * system where `setup.sh` does work:
+     1. run the bash script `setup.sh` and you are done (skip next steps).
+   * system where `setup.sh` does not work:
+     1. copy the files `README.md README_GUI.md LICENSE.txt` in the source folders `thermocepstrum/thermocepstrum` and `thermocepstrum_gui/thermocepstrum_gui/`
+     2. `cd thermocepstrum; pip install .`
+     3. `cd thermocepstrum_gui; pip install`
+
+The copy is needed  because during python packaging it is not possible to include files from parent directories, and we want to have only a single version of the READMEs in the project tree.
+
+You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
+The graphical user interface is started with the command `thermocepstrum-gui` (only if you installed it).
 
 ### Issues
-  You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/thermocepstrum/issues) GitHub issues page.
+You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/thermocepstrum/issues) GitHub issues page.
+
