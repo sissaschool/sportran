@@ -229,7 +229,7 @@ Contact: lercole@sissa.it
         jdata = jfile.data
         START_STEP = 0   # reset to zero, as later we will need to read all of jdata
     elif (input_format == 'dict'):
-        jdata = np.load(inputfile)
+        jdata = np.load(inputfile,allow_pickle=True).tolist()
     elif (input_format == 'lammps'):
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         if temperature is None:
