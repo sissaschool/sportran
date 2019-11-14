@@ -36,6 +36,7 @@ class ThermocepstrumGUI(Tk):
     ThermocepstrumGUI is a subclass of Tk that is the root window.
     """
 
+    # Class variables to store some main parameters
     open_windows = []
     frames = []
     frame = None
@@ -112,6 +113,11 @@ class ThermocepstrumGUI(Tk):
         self.show_frame(ThermocepstrumGUI.home)
 
     def show_software_info(self):
+        """
+        This function displays some software info at the startup.
+
+        The data displayed are took from METADATA
+        """
         print('------------------- Thermocepstrum GUI -------------------')
         print('')
         print('\t\t\tGUI version: {}'.format(METADATA['version']))
