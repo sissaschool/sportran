@@ -62,40 +62,40 @@ class TopBar(Frame):
         top_menu.add_cascade(label='File', menu=file_menu)
 
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['new_a'],
-                              command=lambda: cu.new(main))                                 # Starts a new analysis
+                              command=lambda: cu.new(main))   # Starts a new analysis
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['export_data'],
-                              command=lambda: self._exportData())                           # Let you export the data
+                              command=lambda: self._exportData())   # Let you export the data
         file_menu.add_separator()
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['settings'],
-                              command=lambda: run_new_window(main.root, Settings, main))    # Opens the settings window
+                              command=lambda: run_new_window(main.root, Settings, main))   # Opens the settings window
         file_menu.add_separator()
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['exit'],
-                              command=lambda: cu.secure_exit(main))                         # Close the software
+                              command=lambda: cu.secure_exit(main))   # Close the software
 
         # Create the view section of the top menu
         view_menu = Menu(top_menu, tearoff=False)
         top_menu.add_cascade(label=LANGUAGES[settings.LANGUAGE]['view'], menu=view_menu)
         view_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['s_log'],
-                              command=lambda: run_new_window(main.root, Logs, main))        # Opens the logs window
+                              command=lambda: run_new_window(main.root, Logs, main))   # Opens the logs window
         view_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['s_inf'],
-                              command=lambda: run_new_window(main.root, Info, main))        # Opens the outputs window
+                              command=lambda: run_new_window(main.root, Info, main))   # Opens the outputs window
 
         # Create the info section of the top menu
         file_menu = Menu(top_menu, tearoff=False)
-        top_menu.add_cascade(label=LANGUAGES[settings.LANGUAGE]['info'], menu=file_menu)    # Opens the info menu
+        top_menu.add_cascade(label=LANGUAGES[settings.LANGUAGE]['info'], menu=file_menu)   # Opens the info menu
 
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['version'],
-                              command=lambda: run_new_window(main.root, Version, main))     # Opens the version menu
+                              command=lambda: run_new_window(main.root, Version, main))   # Opens the version menu
         file_menu.add_separator()
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['developers'],
-                              command=lambda: run_new_window(main.root, Developers, main))  # Opens the developers menu
+                              command=lambda: run_new_window(main.root, Developers, main))   # Opens the developers menu
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['contacts'],
-                              command=lambda: run_new_window(main.root, Contacts, main))    # Opens the contacts menu
+                              command=lambda: run_new_window(main.root, Contacts, main))   # Opens the contacts menu
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['about'],
-                              command=lambda: run_new_window(main.root, About, main))       # Opens the about menu
+                              command=lambda: run_new_window(main.root, About, main))   # Opens the about menu
         file_menu.add_separator()
         file_menu.add_command(label=LANGUAGES[settings.LANGUAGE]['help'],
-                              command=lambda: run_new_window(main.root, Help, main))        # Opens the help menu
+                              command=lambda: run_new_window(main.root, Help, main))   # Opens the help menu
 
     def _exportData(self):
         """
@@ -105,9 +105,11 @@ class TopBar(Frame):
         file = fdialog.asksaveasfilename(initialdir=os.getcwd())
         if file:
             if cu.export_data(file):
-                msg.showinfo(LANGUAGES[settings.LANGUAGE]["export_success"], LANGUAGES[settings.LANGUAGE]["export_success_t"].format(file))
+                msg.showinfo(LANGUAGES[settings.LANGUAGE]['export_success'],
+                             LANGUAGES[settings.LANGUAGE]['export_success_t'].format(file))
             else:
-                msg.showerror(LANGUAGES[settings.LANGUAGE]["export_fail"], LANGUAGES[settings.LANGUAGE]["export_fail_t"].format(file))
+                msg.showerror(LANGUAGES[settings.LANGUAGE]['export_fail'],
+                              LANGUAGES[settings.LANGUAGE]['export_fail_t'].format(file))
 
     def _update_window(self):
         self.main.frame.update()
@@ -390,7 +392,6 @@ class TextWidget(Frame):
 
 
 class CheckList(Frame):
-
     """
     This widget generates a list that contains a selector
     of combo box.
@@ -402,6 +403,7 @@ class CheckList(Frame):
     :param start_row: the row in the frame where the elements start to
                        be generated.
     """
+
     def __init__(self, parent, controller, check_list=dict(), start_row=0):
         Frame.__init__(self, parent, controller)
 
@@ -422,13 +424,13 @@ class CheckList(Frame):
         self.clear_list()
         hidden_cont = 0
         for row, el in enumerate(list(check_list.keys())):
-            if el[0] == "_":
-                hidden_cont = hidden_cont+1
+            if el[0] == '_':
+                hidden_cont = hidden_cont + 1
                 continue
 
             # Generate the element
             frame = Frame(self.controller)
-            frame.grid(row=self.start_row + row-hidden_cont, column=0, sticky='we', pady=2)
+            frame.grid(row=self.start_row + row - hidden_cont, column=0, sticky='we', pady=2)
             Label(frame, text=el, font='{} 12 bold'.format(settings.FONT)).grid(row=0, column=0)
             cmb = ttk.Combobox(frame, values=cu.Data.options, state='readonly', width=12)
             cmb.bind('<<ComboboxSelected>>', self.combo_func)   # cu.data.inputformat == 'dict':
@@ -436,15 +438,11 @@ class CheckList(Frame):
             try:
                 cmb.current(
                     cu.Data.options.index(
-                        cu.data.jdata['_HEADERS']['description'][
-                            cu.data.jdata['_HEADERS']['keys'].index(el)
-                        ]
-                    )
-                )
-                cu.log.write_log(LANGUAGES[settings.LANGUAGE]["description_loaded"].format(
+                        cu.data.jdata['_HEADERS']['description'][cu.data.jdata['_HEADERS']['keys'].index(el)]))
+                cu.log.write_log(LANGUAGES[settings.LANGUAGE]['description_loaded'].format(
                     el, cu.data.jdata['_HEADERS']['description'][cu.data.jdata['_HEADERS']['keys'].index(el)]))
 
-            except:     #try to guess
+            except:   #try to guess
                 if el.upper() == 'TEMP' or el.upper() == 'TEMPERATURE':
                     cmb.current(3)
                 elif el.upper() == 'VOL_A' or el.upper() == 'VOLUME_A':
@@ -520,16 +518,11 @@ class ScrollFrame(Frame):
         # todo: should I use self in place of controller???
         # controller=self
         if width or height:
-            self.canvas = Canvas(controller,
-                                 bd=bd,
-                                 relief=SOLID,
-                                 highlightthickness=0,
-                                 bg=bgcol,
-                                 width=width,
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0, bg=bgcol, width=width,
                                  height=height)
         else:
-            self.canvas = Canvas(controller, bd=bd, relief=SOLID,
-                                 highlightthickness=0, bg=bgcol)    # '#00FF00')# bg=bgcol)
+            self.canvas = Canvas(controller, bd=bd, relief=SOLID, highlightthickness=0,
+                                 bg=bgcol)   # '#00FF00')# bg=bgcol)
 
         self.viewPort = Frame(self.canvas, background=bgcol2)   # "#FF0000")#background=bgcol2)
         self.vsb = Scrollbar(controller, orient='vertical', command=self.canvas.yview)
@@ -542,7 +535,7 @@ class ScrollFrame(Frame):
         controller.columnconfigure(0, weight=10)
         controller.columnconfigure(1, weight=0)
 
-        self.viewPort_id = self.canvas.create_window(0, 0, window=self.viewPort, tags='self.viewPort', anchor="n")
+        self.viewPort_id = self.canvas.create_window(0, 0, window=self.viewPort, tags='self.viewPort', anchor='n')
         # self.viewPort.grid(row=0, column=0, sticky='nsew')
         # THE VIEWPORT MUST NOT BE "GRIDDED" OR "PACKED"
         self.canvas.grid_rowconfigure(0, weight=1)
@@ -567,7 +560,7 @@ class ScrollFrame(Frame):
                 move = 1
             else:
                 move = -1
-            self.canvas.yview_scroll(move, "units")
+            self.canvas.yview_scroll(move, 'units')
 
     def update_view(self):
         """
@@ -674,11 +667,12 @@ class Link:
         """
         This function opens the link in the browser.
         """
-        
+
         webbrowser.open(self.url)
 
 
 # Windows
+
 
 class Version:
     """
@@ -712,12 +706,13 @@ class Version:
               text='Thermocepstrum {}: {}'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(),
                                                   METADATA['version'])).grid(row=2, column=0, sticky='w', pady=5)
 
-        Label(self.frame,
-              text='GUI {}: {} ({})'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['gui_version'],
-                                            METADATA['dev_state'])).grid(row=3, column=0, sticky='w')
+        Label(
+            self.frame,
+            text='GUI {}: {} ({})'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['gui_version'],
+                                          METADATA['dev_state'])).grid(row=3, column=0, sticky='w')
 
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]["last_release"].format(
-            METADATA['release_date'])).grid(row=4, column=0, sticky='w', pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['last_release'].format(METADATA['release_date'])).grid(
+            row=4, column=0, sticky='w', pady=5)
 
         # Display logo
         icon = PhotoImage(data=ICON)
@@ -727,12 +722,8 @@ class Version:
         image.pack(side=RIGHT, padx=20, pady=15)
         image.config(image=icon)
 
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -764,10 +755,8 @@ class Developers:
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
         # Display developers name
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['developers'], font='Arial 12 bold').grid(row=0,
-                                                                                                      column=0,
-                                                                                                      sticky='we',
-                                                                                                      pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['developers'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         Label(self.frame, text='Loris Ercole').grid(row=2, column=0, sticky='w', pady=5)
@@ -777,12 +766,8 @@ class Developers:
         Label(self.frame, text='Sebastiano Bisacchi').grid(row=4, column=0, sticky='w', pady=5)
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -814,10 +799,8 @@ class Contacts:
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
         # Display contacts
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['contacts'], font='Arial 12 bold').grid(row=0,
-                                                                                                    column=0,
-                                                                                                    sticky='we',
-                                                                                                    pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['contacts'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         Email(self.frame, email=METADATA['author_email']).grid(row=2, column=0, pady=5, sticky='w')
@@ -825,12 +808,8 @@ class Contacts:
         # Email(self.frame, email='sebastianobisacchi@outlook.it').grid(row=4, column=0, pady=5, sticky='w')
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -859,10 +838,8 @@ class About:
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
         # Display the info page
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['about'], font='Arial 12 bold').grid(row=0,
-                                                                                                 column=0,
-                                                                                                 sticky='we',
-                                                                                                 pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['about'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         html = markdown2.markdown(README_MD)
@@ -872,12 +849,8 @@ class About:
 
         self.frame.columnconfigure(0, weight=1)
         self.frame.rowconfigure(2, weight=1)
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -906,10 +879,8 @@ class Help:
         self.frame.pack(fill=BOTH, expand=1, padx=20, pady=15)
 
         # Display the help page
-        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['help'], font='Arial 12 bold').grid(row=0,
-                                                                                                column=0,
-                                                                                                sticky='we',
-                                                                                                pady=5)
+        Label(self.frame, text=LANGUAGES[settings.LANGUAGE]['help'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
         html = markdown2.markdown(README_GUI_MD)
@@ -919,12 +890,8 @@ class Help:
 
         self.frame.columnconfigure(0, weight=1)
         self.frame.rowconfigure(2, weight=1)
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -964,12 +931,8 @@ class Info:
         cu.info = self.info
 
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -1011,12 +974,8 @@ class Logs:
         cu.log.set_func(self.logs.write)
         cu.log.set_method('other')
         self.frame.columnconfigure(0, weight=1)
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def close_windows(self):
@@ -1056,25 +1015,25 @@ class Settings:
         self.font_size_var = IntVar(value=settings.FONT_SIZE)
         self.preview_lines_var = IntVar(value=settings.PREVIEW_LINES)
         if settings.LANGUAGE == 'en-EN':
-            self.language_var = StringVar(value="English")
+            self.language_var = StringVar(value='English')
         elif settings.LANGUAGE == 'it-IT':
-            self.language_var = StringVar(value="Italian")
+            self.language_var = StringVar(value='Italian')
         else:
-            self.language_var = StringVar(value="English")
+            self.language_var = StringVar(value='English')
 
-        cbx_values = ["English", "Italiano"]
+        cbx_values = ['English', 'Italiano']
 
         Label(general_settings, text=LANGUAGES[settings.LANGUAGE]['fs']).grid(row=0, column=0, sticky='w')
         font_size = Spinbox(general_settings, from_=11, to=15, textvariable=self.font_size_var)
-        font_size.grid(row=0, column=1, sticky='w')     # Font size settings
+        font_size.grid(row=0, column=1, sticky='w')   # Font size settings
 
         Label(general_settings, text=LANGUAGES[settings.LANGUAGE]['pl']).grid(row=1, column=0, sticky='w')
         preview_line = Spinbox(general_settings, from_=1, to=100, textvariable=self.preview_lines_var)
-        preview_line.grid(row=1, column=1, sticky='w')  # Preview lines settings
+        preview_line.grid(row=1, column=1, sticky='w')   # Preview lines settings
 
         Label(general_settings, text=LANGUAGES[settings.LANGUAGE]['lang']).grid(row=2, column=0, sticky='w')
-        language = ttk.Combobox(general_settings, values=cbx_values, textvariable=self.language_var, state="readonly")
-        language.grid(row=2, column=1, sticky='w')      # Language settings
+        language = ttk.Combobox(general_settings, values=cbx_values, textvariable=self.language_var, state='readonly')
+        language.grid(row=2, column=1, sticky='w')   # Language settings
 
         # Define the paths settings tab
         paths_settings = Frame(tabs)
@@ -1084,41 +1043,33 @@ class Settings:
         self.logs_path_var = StringVar(value=settings.LOG_PATH)
         self.output_path_var = StringVar(value=settings.OUTPUT_PATH)
 
-        Label(paths_settings, text="Data path").grid(row=0, column=0, sticky='w')
+        Label(paths_settings, text='Data path').grid(row=0, column=0, sticky='w')
         self.data_dir_entry = Entry(paths_settings, textvariable=self.data_path_var)
         self.data_dir_entry.grid(row=0, column=1, sticky='w', padx=10)
-        Button(paths_settings, text="...", relief=SOLID, bd=1,
-               command=lambda: self.chose_path('dat')).grid(row=0, column=2, sticky='w')    # Data path
+        Button(paths_settings, text='...', relief=SOLID, bd=1,
+               command=lambda: self.chose_path('dat')).grid(row=0, column=2, sticky='w')   # Data path
 
-        Label(paths_settings, text="Logs path").grid(row=1, column=0, sticky='w')
+        Label(paths_settings, text='Logs path').grid(row=1, column=0, sticky='w')
         self.logs_dir_entry = Entry(paths_settings, textvariable=self.logs_path_var)
         self.logs_dir_entry.grid(row=1, column=1, sticky='w', padx=10)
-        Button(paths_settings, text="...", relief=SOLID, bd=1,
-               command=lambda: self.chose_path('log')).grid(row=1, column=2, sticky='w')    # Logs path
+        Button(paths_settings, text='...', relief=SOLID, bd=1,
+               command=lambda: self.chose_path('log')).grid(row=1, column=2, sticky='w')   # Logs path
 
-        Label(paths_settings, text="Outputs path").grid(row=2, column=0, sticky='w')
+        Label(paths_settings, text='Outputs path').grid(row=2, column=0, sticky='w')
         self.out_dir_entry = Entry(paths_settings, textvariable=self.output_path_var)
         self.out_dir_entry.grid(row=2, column=1, sticky='w', padx=10)
-        Button(paths_settings, text="...", relief=SOLID, bd=1,
-               command=lambda: self.chose_path('out')).grid(row=2, column=2, sticky='w')    # Outputs path
+        Button(paths_settings, text='...', relief=SOLID, bd=1,
+               command=lambda: self.chose_path('out')).grid(row=2, column=2, sticky='w')   # Outputs path
 
         tabs.add(general_settings, text='General')
         tabs.add(paths_settings, text='Paths')
         self.frame.columnconfigure(0, weight=1)
-        self.saveButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['save'],
-                                 command=self.save,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.saveButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['save'], command=self.save, width=10,
+                                 bd=1, relief=SOLID)
         self.saveButton.grid(row=5, column=1, sticky='w', pady=5)
 
-        self.quitButton = Button(self.frame,
-                                 text=LANGUAGES[settings.LANGUAGE]['exit'],
-                                 command=self.close_windows,
-                                 width=10,
-                                 bd=1,
-                                 relief=SOLID)
+        self.quitButton = Button(self.frame, text=LANGUAGES[settings.LANGUAGE]['exit'], command=self.close_windows,
+                                 width=10, bd=1, relief=SOLID)
         self.quitButton.grid(row=5, column=0, sticky='w', pady=5)
 
     def chose_path(self, var):
@@ -1149,18 +1100,18 @@ class Settings:
         settings.DATA_PATH = self.data_path_var.get()
         settings.LOG_PATH = self.logs_path_var.get()
         settings.OUTPUT_PATH = self.output_path_var.get()
-        if self.language_var.get() == "English":
-            settings.LANGUAGE = "en-EN"
-        if self.language_var.get() == "Italiano":
-            settings.LANGUAGE = "it-IT"
+        if self.language_var.get() == 'English':
+            settings.LANGUAGE = 'en-EN'
+        if self.language_var.get() == 'Italiano':
+            settings.LANGUAGE = 'it-IT'
 
-        with open("thcp.ini", "w") as settings_file:
-            settings_file.write("DP:{}\n".format(settings.DATA_PATH))
-            settings_file.write("LP:{}\n".format(settings.LOG_PATH))
-            settings_file.write("OP:{}\n".format(settings.OUTPUT_PATH))
-            settings_file.write("FS:{}\n".format(settings.FONT_SIZE))
-            settings_file.write("PL:{}\n".format(settings.PREVIEW_LINES))
-            settings_file.write("LANG:{}\n".format(settings.LANGUAGE))
+        with open('thcp.ini', 'w') as settings_file:
+            settings_file.write('DP:{}\n'.format(settings.DATA_PATH))
+            settings_file.write('LP:{}\n'.format(settings.LOG_PATH))
+            settings_file.write('OP:{}\n'.format(settings.OUTPUT_PATH))
+            settings_file.write('FS:{}\n'.format(settings.FONT_SIZE))
+            settings_file.write('PL:{}\n'.format(settings.PREVIEW_LINES))
+            settings_file.write('LANG:{}\n'.format(settings.LANGUAGE))
 
     def close_windows(self):
 

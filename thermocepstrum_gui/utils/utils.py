@@ -54,7 +54,7 @@ class PrintMethod:
             other -  allows you to define a custom output function using set_func()
         """
 
-        if method is "bash" or method is "other":
+        if method is 'bash' or method is 'other':
             cls._METHOD = method
         else:
-            raise ValueError("Invalid input method")
+            raise ValueError('Invalid input method')

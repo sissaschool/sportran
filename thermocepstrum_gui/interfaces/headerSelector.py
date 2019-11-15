@@ -42,15 +42,17 @@ class HeaderSelector(Frame):
         header_list_frame.grid(row=1, column=0, sticky='nswe', pady=10)
 
         self.scrollable_header_list = ScrollFrame(header_list_frame, header_list_frame, bd=1)
-        self.check_list = CheckList(self.scrollable_header_list.viewPort, self.scrollable_header_list.viewPort, start_row=1)
+        self.check_list = CheckList(self.scrollable_header_list.viewPort, self.scrollable_header_list.viewPort,
+                                    start_row=1)
 
-        Label(header_frame, text=LANGUAGES[settings.LANGUAGE]["select_units"], font='Arial 14 bold') \
+        Label(header_frame, text=LANGUAGES[settings.LANGUAGE]['select_units'], font='Arial 14 bold') \
             .grid(row=2, column=0, sticky='w', pady=10)
         self.units_selector_frame = Frame(header_frame)
-        self.units_selector = ttk.Combobox(self.units_selector_frame,
-                                           values=HeatCurrent.get_units_list(), state='readonly')
+        self.units_selector = ttk.Combobox(self.units_selector_frame, values=HeatCurrent.get_units_list(),
+                                           state='readonly')
         self.units_selector.current(0)
-        Label(self.units_selector_frame, text=LANGUAGES[settings.LANGUAGE]["units"]).grid(row=0, column=0, sticky='we', pady=2)
+        Label(self.units_selector_frame,
+              text=LANGUAGES[settings.LANGUAGE]['units']).grid(row=0, column=0, sticky='we', pady=2)
         self.units_selector.grid(row=0, column=1, sticky='we', pady=2)
         self.units_selector_frame.grid(row=3, column=0, sticky='nswe', pady=2)
 
@@ -79,9 +81,9 @@ class HeaderSelector(Frame):
 
     def next(self):
         keys, description = self.check_list.get_list()
-        if cu.Data.options[1] in description:                   #energy current
+        if cu.Data.options[1] in description:   #energy current
             if description.count(cu.Data.options[1]) == 1:
-                if description.count(cu.Data.options[3]) <= 1:  #temperature
+                if description.count(cu.Data.options[3]) <= 1:   #temperature
                     if description.count(cu.Data.options[4]) <= 1:
                         if description.count(cu.Data.options[5]) <= 1:
                             cu.data.keys = keys
@@ -93,15 +95,18 @@ class HeaderSelector(Frame):
                             else:
                                 raise ValueError('Next frame isn\'t defined')
                         else:
-                            msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_DT"])
+                            msg.showerror(LANGUAGES[settings.LANGUAGE]['value_error'],
+                                          LANGUAGES[settings.LANGUAGE]['only_one_DT'])
                     else:
-                        msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_Volume"])
+                        msg.showerror(LANGUAGES[settings.LANGUAGE]['value_error'],
+                                      LANGUAGES[settings.LANGUAGE]['only_one_Volume'])
                 else:
-                    msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_T"])
+                    msg.showerror(LANGUAGES[settings.LANGUAGE]['value_error'],
+                                  LANGUAGES[settings.LANGUAGE]['only_one_T'])
             else:
-                msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], LANGUAGES[settings.LANGUAGE]["only_one_E"])
+                msg.showerror(LANGUAGES[settings.LANGUAGE]['value_error'], LANGUAGES[settings.LANGUAGE]['only_one_E'])
         else:
-            msg.showerror(LANGUAGES[settings.LANGUAGE]["no_key"], LANGUAGES[settings.LANGUAGE]["no_key_t"])
+            msg.showerror(LANGUAGES[settings.LANGUAGE]['no_key'], LANGUAGES[settings.LANGUAGE]['no_key_t'])
 
     def back(self):
         keys, description = self.check_list.get_list()
@@ -117,7 +122,6 @@ class HeaderSelector(Frame):
         super().update()
         self.main_frame.update_view()
 
-
         try:
             print('cu.Data.loaded={}'.format(cu.Data.loaded))
             if not cu.Data.loaded:
@@ -129,20 +133,19 @@ class HeaderSelector(Frame):
 
             #try to set units (if given)
             try:
-                self.units_selector.current( HeatCurrent.get_units_list().index( cu.data.jdata['_UNITS'] ) )
-                cu.log.write_log(LANGUAGES[settings.LANGUAGE]["units_loaded"].format(cu.data.jdata['_UNITS']))
+                self.units_selector.current(HeatCurrent.get_units_list().index(cu.data.jdata['_UNITS']))
+                cu.log.write_log(LANGUAGES[settings.LANGUAGE]['units_loaded'].format(cu.data.jdata['_UNITS']))
             except:
                 pass
 
             if cu.Data.loaded:
                 for i, check in enumerate(self.check_list.controller.winfo_children()):
-                    check.winfo_children()[1].current(
-                       cu.Data.options.index(cu.data.description[i]))
+                    check.winfo_children()[1].current(cu.Data.options.index(cu.data.description[i]))
         except Exception as e:
             cu.Data.loaded = False
             cu.log.write_log(str(e))
             traceback.print_exc()
-            msg.showerror(LANGUAGES[settings.LANGUAGE]["read_error"], LANGUAGES[settings.LANGUAGE]["read_error_t"])
+            msg.showerror(LANGUAGES[settings.LANGUAGE]['read_error'], LANGUAGES[settings.LANGUAGE]['read_error_t'])
             if self.prev_frame:
                 self.main.show_frame(self.prev_frame)
             else:

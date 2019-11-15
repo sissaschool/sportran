@@ -19,8 +19,7 @@ LOG_PATH = ''
 ASSETS_PATH = os.path.join(BASE_PATH, 'assets')
 
 # todo: Add/Remove extensions
-FILE_EXTENSIONS = ['dat', 'log', 'txt', 'bin','npy']
-
+FILE_EXTENSIONS = ['dat', 'log', 'txt', 'bin', 'npy']
 
 # -------- GUI SETTINGS --------
 
@@ -39,7 +38,6 @@ Y_SIZE = 720
 
 X_SPACING = 300
 Y_SPACING = 200
-
 
 # -------- GRAPHIC SETTINGS --------
 

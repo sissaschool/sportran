@@ -1,4 +1,3 @@
-
 from pkg_resources import resource_stream, resource_string
 import json
 

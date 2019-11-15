@@ -2,15 +2,19 @@ from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.core import control_unit as cu
 from uncertainties import ufloat
 
-INDENT=0
+INDENT = 0
+
+
 def print_name(func):
-    def inner(*args,**kwargs):
+
+    def inner(*args, **kwargs):
         global INDENT
-        print ('{}BEGIN {}'.format(" "*INDENT,func.__name__))
-        INDENT=INDENT+1
+        print('{}BEGIN {}'.format(' ' * INDENT, func.__name__))
+        INDENT = INDENT + 1
         func(*args, **kwargs)
-        INDENT=INDENT-1
-        print('{}END   {}'.format(" "*INDENT,func.__name__))
+        INDENT = INDENT - 1
+        print('{}END   {}'.format(' ' * INDENT, func.__name__))
+
     return inner
 
 
@@ -25,7 +29,7 @@ class PStarSelector(Frame):
         self.prev_frame = None
 
         self.parent = parent
-        self.main_frame_scroll=ScrollFrame(self, self)
+        self.main_frame_scroll = ScrollFrame(self, self)
         self.main_frame = self.main_frame_scroll.viewPort
 
         #self.main_frame.grid(column=0, row=0, sticky='nsew')
@@ -71,8 +75,7 @@ class PStarSelector(Frame):
         Radiobutton(rdbt_frame, text='100', font='Arial 11 bold', variable=self.increment, value=100,
                     command=self._change_increment).pack(side=LEFT)
 
-        Button(value_frame, text=LANGUAGES[settings.LANGUAGE]['recalculate'],
-               font='Arial 12 bold', bd=1, relief=SOLID,
+        Button(value_frame, text=LANGUAGES[settings.LANGUAGE]['recalculate'], font='Arial 12 bold', bd=1, relief=SOLID,
                command=self._recalc, width=20).grid(row=2, column=2, sticky='wens', rowspan=2, padx=50)
 
         value_frame.columnconfigure(0, weight=1, minsize=110)
@@ -83,12 +86,12 @@ class PStarSelector(Frame):
         button_frame = Frame(self.main_frame)
         button_frame.grid(row=2, column=0, sticky='w', padx=10, pady=20)
 
-        back_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'],
-                             bd=1, relief=SOLID, command=lambda: self.back(), width=10)
+        back_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'], bd=1, relief=SOLID,
+                             command=lambda: self.back(), width=10)
         back_button.grid(row=0, column=0, sticky='we', padx=5)
 
-        new_a = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['new_a'],
-                             bd=1, relief=SOLID, command=lambda: cu.new(self.main.root), width=10)
+        new_a = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['new_a'], bd=1, relief=SOLID,
+                       command=lambda: cu.new(self.main.root), width=10)
         new_a.grid(row=0, column=1, sticky='we', padx=5)
 
         self.main_frame.columnconfigure(0, weight=1, minsize=500)
@@ -107,10 +110,8 @@ class PStarSelector(Frame):
         else:
             raise ValueError('Prev frame isn\'t defined')
 
-
     def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
         cu.data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor - 1)
-
 
     def _pstar(self):
         self.value_entry.config(from_=2, to=cu.data.xf.Nfreqs)
@@ -122,10 +123,8 @@ class PStarSelector(Frame):
             self.kmin_label.config(
                 text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
 
-
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
-
 
     def _recalc(self):
         if self.value_entry.get():
@@ -139,19 +138,16 @@ class PStarSelector(Frame):
         cu.data.xf = xf
         self._pstar()
 
-
     def _setup_pstar(self):
         cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
         self._pstar()
-        cu.data.pstar=int(self.value_entry.get())
-
+        cu.data.pstar = int(self.value_entry.get())
 
     def _draw_graph(self):
         self.graph.graph.clear()
         self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
         self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
-
 
     def recalculate(self):
         self._setup_pstar()
@@ -161,11 +157,10 @@ class PStarSelector(Frame):
         if cu.info:
             cu.update_info(cu.info)
 
-
     def update(self):
         super().update()
 
-        self.setted=cu.data.recalc_pstar
+        self.setted = cu.data.recalc_pstar
 
         if self.setted:
             self.recalculate()

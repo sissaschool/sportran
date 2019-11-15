@@ -66,7 +66,7 @@ class FileManager(Frame):
         self.find_button.grid(row=0, column=2, padx=4, sticky='we')
 
         Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['in_frm']).grid(row=0, column=3, padx=5, sticky='we')
-        self.input_selector = ttk.Combobox(selection_frame, values=["table", "dict", "lammps"], state='readonly',
+        self.input_selector = ttk.Combobox(selection_frame, values=['table', 'dict', 'lammps'], state='readonly',
                                            width=10)
         self.input_selector.current(0)
         self.input_selector.grid(row=0, column=4, sticky='w')
@@ -100,11 +100,9 @@ class FileManager(Frame):
               font='Arial 11 bold').grid(row=0, column=0, sticky='nswe')
 
         # create the tree and scrollbars
-        self.headers = (LANGUAGES[settings.LANGUAGE]['f_nm'],
-                        LANGUAGES[settings.LANGUAGE]['f_tp'],
+        self.headers = (LANGUAGES[settings.LANGUAGE]['f_nm'], LANGUAGES[settings.LANGUAGE]['f_tp'],
                         LANGUAGES[settings.LANGUAGE]['size'])
-        self.file_list = ttk.Treeview(inner_frame, columns=self.headers,
-                                      show='headings')
+        self.file_list = ttk.Treeview(inner_frame, columns=self.headers, show='headings')
 
         ysb = ttk.Scrollbar(inner_frame, orient=VERTICAL, command=self.file_list.yview)
         self.file_list['yscroll'] = ysb.set
@@ -130,7 +128,7 @@ class FileManager(Frame):
         try:
             files = os.listdir(settings.DATA_PATH)
         except:
-            settings.DATA_PATH='./'
+            settings.DATA_PATH = './'
             files = os.listdir(settings.DATA_PATH)
 
         self.loaded_files = []
@@ -196,9 +194,7 @@ class FileManager(Frame):
         This function allow the user to search in a more accurately way the file
         by using the OS manager.
         """
-        path = fdialog.askopenfile(initialdir=os.getcwd(),
-                                  title="Select file",
-                                  filetypes=(("all files", "*.*"),))
+        path = fdialog.askopenfile(initialdir=os.getcwd(), title='Select file', filetypes=(('all files', '*.*'),))
 
         if path.name:
             for item in self.file_list.get_children():
@@ -241,7 +237,7 @@ class FileManager(Frame):
                 self.preview.config(state=DISABLED)
         except Exception as e:
             cu.log.write_log(str(e))
-            msg.showinfo(LANGUAGES[settings.LANGUAGE]["display_error"], LANGUAGES[settings.LANGUAGE]["display_error_t"])
+            msg.showinfo(LANGUAGES[settings.LANGUAGE]['display_error'], LANGUAGES[settings.LANGUAGE]['display_error_t'])
 
     def set_next_frame(self, frame):
         """
@@ -271,11 +267,13 @@ class FileManager(Frame):
                     else:
                         raise ValueError('Next frame isn\'t defined')
                 else:
-                    msg.showerror(LANGUAGES[settings.LANGUAGE]["invalid_format"], LANGUAGES[settings.LANGUAGE]["invalid_format_t"])
+                    msg.showerror(LANGUAGES[settings.LANGUAGE]['invalid_format'],
+                                  LANGUAGES[settings.LANGUAGE]['invalid_format_t'])
             else:
-                msg.showerror(LANGUAGES[settings.LANGUAGE]["file_not_exist"], LANGUAGES[settings.LANGUAGE]["file_not_exist_t"])
+                msg.showerror(LANGUAGES[settings.LANGUAGE]['file_not_exist'],
+                              LANGUAGES[settings.LANGUAGE]['file_not_exist_t'])
         else:
-            msg.showerror(LANGUAGES[settings.LANGUAGE]["no_file"], LANGUAGES[settings.LANGUAGE]["no_file_t"])
+            msg.showerror(LANGUAGES[settings.LANGUAGE]['no_file'], LANGUAGES[settings.LANGUAGE]['no_file_t'])
 
     def update(self):
         """

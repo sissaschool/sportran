@@ -274,17 +274,17 @@ def load_settings():
                     if var == 'DP':
                         settings.DATA_PATH = val
                         if not os.path.exists(settings.DATA_PATH):
-                            settings.DATA_PATH='./'
+                            settings.DATA_PATH = './'
                             #os.mkdir(settings.DATA_PATH)
                     elif var == 'OP':
                         settings.OUTPUT_PATH = val
                         if not os.path.exists(settings.OUTPUT_PATH):
-                            settings.OUTPUT_PATH='./'
+                            settings.OUTPUT_PATH = './'
                             #os.mkdir(settings.OUTPUT_PATH)
                     elif var == 'LP':
                         settings.LOG_PATH = val
                         if not os.path.exists(settings.LOG_PATH):
-                            settings.LOG_PATH='./'
+                            settings.LOG_PATH = './'
                             #os.mkdir(settings.LOG_PATH)
                     elif var == 'FS':
                         settings.FONT_SIZE = val
@@ -343,20 +343,8 @@ def load_keys(inputfile):
         raise RuntimeError('inputformat {} not handled'.format(data.inputformat))
 
 
-def load_data(inputfile,
-              input_format,
-              _selected_keys,
-              temperature=None,
-              NSTEPS=0,
-              START_STEP=0,
-              run_keyword='',
-              units=None,
-              DT_FS=None,
-              volume=None,
-              psd_filter_w=None,
-              axis_=None,
-              structurefile=None,
-              _descriptions=[]):
+def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=0, START_STEP=0, run_keyword='',
+              units=None, DT_FS=None, volume=None, psd_filter_w=None, axis_=None, structurefile=None, _descriptions=[]):
     global data
     selected_keys = _selected_keys.copy()
     descriptions = _descriptions.copy()

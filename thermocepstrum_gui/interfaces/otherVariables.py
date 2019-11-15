@@ -3,6 +3,7 @@ from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.assets import LANGUAGES
 
+
 class OtherVariables(Frame):
 
     def __init__(self, parent, main):
@@ -13,7 +14,7 @@ class OtherVariables(Frame):
         self.prev_frame = None
 
         self.main_frame = ScrollFrame(self, self)
-        self.main_frame.grid(row=0,column=0,sticky='nswe')
+        self.main_frame.grid(row=0, column=0, sticky='nswe')
 
         variable_frame = Frame(self.main_frame.viewPort)
 
@@ -35,11 +36,13 @@ class OtherVariables(Frame):
         self.temp_advertise = Label(variable_frame, text='', font='Arial 10')
         self.temp_advertise.grid(row=3, column=2, sticky='w')
 
-        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['volume']+' (angstrom^3):').grid(row=4, column=0, sticky='w')
+        Label(variable_frame,
+              text=LANGUAGES[settings.LANGUAGE]['volume'] + ' (angstrom^3):').grid(row=4, column=0, sticky='w')
         self.volume_entry = Spinbox(variable_frame, increment=1, bd=1, relief=SOLID)
         self.volume_entry.grid(row=4, column=1, padx=2, sticky='w')
 
-        Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['timestep']+' (fs):').grid(row=5, column=0, sticky='w')
+        Label(variable_frame,
+              text=LANGUAGES[settings.LANGUAGE]['timestep'] + ' (fs):').grid(row=5, column=0, sticky='w')
         self.DT_FS_entry = Spinbox(variable_frame, increment=0.1, bd=1, relief=SOLID)
         self.DT_FS_entry.grid(row=5, column=1, padx=2, sticky='w', pady=10)
 
@@ -82,50 +85,43 @@ class OtherVariables(Frame):
         if self.DT_FS_entry.get():
             DT_FS = float(self.DT_FS_entry.get())
 
-
         er = False
         msgs = []
         if temperature:
             if temperature < 0 and 'Temperature' not in cu.data.description:
-                msgs.append(LANGUAGES[settings.LANGUAGE]["temp_low"])
+                msgs.append(LANGUAGES[settings.LANGUAGE]['temp_low'])
                 er = True
         else:
-            msgs.append(LANGUAGES[settings.LANGUAGE]["temp_void"])
+            msgs.append(LANGUAGES[settings.LANGUAGE]['temp_void'])
 
         if volume:
             if volume < 0:
-                msgs.append(LANGUAGES[settings.LANGUAGE]["vol_low"])
+                msgs.append(LANGUAGES[settings.LANGUAGE]['vol_low'])
                 er = True
         else:
-            msgs.append(LANGUAGES[settings.LANGUAGE]["vol_void"])
+            msgs.append(LANGUAGES[settings.LANGUAGE]['vol_void'])
             er = True
 
         if DT_FS:
             if DT_FS < 0:
-                msgs.append(LANGUAGES[settings.LANGUAGE]["DT_low"])
+                msgs.append(LANGUAGES[settings.LANGUAGE]['DT_low'])
                 er = True
         else:
-            msgs.append(LANGUAGES[settings.LANGUAGE]["DT_void"])
+            msgs.append(LANGUAGES[settings.LANGUAGE]['DT_void'])
             er = True
 
         if psd_filter_width:
             if psd_filter_width < 0:
-                msgs.append(LANGUAGES[settings.LANGUAGE]["fw_low"])
+                msgs.append(LANGUAGES[settings.LANGUAGE]['fw_low'])
                 er = True
         else:
-            msgs.append(LANGUAGES[settings.LANGUAGE]["fw_void"])
+            msgs.append(LANGUAGES[settings.LANGUAGE]['fw_void'])
             er = True
 
         if not er:
-            cu.load_data(cu.data.CURRENT_FILE,
-                         cu.data.inputformat,
-                         _selected_keys=cu.data.keys,
-                         _descriptions=cu.data.description,
-                         temperature=temperature,
-                         units=cu.data.units,
-                         volume=volume,
-                         psd_filter_w=cu.data.psd_filter_width,
-                         DT_FS=DT_FS)
+            cu.load_data(cu.data.CURRENT_FILE, cu.data.inputformat, _selected_keys=cu.data.keys,
+                         _descriptions=cu.data.description, temperature=temperature, units=cu.data.units, volume=volume,
+                         psd_filter_w=cu.data.psd_filter_width, DT_FS=DT_FS)
 
             if self.next_frame:
                 self.main.show_frame(self.next_frame)
@@ -133,7 +129,7 @@ class OtherVariables(Frame):
                 raise ValueError('Next frame isn\'t defined')
         else:
             ermsg = '\n'.join(mser for mser in msgs)
-            msg.showerror(LANGUAGES[settings.LANGUAGE]["value_error"], ermsg)
+            msg.showerror(LANGUAGES[settings.LANGUAGE]['value_error'], ermsg)
 
     def back(self):
         if self.filter_width_entry.get():
@@ -160,13 +156,13 @@ class OtherVariables(Frame):
 
         if cu.Data.options[3] in cu.data.description:
             self.temperature_entry.config(state=DISABLED)
-            self.temp_advertise.config(text=LANGUAGES[settings.LANGUAGE]["automatic_T"], fg='red')
+            self.temp_advertise.config(text=LANGUAGES[settings.LANGUAGE]['automatic_T'], fg='red')
         else:
             self.temperature_entry.config(state=NORMAL)
             self.temp_advertise.config(text='')
 
-        if cu.data.inputformat=='dict':
-            if True : #not cu.Data.loaded:
+        if cu.data.inputformat == 'dict':
+            if True:   #not cu.Data.loaded:
                 if cu.Data.options[3] in cu.data.description:
                     temp = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[3])]]
                     if type(temp) == float:
@@ -179,12 +175,12 @@ class OtherVariables(Frame):
                 if cu.Data.options[4] in cu.data.description:
                     vol = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[4])]]
                     if type(vol) == float:
-                        cu.data.volume=vol
+                        cu.data.volume = vol
                     else:
-                        cu.data.volume=vol.mean()
+                        cu.data.volume = vol.mean()
                     self.volume_entry.config(state=DISABLED)
                 if cu.Data.options[4] in cu.data.description:
-                    cu.data.DT_FS=cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[5])]]
+                    cu.data.DT_FS = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[5])]]
                     self.DT_FS_entry.config(state=DISABLED)
 
         self.volume_entry.config(value=cu.data.volume)

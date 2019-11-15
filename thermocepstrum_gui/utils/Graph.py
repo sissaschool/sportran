@@ -26,15 +26,8 @@ class GraphManager:
         self.psd = j.psd
 
     @staticmethod
-    def GUI_plot_periodogram(x,
-                             PSD_FILTER_W=None,
-                             freq_units='thz',
-                             freq_scale=1.0,
-                             axis=None,
-                             kappa_units=True,
-                             data=None,
-                             FIGSIZE=None,
-                             **plot_kwargs):
+    def GUI_plot_periodogram(x, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
+                             data=None, FIGSIZE=None, **plot_kwargs):
         """
         Plot the periodogram.
           PSD_FILTER_W  = width of the filtering window
@@ -97,26 +90,13 @@ class GraphManager:
         axis.grid()
         return axis
 
-    def resample_current(self,
-                         x,
-                         TSKIP=None,
-                         fstar_THz=None,
-                         FILTER_W=None,
-                         plot=True,
-                         PSD_FILTER_W=None,
-                         freq_units='thz',
-                         FIGSIZE=None,
-                         axis=None,
-                         data=None):
+    def resample_current(self, x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
+                         freq_units='thz', FIGSIZE=None, axis=None, data=None):
 
         if data.changes:
             print('resampling current')
-            xf = x.resample_current(TSKIP=TSKIP,
-                                    fstar_THz=fstar_THz,
-                                    FILTER_W=FILTER_W,
-                                    plot=False,
-                                    PSD_FILTER_W=PSD_FILTER_W,
-                                    freq_units=freq_units)
+            xf = x.resample_current(TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=False,
+                                    PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units)
         else:
             print('not resampling current (data is same) {}'.format(data.changes))
             xf = data.xf
@@ -138,14 +118,8 @@ class GraphManager:
             data.xf = xf
 
     @staticmethod
-    def plot_cepstral_spectrum(x,
-                               freq_units='thz',
-                               freq_scale=1.0,
-                               axis=None,
-                               kappa_units=True,
-                               FIGSIZE=None,
-                               data=None,
-                               **plot_kwargs):
+    def plot_cepstral_spectrum(x, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None,
+                               data=None, **plot_kwargs):
         if kappa_units:
             psd_scale = 0.5 * x.kappa_scale
         else:

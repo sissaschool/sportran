@@ -1,5 +1,4 @@
 # -*- coding: future_fstrings -*-
-
 """
 --------------------------------------------
     Thermocepstrum graphic user interface
@@ -50,10 +49,10 @@ class ThermocepstrumGUI(Tk):
         ThermocepstrumGUI.root = self
 
         # Setup the default colors and font to use in the interface
-        self.option_add("*Font", "{} {}".format(settings.FONT, settings.FONT_SIZE))
-        self.option_add("*Background", "{}".format(settings.BG_COLOR))
-        self.option_add("*selectBackground", "light blue")
-        self.option_add("*selectForeground", "black")
+        self.option_add('*Font', '{} {}'.format(settings.FONT, settings.FONT_SIZE))
+        self.option_add('*Background', '{}'.format(settings.BG_COLOR))
+        self.option_add('*selectBackground', 'light blue')
+        self.option_add('*selectForeground', 'black')
 
         self.show_software_info()
 
@@ -67,10 +66,7 @@ class ThermocepstrumGUI(Tk):
         #self.tk.call('wm', 'iconphoto', self._w, window_icon)
         #self.iconbitmap(bitmap=window_icon)
         self.title('Thermocepstrum')
-        self.geometry('{}x{}+{}+{}'.format(settings.X_SIZE,
-                                           settings.Y_SIZE,
-                                           settings.X_SPACING,
-                                           settings.Y_SPACING))
+        self.geometry('{}x{}+{}+{}'.format(settings.X_SIZE, settings.Y_SIZE, settings.X_SPACING, settings.Y_SPACING))
 
         self.resizable(settings.X_RESIZE, settings.Y_RESIZE)
 
@@ -130,7 +126,7 @@ class ThermocepstrumGUI(Tk):
         print('This software is an open-source project licensed under {}'.format(METADATA['license']))
         print(METADATA['credits'])
         print('')
-        print(METADATA['description'])    # todo: Add other project infos
+        print(METADATA['description'])   # todo: Add other project infos
         print('----------------------------------------------------------')
 
     @staticmethod
