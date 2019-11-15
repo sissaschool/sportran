@@ -7,7 +7,7 @@ Symply run, after installing the package, the following command (see `command.sh
 thermocepstrum-analysis ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r
 ```
 If the package is not installed you can run this instead:
-`../../thermocepstrum/thermocepstrum/analysis.py ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r`
+`../../thermocepstrum/analysis.py ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r`
 
 The options have the following meaning:
 * `-k flux` use the columns with header `flux` as the energy flux

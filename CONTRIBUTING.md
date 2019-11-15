@@ -12,8 +12,9 @@ Here are a few guidelines to consider when contributing.
 - When you are done with a branch and want to **merge** it to `develop`, submit a *Pull request*. Unless it is a simple fix, and especially if it is a new functionality, this will help to keep the code clean and find potential bugs beforehand. Also, it will help to standardize the style.
 - Before updating the `develop` branch, make **tests**!
 - Try to make **commits** as specific as possible, and document the changes.
-- note that some files are copied inside the source tree by the script copy_readmes_in_packages.sh (it is not possible to use symbolic links to build the python package)
-- this repository has two python packages inside it: **thermocepstrum**, the full library and the command line interface, that is compatible with python 2.7 and 3.x, and **thermocepstrum_gui**, that contains the GUI only, it depends on **thermocepstrum** and it is NOT python 2.7 compatible.
+- This repository contains two python packages:
+    - **thermocepstrum**, the full library and the command line interface, that is compatible with Python 2.7 and 3.x.
+    - **thermocepstrum_gui**, that contains the GUI only, it depends on **thermocepstrum** and it is *NOT* Python 2.7 compatible.
 
 
 ## WISH LIST

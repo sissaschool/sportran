@@ -19,7 +19,7 @@ This file contains the GUI of the Thermocepstrum project developed at SISSA.
 
 from thermocepstrum_gui.interfaces import *
 from thermocepstrum_gui.utils.custom_widgets import *
-from thermocepstrum_gui.assets import ICON, METADATA, METADATAtc, LANGUAGES
+from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES
 # Verify that thermocepstrum is installed
 try:
     import thermocepstrum
@@ -120,11 +120,11 @@ class ThermocepstrumGUI(Tk):
         """
         print('------------------- Thermocepstrum GUI -------------------')
         print('')
-        print('\t\t\tGUI version: {}'.format(METADATA['version']))
-        print('\t\t\tThermocepstrum version: {}'.format(METADATAtc['version']))
+        print('\t\t\tGUI version: {}'.format(METADATA['gui_version']))
+        print('\t\t\tThermocepstrum version: {}'.format(METADATA['version']))
         print('\t\t\tDev state: {}'.format(METADATA['dev_state']))
         print('\t\t\tLast release: {}'.format(METADATA['release_date']))
-        print('\t\t\tDevelopers: {}'.format(METADATAtc['author']))
+        print('\t\t\tDevelopers: {}'.format(METADATA['author']))
         print('\t\t\tURL: {}'.format(METADATA['url']))
         print('')
         print('This software is an open-source project licensed under {}'.format(METADATA['license']))

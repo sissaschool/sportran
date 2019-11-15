@@ -28,7 +28,7 @@ import matplotlib.patches as patches
 
 from thermocepstrum_gui.core import control_unit as cu
 from thermocepstrum_gui.core import settings
-from thermocepstrum_gui.assets import ICON, METADATAtc, METADATA, LANGUAGES, README_MD, README_GUI_MD
+from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES, README_MD, README_GUI_MD
 import webbrowser
 import markdown2
 
@@ -710,10 +710,10 @@ class Version:
 
         Label(self.frame,
               text='Thermocepstrum {}: {}'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(),
-                                                  METADATAtc['version'])).grid(row=2, column=0, sticky='w', pady=5)
+                                                  METADATA['version'])).grid(row=2, column=0, sticky='w', pady=5)
 
         Label(self.frame,
-              text='GUI {}: {} ({})'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['version'],
+              text='GUI {}: {} ({})'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(), METADATA['gui_version'],
                                             METADATA['dev_state'])).grid(row=3, column=0, sticky='w')
 
         Label(self.frame, text=LANGUAGES[settings.LANGUAGE]["last_release"].format(

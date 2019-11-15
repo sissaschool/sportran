@@ -42,11 +42,11 @@
     },
     "entry_points": {
         "console_scripts": [
-            "thermocepstrum-analysis = thermocepstrum.analysis:main"
+            "thermocepstrum-analysis=thermocepstrum.analysis:main"
         ]
     },
+    "gui_version" : "0.0.2a",
     "dev_state" : "alpha",
     "release_date" : "NOT REL.",
     "credits" : "developed at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY"
-
 }
