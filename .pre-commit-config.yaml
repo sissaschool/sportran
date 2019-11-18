@@ -28,6 +28,11 @@
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
   - id: trailing-whitespace
+    exclude: >
+      (?x)^(
+        docs/.*|
+        examples/.*|
+      )$
 
 #  # prospector: collection of linters
 #  - id: prospector

@@ -229,7 +229,7 @@ Contact: lercole@sissa.it
         jdata = jfile.data
         START_STEP = 0   # reset to zero, as later we will need to read all of jdata
     elif (input_format == 'dict'):
-        jdata = np.load(inputfile,allow_pickle=True).tolist()
+        jdata = np.load(inputfile, allow_pickle=True).tolist()
     elif (input_format == 'lammps'):
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         if temperature is None:
@@ -560,7 +560,7 @@ def plt_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_
     if k_SI_max is None:
         k_SI_max = jf.dct.tau[jf.dct.aic_Kmin] * jf.kappa_scale
 
-    f, (ax2) = plt.subplots(1, 1, figsize=(3.8, 2.3))
+    f, ax2 = plt.subplots(1, 1, figsize=(3.8, 2.3))
     ax2.axvline(x=jf.dct.aic_Kmin + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
     ax2.fill_between(np.arange(jf.dct.logtau.shape[0]) + 1,\
                      (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,\
@@ -607,8 +607,7 @@ def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_ti
     if k_SI_min is None:
         k_SI_min = -k_SI_max
 
-    figure=plt.figure(figsize=(3.8, 2.3))
-    ax=figure.add_subplots()
+    figure, ax = plt.subplots(1, 1, figsize=(3.8, 2.3))
     ax.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[3], lw=1.0, zorder=1)
     ax.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[2], lw=1.0, zorder=1)
 
@@ -653,8 +652,7 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
         k_SI_max = np.max(
             jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.kappa_scale * 0.5) * 1.3
 
-    figure=plt.figure(figsize=(3.8, 2.3))
-    ax=figure.add_subplot()
+    figure, ax = plt.subplots(1, 1, figsize=(3.8, 2.3))
     ax.plot(jf.freqs_THz, jf.psd * jf.kappa_scale * 0.5, lw=0.2, c='0.8', zorder=0)
     ax.plot(jf.freqs_THz, jf.fpsd * jf.kappa_scale * 0.5, c=c[0], zorder=2)
     if j2 is not None:
