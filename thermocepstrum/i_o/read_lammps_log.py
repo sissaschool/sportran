@@ -40,7 +40,7 @@
 ###  Example script:
 ###     data = LAMMPSLogFile('lammps.log', run_keyword='PRODUCTION RUN')
 ###     data.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-###     print data.data
+###     print(data.data)
 ###
 ###     # to save data into a Numpy file:
 ###     save_hc_npz(data, ['flux'], 'lammps.data', 'flux.npz')
@@ -48,6 +48,8 @@
 
 import numpy as np
 from time import time
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 
 def is_string(string):
@@ -119,7 +121,7 @@ class LAMMPSLogFile(object):
   Example script:
      data = LAMMPSLogFile(filename, run_keyword='PRODUCTION RUN')
      data.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-     print data.data
+     print(data.data)
 
      # to save data into a Numpyz file:
      save_hc_npz(data, ['flux'], 'lammps.data', 'flux.npz')
@@ -186,7 +188,7 @@ class LAMMPSLogFile(object):
                 raise RuntimeError('Reached EOF, run_keyword was not found!')
             # check if run_keyword string is found
             if run_keyword in line:
-                print('  run_keyword found at line {:d}.'.format(nlines))
+                log.write_log('  run_keyword found at line {:d}.'.format(nlines))
                 break
         while True:
             line = self.file.readline()
@@ -196,7 +198,7 @@ class LAMMPSLogFile(object):
             values = np.array(line.split())
             # find the column headers line
             if (len(values) and (is_string(values[0])) and (values[0] == 'Step')):
-                print('  column headers found at line {:d}. Reading data...'.format(nlines))
+                log.write_log('  column headers found at line {:d}. Reading data...'.format(nlines))
                 for i in range(len(values)):
                     if group_vectors:
                         bracket = is_vector_variable(values[i])   # position of left square bracket
@@ -223,9 +225,9 @@ class LAMMPSLogFile(object):
                 self.MAX_NSTEPS -= nlines
                 break
         self.NALLCKEYS = np.concatenate(list(self.all_ckeys.values())).size
-        print(' #####################################')
-        print('  all_ckeys = ', self.all_ckeys)
-        print(' #####################################')
+        log.write_log(' #####################################')
+        log.write_log('  all_ckeys = ', self.all_ckeys)
+        log.write_log(' #####################################')
         return
 
     def _set_ckey(self, select_ckeys=None, max_vector_dim=None):
@@ -241,11 +243,11 @@ class LAMMPSLogFile(object):
                 if value is not None:
                     self.ckey[key] = value[:max_vector_dim]   # copy all indexes (up to max dimension for vectors)
                 else:
-                    print('Warning: ', key, 'key not found.')
+                    log.write_log('Warning: ', key, 'key not found.')
         if (len(self.ckey) == 0):
             raise KeyError('No ckey set. Check selected keys.')
         else:
-            print('  ckey = ', self.ckey)
+            log.write_log('  ckey = ', self.ckey)
         return
 
     def _initialize_dic(self, NSTEPS=None):
@@ -307,16 +309,16 @@ class LAMMPSLogFile(object):
         for step in range(NSTEPS):
             line = self.file.readline()
             if (len(line) == 0):   # EOF
-                print('Warning:  reached EOF.')
+                log.write_log('Warning:  reached EOF.')
                 break
             if self.endrun_keyword in line:   # end-of-run keyword
-                print('  endrun_keyword found.')
+                log.write_log('  endrun_keyword found.')
                 step -= 1
                 break
             values = np.array(line.split())
             if (values.size != self.NALLCKEYS):
-                print('Warning:  line with wrong number of columns found. Stopping here...')
-                print(line)
+                log.write_log('Warning:  line with wrong number of columns found. Stopping here...')
+                log.write_log(line)
                 break
             for key, idx in self.ckey.items():   # save the selected columns
                 self.data[key][step, :] = np.array(list(map(float, values[idx])))
@@ -325,29 +327,30 @@ class LAMMPSLogFile(object):
                     progbar.value = float(step + 1) / NSTEPS * 100.
                     progbar.description = '{:6.2f}%'.format(progbar.value)
                 else:
-                    print('    step = {:9d} - {:6.2f}% completed'.format(step + 1, float(step + 1) / NSTEPS * 100.))
+                    log.write_log('    step = {:9d} - {:6.2f}% completed'.format(step + 1,
+                                                                                 float(step + 1) / NSTEPS * 100.))
 
         if self._GUI:
             progbar.close()
         # check number of steps read, keep an even number of steps
         if (step + 1 < NSTEPS):
             if (step == 0):
-                print('WARNING:  no step read.')
+                log.write_log('WARNING:  no step read.')
                 return
             else:
                 if (NSTEPS != self.MAX_NSTEPS):   # if NSTEPS was specified
-                    print('Warning:  less steps read.')
+                    log.write_log('Warning:  less steps read.')
                 NSTEPS = step + 1   # the correct number of read steps
         # even the number of steps
         if even_NSTEPS:
             if (NSTEPS % 2 == 1):
                 NSTEPS = NSTEPS - 1
-                print('  Retaining an even number of steps (even_NSTEPS=True).')
+                log.write_log('  Retaining an even number of steps (even_NSTEPS=True).')
         for key, idx in self.ckey.items():   # free the memory not used
             self.data[key] = self.data[key][:NSTEPS, :]
-        print('  ( %d ) steps read.' % (NSTEPS))
+        log.write_log('  ( %d ) steps read.' % (NSTEPS))
         self.NSTEPS = NSTEPS
-        print('DONE.  Elapsed time: ', time() - start_time, 'seconds')
+        log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
         return self.data
 
 
@@ -399,8 +402,8 @@ def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilena
     if 'Time' in lammpslogfile.ckey:
         dic['DT_TIMEUNITS'] = lammpslogfile.data['Time'][1, 0] - lammpslogfile.data['Time'][0, 0]
 
-    print("These keys will be saved in file \"{:}\" :".format(outfilename))
-    print(' ', list(dic.keys()))
+    log.write_log('These keys will be saved in file \"{:}\" :'.format(outfilename))
+    log.write_log(' ', list(dic.keys()))
     np.savez(outfilename, **dic)
     return
 

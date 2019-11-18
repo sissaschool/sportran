@@ -22,6 +22,11 @@ except ImportError:
     except ImportError:
         raise ImportError('Cannot locate thermocepstrum.')
 
+# import log-print method
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
+log.set_method('bash')
+
 #try to import plotstyle (not fundamental)
 try:
     import pkg_resources
@@ -51,9 +56,9 @@ def main():
 This script performs the cepstral analysis. It outputs some results in the stdout and log file, and plots in pdf format.
 
 INPUT FORMAT:
- - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the lammps compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
+ - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the LAMMPS compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
  - dict   : a Numpy binary file containing a dictionary (e.g. obtained from the script i_o/read_lammps_log.py)
- - lammps : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
+ - LAMMPS : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
 The average temperature is computed if a column with the header 'Temp' is found; otherwise you have to specify it.
 You must provide the name of the heat flux compute. You can also provide additional currents if your system is a multi-component fluid.
 (Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
@@ -92,7 +97,8 @@ This software was written by Loris Ercole and extended by Riccardo Bertossa to h
 
 Please cite these references:
  - Ercole, Marcolongo, Baroni, Sci. Rep. 7, 15835 (2017), https://doi.org/10.1038/s41598-017-15843-2
- - for the multi-component analysis:  Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
+ - Bertossa, Grasselli, Ercole, Baroni Phys. Rev. Lett. 122, 255901 (2019), https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.255901
+ - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
 
 https://github.com/lorisercole/thermocepstrum
 Contact: lercole@sissa.it
@@ -101,7 +107,7 @@ Contact: lercole@sissa.it
     # yapf: disable
     parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument( 'inputfile', type=str, help='input file to read (default format: Table)' )
-    parser.add_argument( '-t', '--timestep', type=float, required=True, help='Time step of the printed data (fs)' )
+    parser.add_argument( '-t', '--timestep', type=float, required=True, help='Time step of the log.write_loged data (fs)' )
     parser.add_argument( '-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux' )
     parser.add_argument( '-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)' )
     parser.add_argument( '-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)' )
@@ -204,11 +210,11 @@ Contact: lercole@sissa.it
     selected_keys.extend(j2_keys)
 
     # Write some parameters
-    print(' Input file ({}):      {}'.format(input_format, inputfile))
+    log.write_log(' Input file ({}):      {}'.format(input_format, inputfile))
     logfile.write(' Input file ({}):      {}\n'.format(input_format, inputfile))
-    print(' Units:      {}'.format(units))
+    log.write_log(' Units:      {}'.format(units))
     logfile.write(' Units:      {}\n'.format(units))
-    print(' Time step:      {} fs'.format(DT_FS))
+    log.write_log(' Time step:      {} fs'.format(DT_FS))
     logfile.write(' Time step:      {} fs\n'.format(DT_FS))
 
     ## Read data
@@ -223,7 +229,7 @@ Contact: lercole@sissa.it
         jdata = jfile.data
         START_STEP = 0   # reset to zero, as later we will need to read all of jdata
     elif (input_format == 'dict'):
-        jdata = np.load(inputfile)
+        jdata = np.load(inputfile,allow_pickle=True).tolist()
     elif (input_format == 'lammps'):
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         if temperature is None:
@@ -236,7 +242,7 @@ Contact: lercole@sissa.it
         raise NotImplemented('input format not implemented.')
 
     if (NSPLIT > 1):
-        print('Splitting input data time series into {:d} segments...'.format(NSPLIT))
+        log.write_log('Splitting input data time series into {:d} segments...'.format(NSPLIT))
         logfile.write('Splitting input data time series into {:d} segments...\n'.format(NSPLIT))
         data_size = jdata[selected_keys[0]].shape[0]
         n_proc = 1
@@ -254,7 +260,7 @@ Contact: lercole@sissa.it
                 newdata = value[:steps_start].reshape((NSPLIT, data_size / NSPLIT, n_proc)).transpose(
                     (1, 0, 2)).reshape((data_size / NSPLIT, NSPLIT * n_proc))
                 jdata[key] = newdata[:steps_end]
-        print('New shape of input data: {}'.format(jdata[selected_keys[0]].shape))
+        log.write_log('New shape of input data: {}'.format(jdata[selected_keys[0]].shape))
         logfile.write('New shape of input data: {}\n'.format(jdata[selected_keys[0]].shape))
 
     if (NSTEPS == 0):
@@ -267,50 +273,50 @@ Contact: lercole@sissa.it
             temperature_std = np.std(jdata['Temp'])   # this is wrong (needs block average)
             if 'Temp' in selected_keys:
                 selected_keys.remove('Temp')
-            print(' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std))
+            log.write_log(' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std))
             logfile.write(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
         elif 'Temp_ave' in jdata:
             temperature = jdata['Temp_ave']
             if 'Temp_std' in jdata:
                 temperature_std = jdata['Temp_std']
-                print(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
+                log.write_log(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
                 logfile.write(' Mean Temperature (file):      {} K  +/-  {}\n'.format(temperature, temperature_std))
             else:
-                print(' Mean Temperature (file):      {} K'.format(temperature))
+                log.write_log(' Mean Temperature (file):      {} K'.format(temperature))
                 logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
         else:
             raise RuntimeError('No Temp key found. Please provide Temperature (-T).')
     else:
-        print(' Mean Temperature (input):  {} K'.format(temperature))
+        log.write_log(' Mean Temperature (input):  {} K'.format(temperature))
         logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
 
     ## Define Volume
     if volume is None:
         if structurefile is not None:
             _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
-            print(' Volume (structure file):    {} A^3'.format(volume))
+            log.write_log(' Volume (structure file):    {} A^3'.format(volume))
             logfile.write(' Volume (structure file):    {} A^3'.format(volume))
         elif 'Volume' in jdata:
             volume = jdata['Volume']
-            print(' Volume (file):    {} A^3'.format(volume))
+            log.write_log(' Volume (file):    {} A^3'.format(volume))
             logfile.write(' Volume (file):    {} A^3\n'.format(volume))
         else:
             raise RuntimeError('No Volume key found. Please provide Volume (-V) of structure file (--structure).')
     else:
-        print(' Volume (input):  {} A^3'.format(volume))
+        log.write_log(' Volume (input):  {} A^3'.format(volume))
         logfile.write(' Volume (input):  {} A^3\n'.format(volume))
 
-    print(' Time step (input):  {} fs'.format(DT_FS))
+    log.write_log(' Time step (input):  {} fs'.format(DT_FS))
     logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
     ### Compute Pressure (optional)
     #if 'Press' in jdata:
     #   pressure = np.mean(jdata['Press'])
-    #   print ' Mean Pressure (computed):  {} K'.format(pressure)
+    #   log.write_log ' Mean Pressure (computed):  {} K'.format(pressure)
     #   logfile.write(' Mean Pressure (computed):  {} K'.format(pressure))
 
     ## Define currents
-    print(selected_keys, jindex)
+    log.write_log(selected_keys, jindex)
     if jindex is None:
         currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in selected_keys])
     else:
@@ -321,21 +327,21 @@ Contact: lercole@sissa.it
                 jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] -
                 jdata[key][START_STEP:(START_STEP + NSTEPS), sindex] for key in selected_keys
             ])
-    print('  currents shape is {}'.format(currents.shape))
+    log.write_log('  currents shape is {}'.format(currents.shape))
     logfile.write('  currents shape is {}\n'.format(currents.shape))
-    print('snippet:')
-    print(currents)
+    log.write_log('snippet:')
+    log.write_log(currents)
 
     # create HeatCurrent object
     j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
 
-    print(' Number of currents = {}'.format(ncurrents))
+    log.write_log(' Number of currents = {}'.format(ncurrents))
     logfile.write(' Number of currrents = {}\n'.format(ncurrents))
-    print(' Number of components = {}'.format(j.N_COMPONENTS))
+    log.write_log(' Number of components = {}'.format(j.N_COMPONENTS))
     logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
-    print(' kappa_scale = {}'.format(j.kappa_scale))
+    log.write_log(' kappa_scale = {}'.format(j.kappa_scale))
     logfile.write(' kappa_scale = {}\n'.format(j.kappa_scale))
-    print(' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz))
+    log.write_log(' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz))
     logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
     ################################
@@ -525,10 +531,10 @@ Contact: lercole@sissa.it
         #conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
         #
         #if units=='metal':
-        #    print 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
+        #    log.write_log 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
         #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
         #elif units=='real':
-        #    print 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
+        #    log.write_log 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
         #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
         #conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
         #conv_fact.close()
@@ -601,14 +607,15 @@ def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_ti
     if k_SI_min is None:
         k_SI_min = -k_SI_max
 
-    plt.figure(figsize=(3.8, 2.3))
-    plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[3], lw=1.0, zorder=1)
-    plt.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[2], lw=1.0, zorder=1)
+    figure=plt.figure(figsize=(3.8, 2.3))
+    ax=figure.add_subplots()
+    ax.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[3], lw=1.0, zorder=1)
+    ax.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[2], lw=1.0, zorder=1)
 
-    plt.ylim([k_SI_min, k_SI_max])
-    plt.xlim([0, f_THz_max])
-    plt.xlabel(r'$\omega/2\pi$ (THz)')
-    plt.ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
+    ax.set_ylim([k_SI_min, k_SI_max])
+    ax.set_xlim([0, f_THz_max])
+    ax.set_xlabel(r'$\omega/2\pi$ (THz)')
+    ax.set_ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
 
     if f_tick is None:
         dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
@@ -621,10 +628,10 @@ def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_ti
         dy1 = k_tick
         dy2 = dy1 / 2
 
-    plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
-    plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
-    plt.axes().yaxis.set_major_locator(MultipleLocator(dy1))
-    plt.axes().yaxis.set_minor_locator(MultipleLocator(dy2))
+    ax.xaxis.set_major_locator(MultipleLocator(dx1))
+    ax.xaxis.set_minor_locator(MultipleLocator(dx2))
+    ax.yaxis.set_major_locator(MultipleLocator(dy1))
+    ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
 
 def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
@@ -646,9 +653,10 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
         k_SI_max = np.max(
             jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.kappa_scale * 0.5) * 1.3
 
-    plt.figure(figsize=(3.8, 2.3))
-    plt.plot(jf.freqs_THz, jf.psd * jf.kappa_scale * 0.5, lw=0.2, c='0.8', zorder=0)
-    plt.plot(jf.freqs_THz, jf.fpsd * jf.kappa_scale * 0.5, c=c[0], zorder=2)
+    figure=plt.figure(figsize=(3.8, 2.3))
+    ax=figure.add_subplot()
+    ax.plot(jf.freqs_THz, jf.psd * jf.kappa_scale * 0.5, lw=0.2, c='0.8', zorder=0)
+    ax.plot(jf.freqs_THz, jf.fpsd * jf.kappa_scale * 0.5, c=c[0], zorder=2)
     if j2 is not None:
         plt.axvline(x=j2.Nyquist_f_THz, ls='--', c='k', dashes=(1.4, 0.6), zorder=3)
     if j2pl is not None:
@@ -658,10 +666,10 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
     except:
         pass
 
-    plt.ylim([0, k_SI_max])
-    plt.xlim([0, f_THz_max])
-    plt.xlabel(r'$\omega/2\pi$ (THz)')
-    plt.ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
+    ax.set_ylim([0, k_SI_max])
+    ax.set_xlim([0, f_THz_max])
+    ax.set_xlabel(r'$\omega/2\pi$ (THz)')
+    ax.set_ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
 
     if f_tick is None:
         dx1, dx2 = n_tick_in_range(0, f_THz_max, 5)
@@ -674,10 +682,10 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
         dy1 = k_tick
         dy2 = dy1 / 2
 
-    plt.axes().xaxis.set_major_locator(MultipleLocator(dx1))
-    plt.axes().xaxis.set_minor_locator(MultipleLocator(dx2))
-    plt.axes().yaxis.set_major_locator(MultipleLocator(dy1))
-    plt.axes().yaxis.set_minor_locator(MultipleLocator(dy2))
+    ax.xaxis.set_major_locator(MultipleLocator(dx1))
+    ax.xaxis.set_minor_locator(MultipleLocator(dx2))
+    ax.yaxis.set_major_locator(MultipleLocator(dy1))
+    ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
 
 def n_tick_in_range(beg, end, n):

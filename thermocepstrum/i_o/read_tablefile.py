@@ -7,7 +7,7 @@
 ###  a package that reads a table-style file and organizes it into a dictionary according to the column headers.
 ###  LAMMPS-style vector variables header are grouped together (only if group_vector = True).
 ###  If the name starts with "c_" or "v_", this is stripped away.
-###    e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux0' key
+###    e.g.    c_flux[0] c_flux[1] c_flux[2]  -->  placed in 'flux' key
 ###  Comments lines are ignored.
 ###
 ###  Lines are read SEQUENTIALLY with the method read_datalines.
@@ -30,11 +30,13 @@
 ###   example:
 ###      current = TableFile(filename)
 ###      current.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-###      print current.data
+###      print(current.data)
 ################################################################################
 
 import numpy as np
 from time import time
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
 
 
 def is_string(string):
@@ -77,7 +79,7 @@ class TableFile(object):
     Example:
       current = TableFile(filename)
       current.read_datalines(NSTEPS=100, select_ckeys=['Step', 'Temp', 'flux'])
-      print current.data
+      print(current.data)
 
     Variables (columns) are organized into a dictionary according to the column headers.
     LAMMPS-style vector variables header are grouped together (only if group_vector = True).
@@ -119,7 +121,7 @@ class TableFile(object):
         self._read_ckeys(group_vectors)
         self.ckey = None
         self.MAX_NSTEPS = data_length(self.filename)
-        print('Data length = ', self.MAX_NSTEPS)
+        log.write_log('Data length = ', self.MAX_NSTEPS)
         return
 
     def __repr__(self):
@@ -178,10 +180,10 @@ class TableFile(object):
                 break
             else:
                 self.header += line
-        print(self.header)
-        print(' #####################################')
-        print('  all_ckeys = ', self.all_ckeys)
-        print(' #####################################')
+        log.write_log(self.header)
+        log.write_log(' #####################################')
+        log.write_log('  all_ckeys = ', self.all_ckeys)
+        log.write_log(' #####################################')
         return
 
     def _set_ckey(self, select_ckeys=None, max_vector_dim=None):
@@ -197,11 +199,11 @@ class TableFile(object):
                 if value is not None:
                     self.ckey[key] = value[:max_vector_dim]   # copy all indexes (up to max dimension for vectors)
                 else:
-                    print('Warning: ', key, 'key not found.')
+                    log.write_log('Warning: ', key, 'key not found.')
         if (len(self.ckey) == 0):
             raise KeyError('No ckey set. Check selected keys.')
         else:
-            print('  ckey = ', self.ckey)
+            log.write_log('  ckey = ', self.ckey)
         return
 
     def _initialize_dic(self, NSTEPS=None):
@@ -259,7 +261,7 @@ class TableFile(object):
         for step in range(NSTEPS):
             line = self.file.readline()
             if len(line) == 0:   # EOF
-                print('Warning:  reached EOF.')
+                log.write_log('Warning:  reached EOF.')
                 break
             values = np.array(line.split())
             for key, idx in self.ckey.items():   # save the selected columns
@@ -269,24 +271,25 @@ class TableFile(object):
                     progbar.value = float(step + 1) / NSTEPS * 100.
                     progbar.description = '{:6.2f}%'.format(progbar.value)
                 else:
-                    print('    step = {:9d} - {:6.2f}% completed'.format(step + 1, float(step + 1) / NSTEPS * 100.))
+                    log.write_log('    step = {:9d} - {:6.2f}% completed'.format(step + 1,
+                                                                                 float(step + 1) / NSTEPS * 100.))
 
         if self._GUI:
             progbar.close()
         # check number of steps read, keep an even number of steps
         if (step + 1 < self.NSTEPS):
             if (step == 0):
-                print('WARNING:  no step read.')
+                log.write_log('WARNING:  no step read.')
                 return
             else:
-                print('Warning:  less steps read.')
+                log.write_log('Warning:  less steps read.')
                 self.NSTEPS = step + 1
         if even_NSTEPS:
             if (NSTEPS % 2 == 1):
                 NSTEPS = NSTEPS - 1
         for key, idx in self.ckey.items():   # free memory not used
             self.data[key] = self.data[key][:NSTEPS, :]
-        print('  ( %d ) steps read.' % (NSTEPS))
+        log.write_log('  ( %d ) steps read.' % (NSTEPS))
         self.NSTEPS = NSTEPS
-        print('DONE.  Elapsed time: ', time() - start_time, 'seconds')
+        log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
         return self.data
