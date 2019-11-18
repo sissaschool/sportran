@@ -20,7 +20,7 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
 #### only cepstral analysis (command line interface)
  - Python 2.7 or 3.x
  - numpy
- - ncipy
+ - scipy
  - matplotlib
 #### graphical user interface
  - all the requirements of cepstral analysis
