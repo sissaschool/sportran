@@ -109,7 +109,7 @@ class HeatCurrent(MDSample):
 
     @staticmethod
     def get_units_list():
-        return ['metal','real','qepw','gpumd','dlpoly']
+        return ['metal', 'real', 'qepw', 'gpumd', 'dlpoly']
 
     def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
         """
@@ -512,12 +512,10 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
             figure, ax = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         else:
             ax = axes
-        ax[0].errorbar(FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf],
-                       yerr=[xff.kappa_Kmin_std for xff in xf],
+        ax[0].errorbar(FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr=[xff.kappa_Kmin_std for xff in xf],
                        **plot_kwargs)
         ax[1].errorbar(FSTAR_THZ_LIST, [xff.dct.logtau_Kmin for xff in xf],
-                       yerr=[xff.dct.logtau_std_Kmin for xff in xf],
-                       **plot_kwargs)
+                       yerr=[xff.dct.logtau_std_Kmin for xff in xf], **plot_kwargs)
         # ax[0].plot(x.freqs_THz, x.fpsd,    **plot_kwargs)
         # ax[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
         ax[0].xaxis.set_ticks_position('top')

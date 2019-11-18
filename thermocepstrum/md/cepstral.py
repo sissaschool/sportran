@@ -243,11 +243,7 @@ class CosFilter(object):
         self.p_aic_Kave, self.p_aic_Kstd = grid_statistics(np.arange(NF), self.p_aic)
         return
 
-    def compute_logtau_density(self,
-                               method='ba',
-                               only_stats=False,
-                               density_grid=None,
-                               grid_size=1000,
+    def compute_logtau_density(self, method='ba', only_stats=False, density_grid=None, grid_size=1000,
                                correct_mean=True):
         if self.p_aic is None:
             raise ValueError('No P_AIC defined.')

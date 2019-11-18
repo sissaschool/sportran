@@ -1,13 +1,14 @@
 # thermocepstrum
 Code to compute thermal conductivity through cepstral analysis of heat flux time series, as described in papers:
- - [Ercole, Marcolongo, Baroni, Sci. Rep. 7, 15835 (2017)](https://doi.org/10.1038/s41598-017-15843-2),
- - (multicomponent systems) [Bertossa, Grasselli, Ercole, Baroni Phys. Rev. Lett. 122, 255901 (2019)](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.255901),
- - [Baroni, Bertossa, Ercole, Grasselli, Marcolongo](https://arxiv.org/abs/1802.08006),
- 
-**Acknowledgment**  The development of this software is part of the scientific program of the EU MaX Centre of Excellence for Supercomputing Applications (Grant No. 676598) and has been partly funded through it.
+
+ - (cepstral analysis) [Ercole, Marcolongo, Baroni, *Sci. Rep.* **7**, 15835 (2017)](https://doi.org/10.1038/s41598-017-15843-2)
+ - (multicomponent systems) [Bertossa, Grasselli, Ercole, Baroni, *Phys. Rev. Lett.* **122**, 255901 (2019)](https://doi.org/10.1103/PhysRevLett.122.255901) ([arXiv](https://arxiv.org/abs/1808.03341))
+ - (review) [Baroni, Bertossa, Ercole, Grasselli, Marcolongo, *Handbook of Materials Modeling* (2018)](https://doi.org/10.1007/978-3-319-50257-1_12-1) ([arXiv](https://arxiv.org/abs/1802.08006))
+
+**Acknowledgment**  The development of this software is part of the scientific program of the EU MaX Centre of Excellence for Supercomputing Applications (Grant No. 676598, 824143) and has been partly funded through it.
 
 ### Usage
-There is a [**GUI**](README_GUI.md) that you can try after pip-installing everything.
+There is a [**GUI**](README_GUI.md) that you can try after installing everything (only Python 3).
 
 The code can be used as a **library**, for example in a Jupyter notebook.
 In the [`examples`](examples/) folder you can find some examples.
