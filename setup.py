@@ -7,11 +7,11 @@ import sys
 import json
 
 GUI_dependencies = [
-        "future-fstrings",
-        "markdown2",
-        "pillow>=5.4.0",
-        "tk-html-widgets",
-        "uncertainties"
+        'future-fstrings>=0.1.0',
+        'markdown2>=2.0.0',
+        'pillow>=5.4.0',
+        'tk-html-widgets>=0.3.0',
+        'uncertainties>=2.4'
 ]
 
 if sys.version_info[0] == 2:
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     if INSTALL_GUI:
         exclude_packages = []
         SETUP_JSON['install_requires'] += GUI_dependencies
-        SETUP_JSON['entry_points']['console_scripts'] += ["thermocepstrum-gui = thermocepstrum_gui.main:run"]
+        SETUP_JSON['entry_points']['console_scripts'] += ['thermocepstrum-gui = thermocepstrum_gui.main:run']
         with open(path.join(THIS_FOLDER, 'thermocepstrum/metadata.json'), 'w') as fh:
            json.dump(SETUP_JSON, fh)
     else:
@@ -43,8 +43,4 @@ if __name__ == '__main__':
           packages=find_packages(exclude=exclude_packages),
           long_description=long_description,
           long_description_content_type='text/markdown',
-#          setup_requires=['reentry'],
           **SETUP_JSON)
-
-# https://packaging.python.org/guides/distributing-packages-using-setuptools/#setup-args
-# https://setuptools.readthedocs.io/en/latest/setuptools.html#including-data-files
