@@ -94,8 +94,7 @@ class MDBlocks(object):
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor, normalization=self.BLOCK_SIZE)
             else:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS)
-                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd,
-                                                    aic_type=aic_type,
+                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor,
                                                     normalization=self.BLOCK_SIZE)   # theory_var=None
 
@@ -138,17 +137,14 @@ class MDBlocks(object):
 
         for L in range(self.N_BLOCKS):
             if self.MULTI_COMPONENT:
-                self.block[L].compute_kappa(other=other.block[L],
-                                            DT=self.TSKIP,
-                                            DT_FS=self.DT_FS,
+                self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP, DT_FS=self.DT_FS,
                                             average_components=True)   #different method call!
                 self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)#, normalization=self.BLOCK_SIZE) #removed (personal comunication with Loris)
             else:
                 self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP,
                                             DT_FS=self.DT_FS)   #different method call!
-                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd,
-                                                    aic_type=aic_type,
+                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor)
 
             self.block[L].dct.scan_filter_tau()
@@ -422,10 +418,9 @@ class MDBlocks(object):
         self.slogpsd_h_yedges = np.linspace(YEDGE1, YEDGE2, NYBINS + 1)
         self.slogpsd_h = np.zeros((self.BLOCK_NFREQS / XBINW, NYBINS))
         for f in range(self.BLOCK_NFREQS / XBINW):
-            self.slogpsd_h[f, :], self.slogpsd_h_yedges = np.histogram(np.transpose(
-                list(self.slogpsd())[f * XBINW:(f + 1) * XBINW][:]).flatten(),
-                                                                       bins=self.slogpsd_h_yedges,
-                                                                       density=True)
+            self.slogpsd_h[f, :], self.slogpsd_h_yedges = np.histogram(
+                np.transpose(list(self.slogpsd())[f * XBINW:(f + 1) * XBINW][:]).flatten(), bins=self.slogpsd_h_yedges,
+                density=True)
         self.slogpsd_h = self.slogpsd_h.T
         return
 
@@ -435,9 +430,8 @@ class MDBlocks(object):
         self.spsd_h_yedges = np.linspace(YEDGE1, YEDGE2, NYBINS + 1)
         self.spsd_h = np.zeros((self.BLOCK_NFREQS / XBINW, NYBINS))
         for f in range(self.BLOCK_NFREQS / XBINW):
-            self.spsd_h[f, :], self.spsd_h_yedges = np.histogram(np.transpose(
-                list(self.spsd())[f * XBINW:(f + 1) * XBINW][:]).flatten(),
-                                                                 bins=self.spsd_h_yedges,
-                                                                 density=True)
+            self.spsd_h[f, :], self.spsd_h_yedges = np.histogram(
+                np.transpose(list(self.spsd())[f * XBINW:(f + 1) * XBINW][:]).flatten(), bins=self.spsd_h_yedges,
+                density=True)
         self.spsd_h = self.spsd_h.T
         return

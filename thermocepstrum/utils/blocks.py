@@ -263,12 +263,7 @@ def main():
         pdf.savefig(bbox_inches='tight', pad_inches=0.0)
         plt.close()
 
-        plt_psd_with_zoom(psd,
-                          k_00=True,
-                          f_THz_max=max_THz,
-                          nyq=nyq,
-                          k_SI_max=k_SI_max,
-                          inset_maxTHz=zmax_THz,
+        plt_psd_with_zoom(psd, k_00=True, f_THz_max=max_THz, nyq=nyq, k_SI_max=k_SI_max, inset_maxTHz=zmax_THz,
                           inset_maxk=zk_SI_max)
         pdf.savefig(bbox_inches='tight', pad_inches=0.0)
         plt.close()
@@ -290,12 +285,7 @@ def main():
         pdf.savefig(bbox_inches='tight', pad_inches=0.0)
         plt.close()
 
-        plt_psd_with_zoom(psd,
-                          k_00=True,
-                          f_THz_max=max_THz,
-                          nyq=nyq,
-                          k_SI_max=k_SI_max,
-                          inset_maxTHz=zmax_THz,
+        plt_psd_with_zoom(psd, k_00=True, f_THz_max=max_THz, nyq=nyq, k_SI_max=k_SI_max, inset_maxTHz=zmax_THz,
                           inset_maxk=zk_SI_max)
         pdf.savefig(bbox_inches='tight', pad_inches=0.0)
         plt.close()
@@ -317,12 +307,7 @@ def main():
         pdf.savefig(bbox_inches='tight', pad_inches=0.0)
         plt.close()
 
-        plt_psd_with_zoom(psd,
-                          k_00=True,
-                          f_THz_max=max_THz,
-                          nyq=nyq,
-                          k_SI_max=k_SI_max,
-                          inset_maxTHz=zmax_THz,
+        plt_psd_with_zoom(psd, k_00=True, f_THz_max=max_THz, nyq=nyq, k_SI_max=k_SI_max, inset_maxTHz=zmax_THz,
                           inset_maxk=zk_SI_max)
         pdf.savefig(bbox_inches='tight', pad_inches=0.0)
         plt.close()
@@ -435,14 +420,7 @@ def plt_hist_single_psd(data1, dof, nbins=None):
     return ks_0
 
 
-def plt_psd_with_zoom(jf,
-                      j2=None,
-                      j2pl=None,
-                      f_THz_max=None,
-                      k_SI_max=None,
-                      k_00=False,
-                      nyq=None,
-                      inset_maxTHz=None,
+def plt_psd_with_zoom(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_00=False, nyq=None, inset_maxTHz=None,
                       inset_maxk=None):
     #plt.axes([0,1,0,1])
     fig_r, ax0 = plt_psd(jf, j2, j2pl, f_THz_max, k_SI_max, k_00, nyq)
@@ -455,13 +433,8 @@ def plt_psd_with_zoom(jf,
     f_y2 = 1.35
     log.write_log(inv.transform((coord_f[0] * f_x, coord_f[1] * f_y)))
     ax0.add_patch(
-        matplotlib.patches.Rectangle((coord_f[0] * f_x, coord_f[1] * f_y),
-                                     coord_f[2] * f_x2,
-                                     coord_f[3] * f_y2,
-                                     fill=True,
-                                     color='White',
-                                     visible=True,
-                                     transform=inv))
+        matplotlib.patches.Rectangle((coord_f[0] * f_x, coord_f[1] * f_y), coord_f[2] * f_x2, coord_f[3] * f_y2,
+                                     fill=True, color='White', visible=True, transform=inv))
     #plt.box()
     plt_psd(jf, j2, j2pl, inset_maxTHz, inset_maxk, k_00, nyq, False, axes=ax)
 

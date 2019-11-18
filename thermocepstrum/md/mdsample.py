@@ -97,9 +97,9 @@ class MDSample(object):
 
     def initialize_traj(self, array):
         if array is not None:
-            if array.shape[0] % 2 == 1 :
+            if array.shape[0] % 2 == 1:
                 self.traj = np.array(array[1:], dtype=float)
-                print ("trajectory has an odd number of points. Removing the first one.")
+                print('trajectory has an odd number of points. Removing the first one.')
             else:
                 self.traj = np.array(array, dtype=float)
             self.N = self.traj.shape[0]
