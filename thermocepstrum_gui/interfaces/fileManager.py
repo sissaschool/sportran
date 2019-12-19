@@ -195,7 +195,8 @@ class FileManager(Frame):
         by using the OS manager.
         """
         path = fdialog.askopenfile(initialdir=os.getcwd(), title='Select file', filetypes=(('all files', '*.*'),))
-
+        if path == None:
+            return
         if path.name:
             for item in self.file_list.get_children():
                 self.file_list.delete(item)
@@ -215,7 +216,7 @@ class FileManager(Frame):
         """
 
         # Read the file, only if format is not dict
-        if self.input_selector.get() != 'dict': 
+        if self.input_selector.get() != 'dict':
             try:
                 with open(path, 'r') as file:
                     lines = file.readlines()[0:int(settings.PREVIEW_LINES)]
@@ -238,7 +239,12 @@ class FileManager(Frame):
                     self.preview.config(state=DISABLED)
             except Exception as e:
                 cu.log.write_log(str(e))
-                msg.showinfo(LANGUAGES[settings.LANGUAGE]['display_error'], LANGUAGES[settings.LANGUAGE]['display_error_t'])
+                msg.showinfo(LANGUAGES[settings.LANGUAGE]['display_error'],
+                             LANGUAGES[settings.LANGUAGE]['display_error_t'])
+                set_to_dict = msg.askyesno(LANGUAGES[settings.LANGUAGE]['display_error'],
+                                           LANGUAGES[settings.LANGUAGE]['swich_to_dict_t'])
+                if set_to_dict == True:
+                    self.input_selector.current(1)
 
     def set_next_frame(self, frame):
         """
