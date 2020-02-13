@@ -5,6 +5,7 @@ from thermocepstrum.utils.loadAfterPlt import plt
 
 from .tools import integrate_acf, runavefilter
 from scipy.signal import periodogram
+from scipy.interpolate import interp1d
 from .acf import acovf
 
 
@@ -384,6 +385,97 @@ class MDSample(object):
         self.psd_power = np.trapz(self.psd)   # one-side PSD power
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
             self.filter_psd(FILTER_WINDOW_WIDTH)
+        return
+		
+		##################################################################################################3
+		##################################################################################################3
+		##################################################################################################3
+		##################################################################################################3
+		##################################################################################################3
+		
+    def hz2mel_rec(self, hz, n=1):
+        """Convert a value in Hertz to Mels
+        
+        :param hz: a value in Hz. This can also be a numpy array, conversion proceeds element-wise.
+        :returns: a value in Mels. If an array was passed in, an identical sized array is returned.
+        """
+        a = self.mel_scale
+        x = hz
+        for i in range(n):
+            x = a * np.log(1+x/a)/np.log(2)
+        return x 
+        
+        
+    def mel2hz_rec(self, mel, n=1):
+        """Convert a value in Mels to Hertz
+     
+        :param mel: a value in Mels. This can also be a numpy array, conversion proceeds element-wise.
+        :returns: a value in Hertz. If an array was passed in, an identical sized array is returned.
+        """
+        a = self.mel_scale
+        x = mel
+        for i in range(n):
+            x = a*(np.exp(np.log(2)*x/(a))-1)
+        return x
+
+    def mel_filter(self, nfilt=None, samplerate=16000, lowfreq=0, highfreq=None, axis=0, nrec=1):
+        
+        arr = self.psd
+        
+        dim = list(arr.shape)
+        #dim[axis] = nfilt
+        dim[axis] = nfilt+2
+        out = np.zeros(tuple(dim))
+        
+        highfreq= highfreq or samplerate / 2
+        assert highfreq <= samplerate / 2, "highfreq is greater than samplerate/2"
+        
+        # compute points evenly spaced in mels
+        lowmel = self.hz2mel_rec(lowfreq, nrec)
+        highmel = self.hz2mel_rec(highfreq, nrec)
+        melpoints = np.linspace(lowmel,highmel,nfilt+2)
+        
+        nfft = arr.shape[axis]
+        
+        bins = np.floor(2*nfft*self.mel2hz_rec(melpoints, nrec)/samplerate)
+        
+        for j in range(0, nfilt):
+            for i in range(int(bins[j]), int(bins[j+1])):
+                fb = (i - bins[j]) / (bins[j+1]-bins[j])
+                #out[j] += fb*arr[i]
+                out[j+1] += fb*arr[i]
+            for i in range(int(bins[j+1]), int(bins[j+2])):
+                fb = (bins[j+2]-i) / (bins[j+2]-bins[j+1])
+                #out[j] += fb*arr[i]
+                out[j+1] += fb*arr[i]
+            out[j] *= 2./(bins[j+2]-bins[j])
+        
+        out[0] = arr[0]
+        out[-1] = arr[int(bins[-1])]
+        
+        return out, melpoints
+
+    def mel_interpolate(self, melpoints, y, nfft, nrec=1):
+        x = self.mel2hz_rec(melpoints, nrec)
+        
+        assert (y>=0).all(), "Array must be >= 0. {} {}".format(np.argwhere(y<0),y[np.argwhere(y<0)])
+        
+        fun = interp1d(x, np.log(y), kind = 'quadratic')
+        x_new = np.linspace(x[0], x[-1], nfft)
+        y_new = np.exp(fun(x_new))
+        
+        return x_new, y_new
+    
+    def compute_mel_filter(self):
+        if self.mel_nfilt is None:
+           self.mel_nfilt = self.Nfreqs//10
+        self.mel_filtered, self.mel_points = self.mel_filter(nfilt=self.mel_nfilt, samplerate=int(1e15/self.DT_FS), 
+                                                       lowfreq=0, highfreq=self.Nyquist_f_THz*1e12, axis=0, nrec=self.mel_nrecursion)
+        self.mel_filtered_freqs, self.mel_filtered_psd = self.mel_interpolate(self.mel_points, self.mel_filtered, self.Nfreqs, nrec=self.mel_nrecursion)
+        self.mel_filtered_freqs_THz = self.mel_filtered_freqs*1e12
+        self.mel_logpsd = np.log(self.mel_filtered_psd)
+        self.mel_psd_min = np.min(self.mel_filtered_psd)
+        self.mel_psd_power = np.trapz(self.mel_filtered_psd)   # one-side PSD power
         return
 
     ###################################

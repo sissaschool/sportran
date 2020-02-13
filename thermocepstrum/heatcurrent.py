@@ -37,7 +37,7 @@ class HeatCurrent(MDSample):
      - freq_units    frequency units   [THz or red] (optional)
     """
 
-    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
+    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz', do_mel=False, mel_scale=1e12, mel_nrecursion=1, mel_nfilt=None):
 
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)
@@ -64,6 +64,7 @@ class HeatCurrent(MDSample):
             MDSample.__init__(self, traj=j, DT_FS=DT_FS)
 
         self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
+        self.initialize_mel(do_mel, mel_scale, mel_nrecursion, mel_nfilt)
 
         if self.traj is not None:
             if PSD_FILTER_W is None:
@@ -84,7 +85,10 @@ class HeatCurrent(MDSample):
                         self.compute_kappa_multi(self.otherMD, PSD_FILTER_W)
                 else:
                     raise ValueError('Freq units not valid.')
+            
             self.initialize_cepstral_parameters()
+
+            if self.do_mel: self.compute_mel_filter()
         else:
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
 
@@ -134,6 +138,16 @@ class HeatCurrent(MDSample):
             raise ValueError('Units not supported.')
         return
 
+    def initialize_mel(self, do_mel, mel_scale, mel_nrecursion, mel_nfilt):
+        self.do_mel = do_mel
+        self.mel_scale = mel_scale
+        self.mel_nrecursion = mel_nrecursion
+        #if mel_nfilt is None:
+        #    self.mel_nfilt = self.Nfreqs//10
+        #else:
+        self.mel_nfilt = mel_nfilt
+        return
+
     def initialize_cepstral_parameters(self):
         """
         Defines the parameters of the theoretical distribution of the cepstrum.
@@ -175,6 +189,35 @@ class HeatCurrent(MDSample):
               '  kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.kappa_Kmin, self.kappa_Kmin_std) +\
               '-----------------------------------------------------\n'
         log.write_log(self.cepstral_log)
+        return
+
+    def mel_cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None):
+        """
+        Performs Cepstral Analysis on the heat current trajectory.
+           aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
+           Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
+
+        Resulting conductivity:
+            appa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
+        """
+
+        self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.ck_THEORY_var, \
+            psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
+        self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
+        self.mel_kappa_Kmin = self.mel_dct.tau_Kmin * self.kappa_scale * 0.5
+        self.mel_kappa_Kmin_std = self.mel_dct.tau_std_Kmin * self.kappa_scale * 0.5
+
+        self.mel_cepstral_log = \
+              '-----------------------------------------------------\n' +\
+              '  MEL CEPSTRAL ANALYSIS\n' +\
+              '-----------------------------------------------------\n' +\
+              '  AIC_Kmin  = {:d}  (P* = {:d}, corr_factor = {:4f})\n'.format(self.mel_dct.aic_Kmin, self.mel_dct.aic_Kmin + 1, self.mel_dct.Kmin_corrfactor) +\
+              '  L_0*   = {:18f} +/- {:10f}\n'.format(self.mel_dct.logtau_Kmin, self.mel_dct.logtau_std_Kmin) +\
+              '  S_0*   = {:18f} +/- {:10f}\n'.format(self.mel_dct.tau_Kmin, self.mel_dct.tau_std_Kmin) +\
+              '-----------------------------------------------------\n' +\
+              '  Mel kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.mel_kappa_Kmin, self.mel_kappa_Kmin_std) +\
+              '-----------------------------------------------------\n'
+        log.write_log(self.mel_cepstral_log)
         return
 
     ###################################
