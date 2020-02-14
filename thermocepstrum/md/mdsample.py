@@ -435,10 +435,13 @@ class MDSample(object):
         highmel = self.hz2mel_rec(highfreq, nrec)
         melpoints = np.linspace(lowmel,highmel,nfilt+2)
         
-        nfft = arr.shape[axis]
+        nfft = self.psd.shape[axis]
         
         bins = np.floor(2*nfft*self.mel2hz_rec(melpoints, nrec)/samplerate)
-        
+        # mel2hz overestimates numerically the correct value 
+        if bins[-1] >= nfft: bins[-1] = nfft-1
+        print('bins={}'.format(bins))
+
         for j in range(0, nfilt):
             for i in range(int(bins[j]), int(bins[j+1])):
                 fb = (i - bins[j]) / (bins[j+1]-bins[j])
@@ -448,11 +451,11 @@ class MDSample(object):
                 fb = (bins[j+2]-i) / (bins[j+2]-bins[j+1])
                 #out[j] += fb*arr[i]
                 out[j+1] += fb*arr[i]
-            out[j] *= 2./(bins[j+2]-bins[j])
+            out[j+1] *= 2./(bins[j+2]-bins[j])
         
         out[0] = arr[0]
         out[-1] = arr[int(bins[-1])]
-        
+        print('out={}'.format(out) )
         return out, melpoints
 
     def mel_interpolate(self, melpoints, y, nfft, nrec=1):
