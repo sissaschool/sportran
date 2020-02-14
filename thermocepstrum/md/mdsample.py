@@ -418,7 +418,7 @@ class MDSample(object):
             x = a*(np.exp(np.log(2)*x/(a))-1)
         return x
 
-    def mel_filter(self, nfilt=None, samplerate=16000, lowfreq=0, highfreq=None, axis=0, nrec=1):
+    def mel_filter(self, nfilt=None, samplerate=16000, lowfreq=0, highfreq=None, axis=0, nrec=1, triang=False):
         
         arr = self.psd
         
@@ -441,17 +441,20 @@ class MDSample(object):
         # mel2hz overestimates numerically the correct value 
         if bins[-1] >= nfft: bins[-1] = nfft-1
         print('bins={}'.format(bins))
-
+        
         for j in range(0, nfilt):
-            for i in range(int(bins[j]), int(bins[j+1])):
-                fb = (i - bins[j]) / (bins[j+1]-bins[j])
-                #out[j] += fb*arr[i]
-                out[j+1] += fb*arr[i]
-            for i in range(int(bins[j+1]), int(bins[j+2])):
-                fb = (bins[j+2]-i) / (bins[j+2]-bins[j+1])
-                #out[j] += fb*arr[i]
-                out[j+1] += fb*arr[i]
-            out[j+1] *= 2./(bins[j+2]-bins[j])
+            if triang:
+                for i in range(int(bins[j]), int(bins[j+1])):
+                    fb = (i - bins[j]) / (bins[j+1]-bins[j])
+                    #out[j] += fb*arr[i]
+                    out[j+1] += fb*arr[i]
+                for i in range(int(bins[j+1]), int(bins[j+2])):
+                    fb = (bins[j+2]-i) / (bins[j+2]-bins[j+1])
+                    #out[j] += fb*arr[i]
+                    out[j+1] += fb*arr[i]
+                out[j+1] *= 2./(bins[j+2]-bins[j])
+            else:
+                out[j+1] = np.sum(arr[int(bins[j]):int(bins[j+2])], axis=axis)/(bins[j+2]-bins[j])
         
         out[0] = arr[0]
         out[-1] = arr[int(bins[-1])]
@@ -469,13 +472,13 @@ class MDSample(object):
         
         return x_new, y_new
     
-    def compute_mel_filter(self):
+    def compute_mel_filter(self, triang=False):
         if self.mel_nfilt is None:
            self.mel_nfilt = self.Nfreqs//10
         self.mel_filtered, self.mel_points = self.mel_filter(nfilt=self.mel_nfilt, samplerate=int(1e15/self.DT_FS), 
-                                                       lowfreq=0, highfreq=self.Nyquist_f_THz*1e12, axis=0, nrec=self.mel_nrecursion)
+                                                       lowfreq=0, highfreq=self.Nyquist_f_THz*1e12, axis=0, nrec=self.mel_nrecursion, triang=triang)
         self.mel_filtered_freqs, self.mel_filtered_psd = self.mel_interpolate(self.mel_points, self.mel_filtered, self.Nfreqs, nrec=self.mel_nrecursion)
-        self.mel_filtered_freqs_THz = self.mel_filtered_freqs*1e12
+        self.mel_filtered_freqs_THz = self.mel_filtered_freqs*1e-12
         self.mel_logpsd = np.log(self.mel_filtered_psd)
         self.mel_psd_min = np.min(self.mel_filtered_psd)
         self.mel_psd_power = np.trapz(self.mel_filtered_psd)   # one-side PSD power
