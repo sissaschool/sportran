@@ -386,12 +386,9 @@ class MDSample(object):
         if (FILTER_WINDOW_WIDTH is not None) or (self.FILTER_WINDOW_WIDTH is not None):
             self.filter_psd(FILTER_WINDOW_WIDTH)
         return
-		
-		##################################################################################################3
-		##################################################################################################3
-		##################################################################################################3
-		##################################################################################################3
-		##################################################################################################3
+
+    ###############################################################
+    ### Mel analysis
 		
     def hz2mel_rec(self, hz, n=1):
         """Convert a value in Hertz to Mels
@@ -419,6 +416,20 @@ class MDSample(object):
         return x
 
     def mel_filter(self, nfilt=None, samplerate=16000, lowfreq=0, highfreq=None, axis=0, nrec=1, triang=False):
+        """Compute the filtered spectrum on a Mel-like logarithmic scale. 
+
+        Parameters:
+        nfilt = number of filtered Mel frequencies.
+        samplerate = sampling rate of the spectrum.
+        lowfreq = lowest frequency to consider in Hz. Default: 0.
+        highfreq = highest frequency to consider. If None, the Nyquist frequency is chosen.
+        axis = the axis along which to filter. Default: 0.
+        nrec = recursion number for the Mel-like scale function (see mel2hz_rec and hz2mel_rec).
+        triang = if True, the shape of the filter is triangular, the vertices being on three consecutive Mel frequencies.
+
+        Returns:
+        Mel frequencies, Mel-filtered spectrum
+        """
         
         arr = self.psd
         
@@ -462,6 +473,17 @@ class MDSample(object):
         return out, melpoints
 
     def mel_interpolate(self, melpoints, y, nfft, nrec=1):
+        """Interpolate the Mel-filtered spectrum.
+
+        Parameters:
+        melpoints = Mel frequencies.
+        y = array of values of the signal at the Mel frequencies.
+        nfft = dimension of the output array.
+        nrec = recursion number for the Mel-like scale function (see mel2hz_rec and hz2mel_rec).
+        
+        Returns:
+        array of interpolated frequencies, array of interpolated value of the signal.
+        """
         x = self.mel2hz_rec(melpoints, nrec)
         
         assert (y>=0).all(), "Array must be >= 0. {} {}".format(np.argwhere(y<0),y[np.argwhere(y<0)])
@@ -473,6 +495,12 @@ class MDSample(object):
         return x_new, y_new
     
     def compute_mel_filter(self, triang=False):
+        """Execute the Mel-filter on the psd and defines the related objects 
+
+        Parameters:
+        triang = if True, the shape of the filter is triangular, the vertices being on three consecutive Mel frequencies.
+        """
+
         if self.mel_nfilt is None:
            self.mel_nfilt = self.Nfreqs//10
         self.mel_filtered, self.mel_points = self.mel_filter(nfilt=self.mel_nfilt, samplerate=int(1e15/self.DT_FS), 
