@@ -37,7 +37,7 @@ class HeatCurrent(MDSample):
      - freq_units    frequency units   [THz or red] (optional)
     """
 
-    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz', do_mel=False, mel_scale=1e12, mel_nrecursion=1, mel_nfilt=None):
+    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz', do_mel=False, mel_scale=1e12, mel_nrecursion=1, mel_nfilt=None,mel_log_flag=False):
 
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)
@@ -64,7 +64,7 @@ class HeatCurrent(MDSample):
             MDSample.__init__(self, traj=j, DT_FS=DT_FS)
 
         self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
-        self.initialize_mel(do_mel, mel_scale, mel_nrecursion, mel_nfilt)
+        self.initialize_mel(do_mel, mel_scale, mel_nrecursion, mel_nfilt,mel_log_flag=mel_log_flag)
 
         if self.traj is not None:
             if PSD_FILTER_W is None:
@@ -138,10 +138,20 @@ class HeatCurrent(MDSample):
             raise ValueError('Units not supported.')
         return
 
-    def initialize_mel(self, do_mel, mel_scale, mel_nrecursion, mel_nfilt):
+    def initialize_mel(self, do_mel, mel_scale, mel_nrecursion, mel_nfilt,mel_log_flag):
+        """
+        Initialize the parameters for mel analysis
+        :param do_mel: If True do mel analysis
+        :param mel_scale: Parameter for the mel-hertz conversion. It is the frequency in Hz that has the same value in mel.
+        :param mel_nrecursion: number of recursion in mel2hz_rec and hz2mel_rec functions
+        :param mel_nfilt: number of mel filters
+        :param mel_log_flag: if True it mel-filter the log(psd) instead of psd
+
+        """
         self.do_mel = do_mel
         self.mel_scale = mel_scale
         self.mel_nrecursion = mel_nrecursion
+        self.mel_log_flag = mel_log_flag
         #if mel_nfilt is None:
         #    self.mel_nfilt = self.Nfreqs//10
         #else:

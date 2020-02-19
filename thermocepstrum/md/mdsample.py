@@ -1,3 +1,5 @@
+from typing import Any, Union
+
 import numpy as np
 
 #import matplotlib.pyplot as plt
@@ -56,6 +58,7 @@ class MDSample(object):
         self.FILTER_WF              width of the moving average filter (number of frequencies)
 
     """
+    psd: Union[float, Any]
 
     def __init__(self, traj=None, spectr=None, psd=None, freqs=None, DT_FS=1.0):
         self.DT_FS = DT_FS
@@ -415,23 +418,22 @@ class MDSample(object):
             x = a*(np.exp(np.log(2)*x/(a))-1)
         return x
 
-    def mel_filter(self, nfilt=None, samplerate=16000, lowfreq=0, highfreq=None, axis=0, nrec=1, triang=False):
-        """Compute the filtered spectrum on a Mel-like logarithmic scale. 
+    def mel_filter(self, arr=None,nfilt=None, samplerate=16000, lowfreq=0, highfreq=None, axis=0, nrec=1, triang=False):
+        """Compute the filtered spectrum on a Mel-like logarithmic scale.
 
-        Parameters:
-        nfilt = number of filtered Mel frequencies.
-        samplerate = sampling rate of the spectrum.
-        lowfreq = lowest frequency to consider in Hz. Default: 0.
-        highfreq = highest frequency to consider. If None, the Nyquist frequency is chosen.
-        axis = the axis along which to filter. Default: 0.
-        nrec = recursion number for the Mel-like scale function (see mel2hz_rec and hz2mel_rec).
-        triang = if True, the shape of the filter is triangular, the vertices being on three consecutive Mel frequencies.
+        :param arr: Array to filter. If None  arr=self.psd .
+        :param nfilt : number of filtered Mel frequencies.
+        :param samplerate :sampling rate of the spectrum.
+        :param lowfreq : lowest frequency to consider in Hz. Default: 0.
+        :param highfreq : highest frequency to consider. If None, the Nyquist frequency is chosen.
+        :param axis : the axis along which to filter. Default: 0.
+        :param nrec : recursion number for the Mel-like scale function (see mel2hz_rec and hz2mel_rec).
+        :param triang : if True, the shape of the filter is triangular, the vertices being on three consecutive Mel frequencies.
 
-        Returns:
-        Mel frequencies, Mel-filtered spectrum
+        :returns: Mel frequencies, Mel-filtered spectrum
         """
         
-        arr = self.psd
+        if arr is None : arr = self.psd
         
         dim = list(arr.shape)
         #dim[axis] = nfilt
@@ -446,7 +448,7 @@ class MDSample(object):
         highmel = self.hz2mel_rec(highfreq, nrec)
         melpoints = np.linspace(lowmel,highmel,nfilt+2)
         
-        nfft = self.psd.shape[axis]
+        nfft = self.arr.shape[axis]
         
         bins = np.floor(2*nfft*self.mel2hz_rec(melpoints, nrec)/samplerate)
         # mel2hz overestimates numerically the correct value 
@@ -476,13 +478,12 @@ class MDSample(object):
         """Interpolate the Mel-filtered spectrum.
 
         Parameters:
-        melpoints = Mel frequencies.
-        y = array of values of the signal at the Mel frequencies.
-        nfft = dimension of the output array.
-        nrec = recursion number for the Mel-like scale function (see mel2hz_rec and hz2mel_rec).
+        :param melpoints:  Mel frequencies.
+        :param y : array of values of the signal at the Mel frequencies.
+        :param nfft : dimension of the output array.
+        :param nrec : recursion number for the Mel-like scale function (see mel2hz_rec and hz2mel_rec).
         
-        Returns:
-        array of interpolated frequencies, array of interpolated value of the signal.
+        :returns : array of interpolated frequencies, array of interpolated value of the signal.
         """
         x = self.mel2hz_rec(melpoints, nrec)
         
@@ -498,18 +499,49 @@ class MDSample(object):
         """Execute the Mel-filter on the psd and defines the related objects 
 
         Parameters:
-        triang = if True, the shape of the filter is triangular, the vertices being on three consecutive Mel frequencies.
+        :param triang : if True, the shape of the filter is triangular, the vertices being on three consecutive Mel frequencies.
         """
 
         if self.mel_nfilt is None:
            self.mel_nfilt = self.Nfreqs//10
-        self.mel_filtered, self.mel_points = self.mel_filter(nfilt=self.mel_nfilt, samplerate=int(1e15/self.DT_FS), 
+
+        self.mel_filtered, self.mel_points = self.mel_filter( nfilt=self.mel_nfilt, samplerate=int(1e15/self.DT_FS),
                                                        lowfreq=0, highfreq=self.Nyquist_f_THz*1e12, axis=0, nrec=self.mel_nrecursion, triang=triang)
+
         self.mel_filtered_freqs, self.mel_filtered_psd = self.mel_interpolate(self.mel_points, self.mel_filtered, self.Nfreqs, nrec=self.mel_nrecursion)
         self.mel_filtered_freqs_THz = self.mel_filtered_freqs*1e-12
         self.mel_logpsd = np.log(self.mel_filtered_psd)
         self.mel_psd_min = np.min(self.mel_filtered_psd)
         self.mel_psd_power = np.trapz(self.mel_filtered_psd)   # one-side PSD power
+        return
+
+    def compute_mel_filter_log(self, triang=False, mel_log_flag=False):
+        """Execute the Mel-filter on the log(psd) and defines the related objects
+
+        Parameters:
+        :param triang : if True, the shape of the filter is triangular, the vertices being on three consecutive Mel frequencies.
+
+        """
+
+        if self.mel_nfilt is None:
+            self.mel_nfilt = self.Nfreqs // 10
+
+
+        arr = self.logpsd
+
+        self.mel_filtered, self.mel_points = self.mel_filter(arr=arr, nfilt=self.mel_nfilt,
+                                                             samplerate=int(1e15 / self.DT_FS),
+                                                             lowfreq=0, highfreq=self.Nyquist_f_THz * 1e12, axis=0,
+                                                             nrec=self.mel_nrecursion, triang=triang)
+
+        ### TODO magari cambiare i nomi delle variabili
+        self.mel_filtered_freqs, self.mel_logpsd = self.mel_interpolate(self.mel_points, self.mel_filtered,
+                                                                              self.Nfreqs, nrec=self.mel_nrecursion)
+        self.mel_filter_psd = self.psd
+        self.mel_filtered_freqs_THz = self.mel_filtered_freqs * 1e-12
+        #self.mel_logpsd = np.log(self.mel_filtered_psd)
+        self.mel_psd_min = np.min(self.mel_filtered_psd)
+        self.mel_psd_power = np.trapz(self.mel_filtered_psd)  # one-side PSD power
         return
 
     ###################################
