@@ -515,7 +515,7 @@ class MDSample(object):
         self.mel_psd_power = np.trapz(self.mel_filtered_psd)   # one-side PSD power
         return
 
-    def compute_mel_filter_log(self, triang=False, mel_log_flag=False):
+    def compute_mel_filter_log(self, triang=False):
         """Execute the Mel-filter on the log(psd) and defines the related objects
 
         Parameters:

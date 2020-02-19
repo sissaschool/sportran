@@ -88,7 +88,11 @@ class HeatCurrent(MDSample):
             
             self.initialize_cepstral_parameters()
 
-            if self.do_mel: self.compute_mel_filter()
+            if self.do_mel:
+                if(self.mel_log_flag):
+                    self.compute_mel_filter_log()
+                else:
+                    self.compute_mel_filter()
         else:
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
 
