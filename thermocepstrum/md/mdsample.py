@@ -448,7 +448,7 @@ class MDSample(object):
         highmel = self.hz2mel_rec(highfreq, nrec)
         melpoints = np.linspace(lowmel,highmel,nfilt+2)
         
-        nfft = self.arr.shape[axis]
+        nfft = arr.shape[axis]
         
         bins = np.floor(2*nfft*self.mel2hz_rec(melpoints, nrec)/samplerate)
         # mel2hz overestimates numerically the correct value 
