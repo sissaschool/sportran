@@ -1,5 +1,3 @@
-from typing import Any, Union
-
 import numpy as np
 
 #import matplotlib.pyplot as plt
@@ -58,7 +56,7 @@ class MDSample(object):
         self.FILTER_WF              width of the moving average filter (number of frequencies)
 
     """
-    psd: Union[float, Any]
+
 
     def __init__(self, traj=None, spectr=None, psd=None, freqs=None, DT_FS=1.0):
         self.DT_FS = DT_FS
@@ -537,7 +535,7 @@ class MDSample(object):
         ### TODO magari cambiare i nomi delle variabili
         self.mel_filtered_freqs, self.mel_logpsd = self.mel_interpolate(self.mel_points, self.mel_filtered,
                                                                               self.Nfreqs, nrec=self.mel_nrecursion)
-        self.mel_filter_psd = self.psd
+        self.mel_filtered_psd = np.copy(self.psd)
         self.mel_filtered_freqs_THz = self.mel_filtered_freqs * 1e-12
         #self.mel_logpsd = np.log(self.mel_filtered_psd)
         self.mel_psd_min = np.min(self.mel_filtered_psd)
