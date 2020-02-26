@@ -37,7 +37,7 @@ class HeatCurrent(MDSample):
      - freq_units    frequency units   [THz or red] (optional)
     """
 
-    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz', do_mel=False, mel_scale=1e12, mel_nrecursion=1, mel_nfilt=None,mel_log_flag=False):
+    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz', do_mel=False, mel_scale=1e12, mel_nrecursion=1, mel_nfilt=None,mel_log_flag=True):
 
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)
@@ -86,13 +86,14 @@ class HeatCurrent(MDSample):
                 else:
                     raise ValueError('Freq units not valid.')
             
-            self.initialize_cepstral_parameters()
 
             if self.do_mel:
                 if(self.mel_log_flag):
                     self.compute_mel_filter_log()
                 else:
                     self.compute_mel_filter()
+
+            self.initialize_cepstral_parameters()
         else:
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
 
@@ -167,6 +168,7 @@ class HeatCurrent(MDSample):
         Defines the parameters of the theoretical distribution of the cepstrum.
         """
         if not self.many_currents:
+            self.ndf_chi = self.N_COMPONENTS
             self.ck_THEORY_var, self.psd_THEORY_mean = \
                 md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.N_COMPONENTS)
         else:
@@ -174,6 +176,9 @@ class HeatCurrent(MDSample):
                 raise RuntimeError('self.ndf_chi cannot be None.')
             self.ck_THEORY_var, self.psd_THEORY_mean = \
                 md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
+        if self.do_mel :
+            self.mel_ck_THEORY_var, self.mel_psd_THEORY_mean = \
+                md.cepstral.mel_multicomp_cepstral_parameters(N_COMPONENTS=self.ndf_chi,bins=self.mel_bins)
         return
 
     def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None):
@@ -215,8 +220,8 @@ class HeatCurrent(MDSample):
             appa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
         """
 
-        self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.ck_THEORY_var, \
-            psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
+        self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.mel_ck_THEORY_var, \
+            psd_theory_mean=self.mel_psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
         self.mel_kappa_Kmin = self.mel_dct.tau_Kmin * self.kappa_scale * 0.5
         self.mel_kappa_Kmin_std = self.mel_dct.tau_std_Kmin * self.kappa_scale * 0.5
@@ -496,7 +501,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
         ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
         ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
-    if x.fpsd is not None:
+    if x.fpsd is not None and xf.fpsd is not None:
         xf.resample_log += \
             ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
             '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\

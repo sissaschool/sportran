@@ -30,6 +30,34 @@ def multicomp_cepstral_parameters(NF, N_COMPONENTS):
 
     return ck_THEORY_var, psd_THEORY_mean
 
+def mel_multicomp_cepstral_parameters( N_COMPONENTS,bins):
+    """
+    Returns the theoretical variance of the cepstral coefficients and the mean of the log(PSD) distribution,
+    generated from a periodogram that is the average of N_COMPONENTS.
+    :param NF : number of frequencies
+    :param N_COMPONENTS : number of degrees of freedom
+    :param bins : filterbank bins
+    """
+    NF = bins.shape[0]
+    N = 2 * (NF - 1)
+    Nbins = np.zeros(NF)
+    Nbins[0] = Nbins[-1] = 1
+    Nbins[1:-1] = bins[2:] - bins[:-2]
+    T = np.zeros(NF)
+    T[0] = T[-1] = 1
+    for i in range(1,NF-1):
+        T[i]=1./(bins[i+1]-bins[i-1])
+    # variance of cepstral coefficients
+    trigamma = polygamma(1, N_COMPONENTS)
+    ck_THEORY_var = 1. / N * np.concatenate(([2 * trigamma], [trigamma] * (NF - 2), [2 * trigamma]))
+
+    # bias of log(PSD)
+    #psd_THEORY_mean = (polygamma(0, N_COMPONENTS) - np.log(N_COMPONENTS)) * np.ones(NF)
+    #psd_THEORY_mean[0] = polygamma(0, 0.5 * N_COMPONENTS) - np.log(0.5 * N_COMPONENTS)
+    #psd_THEORY_mean[-1] = psd_THEORY_mean[0]
+    psd_THEORY_mean = (polygamma(0, N_COMPONENTS) - np.log(N_COMPONENTS)) * Nbins * T
+
+    return ck_THEORY_var, psd_THEORY_mean
 
 def dct_coefficients(y):
     """Compute the normalized Discrete Cosine Transform coefficients of y.
