@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import polygamma
-from scipy.fftpack import dct
+from scipy.sparse import diags
+from scipy.fftpack import dct,rfft,irfft
 from .tools import logtau_to_tau
 from .aic import *
 from thermocepstrum.utils.utils import PrintMethod
@@ -34,7 +35,7 @@ def mel_multicomp_cepstral_parameters( N_COMPONENTS,bins):
     """
     Returns the theoretical variance of the cepstral coefficients and the mean of the log(PSD) distribution,
     generated from a periodogram that is the average of N_COMPONENTS.
-    :param NF : number of frequencies
+
     :param N_COMPONENTS : number of degrees of freedom
     :param bins : filterbank bins
     """
@@ -51,13 +52,17 @@ def mel_multicomp_cepstral_parameters( N_COMPONENTS,bins):
     trigamma = polygamma(1, N_COMPONENTS)
     ck_THEORY_var = 1. / N * np.concatenate(([2 * trigamma], [trigamma] * (NF - 2), [2 * trigamma]))
 
+    #compute the covariance matrix for Xi_j Xi_i
+    var_diag = Nbins * T**2 * trigamma
+    var_sdiag = np.zeros(NF-1)
+    var_sdiag [1:-2]=(bins[3:-1] - bins[2:-2])*T[1:-3]*T[2:-2]*trigamma
     # bias of log(PSD)
     #psd_THEORY_mean = (polygamma(0, N_COMPONENTS) - np.log(N_COMPONENTS)) * np.ones(NF)
     #psd_THEORY_mean[0] = polygamma(0, 0.5 * N_COMPONENTS) - np.log(0.5 * N_COMPONENTS)
     #psd_THEORY_mean[-1] = psd_THEORY_mean[0]
     psd_THEORY_mean = (polygamma(0, N_COMPONENTS) - np.log(N_COMPONENTS)) * Nbins * T
 
-    return ck_THEORY_var, psd_THEORY_mean
+    return ck_THEORY_var, psd_THEORY_mean,[var_diag,var_sdiag]
 
 def dct_coefficients(y):
     """Compute the normalized Discrete Cosine Transform coefficients of y.
@@ -300,7 +305,19 @@ class CosFilter(object):
                                                                          self.p_logtau_density_xstd)
         return
 
+    def mel_compute_variance(self,mel_var_list):
+        '''
 
+        :param mel_var_list: list with diagonal and convariance matrix of Xi (vedi Notre Mel #TODO spiegare)
+        :return: variance on the mel-filtered cepstrum
+        '''
+
+        cov = diags(mel_var_list,[0,1]).toarray() #cov= covariance Xi
+        cov = 0.5*(cov + cov.T) #symmetrize
+        cov_cc = irfft(rfft(cov,axis=1),axis=0)  #/cov.shape[0]
+        cov_cc[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+        tmp = irfft(rfft(cov_cc,axis=1),axis=0) #*cov.shape[0]
+        return np.diag(tmp)
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
 #        if K_LIST is not None:
 #            self.K_LIST = K_LIST

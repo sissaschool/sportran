@@ -177,7 +177,7 @@ class HeatCurrent(MDSample):
             self.ck_THEORY_var, self.psd_THEORY_mean = \
                 md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
         if self.do_mel :
-            self.mel_ck_THEORY_var, self.mel_psd_THEORY_mean = \
+            self.mel_ck_THEORY_var, self.mel_psd_THEORY_mean,self.mel_var_list = \
                 md.cepstral.mel_multicomp_cepstral_parameters(N_COMPONENTS=self.ndf_chi,bins=self.mel_bins)
         return
 
@@ -223,8 +223,9 @@ class HeatCurrent(MDSample):
         self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.mel_ck_THEORY_var, \
             psd_theory_mean=self.mel_psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
+        self.mel_psd_std = self.mel_dct.mel_compute_variance(self.mel_var_list)
         self.mel_kappa_Kmin = self.mel_dct.tau_Kmin * self.kappa_scale * 0.5
-        self.mel_kappa_Kmin_std = self.mel_dct.tau_std_Kmin * self.kappa_scale * 0.5
+        self.mel_kappa_Kmin_std = self.mel_psd_std[0] * self.kappa_scale * 0.5
 
         self.mel_cepstral_log = \
               '-----------------------------------------------------\n' +\
