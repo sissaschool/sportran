@@ -223,7 +223,8 @@ class HeatCurrent(MDSample):
         self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.mel_ck_THEORY_var, \
             psd_theory_mean=self.mel_psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
-        self.mel_psd_std = self.mel_dct.mel_compute_variance(self.mel_var_list)
+        self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list)
+        # TODO: delete covxi, debug purpose only
         self.mel_kappa_Kmin = self.mel_dct.tau_Kmin * self.kappa_scale * 0.5
         self.mel_kappa_Kmin_std = self.mel_psd_std[0] * self.kappa_scale * 0.5
 

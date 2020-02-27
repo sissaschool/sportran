@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import polygamma
 from scipy.sparse import diags
-from scipy.fftpack import dct,rfft,irfft
+from scipy.fftpack import dct,rfft,irfft, fft, ifft
 from .tools import logtau_to_tau
 from .aic import *
 from thermocepstrum.utils.utils import PrintMethod
@@ -44,10 +44,11 @@ def mel_multicomp_cepstral_parameters( N_COMPONENTS,bins):
     Nbins = np.zeros(NF)
     Nbins[0] = Nbins[-1] = 1
     Nbins[1:-1] = bins[2:] - bins[:-2]
-    T = np.zeros(NF)
-    T[0] = T[-1] = 1
-    for i in range(1,NF-1):
-        T[i]=1./(bins[i+1]-bins[i-1])
+    #T = np.zeros(NF)
+    #T[0] = T[-1] = 1
+    #for i in range(1,NF-1):
+    #    T[i]=1./(bins[i+1]-bins[i-1])
+    T = 1/Nbins
     # variance of cepstral coefficients
     trigamma = polygamma(1, N_COMPONENTS)
     ck_THEORY_var = 1. / N * np.concatenate(([2 * trigamma], [trigamma] * (NF - 2), [2 * trigamma]))
@@ -312,12 +313,33 @@ class CosFilter(object):
         :return: variance on the mel-filtered cepstrum
         '''
 
-        cov = diags(mel_var_list,[0,1]).toarray() #cov= covariance Xi
-        cov = 0.5*(cov + cov.T) #symmetrize
-        cov_cc = irfft(rfft(cov,axis=1),axis=0)  #/cov.shape[0]
-        cov_cc[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
-        tmp = irfft(rfft(cov_cc,axis=1),axis=0) #*cov.shape[0]
-        return np.diag(tmp)
+        cov = diags([mel_var_list[0], mel_var_list[1], mel_var_list[1]],[0,1,-1]).toarray() #cov= covariance Xi
+        
+        #cov_cc = irfft(rfft(cov,axis=1),axis=0)  #/cov.shape[0]
+        #cov_cc = ifft(fft(cov, axis = 1), axis = 0)  #/cov.shape[0]
+        #(n1, n2) = cov.shape
+        #for j1 in range(n1):
+        #    for m in range(n2):
+        #        tmp[] = np.sum(cov * np.exp(2*np.pi*1j*m*np.arange(n2)/n2), axis = 1)
+        #    tmp[j1, :] = cov[:, ] * exp(2*pi*sqrt(-1)*j*np.arange(n)/n)).mean().
+        #cov_cc[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+        ##tmp = irfft(rfft(cov_cc,axis=1),axis=0).real #*cov.shape[0]
+        #tmp = ifft(fft(cov_cc, axis = 1), axis = 0).real #*cov.shape[0]
+
+        (n1, n2) = cov.shape
+        r1 = np.arange(n1)
+        r2 = np.arange(n2)
+        
+        eps = np.exp(2*np.pi*1j*np.outer(r1, r2)/n1)
+        ems = 1/eps # np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
+        ep  = np.copy(eps) #np.exp(2*np.pi*1j*np.outer(r1, r2)/n1)
+        em  = 1/ep #np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
+        eps[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+        ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+        tmp = np.einsum('am,bn,jn,mi,ji->ab', eps, ems, ep, em, cov, optimize='greedy').real
+
+        return np.sqrt(np.diag(tmp)/n1/n2), cov
+        # TODO: delete cov, debug purpose only
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
 #        if K_LIST is not None:
 #            self.K_LIST = K_LIST
