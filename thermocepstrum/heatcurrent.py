@@ -210,12 +210,12 @@ class HeatCurrent(MDSample):
         log.write_log(self.cepstral_log)
         return
 
-    def mel_cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None):
+    def mel_cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None,debug = False):
         """
         Performs Cepstral Analysis on the heat current trajectory.
            aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
            Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
-
+           debug = debug flag for mel_compute_variance if True the variable self.covxi is crated with the covariance
         Resulting conductivity:
             appa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
         """
@@ -223,8 +223,11 @@ class HeatCurrent(MDSample):
         self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.mel_ck_THEORY_var, \
             psd_theory_mean=self.mel_psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
-        self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list)
-        # TODO: delete covxi, debug purpose only
+        if debug:
+             self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
+        else:
+            self.mel_psd_std = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
+
         self.mel_kappa_Kmin = self.mel_dct.tau_Kmin * self.kappa_scale * 0.5
         self.mel_kappa_Kmin_std = self.mel_psd_std[0] * self.kappa_scale * 0.5
 

@@ -306,11 +306,12 @@ class CosFilter(object):
                                                                          self.p_logtau_density_xstd)
         return
 
-    def mel_compute_variance(self,mel_var_list):
+    def mel_compute_variance(self,mel_var_list,debug=False):
         '''
 
         :param mel_var_list: list with diagonal and convariance matrix of Xi (vedi Notre Mel #TODO spiegare)
-        :return: variance on the mel-filtered cepstrum
+        :param debug: debug flag if True the code return also covariance matrix
+        :return: variance on the mel-filtered cepstrum, civariance matrix (only if debug=True)
         '''
 
         cov = diags([mel_var_list[0], mel_var_list[1], mel_var_list[1]],[0,1,-1]).toarray() #cov= covariance Xi
@@ -338,8 +339,9 @@ class CosFilter(object):
         ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
         tmp = np.einsum('am,bn,jn,mi,ji->ab', eps, ems, ep, em, cov, optimize='greedy').real
 
-        return np.sqrt(np.diag(tmp)/n1/n2), cov
-        # TODO: delete cov, debug purpose only
+        if debug : return np.sqrt(np.diag(tmp)/n1/n2), cov
+        return np.sqrt(np.diag(tmp)/n1/n2)
+
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
 #        if K_LIST is not None:
 #            self.K_LIST = K_LIST
