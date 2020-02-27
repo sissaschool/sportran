@@ -325,7 +325,8 @@ class CosFilter(object):
         #    tmp[j1, :] = cov[:, ] * exp(2*pi*sqrt(-1)*j*np.arange(n)/n)).mean().
         #cov_cc[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
         ##tmp = irfft(rfft(cov_cc,axis=1),axis=0).real #*cov.shape[0]
-        #tmp = ifft(fft(cov_cc, axis = 1), axis = 0).real #*cov.shape[0]
+        ##tmp = ifft(fft(cov_cc, axis = 1), axis = 0).real #*cov.shape[0] !!!WRONG axis
+        #tmp1 = ifft(fft(cov_cc, axis = 0), axis = 1).real #*cov.shape[0]
 
         (n1, n2) = cov.shape
         r1 = np.arange(n1)
@@ -339,7 +340,7 @@ class CosFilter(object):
         ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
         tmp = np.einsum('am,bn,jn,mi,ji->ab', eps, ems, ep, em, cov, optimize='greedy').real
 
-        if debug : return np.sqrt(np.diag(tmp)/n1/n2), cov
+        if debug : return np.sqrt(np.diag(tmp)/n1/n2), cov   #,np.diag(tmp1)
         return np.sqrt(np.diag(tmp)/n1/n2)
 
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
