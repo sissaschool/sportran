@@ -224,8 +224,8 @@ class HeatCurrent(MDSample):
             psd_theory_mean=self.mel_psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
         if debug:
-             #self.mel_psd_std, self.covxi, self.mel_psd_std_FFT = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
-             self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
+             self.mel_psd_std, self.covxi, self.mel_psd_std_FFT = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
+             #self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
         else:
             self.mel_psd_std = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
 
