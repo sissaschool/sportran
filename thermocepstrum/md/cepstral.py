@@ -328,25 +328,25 @@ class CosFilter(object):
         ##tmp = irfft(rfft(cov_cc,axis=1),axis=0).real #*cov.shape[0]
         ##tmp = ifft(fft(cov_cc, axis = 1), axis = 0).real #*cov.shape[0] !!!WRONG axis
         tmp1 = ifft(fft(cov_cc, axis = 0), axis = 1).real #*cov.shape[0]
+        if(debug):
+              (n1, n2) = cov.shape
+              r1 = np.arange(n1)
+              r2 = np.arange(n2)
 
-        (n1, n2) = cov.shape
-        r1 = np.arange(n1)
-        r2 = np.arange(n2)
-        
-        eps = np.exp(2*np.pi*1j*np.outer(r1, r2)/n1)
-        ems = 1/eps # np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
-        ep  = np.copy(eps) #np.exp(2*np.pi*1j*np.outer(r1, r2)/n1)
-        em  = 1/ep #np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
-        #eps[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
-        #ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
-        eps[self.aic_Kmin + 1:,:] = 0.
-        eps[:,self.aic_Kmin + 1:] = 0.
-        ems[self.aic_Kmin + 1:,:] = 0.
-        ems[:,self.aic_Kmin + 1:] = 0.
-        tmp = np.einsum('am,bn,jn,mi,ji->ab', eps, ems, ep, em, cov, optimize='greedy').real
+              eps = np.exp(2*np.pi*1j*np.outer(r1, r2)/n1)
+              ems = 1/eps # np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
+              ep  = np.copy(eps) #np.exp(2*np.pi*1j*np.outer(r1, r2)/n1)
+              em  = 1/ep #np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
+              #eps[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+              #ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+              eps[self.aic_Kmin + 1:,:] = 0.
+              eps[:,self.aic_Kmin + 1:] = 0.
+              ems[self.aic_Kmin + 1:,:] = 0.
+              ems[:,self.aic_Kmin + 1:] = 0.
+              tmp = np.einsum('am,bn,jn,mi,ji->ab', eps, ems, ep, em, cov, optimize='greedy').real
 
-        if debug : return np.sqrt(np.diag(tmp)/n1/n2), cov, np.sqrt(np.diag(tmp1))
-        return np.sqrt(np.diag(tmp)/n1/n2)
+        if debug : return np.sqrt(np.diag(tmp1)), cov,np.sqrt(np.diag(tmp)/n1/n2)
+        return np.sqrt(np.diag(tmp1))
 
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
 #        if K_LIST is not None:
