@@ -341,7 +341,7 @@ class CosFilter(object):
         ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
         tmp = np.einsum('am,bn,jn,mi,ji->ab', eps, ems, ep, em, cov, optimize='greedy').real
 
-        if debug : return np.sqrt(np.diag(tmp)/n1/n2), cov   , np.sqrt(np.diag(tmp1))
+        if debug : return np.sqrt(np.diag(tmp)/n1/n2), cov, np.sqrt(np.diag(tmp1))
         return np.sqrt(np.diag(tmp)/n1/n2)
 
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
