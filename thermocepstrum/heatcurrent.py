@@ -230,11 +230,20 @@ class HeatCurrent(MDSample):
              #self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
         else:
             self.mel_psd_std = self.mel_dct.mel_compute_variance(self.mel_var_list,debug)
+        # self.mel_psd_std  is the error on the f=log(kappa), the error on kappa is
+        # sigma_kappa = d(exp(f(omega)))/d(omega) * self.mel_psd_std = exp(f(omega)) * self.mel_psd_std
+        # so basically self.mel_psd_std that exits from mel_compute_variance is the relative error on PSD
+
+        self.mel_dct.logtau_std_Kmin = self.mel_psd_std[0]
+        self.mel_dct.tau_std_Kmin = self.mel_dct.tau_Kmin * self.mel_psd_std[0]
 
         self.mel_kappa_Kmin = self.mel_dct.tau_Kmin * self.kappa_scale * 0.5
         #self.mel_kappa_Kmin_std = self.mel_psd_std[0] * self.kappa_scale * 0.5
         self.mel_kappa_Kmin_std = self.mel_psd_std[0] * self.mel_kappa_Kmin
-        #self.mel_psd_std = self.mel_dct.psd * self.mel_psd_std
+
+        # Now let's make self.mel_psd_std the true error on self.mel_dct.psd (the cepstrum filtered PSD)
+        self.mel_psd_std *= self.mel_dct.psd
+
 
         self.mel_cepstral_log = \
               '-----------------------------------------------------\n' +\
