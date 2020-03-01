@@ -36,6 +36,8 @@ class MDBlocks(object):
             self.tau_scale = scale_kappa_REALtoSI(self.Temperature, self.Volume, self.DT_FS)
         elif (self.units == 'metal'):
             self.tau_scale = scale_kappa_METALtoSI(self.Temperature, self.Volume, self.DT_FS)
+        elif (self.units == 'metal_el'):
+            self.tau_scale = scale_kappa_METAL_ELtoSI(self.Temperature, self.Volume, self.DT_FS)
         else:
             raise ValueError('Units not valid.')
         self.GUI = GUI

@@ -75,16 +75,3 @@ def scale_kappa_DLPOLYtoSI(temp, volume, timestep):
     kB = 1.3806504
     NA = 6.022140857
     return (1.0 / NA / temp)**2 / kB / volume * timestep * 1e10
-
-def scale_kappa_METAL_ELtoSI(temp, volume, timestep):
-    """
-    Conversion factor for the electrical conductivity from METAL LAMMPS units to [S/cm] units.
-    INPUT:
-    : param temp :  temperature [ K ]
-    : param volume :  cell volume [ A^3 ]
-    :param timestep  :  integration time step [ fs ]
-    """
-
-    kB = 1.3806504
-    charge = 1.6021765
-    return charge**2 / temp / kB / volume * timestep * 100

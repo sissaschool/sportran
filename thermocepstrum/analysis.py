@@ -125,7 +125,7 @@ Contact: lercole@sissa.it
     parser.add_argument( '-V', '--volume', type=float, help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile.' )
     parser.add_argument( '--structure', type=str, help='LAMMPS data file containing the structure. Read to get Volume.' )
     parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
-    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'], help='LAMMPS units (default: metal)' )
+    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly', 'metal_el'], help='LAMMPS units (default: metal)' )
 
     parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR' )
     resamplearg = parser.add_mutually_exclusive_group()

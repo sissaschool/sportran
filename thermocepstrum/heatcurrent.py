@@ -139,6 +139,8 @@ class HeatCurrent(MDSample):
             self.kappa_scale = md.units.scale_kappa_GPUMDtoSI(TEMPERATURE, VOLUME, 1.0)
         elif (self.units == 'dlpoly'):
             self.kappa_scale = md.units.scale_kappa_DLPOLYtoSI(TEMPERATURE, VOLUME, 1.0)
+        elif (self.units == 'metal_el'):
+            self.kappa_scale = md.units.scale_kappa_METAL_ELtoSI(TEMPERATURE, VOLUME, 1.0)
         else:
             raise ValueError('Units not supported.')
         return
@@ -217,13 +219,29 @@ class HeatCurrent(MDSample):
            Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
 
         Resulting conductivity:
-            appa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
+            kappa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
         """
 
         self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.mel_ck_THEORY_var, \
             psd_theory_mean=self.mel_psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
-        self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
-        self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list)
+        #print('primo',self.mel_ck_THEORY_var)
+
+        # P* has been defined: now compute the true variance
+        print('step ', 0, 'P*= ', self.mel_dct.aic_Kmin+1)
+        
+        for ii in range(1,11):
+            self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list)
+            self.mel_ck_THEORY_var = self.mel_psd_std**2
+            #print('secondo',self.mel_ck_THEORY_var)
+            self.mel_dct = md.CosFilter(self.mel_logpsd, ck_theory_var=self.mel_ck_THEORY_var, \
+                psd_theory_mean=self.mel_psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
+            
+
+            self.mel_dct.scan_filter_tau(K_PSD=K_PSD)
+            print('step ', ii, 'P*= ', self.mel_dct.aic_Kmin+1)
+        
+        #self.mel_psd_std, self.covxi = self.mel_dct.mel_compute_variance(self.mel_var_list)
+        
         # TODO: delete covxi, debug purpose only
         self.mel_kappa_Kmin = self.mel_dct.tau_Kmin * self.kappa_scale * 0.5
         self.mel_kappa_Kmin_std = self.mel_psd_std[0] * self.kappa_scale * 0.5
