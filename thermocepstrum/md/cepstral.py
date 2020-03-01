@@ -337,8 +337,13 @@ class CosFilter(object):
         ems = 1/eps # np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
         ep  = np.copy(eps) #np.exp(2*np.pi*1j*np.outer(r1, r2)/n1)
         em  = 1/ep #np.exp(-2*np.pi*1j*np.outer(r1, r2)/n1)
-        eps[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
-        ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+        #eps[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+        #ems[self.aic_Kmin + 1:,self.aic_Kmin + 1:] = 0.
+        eps[self.aic_Kmin + 1:,:] = 0.
+        eps[:,self.aic_Kmin + 1:] = 0.
+        ems[self.aic_Kmin + 1:,:] = 0.
+        ems[:,self.aic_Kmin + 1:] = 0.
+        print('gggg')
         tmp = np.einsum('am,bn,jn,mi,ji->ab', eps, ems, ep, em, cov, optimize='greedy').real
 
         if debug : return np.sqrt(np.diag(tmp)/n1/n2), cov, np.sqrt(np.diag(tmp1))
