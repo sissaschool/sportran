@@ -250,6 +250,7 @@ class HeatCurrent(MDSample):
               '-----------------------------------------------------\n' +\
               '  MEL CEPSTRAL ANALYSIS\n' +\
               '-----------------------------------------------------\n' +\
+              '  Number of filter = {:d}\n'.format(self.mel_nfilt) +\
               '  AIC_Kmin  = {:d}  (P* = {:d}, corr_factor = {:4f})\n'.format(self.mel_dct.aic_Kmin, self.mel_dct.aic_Kmin + 1, self.mel_dct.Kmin_corrfactor) +\
               '  L_0*   = {:18f} +/- {:10f}\n'.format(self.mel_dct.logtau_Kmin, self.mel_dct.logtau_std_Kmin) +\
               '  S_0*   = {:18f} +/- {:10f}\n'.format(self.mel_dct.tau_Kmin, self.mel_dct.tau_std_Kmin) +\

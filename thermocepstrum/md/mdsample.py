@@ -451,7 +451,7 @@ class MDSample(object):
         bins = np.floor(2*nfft*self.mel2hz_rec(melpoints, nrec)/samplerate)
         # mel2hz overestimates numerically the correct value 
         if bins[-1] >= nfft: bins[-1] = nfft-1
-        print('bins={}'.format(bins))
+        #print('bins={}'.format(bins))
         
         for j in range(0, nfilt):
             if triang:
@@ -469,7 +469,7 @@ class MDSample(object):
         
         out[0] = arr[0]
         out[-1] = arr[int(bins[-1])]
-        print('out={}'.format(out) )
+        #print('out={}'.format(out) )
         #N_bins = bins - np.roll(bins[-1])
         return out, melpoints,bins
 
