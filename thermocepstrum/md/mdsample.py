@@ -439,7 +439,9 @@ class MDSample(object):
         out = np.zeros(tuple(dim))
         
         highfreq= highfreq or samplerate / 2
-        assert highfreq <= samplerate / 2, "highfreq is greater than samplerate/2"
+        #assert highfreq <= samplerate / 2, "highfreq = {} is greater than samplerate/2 = {}".format(highfreq,samplerate/2)
+        if (highfreq > samplerate / 2):
+            print('# WARNING highfreq = {} is greater than samplerate/2 = {}'.format(highfreq,samplerate/2))
         
         # compute points evenly spaced in mels
         lowmel = self.hz2mel_rec(lowfreq, nrec)
@@ -529,7 +531,7 @@ class MDSample(object):
         arr = self.logpsd
 
         self.mel_filtered, self.mel_points, self.mel_bins = self.mel_filter(arr=arr, nfilt=self.mel_nfilt,
-                                                             samplerate=int(1e15 / self.DT_FS),
+                                                             samplerate= int(1e15 / self.DT_FS),
                                                              lowfreq=0, highfreq=self.Nyquist_f_THz * 1e12, axis=0,
                                                              nrec=self.mel_nrecursion, triang=triang)
 
