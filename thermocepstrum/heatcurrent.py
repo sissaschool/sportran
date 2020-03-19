@@ -356,7 +356,7 @@ class HeatCurrent(MDSample):
 
 
 def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz',
-                     FIGSIZE=None):   # yapf: disable
+                     FIGSIZE=None, verbose=True):   # yapf: disable
     """
     Simulate the resampling of x.
 
@@ -439,7 +439,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
         ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
         ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
-    if x.fpsd is not None:
+    if x.fpsd is not None and xf.fpsd is not None:
         xf.resample_log += \
             ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
             '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
@@ -451,7 +451,8 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     else:
         xf.resample_log += ' fPSD not calculated before resampling!\n '
     xf.resample_log += '-----------------------------------------------------\n'
-    log.write_log(xf.resample_log)
+    if verbose:
+        log.write_log(xf.resample_log)
 
     if plot:
         if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -470,21 +471,21 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
 
 
 def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
-                   **plot_kwargs):   # yapf: disable
+                   verbose=False, **plot_kwargs):   # yapf: disable
     """
     Perform cepstral analysis on a set of resampled time series, to study the effect of f*.
     For each TSKIP in TSKIP_LIST, the HeatCurrent x is filtered & resampled, and then cesptral-analysed.
 
     Parameters
     ----------
-    TSKIP        = sampling time [steps]
-    fstar_THz    = target cutoff frequency [THz]
-    FILTER_W     = pre-sampling filter window width [steps]
-    plot         = plot the PSD (True/False)
-    PSD_FILTER_W = PSD filtering window width [chosen frequency units]
-    freq_units   = 'thz'  THz
-                   'red'  omega*DT/(2*pi)
-    FIGSIZE      = plot figure size
+    TSKIP_LIST    = list of sampling times [steps]
+    aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
+    Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
+    plot          = plot the PSD (True/False)
+    axes          = matplotlib.axes.Axes object (if None, create one)
+    FIGSIZE       = plot figure size
+    verbose       = verbose output (default: False)
+    **plot_kwargs = other parameters passed to plot function
 
     Returns
     -------
@@ -502,7 +503,7 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
     xf = []
     for TSKIP in TSKIP_LIST:
         log.write_log('TSKIP =  {:d}'.format(TSKIP))
-        xff = resample_current(x, TSKIP, plot=False)
+        xff = resample_current(x, TSKIP, plot=False, verbose=verbose)
         xff.cepstral_analysis(aic_type, Kmin_corrfactor)
         xf.append(xff)
     FSTAR_THZ_LIST = [xff.Nyquist_f_THz for xff in xf]
