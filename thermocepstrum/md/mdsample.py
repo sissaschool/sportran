@@ -96,19 +96,28 @@ class MDSample(object):
     #############################################
 
     def initialize_traj(self, array):
+        """
+        Initialize a trajectory from an array.
+        The dimensions of the array should be:
+          (number of time points, number of equivalent components)
+        or, in the case of 1 component:
+          (number of time points)
+        """
         if array is not None:
-            if array.shape[0] % 2 == 1:
-                self.traj = np.array(array[1:], dtype=float)
-                print('trajectory has an odd number of points. Removing the first one.')
-            else:
-                self.traj = np.array(array, dtype=float)
-            self.N = self.traj.shape[0]
-            if len(self.traj.shape) > 1:
-                self.MULTI_COMPONENT = True
-                self.N_COMPONENTS = self.traj.shape[1]
-            else:
+            array = np.array(array, dtype=float)
+            if (len(array.shape) == 1):
                 self.MULTI_COMPONENT = False
                 self.N_COMPONENTS = 1
+                self.traj = array[:, np.newaxis]
+            elif (len(array.shape) == 2):
+                if (array.shape[0] % 2 == 1):
+                    self.traj = array[:-1]
+                    print('Trajectory has an odd number of points. Removing the last one.')
+                else:
+                    self.traj = array
+            else:
+                raise TypeError('Input trajectory array has > 2 dimensions.')
+            self.N = self.traj.shape[0]
         else:
             self.traj = None
             self.N = None

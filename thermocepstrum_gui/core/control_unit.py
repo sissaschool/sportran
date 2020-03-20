@@ -334,7 +334,10 @@ def load_keys(inputfile):
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
         return jfile.all_ckeys
     elif data.inputformat == 'dict':
-        data.jdata = np.load(inputfile, allow_pickle=True).tolist()
+        try:
+            data.jdata = np.load(inputfile, allow_pickle=True).tolist()
+        except: # to allow loading of python2 pickle files
+            data.jdata = np.load(inputfile, allow_pickle=True, encoding='latin1').tolist()
         return {key: i for i, key in enumerate(data.jdata)}
     elif data.inputformat == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile)

@@ -195,14 +195,15 @@ class FileManager(Frame):
         by using the OS manager.
         """
         path = fdialog.askopenfile(initialdir=os.getcwd(), title='Select file', filetypes=(('all files', '*.*'),))
-
+        if path == None:
+            return
         if path.name:
             for item in self.file_list.get_children():
                 self.file_list.delete(item)
 
             settings.DATA_PATH = os.path.dirname(path.name)
             self._parse_files()
-
+            self.selected.delete(0, END)
             self.selected.insert(INSERT, path.name)
             self.load_file_settings(path.name)
 
@@ -214,30 +215,36 @@ class FileManager(Frame):
         :param path: The location of the file.
         """
 
-        # Read the file
-        try:
-            with open(path, 'r') as file:
-                lines = file.readlines()[0:int(settings.PREVIEW_LINES)]
+        # Read the file, only if format is not dict
+        if self.input_selector.get() != 'dict':
+            try:
+                with open(path, 'r') as file:
+                    lines = file.readlines()[0:int(settings.PREVIEW_LINES)]
 
-                # Clean the file
-                prev = []
-                for line in lines:
-                    prev.append(line.replace('{', '').replace('}', ''))
+                    # Clean the file
+                    prev = []
+                    for line in lines:
+                        prev.append(line.replace('{', '').replace('}', ''))
 
-                # Enable/disable a spacing between the lines of the preview
-                prev_spacing = False
-                if prev_spacing:
-                    schr = '\n'
-                else:
-                    schr = ''
+                    # Enable/disable a spacing between the lines of the preview
+                    prev_spacing = False
+                    if prev_spacing:
+                        schr = '\n'
+                    else:
+                        schr = ''
 
-                self.preview.config(state=NORMAL)
-                self.preview.delete('1.0', END)
-                self.preview.insert('1.0', schr.join(prev))
-                self.preview.config(state=DISABLED)
-        except Exception as e:
-            cu.log.write_log(str(e))
-            msg.showinfo(LANGUAGES[settings.LANGUAGE]['display_error'], LANGUAGES[settings.LANGUAGE]['display_error_t'])
+                    self.preview.config(state=NORMAL)
+                    self.preview.delete('1.0', END)
+                    self.preview.insert('1.0', schr.join(prev))
+                    self.preview.config(state=DISABLED)
+            except Exception as e:
+                cu.log.write_log(str(e))
+                msg.showinfo(LANGUAGES[settings.LANGUAGE]['display_error'],
+                             LANGUAGES[settings.LANGUAGE]['display_error_t'])
+                set_to_dict = msg.askyesno(LANGUAGES[settings.LANGUAGE]['display_error'],
+                                           LANGUAGES[settings.LANGUAGE]['swich_to_dict_t'])
+                if set_to_dict == True:
+                    self.input_selector.current(1)
 
     def set_next_frame(self, frame):
         """
