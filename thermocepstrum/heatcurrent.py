@@ -4,7 +4,7 @@
 
 import numpy as np
 from . import md
-from .md.mdsample import MDSample
+from .md.mdsample import MDSample, freq_THz_to_red, freq_red_to_THz
 
 #import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
@@ -15,10 +15,6 @@ try:
     plt
 except:
     log.write_log('Warning: plt undefined')
-
-
-def freq_THz_to_red(f, DT_FS):
-    return f / 1000. * DT_FS
 
 
 class HeatCurrent(MDSample):
@@ -72,18 +68,10 @@ class HeatCurrent(MDSample):
                 else:
                     self.compute_kappa_multi(others=self.otherMD)
             else:
-                if (freq_units == 'thz') or (freq_units == 'THz'):
-                    if not self.many_currents:
-                        self.compute_psd(freq_THz_to_red(PSD_FILTER_W, DT_FS))
-                    else:
-                        self.compute_kappa_multi(self.otherMD, freq_THz_to_red(PSD_FILTER_W, DT_FS))
-                elif (freq_units == 'red'):
-                    if not self.many_currents:
-                        self.compute_psd(PSD_FILTER_W)
-                    else:
-                        self.compute_kappa_multi(self.otherMD, PSD_FILTER_W)
+                if not self.many_currents:
+                    self.compute_psd(PSD_FILTER_W, freq_units)
                 else:
-                    raise ValueError('Freq units not valid.')
+                    self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units)
             self.initialize_cepstral_parameters()
         else:
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
@@ -97,15 +85,21 @@ class HeatCurrent(MDSample):
             msg += self.dct.__repr__()
         return msg
 
-    # overrides MDSample methos
-    def compute_psd(self, FILTER_WINDOW_WIDTH=None, method='trajectory', DT_FS=None, average_components=True,
-                    normalize=False):  # yapf: disable
+    def compute_psd(self, PSD_FILTER_W=None, freq_units='red', method='trajectory', DT_FS=None, normalize=False):
+        # overrides MDSample methos
+        # TODO: can we move this to mdsample?
+        """
+        Compute the periodogram from the heat current time series.
+        If a PSD_FILTER_W (expressed in freq_units) is known or given, the psd is also filtered.
+        The PSD is multiplied by DT_FS at the end.
+        """
         if self.many_currents:
             if self.otherMD is None:
                 raise RuntimeError('self.otherMD cannot be None (wrong/missing initialization?)')
-            self.compute_kappa_multi(self.otherMD, FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
-            return
-        super(HeatCurrent, self).compute_psd(FILTER_WINDOW_WIDTH, method, DT_FS, average_components, normalize)
+            self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units, method, DT_FS, normalize)
+        else:
+            super(HeatCurrent, self).compute_psd(PSD_FILTER_W, freq_units, method, DT_FS, normalize)
+        return
 
     @staticmethod
     def get_units_list():
@@ -181,7 +175,7 @@ class HeatCurrent(MDSample):
     ###  PLOT METHODS
     ###################################
 
-    def plot_periodogram(self, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=False,
+    def plot_periodogram(self, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
                          FIGSIZE=None, **plot_kwargs):   # yapf: disable
         """
         Plot the periodogram.
@@ -203,18 +197,11 @@ class HeatCurrent(MDSample):
                     raise ValueError('self.otherMD cannot be None (missing initialization?)')
                 self.compute_kappa_multi(others=self.otherMD)
         if PSD_FILTER_W is None:
-            if self.FILTER_WINDOW_WIDTH is None:
+            if self.PSD_FILTER_W is None:
                 self.filter_psd(0.)
         else:
-            if (freq_units == 'thz') or (freq_units == 'THz'):
-                self.filter_psd(freq_THz_to_red(PSD_FILTER_W, self.DT_FS))
-            elif (freq_units == 'red'):
-                self.filter_psd(PSD_FILTER_W)
-            else:
-                raise ValueError('Units not valid.')
-
-        if kappa_units:
-            # plot psd in units of kappa - the log(psd) is not converted
+            self.filter_psd(PSD_FILTER_W, freq_units)
+        if kappa_units:   # plot psd in units of kappa - the log(psd) is not converted
             psd_scale = 0.5 * self.kappa_scale
         else:
             psd_scale = 1.0
@@ -226,13 +213,15 @@ class HeatCurrent(MDSample):
             axes[1].plot(self.freqs_THz, self.flogpsd, **plot_kwargs)
             axes[0].set_xlim([0., self.Nyquist_f_THz])
             axes[1].set_xlim([0., self.Nyquist_f_THz])
+            axes[1].set_xlabel(r'$f$ [THz]')
         elif (freq_units == 'red'):
             axes[0].plot(self.freqs / freq_scale, psd_scale * self.fpsd, **plot_kwargs)
             axes[1].plot(self.freqs / freq_scale, self.flogpsd, **plot_kwargs)
             axes[0].set_xlim([0., 0.5 / freq_scale])
             axes[1].set_xlim([0., 0.5 / freq_scale])
+            axes[1].set_xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
         else:
-            raise ValueError('Units not valid.')
+            raise ValueError('Frequency units not valid.')
         axes[0].xaxis.set_ticks_position('top')
         if kappa_units:
             axes[0].set_ylabel(r'PSD [W/mK]')
@@ -240,7 +229,6 @@ class HeatCurrent(MDSample):
             axes[0].set_ylabel(r'PSD')
         axes[0].grid()
         axes[1].xaxis.set_ticks_position('bottom')
-        axes[1].set_xlabel(r'$f$ [THz]')
         axes[1].set_ylabel(r'log(PSD)')
         axes[1].grid()
         return axes
@@ -294,7 +282,7 @@ class HeatCurrent(MDSample):
         axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
         return axes
 
-    def plot_cepstral_spectrum(self, freq_units='thz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
+    def plot_cepstral_spectrum(self, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
                                **plot_kwargs):   # yapf: disable
         if axes is None:
             figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
@@ -308,11 +296,13 @@ class HeatCurrent(MDSample):
             axes[1].plot(self.freqs_THz, self.dct.logpsd, **plot_kwargs)
             axes[0].set_xlim([0., self.Nyquist_f_THz])
             axes[1].set_xlim([0., self.Nyquist_f_THz])
+            axes[1].set_xlabel(r'$f$ [THz]')
         elif (freq_units == 'red'):
             axes[0].plot(self.freqs / freq_scale, self.dct.psd * psd_scale, **plot_kwargs)
             axes[1].plot(self.freqs / freq_scale, self.dct.logpsd, **plot_kwargs)
             axes[0].set_xlim([0., 0.5 / freq_scale])
             axes[1].set_xlim([0., 0.5 / freq_scale])
+            axes[1].set_xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
         else:
             raise ValueError('Units not valid.')
         axes[0].xaxis.set_ticks_position('top')
@@ -323,39 +313,19 @@ class HeatCurrent(MDSample):
             axes[0].set_ylabel(r'PSD')
         axes[0].grid()
         axes[1].xaxis.set_ticks_position('bottom')
-        axes[1].set_xlabel(r'$f$ [THz]')
         axes[1].set_ylabel(r'log(PSD)')
         axes[1].grid()
         return axes
 
     def resample_current(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
-                         freq_units='thz', FIGSIZE=None):   # yapf: disable
-        return resample_current(self, TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=plot,
-                                PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units)   # yapf: disable
+                         freq_units='THz', FIGSIZE=None):   # yapf: disable
+        return resample_current(self, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W, freq_units, FIGSIZE)
 
-
-#is this function needed?
-#   def compute_kappa_multi(self, others, FILTER_WINDOW_WIDTH=None):
-#      """Multi-component kappa calculation."""
-#      log.write_log("HeatCurrent.compute_kappa_multi")
-#      if FILTER_WINDOW_WIDTH is None:
-#         FILTER_WINDOW_WIDTH = self.FILTER_WINDOW_WIDTH
-#      multi_mdsample = super(HeatCurrent, self).compute_kappa_multi(others, FILTER_WINDOW_WIDTH, DT_FS=self.DT_FS, call_other=True)
-#      multi_hc = HeatCurrent(None, self.units, self.DT_FS, self.TEMPERATURE, self.VOLUME, FILTER_WINDOW_WIDTH, 'red')
-#      ### CHECK THAT PSD IS NOT INITIALIZED by the HC constructor
-#      ### We'd actually need a HC constructor from a MDSample object
-#      ### NEED TO CHANGE FILTER_WINDOW_WIDTH into PSD_FILTER_W and check freq_units (for now = 'red')
-#      multi_hc.initialize_psd(psd=multi_mdsample.psd, freqs=multi_mdsample.freqs)
-#      multi_hc.filter_psd(FILTER_WINDOW_WIDTH)
-#      multi_hc.covarALL = multi_mdsample.covarALL
-#      multi_hc.ndf_chi = multi_mdsample.ndf_chi
-#      multi_hc.cospectrum = multi_mdsample.cospectrum
-#      return multi_hc
 
 ################################################################################
 
 
-def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='thz',
+def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='THz',
                      FIGSIZE=None, verbose=True):   # yapf: disable
     """
     Simulate the resampling of x.
@@ -390,7 +360,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
             TSKIP = int(round(x.Nyquist_f_THz / fstar_THz))
     if plot:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, 1.0, axes=axes)   # this also updates x.FILTER_WINDOW_WIDTH
+        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, 1.0, axes=axes)   # this also updates x.PSD_FILTER_W
 
     fstar_THz = x.Nyquist_f_THz / TSKIP
     fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
@@ -403,9 +373,9 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     #TODO: document the units of frequency used everywere in the library and use a consistent scheme.
 
     # resample filtering window width in order to use the same filtering frequency window in the plot
-    # if PSD_FILTER_W was specified, then x.FILTER_WINDOW_WIDTH was updated by the previous plot function
-    #if x.FILTER_WINDOW_WIDTH is not None:
-    #    PSD_FILTER_W = x.FILTER_WINDOW_WIDTH * TSKIP
+    # if PSD_FILTER_W was specified, then x.PSD_FILTER_W was updated by the previous plot function
+    #if x.PSD_FILTER_W is not None:
+    #    PSD_FILTER_W = x.PSD_FILTER_W * TSKIP
 
     # define new HeatCurrent
     if not x.many_currents:
@@ -422,11 +392,11 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
     if plot:
         if (freq_units == 'thz') or (freq_units == 'THz'):
-            xf.plot_periodogram(x.FILTER_WINDOW_WIDTH * 1000. / x.DT_FS, 'thz', TSKIP, axes=axes)
+            xf.plot_periodogram(x.PSD_FILTER_W_THz, 'THz', TSKIP, axes=axes)
         elif (freq_units == 'red'):
             log.write_log(PSD_FILTER_W)
-            log.write_log(x.FILTER_WINDOW_WIDTH)
-            xf.plot_periodogram(x.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axes=axes)
+            log.write_log(x.PSD_FILTER_W)
+            xf.plot_periodogram(x.PSD_FILTER_W * TSKIP, 'red', TSKIP, axes=axes)
 
     # write log
     xf.resample_log = \
@@ -540,5 +510,3 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
     else:
         return xf
 
-
-################################################################################
