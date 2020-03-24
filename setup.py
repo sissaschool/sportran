@@ -10,7 +10,6 @@ GUI_dependencies = [
         'future-fstrings>=0.1.0',
         'markdown2>=2.0.0',
         'pillow>=5.4.0',
-        'tk-html-widgets>=0.3.0',
         'uncertainties>=2.4'
 ]
 
