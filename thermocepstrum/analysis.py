@@ -502,9 +502,8 @@ Contact: lercole@sissa.it
             binoutobj.jf_dct_Kmin_corrfactor = jf.dct.Kmin_corrfactor
         if not no_text_out:
             outfile_name = output + '.cepstral.dat'
-            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.
-                             logtau_THEORY_std, jf.dct.tau * jf.kappa_scale * 0.5, jf.dct.tau_THEORY_std *
-                             jf.kappa_scale * 0.5]
+            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std,
+                             jf.dct.tau * jf.kappa_scale * 0.5, jf.dct.tau_THEORY_std * jf.kappa_scale * 0.5]
             outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
 
