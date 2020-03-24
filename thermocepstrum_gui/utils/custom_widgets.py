@@ -10,7 +10,7 @@ This file contains the tools and widgets that the GUI use.
 
 from tkinter import *
 from tkinter import ttk
-from tk_html_widgets import HTMLLabel, HTMLScrolledText
+from .tk_html_widgets import HTMLLabel, HTMLScrolledText
 import tkinter.filedialog as fdialog
 from tkinter import messagebox as msg
 import os
