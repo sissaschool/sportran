@@ -1,0 +1,51 @@
+# Install pre-commit hooks via
+# pre-commit install
+
+- repo: local
+  hooks:
+  # yapf = yet another python formatter
+  - id: yapf
+    name: yapf
+    entry: yapf
+    language: system
+    types: [python]
+    args: ["-i"]
+    exclude: &exclude_files >
+      (?x)^(
+        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        docs/.*|
+        examples/.*|
+        setup.py|
+      )$
+
+- repo: git://github.com/pre-commit/pre-commit-hooks
+  rev: v2.3.0
+  hooks:
+  - id: check-yaml
+  - id: check-merge-conflict
+  - id: check-symlinks
+  - id: check-json
+  - id: check-executables-have-shebangs
+  - id: double-quote-string-fixer
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+    exclude: >
+      (?x)^(
+        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        docs/.*|
+        examples/.*|
+      )$
+
+#  # prospector: collection of linters
+#  - id: prospector
+#    language: system
+#    types: [file, python]
+#    name: prospector
+#    description: "This hook runs Prospector: https://github.com/landscapeio/prospector"
+#    entry: prospector
+#
+#  - id: version-number
+#    name: Check version numbers
+#    entry: python ./.travis-data/check_version.py
+#    language: system
+#    files: '^(setup.json)|(aiida_diff/__init__.py)'

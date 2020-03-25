@@ -25,13 +25,13 @@ The output of the program in the terminal is:
  Time step:      5.0 fs
 Temp    c_flux[1] c_flux[2] c_flux[3] c_vcm[1][1] c_vcm[1][2] c_vcm[1][3]
  #####################################
-  all_ckeys =  {'flux': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6]), 'Temp': [0]}
+  all_ckeys =  {'Temp': [0], 'flux': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6])}
  #####################################
 Data length =  20000
   ckey =  {'flux': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6]), 'Temp': [0]}
   ( 20000 ) steps read.
-DONE.  Elapsed time:  0.205617904663 seconds
- Mean Temperature (computed):  1399.3477812 K  +/-  19.3187858209
+DONE.  Elapsed time:  0.25597500801086426 seconds
+ Mean Temperature (computed):  1399.3477811999999 K  +/-  19.318785820942594
  Volume (input):  65013.301261 A^3
  Time step (input):  5.0 fs
 ['flux', 'vcm[1]'] None
@@ -55,7 +55,7 @@ snippet:
 Using multicomponent code.
  Number of currents = 2
  Number of components = 3
- kappa_scale = 1.46043907889e-07
+ kappa_scale = 1.4604390788939313e-07
  Nyquist_f   = 100.0  THz
 Using multicomponent code.
 -----------------------------------------------------
@@ -87,4 +87,5 @@ Using multicomponent code.
 -----------------------------------------------------
 ```
 
-The program outputs raw data and some pdf plots. In this example the output files are called `output.*`.
+The program outputs raw data and some pdf plots.\
+In this example the output files are called `output.*`.
