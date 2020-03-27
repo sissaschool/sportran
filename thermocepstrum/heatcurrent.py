@@ -33,45 +33,11 @@ class HeatCurrent(MDSample):
      - freq_units    frequency units   [THz or red] (optional)
     """
 
-    def __init__(self, j, units, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
-
-        # check if we have a multicomponent fluid
-        j = np.array(j, dtype=float)
-        if (len(j.shape) == 3):
-            if (j.shape[0] == 1):
-                self.many_currents = False
-                j = np.squeeze(j, axis=0)
-            else:
-                self.many_currents = True
-        elif (len(j.shape) <= 2):
-            self.many_currents = False
-        else:
-            raise ValueError('Shape of j {} not valid.'.format(j.shape))
-
-        if self.many_currents:
-            log.write_log('Using multicomponent code.')
-            MDSample.__init__(self, traj=j[0], DT_FS=DT_FS)
-            # initialize other MDSample objects needed to make the work
-            self.otherMD = []
-            for js in j[1:]:
-                self.otherMD.append(MDSample(traj=js, DT_FS=DT_FS))
-        else:
-            log.write_log('Using single component code.')
-            MDSample.__init__(self, traj=j, DT_FS=DT_FS)
-
-        self.initialize_units(units, TEMPERATURE, VOLUME, DT_FS)
-
+    def __init__(self, j, UNITS, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
+        self.initialize_currents(j, DT_FS)
+        self.initialize_units(UNITS, TEMPERATURE, VOLUME, DT_FS)
         if self.traj is not None:
-            if PSD_FILTER_W is None:
-                if not self.many_currents:
-                    self.compute_psd()
-                else:
-                    self.compute_kappa_multi(others=self.otherMD)
-            else:
-                if not self.many_currents:
-                    self.compute_psd(PSD_FILTER_W, freq_units)
-                else:
-                    self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units)
+            self.compute_psd(PSD_FILTER_W, freq_units)
             self.initialize_cepstral_parameters()
         else:
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
@@ -80,49 +46,78 @@ class HeatCurrent(MDSample):
         return
 
     def __repr__(self):
-        msg = 'HeatCurrent:\n' + super(HeatCurrent, self).__repr__()
+        msg = 'HeatCurrent:\n' +\
+              '  N_CURRENTS =  {}\n'.format(self.N_CURRENTS) +\
+              super(HeatCurrent, self).__repr__()
+        for current in self.otherMD:
+            msg += current.__repr__()
         if self.dct is not None:
             msg += self.dct.__repr__()
         return msg
 
-    def compute_psd(self, PSD_FILTER_W=None, freq_units='red', method='trajectory', DT_FS=None, normalize=False):
-        # overrides MDSample methos
-        # TODO: can we move this to mdsample?
+    def initialize_currents(self, j, DT_FS):
+        # check if we have a multicomponent fluid
+        j = np.array(j, dtype=float)
+        if (len(j.shape) == 3):
+            self.N_CURRENTS = j.shape[0]
+            if (self.N_CURRENTS == 1):
+                self.MANY_CURRENTS = False
+                j = np.squeeze(j, axis=0)
+            else:
+                self.MANY_CURRENTS = True
+        elif (len(j.shape) <= 2):
+            self.N_CURRENTS = 1
+            self.MANY_CURRENTS = False
+        else:
+            raise ValueError('Shape of j {} not valid.'.format(j.shape))
+
+        if self.MANY_CURRENTS:
+            log.write_log('Using multicomponent code.')
+            super(HeatCurrent, self).__init__(traj=j[0], DT_FS=DT_FS)
+            # initialize other MDSample currents
+            self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[1:]]
+        else:
+            log.write_log('Using single component code.')
+            super(HeatCurrent, self).__init__(traj=j, DT_FS=DT_FS)
+        return
+
+    def compute_psd(self, PSD_FILTER_W=None, freq_units='red'):
+        # overrides MDSample method
         """
         Compute the periodogram from the heat current time series.
         If a PSD_FILTER_W (expressed in freq_units) is known or given, the psd is also filtered.
         The PSD is multiplied by DT_FS at the end.
         """
-        if self.many_currents:
+        if self.MANY_CURRENTS:
             if self.otherMD is None:
                 raise RuntimeError('self.otherMD cannot be None (wrong/missing initialization?)')
-            self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units, method, DT_FS, normalize)
+            self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units)
         else:
-            super(HeatCurrent, self).compute_psd(PSD_FILTER_W, freq_units, method, DT_FS, normalize)
+            super(HeatCurrent, self).compute_psd(PSD_FILTER_W, freq_units)
         return
 
     @staticmethod
     def get_units_list():
         return ['metal', 'real', 'qepw', 'gpumd', 'dlpoly']
 
-    def initialize_units(self, units, TEMPERATURE, VOLUME, DT_FS):
+    def initialize_units(self, UNITS, TEMPERATURE, VOLUME, DT_FS):
         """
         Initializes the units and define the kappa_scale.
         """
-        self.units = units
+        self.UNITS = UNITS
         self.TEMPERATURE = TEMPERATURE
         self.VOLUME = VOLUME
         self.DT_FS = DT_FS
         # timestep is already included in the PSD definition, so it will be ignored here
-        if (self.units == 'metal'):
+        if (self.UNITS == 'metal'):
             self.kappa_scale = md.units.scale_kappa_METALtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.units == 'real'):
+        elif (self.UNITS == 'real'):
             self.kappa_scale = md.units.scale_kappa_REALtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.units == 'qepw'):
+        elif (self.UNITS == 'qepw'):
             self.kappa_scale = md.units.scale_kappa_QEPWtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.units == 'gpumd'):
+        elif (self.UNITS == 'gpumd'):
             self.kappa_scale = md.units.scale_kappa_GPUMDtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.units == 'dlpoly'):
+        elif (self.UNITS == 'dlpoly'):
             self.kappa_scale = md.units.scale_kappa_DLPOLYtoSI(TEMPERATURE, VOLUME, 1.0)
         else:
             raise ValueError('Units not supported.')
@@ -132,7 +127,7 @@ class HeatCurrent(MDSample):
         """
         Defines the parameters of the theoretical distribution of the cepstrum.
         """
-        if not self.many_currents:
+        if not self.MANY_CURRENTS:
             self.ck_THEORY_var, self.psd_THEORY_mean = \
                 md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.N_COMPONENTS)
         else:
@@ -180,9 +175,10 @@ class HeatCurrent(MDSample):
         """
         Plot the periodogram.
           PSD_FILTER_W  = width of the filtering window
-          freq_units    = 'thz'  THz
-                          'red'  omega*DT/(2*pi)
+          freq_units    = 'thz'  [THz]
+                          'red'  [omega*DT/(2*pi)]
           freq_scale    = rescale red frequencies by this factor (e.g. 2 --> freq = [0, 0.25])
+          kappa_units   = plot periodograms in units of kappa (default: False) - NB: log-psd not converted
           axes          = matplotlib.axes.Axes object (if None, create one)
           FIGSIZE       = size of the plot
 
@@ -190,25 +186,21 @@ class HeatCurrent(MDSample):
         """
         # recompute PSD if needed
         if self.psd is None:
-            if not self.many_currents:
-                self.compute_psd()
-            else:
-                if self.otherMD is None:
-                    raise ValueError('self.otherMD cannot be None (missing initialization?)')
-                self.compute_kappa_multi(others=self.otherMD)
-        if PSD_FILTER_W is None:
-            if self.PSD_FILTER_W is None:
-                self.filter_psd(0.)
-        else:
+            self.compute_psd()
+        # (re)compute filtered psd, if a window has been defined
+        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
+        else:   # use a zero-width (non-filtering) window
+            self.filter_psd(0.)
         if kappa_units:   # plot psd in units of kappa - the log(psd) is not converted
             psd_scale = 0.5 * self.kappa_scale
         else:
             psd_scale = 1.0
+
         if axes is None:
             figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        plt.subplots_adjust(hspace=0.1)
-        if (freq_units == 'thz') or (freq_units == 'THz'):
+            plt.subplots_adjust(hspace=0.1)
+        if freq_units in ('THz', 'thz'):
             axes[0].plot(self.freqs_THz, psd_scale * self.fpsd, **plot_kwargs)
             axes[1].plot(self.freqs_THz, self.flogpsd, **plot_kwargs)
             axes[0].set_xlim([0., self.Nyquist_f_THz])
@@ -291,7 +283,7 @@ class HeatCurrent(MDSample):
             psd_scale = 0.5 * self.kappa_scale
         else:
             psd_scale = 1.0
-        if (freq_units == 'thz') or (freq_units == 'THz'):
+        if freq_units in ('THz', 'thz'):
             axes[0].plot(self.freqs_THz, self.dct.psd * psd_scale, **plot_kwargs)
             axes[1].plot(self.freqs_THz, self.dct.logpsd, **plot_kwargs)
             axes[0].set_xlim([0., self.Nyquist_f_THz])
@@ -320,6 +312,10 @@ class HeatCurrent(MDSample):
     def resample_current(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
                          freq_units='THz', FIGSIZE=None):   # yapf: disable
         return resample_current(self, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W, freq_units, FIGSIZE)
+
+    def fstar_analysis(self, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
+                       verbose=False, **plot_kwargs):   # yapf: disable
+        return fstar_analysis(self, TSKIP_LIST, aic_type, Kmin_corrfactor, plot, axes, FIGSIZE, verbose, **plot_kwargs)
 
 
 ################################################################################
@@ -360,7 +356,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
             TSKIP = int(round(x.Nyquist_f_THz / fstar_THz))
     if plot:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, 1.0, axes=axes)   # this also updates x.PSD_FILTER_W
+        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, axes=axes)   # this also updates x.PSD_FILTER_W
 
     fstar_THz = x.Nyquist_f_THz / TSKIP
     fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
@@ -370,32 +366,29 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         FILTER_W = TSKIP
     trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
 
-    #TODO: document the units of frequency used everywere in the library and use a consistent scheme.
-
     # resample filtering window width in order to use the same filtering frequency window in the plot
     # if PSD_FILTER_W was specified, then x.PSD_FILTER_W was updated by the previous plot function
-    #if x.PSD_FILTER_W is not None:
-    #    PSD_FILTER_W = x.PSD_FILTER_W * TSKIP
 
     # define new HeatCurrent
-    if not x.many_currents:
-        xf = HeatCurrent(trajf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
+    if not x.MANY_CURRENTS:
+        xf = HeatCurrent(trajf, x.UNITS, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
     else:
         if x.otherMD is None:
             raise RuntimeError('x.otherMD cannot be none (wrong/missing initialization?)')
-        # filter_and_sample also other trajectories
+        # filter and sample other trajectories
         yf = []
         yf.append(trajf)
         for y in x.otherMD:
             tmp = md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
             yf.append(tmp)
-        xf = HeatCurrent(yf, x.units, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
+        xf = HeatCurrent(yf, x.UNITS, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
+
     if plot:
-        if (freq_units == 'thz') or (freq_units == 'THz'):
-            xf.plot_periodogram(x.PSD_FILTER_W_THz, 'THz', TSKIP, axes=axes)
+        if freq_units in ('THz', 'thz'):
+            xf.plot_periodogram(x.PSD_FILTER_W_THZ, 'THz', TSKIP, axes=axes)
         elif (freq_units == 'red'):
-            log.write_log(PSD_FILTER_W)
-            log.write_log(x.PSD_FILTER_W)
+            # log.write_log(PSD_FILTER_W)
+            # log.write_log(x.PSD_FILTER_W)
             xf.plot_periodogram(x.PSD_FILTER_W * TSKIP, 'red', TSKIP, axes=axes)
 
     # write log
@@ -425,7 +418,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         log.write_log(xf.resample_log)
 
     if plot:
-        if (freq_units == 'thz') or (freq_units == 'THz'):
+        if freq_units in ('THz', 'thz'):
             axes[0].axvline(x=fstar_THz, ls='--', c='k')
             axes[1].axvline(x=fstar_THz, ls='--', c='k')
             axes[0].set_xlim([0., x.Nyquist_f_THz])
@@ -509,4 +502,3 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
             return xf, ax
     else:
         return xf
-

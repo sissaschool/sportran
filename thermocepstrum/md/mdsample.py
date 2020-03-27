@@ -1,9 +1,6 @@
 import numpy as np
-
 #import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
-
-from .tools import integrate_acf, runavefilter
 
 
 def freq_THz_to_red(f_THz, DT_FS):
@@ -63,11 +60,11 @@ class MDSample(object):
         self.fpsd                   filtered periodogram
         self.flogpsd                filtered log-periodogram
         self.acf                    autocorrelation function
-        self.N_COMPONENTS           number of equivalent (cartesian) components (an average over them will be computed)
-        self.MULTI_COMPONENT        True if N_COMPONENTS > 1
+        self.N_COMPONENTS           number of EQUIVALENT (cartesian) components (an average over them will be computed)
+        self.MANY_COMPONENTS        True if N_COMPONENTS > 1
         self.PSD_FILTER_W           width of the moving average filter (reduced frequency units)
         self.PSD_FILTER_W_THZ       width of the moving average filter (THz)
-        self.FILTER_WF              width of the moving average filter (number of frequencies)
+        self.PSD_FILTER_WF          width of the moving average filter (number of frequencies)
 
     """
 
@@ -77,35 +74,29 @@ class MDSample(object):
         self.initialize_spectrum(spectr)
         self.initialize_psd(freqs=freqs, psd=psd, DT_FS=DT_FS)
 
-        self.fpsd = None
-        self.flogpsd = None
-        self.acf = None
-        self.NLAGS = None
         self.cospectrum = None
         self.fcospectrum = None
-
-        # other variables...
-        self.PSD_FILTER_W = None
-        self.PSD_FILTER_W_THZ = None
-        self.FILTER_WF = None
         return
 
     def __repr__(self):
         msg = 'MDSample:\n' + \
+              '  DT_FS:  {}  fs\n'.format(self.DT_FS) + \
               '  traj:   {}  steps  *  {} components\n'.format(self.N, self.N_COMPONENTS) + \
-              '  spectr: {}  frequencies\n'.format(self.Nfreqs)
+              '          {}  fs\n'.format(None if self.traj is None else self.DT_FS * self.N)
+        if self.spectr is not None:
+            msg += '  spectr: {}  frequencies\n'.format(self.Nfreqs)
         if self.psd is not None:
-            msg = msg + '  psd:      {}  frequencies\n'.format(self.psd.size) + \
-                    '      DF =      {}  [omega*DT/(2*pi)]\n'.format(self.DF) + \
-                    '                {}  [THz]\n'.format(self.DF_THz) + \
-                    '  NyquistFreq = {}  [THz]'.format(self.Nyquist_f_THz)
+            msg += '  psd:    {}  frequencies\n'.format(self.psd.size) + \
+                   '      DF =      {}  [omega*DT/(2*pi)]\n'.format(self.DF) + \
+                   '                {}  [THz]\n'.format(self.DF_THz) + \
+                   '      Nyquist Frequency = {}  [THz]\n'.format(self.Nyquist_f_THz)
         if self.fpsd is not None:
-            msg = msg + '  fpsd:   {}  frequencies\n'.format(self.fpsd.size) +\
-                    '      PSD_FILTER_W  = {} [omega*DT/(2*pi)]\n'.format(self.PSD_FILTER_W) +\
-                    '                    = {} [THz]\n'.format(self.PSD_FILTER_W_THZ) +\
-                    '      FILTER_WF     = {} frequencies\n'.format(self.FILTER_WF)
+            msg += '  fpsd:   {}  frequencies\n'.format(self.fpsd.size) +\
+                   '      PSD_FILTER_W  = {} [omega*DT/(2*pi)]\n'.format(self.PSD_FILTER_W) +\
+                   '                    = {} [THz]\n'.format(self.PSD_FILTER_W_THZ) +\
+                   '      PSD_FILTER_WF = {} frequencies\n'.format(self.PSD_FILTER_WF)
         if self.acf is not None:
-            msg = msg + '  acf:    {}  lags\n'.format(self.NLAGS)
+            msg += '  acf:    {}  lags\n'.format(self.NLAGS)
         return msg
 
     #############################################
@@ -122,13 +113,15 @@ class MDSample(object):
         or, in the case of 1 component:
           (number of time points)
         """
+        if not isinstance(array, (list, np.ndarray, tuple)):
+            raise TypeError('Input trajectory must be an array.')
         if array is not None:
             array = np.array(array, dtype=float)
             if (len(array.shape) == 1):
-                self.MULTI_COMPONENT = False
-                self.N_COMPONENTS = 1
+                self.MANY_COMPONENTS = False
                 self.traj = array[:, np.newaxis]
             elif (len(array.shape) == 2):
+                self.MANY_COMPONENTS = True
                 if (array.shape[0] % 2 == 1):
                     self.traj = array[:-1]
                     print('Trajectory has an odd number of points. Removing the last one.')
@@ -136,11 +129,16 @@ class MDSample(object):
                     self.traj = array
             else:
                 raise TypeError('Input trajectory array has > 2 dimensions.')
-            self.N = self.traj.shape[0]
+            self.N, self.N_COMPONENTS = self.traj.shape
+            if (self.N < 2) or (self.N_COMPONENTS < 1):
+                raise ValueError('Input trajectory size too small (N = {}, N_COMPONENTS = {}).'.format(
+                    self.N, self.N_COMPONENTS))
         else:
             self.traj = None
             self.N = None
             self.N_COMPONENTS = None
+        self.acf = None
+        self.NLAGS = None
         return
 
     def initialize_spectrum(self, array):
@@ -165,6 +163,7 @@ class MDSample(object):
           - passing PSD only (frequencies will be computed automatically)
               e.g.   initialize_psd(psd)
         """
+        # frequencies
         if freq_psd is not None:   # use freq_psd variable
             if (len(freq_psd) == 2):   # (freqs, psd) tuple was passed
                 if (freqs is not None) or (psd is not None):
@@ -188,11 +187,19 @@ class MDSample(object):
             frequencies = freqs
             array = psd
 
+        self.psd = None
+        self.freqs = None
+        self.fpsd = None
+        self.flogpsd = None
+        self.PSD_FILTER_W = None
+        self.PSD_FILTER_W_THZ = None
+        self.PSD_FILTER_WF = None
+
         # PSD
         if array is None:
-            self.psd = None
-            self.freqs = None
             return
+        else:
+            pass
         self.psd = np.array(array, dtype=float)
         self.logpsd = np.log(self.psd)
         self.logpsd_min = np.min(self.psd)
@@ -212,7 +219,7 @@ class MDSample(object):
         self.freqs_THz = freq_red_to_THz(self.freqs, self.DT_FS)
         self.Nyquist_f_THz = self.freqs_THz[-1]
         self.DF = 0.5 / (self.Nfreqs - 1)
-        self.DF_THz = freq_red_to_THz(self.DF)
+        self.DF_THz = freq_red_to_THz(self.DF, self.DT_FS)
         return
 
     #############################################
@@ -257,15 +264,13 @@ class MDSample(object):
         if (method == 'trajectory'):
             if self.traj is None:
                 raise ValueError('Trajectory not defined.')
-            if self.MULTI_COMPONENT:
-                self.freqs, self.psdALL = periodogram(self.traj, detrend=None, axis=0)
-                self.psd = np.mean(self.psdALL, axis=1)
-            else:
-                self.freqs, self.psd = periodogram(self.traj, detrend=None)
+            self.freqs, self.psdALL = periodogram(self.traj, detrend=None, axis=0)
+            self.psd = np.mean(self.psdALL, axis=1)
             self.psd[1:-1] = self.psd[1:-1] * 0.5
-            self.psd = self.DT_FS * self.psd
+            self.psd *= self.DT_FS
             self.Nfreqs = self.freqs.size
             self.DF = 0.5 / (self.Nfreqs - 1)
+            self.DF_THz = freq_red_to_THz(self.DF, self.DT_FS)
         elif (method == 'spectrum'):
             if self.spectr is None:
                 raise ValueError('Spectrum not defined.')
@@ -281,6 +286,8 @@ class MDSample(object):
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
         self.psd_power = np.trapz(self.psd)   # one-side PSD power
+
+        # (re)compute filtered psd, if a window has been defined
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
         return
@@ -294,31 +301,39 @@ class MDSample(object):
         """
         if self.psd is None:
             raise ValueError('Periodogram is not defined.')
-        if PSD_FILTER_W is not None:   # otherwise try to use the internal value
-            if (freq_units == 'thz') or (freq_units == 'THz'):
+        if PSD_FILTER_W is not None:
+            if freq_units in ('THz', 'thz'):
                 self.PSD_FILTER_W_THZ = PSD_FILTER_W
-                self.PSD_FILTER_W = freq_THz_to_red(PSD_FILTER_W)
+                self.PSD_FILTER_W = freq_THz_to_red(PSD_FILTER_W, self.DT_FS)
             elif (freq_units == 'red'):
                 self.PSD_FILTER_W = PSD_FILTER_W
-                self.PSD_FILTER_W_THZ = freq_red_to_THz(PSD_FILTER_W)
+                self.PSD_FILTER_W_THZ = freq_red_to_THz(PSD_FILTER_W, self.DT_FS)
             else:
                 raise ValueError('Freq units not valid.')
+        else:
+            pass   # try to use the internal value
         if self.PSD_FILTER_W is not None:
-            self.FILTER_WF = int(round(self.PSD_FILTER_W * self.Nfreqs * 2.))
+            self.PSD_FILTER_WF = int(round(self.PSD_FILTER_W * self.Nfreqs * 2.))
         else:
             raise ValueError('Filter window width not defined.')
+
+        from .tools import runavefilter
         if (window_type == 'rectangular'):
-            self.fpsd = runavefilter(self.psd, self.FILTER_WF)
-            if self.cospectrum is not None:   # try to filter the other currents (if present)
+            self.fpsd = runavefilter(self.psd, self.PSD_FILTER_WF)
+
+            # try to filter the other currents (if present)
+            if self.cospectrum is not None:
                 self.fcospectrum = []
                 for i in range(self.cospectrum.shape[0]):
                     self.fcospectrum.append([])
                     for j in range(self.cospectrum.shape[1]):
-                        ffpsd = runavefilter(self.cospectrum[i, j], self.FILTER_WF)
+                        ffpsd = runavefilter(self.cospectrum[i, j], self.PSD_FILTER_WF)
                         self.fcospectrum[i].append(ffpsd / self.L)
                 self.fcospectrum = np.asarray(self.fcospectrum)
-            if logpsd_filter_type == 1:
-                self.flogpsd = runavefilter(self.logpsd, self.FILTER_WF)
+
+            # filter log-psd
+            if (logpsd_filter_type == 1):
+                self.flogpsd = runavefilter(self.logpsd, self.PSD_FILTER_WF)
             else:
                 self.flogpsd = np.log(self.fpsd)
         else:
@@ -342,6 +357,7 @@ class MDSample(object):
         """Compute the integral of the autocovariance function."""
         if self.acf is None:
             raise RuntimeError('Autocovariance is not defined.')
+        from .tools import integrate_acf
         self.tau = integrate_acf(self.acf)
         self.taum = np.mean(self.tau, axis=1)   # average tau
         return
@@ -379,6 +395,7 @@ class MDSample(object):
             self.Nfreqs = self.spectrALL.shape[0]
             self.freqs = np.linspace(0., 0.5, self.Nfreqs)
             self.DF = 0.5 / (self.Nfreqs - 1)
+            self.DF_THz = freq_red_to_THz(self.DF, self.DT_FS)
         else:
             raise KeyError('method not understood')
         self.freqs_THz = self.freqs / self.DT_FS * 1000.
@@ -432,7 +449,9 @@ class MDSample(object):
     ###################################
     # customized line properties can be passed through the param_dict dictionary
     # see kwargs at: http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.plot
-    # TODO: move these plot functions into a separate class
+
+    ## TODO: plots should call Plotter methods
+    ## all these methods have to be updated
 
     def plot_traj(self, param_dict={'label': 'traj'}):
         """Plot the time series."""

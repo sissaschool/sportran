@@ -366,7 +366,7 @@ Contact: lercole@sissa.it
             binoutobj.j_logpsd = j.logpsd
             binoutobj.j_Nyquist_f_THz = j.Nyquist_f_THz
             binoutobj.j_PSD_FILTER_W_THz = psd_filter_w
-            if j.many_currents:
+            if j.MANY_CURRENTS:
                 binoutobj.j_cospectrum = j.cospectrum
                 binoutobj.j_fcospectrum = j.fcospectrum
         #TODO: move all output in one place?
@@ -375,7 +375,7 @@ Contact: lercole@sissa.it
             outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
             outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
-            if j.many_currents:
+            if j.MANY_CURRENTS:
                 outfile_name = output + '.cospectrum.dat'
                 outarray = np.c_[j.freqs_THz,
                                  j.cospectrum.reshape((j.cospectrum.shape[0] * j.cospectrum.shape[1],
@@ -443,7 +443,7 @@ Contact: lercole@sissa.it
             binoutobj.kappa_Kmin = jf.kappa_Kmin
             binoutobj.kappa_Kmin_std = jf.kappa_Kmin_std
             binoutobj.cepstral_log = jf.cepstral_log
-            binoutobj.units = jf.units
+            binoutobj.units = jf.UNITS
             binoutobj.kappa_scale = jf.kappa_scale
             binoutobj.TEMPERATURE = temperature
             binoutobj.VOLUME = volume
@@ -502,9 +502,8 @@ Contact: lercole@sissa.it
             binoutobj.jf_dct_Kmin_corrfactor = jf.dct.Kmin_corrfactor
         if not no_text_out:
             outfile_name = output + '.cepstral.dat'
-            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.
-                             logtau_THEORY_std, jf.dct.tau * jf.kappa_scale * 0.5, jf.dct.tau_THEORY_std *
-                             jf.kappa_scale * 0.5]
+            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std,
+                             jf.dct.tau * jf.kappa_scale * 0.5, jf.dct.tau_THEORY_std * jf.kappa_scale * 0.5]
             outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
 
@@ -743,7 +742,7 @@ class TCOutput(object):
         self.kappa_Kmin     = None
         self.kappa_Kmin_std = None
         self.cepstral_log   = None
-        self.units          = None
+        self.UNITS          = None
         self.kappa_scale    = None
         self.TEMPERATURE    = None
         self.VOLUME         = None
