@@ -178,8 +178,8 @@ def main():
     mean_cepstral = np.mean(cepstrals, axis=0)
     log.write_log(mean_cepstral.shape)
     log.write_log(mean_periodogram.shape)
-    np.savetxt(output + '.mean_periodogram',
-               np.c_[freqs, mean_periodogram[0], std_periodogram[0], mean_periodogram[1], std_periodogram[1]])
+    np.savetxt(output + '.mean_periodogram', np.c_[freqs, mean_periodogram[0], std_periodogram[0], mean_periodogram[1],
+                                                   std_periodogram[1]])
     np.savetxt(output + '.mean_cepstral', np.c_[mean_cepstral[0], std_cepstral[0], mean_cepstral[1], std_cepstral[1]])
 
     log.write_log('Mean values and standard deviations done.')
@@ -231,17 +231,17 @@ def main():
                 WF = int(round(w / 1000. * self.DT_FS * len(self.freqs_THz) * 2.))
                 log.write_log('filtering: ', WF)
                 if not single:
-                    ffpsd = tc.md.tools.runavefilter(self.mpsd, WF)
+                    ffpsd = tc.md.tools.filter.runavefilter(self.mpsd, WF)
                 else:
-                    ffpsd = tc.md.tools.runavefilter(self.psd, WF)
+                    ffpsd = tc.md.tools.filter.runavefilter(self.psd, WF)
                 self.fpsd = ffpsd
                 try:
                     for i in range(self.ucospectrum.shape[0]):
                         for j in range(self.ucospectrum.shape[1]):
                             if not single:
-                                ffc = tc.md.tools.runavefilter(self.mcospectrum[i, j], WF)
+                                ffc = tc.md.tools.filter.runavefilter(self.mcospectrum[i, j], WF)
                             else:
-                                ffc = tc.md.tools.runavefilter(self.ucospectrum[i, j], WF)
+                                ffc = tc.md.tools.filter.runavefilter(self.ucospectrum[i, j], WF)
                             self.cospectrum[i, j] = ffc
                 except AttributeError:
                     pass
@@ -353,9 +353,8 @@ def main():
         all_normalized = np.zeros(periodograms.shape[0] * (len(selection_not_zero)))
         for i in range(periodograms.shape[0]):
             #for idx,i in enumerate(selection_not_zero):
-            all_normalized[i * len(selection_not_zero):(i + 1) *
-                           len(selection_not_zero
-                              )] = periodograms[i, 0, selection_not_zero] / independent_mean[i, selection_not_zero]
+            all_normalized[i * len(selection_not_zero):(i + 1) * len(selection_not_zero)] = periodograms[
+                i, 0, selection_not_zero] / independent_mean[i, selection_not_zero]
 
         ks_all = plt_hist_single_psd(all_normalized, dof * 2, nbins=100)
         pdf.savefig(bbox_inches='tight', pad_inches=0.0)

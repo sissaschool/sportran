@@ -4,7 +4,9 @@
 
 import numpy as np
 from . import md
-from .md.mdsample import MDSample, freq_THz_to_red, freq_red_to_THz
+from .md.mdsample import MDSample
+from .md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
+from .md.tools.resample import filter_and_sample
 
 #import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
@@ -364,7 +366,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
     # filter and sample
     if FILTER_W is None:
         FILTER_W = TSKIP
-    trajf = md.tools.filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
+    trajf = filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
 
     # resample filtering window width in order to use the same filtering frequency window in the plot
     # if PSD_FILTER_W was specified, then x.PSD_FILTER_W was updated by the previous plot function
@@ -379,7 +381,7 @@ def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PS
         yf = []
         yf.append(trajf)
         for y in x.otherMD:
-            tmp = md.tools.filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
+            tmp = filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
             yf.append(tmp)
         xf = HeatCurrent(yf, x.UNITS, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
 

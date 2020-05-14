@@ -1,22 +1,9 @@
 import numpy as np
 #import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
-
-
-def freq_THz_to_red(f_THz, DT_FS):
-    """
-    Converts THz to reduced frequency units.
-       f[red] = f[THz] * dt[fs] / 1000
-    """
-    return f_THz / 1000. * DT_FS
-
-
-def freq_red_to_THz(f_red, DT_FS):
-    """
-    Converts reduced frequency units to THz.
-       f[THz] = f[red] * 1000 / dt[fs]
-    """
-    return f_red * 1000. / DT_FS
+from .tools.spectrum import freq_THz_to_red, freq_red_to_THz
+from .tools.filter import runavefilter
+from .tools.acf import acovf, integrate_acf
 
 
 class MDSample(object):
@@ -317,7 +304,6 @@ class MDSample(object):
         else:
             raise ValueError('Filter window width not defined.')
 
-        from .tools import runavefilter
         if (window_type == 'rectangular'):
             self.fpsd = runavefilter(self.psd, self.PSD_FILTER_WF)
 
@@ -342,7 +328,6 @@ class MDSample(object):
 
     def compute_acf(self, NLAGS=None):
         """Computes the autocovariance function of the trajectory."""
-        from .acf import acovf
         if NLAGS is not None:
             self.NLAGS = NLAGS
         else:
@@ -357,7 +342,6 @@ class MDSample(object):
         """Compute the integral of the autocovariance function."""
         if self.acf is None:
             raise RuntimeError('Autocovariance is not defined.')
-        from .tools import integrate_acf
         self.tau = integrate_acf(self.acf)
         self.taum = np.mean(self.tau, axis=1)   # average tau
         return

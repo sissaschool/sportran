@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import polygamma
 from scipy.fftpack import dct
-from .tools import logtau_to_tau
+from .tools.spectrum import logtau_to_tau
 from .aic import *
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
@@ -70,9 +70,9 @@ class CosFilter(object):
     CEPSTRAL ANALYSIS based filtering.
 
     ** INPUT VARIABLES:
-    samplelogpsd    = the original sample log-PSD, \hat{L}_k
-    ck_theory_var   = the theoretical variance of cepstral coefficients, \sigma*^2(P*,N)
-    psd_theory_mean = the theoretical bias of log-PSD, \lambda_l
+    samplelogpsd    = the original sample log-PSD, \\hat{L}_k
+    ck_theory_var   = the theoretical variance of cepstral coefficients, \\sigma*^2(P*,N)
+    psd_theory_mean = the theoretical bias of log-PSD, \\lambda_l
     aic_type        = type of AIC to use ('aic' (default), 'aicc')
     Kmin_corrfactor = cutoff correction factor (default: 1.0)
     K_PSD           = cutoff used to compute logpsd (default: K_PSD = aic_Kmin)
@@ -80,7 +80,7 @@ class CosFilter(object):
     ** INTERNAL VARIABLES:
     samplelogpsd  = the original sample log-PSD - logpsd_THEORY_mean
 
-    logpsdK  = the cepstrum of the data, \hat{C}_n (i.e. the DCT of samplelogpsd)
+    logpsdK  = the cepstrum of the data, \\hat{C}_n (i.e. the DCT of samplelogpsd)
     aic_min  = minimum value of the AIC
     aic_Kmin = cutoff K that minimizes the AIC, K = P*-1
 

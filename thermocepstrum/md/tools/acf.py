@@ -1,8 +1,22 @@
 import numpy as np
 
+
+def integrate_acf(acf):
+    """Returns the integral function of acf, i.e. its integral as a function of the upper integration limit.
+    Supports multi-component (N, N_COMP) arrays.
+    Trapezial integration is used.
+          tau[i] = trapz_{0}^{i} acf
+    """
+
+    N = acf.shape[0]
+    tau = np.zeros(acf.shape)
+    for i in range(1, N):
+        tau[i] = tau[i - 1] + 0.5 * acf[i - 1] + 0.5 * acf[i]
+    return tau
+
+
+################################################################################
 ## functions copied from statstools.tsa
-
-
 def acovf(x, unbiased=False, demean=True, fft=False, missing='none'):
     """
     Autocovariance for 1D
