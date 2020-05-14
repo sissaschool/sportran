@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ################################################################################
 ###
 ###   Code to analyze heat current trajectories in blocks using the CosFilter

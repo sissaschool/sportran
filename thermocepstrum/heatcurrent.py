@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ################################################################################
 ###   heatcurrent API
 ################################################################################
@@ -50,7 +52,7 @@ class HeatCurrent(MDSample):
     def __repr__(self):
         msg = 'HeatCurrent:\n' +\
               '  N_CURRENTS =  {}\n'.format(self.N_CURRENTS) +\
-              super(HeatCurrent, self).__repr__()
+              super().__repr__()
         for current in self.otherMD:
             msg += current.__repr__()
         if self.dct is not None:
@@ -75,12 +77,12 @@ class HeatCurrent(MDSample):
 
         if self.MANY_CURRENTS:
             log.write_log('Using multicomponent code.')
-            super(HeatCurrent, self).__init__(traj=j[0], DT_FS=DT_FS)
+            super().__init__(traj=j[0], DT_FS=DT_FS)
             # initialize other MDSample currents
             self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[1:]]
         else:
             log.write_log('Using single component code.')
-            super(HeatCurrent, self).__init__(traj=j, DT_FS=DT_FS)
+            super().__init__(traj=j, DT_FS=DT_FS)
         return
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='red'):
@@ -95,7 +97,7 @@ class HeatCurrent(MDSample):
                 raise RuntimeError('self.otherMD cannot be None (wrong/missing initialization?)')
             self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units)
         else:
-            super(HeatCurrent, self).compute_psd(PSD_FILTER_W, freq_units)
+            super().compute_psd(PSD_FILTER_W, freq_units)
         return
 
     @staticmethod

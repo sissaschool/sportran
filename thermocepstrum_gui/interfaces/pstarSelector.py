@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.core import control_unit as cu
 from uncertainties import ufloat

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from thermocepstrum_gui.utils.custom_widgets import *
 
 

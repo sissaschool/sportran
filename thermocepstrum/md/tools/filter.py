@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 def runavefilter(X, WF):
     """Computes the running average of a numpy array over WF consecutive elements (or WF+1 if WF is even):
             (X[i-WF/2]+...+X[i]+...+X[i+WF/2]) / WF

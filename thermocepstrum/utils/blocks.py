@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 __all__ = ['aic', 'cepstral', 'mdsample', 'tools', 'units']
 
 #from scipy.fftpack import fft, ifft, dct

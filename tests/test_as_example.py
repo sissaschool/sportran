@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 def test_example_NaCl():
     import numpy as np
     import os

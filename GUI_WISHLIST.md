@@ -77,8 +77,6 @@ Per rendere tutto più lineare (dall'alto in basso) metterei:
 ### packaging
 - [ ] get rid of `uncertainties` package
 
-- [ ] get rid of `future-fstrings` package
-
 - [ ] get rid of `tk-html-widgets` if possible
 
 - [ ] ensure that the code is Python 2 compatible
