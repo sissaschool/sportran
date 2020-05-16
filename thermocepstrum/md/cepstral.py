@@ -161,7 +161,6 @@ class CosFilter(object):
                 self.logtau_THEORY_var[K] = self.logtau_THEORY_var[K - 1] + 4. * self.logpsdK_THEORY_var[K]
             self.logtau_THEORY_var[-1] = self.logtau_THEORY_var[-2] + self.logpsdK_THEORY_var[-1]
             self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
-        return
 
     def __repr__(self):
         msg = 'CosFilter:\n' + \
@@ -211,7 +210,6 @@ class CosFilter(object):
             self.logpsd = self.logpsd + self.logpsd_THEORY_mean
             self.logtau = self.logtau + self.logpsd_THEORY_mean[0]
             self.logtau_Kmin = self.logtau_Kmin + self.logpsd_THEORY_mean[0]
-        return
 
     def scan_filter_psd(self, K_LIST, correct_mean=True):
         """Computes the psd as a function of the cutoff K for the CosFilter.
@@ -233,7 +231,6 @@ class CosFilter(object):
             if correct_mean:
                 self.logpsd_K_LIST[:, k] = self.logpsd_K_LIST[:, k] + self.logpsd_THEORY_mean
                 self.logtau_K_LIST[k] = self.logtau_K_LIST[k] + self.logpsd_THEORY_mean[0]
-        return
 
     #############################
     ####  Bayesian method
@@ -243,7 +240,6 @@ class CosFilter(object):
         NF = self.samplelogpsd.size
         self.p_aic = produce_p(self.aic, method)
         self.p_aic_Kave, self.p_aic_Kstd = grid_statistics(np.arange(NF), self.p_aic)
-        return
 
     def compute_logtau_density(self, method='ba', only_stats=False, density_grid=None, grid_size=1000,
                                correct_mean=True):
@@ -272,7 +268,6 @@ class CosFilter(object):
         self.p_tau_density_xave, self.p_tau_density_xstd = logtau_to_tau(self.p_logtau_density_xave,
                                                                          self.logpsd_THEORY_mean[0],
                                                                          self.p_logtau_density_xstd)
-        return
 
 
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
@@ -291,4 +286,3 @@ class CosFilter(object):
 #            self.optimalK_idx = np.NaN
 #            self.optimalK = np.NaN
 #            log.write_log(Warning: optimal cutoff K NOT FOUND.')
-#        return

@@ -47,7 +47,6 @@ class HeatCurrent(MDSample):
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
 
         self.dct = None
-        return
 
     def __repr__(self):
         msg = 'HeatCurrent:\n' +\
@@ -83,7 +82,6 @@ class HeatCurrent(MDSample):
         else:
             log.write_log('Using single component code.')
             super().__init__(traj=j, DT_FS=DT_FS)
-        return
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='red'):
         # overrides MDSample method
@@ -98,7 +96,6 @@ class HeatCurrent(MDSample):
             self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units)
         else:
             super().compute_psd(PSD_FILTER_W, freq_units)
-        return
 
     @staticmethod
     def get_units_list():
@@ -125,7 +122,6 @@ class HeatCurrent(MDSample):
             self.kappa_scale = md.units.scale_kappa_DLPOLYtoSI(TEMPERATURE, VOLUME, 1.0)
         else:
             raise ValueError('Units not supported.')
-        return
 
     def initialize_cepstral_parameters(self):
         """
@@ -139,7 +135,6 @@ class HeatCurrent(MDSample):
                 raise RuntimeError('self.ndf_chi cannot be None.')
             self.ck_THEORY_var, self.psd_THEORY_mean = \
                 md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
-        return
 
     def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None):
         """
@@ -168,7 +163,6 @@ class HeatCurrent(MDSample):
               '  kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.kappa_Kmin, self.kappa_Kmin_std) +\
               '-----------------------------------------------------\n'
         log.write_log(self.cepstral_log)
-        return
 
     ###################################
     ###  PLOT METHODS

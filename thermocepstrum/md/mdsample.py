@@ -65,7 +65,6 @@ class MDSample(object):
 
         self.cospectrum = None
         self.fcospectrum = None
-        return
 
     def __repr__(self):
         msg = 'MDSample:\n' + \
@@ -128,7 +127,6 @@ class MDSample(object):
             self.N_COMPONENTS = None
         self.acf = None
         self.NLAGS = None
-        return
 
     def initialize_spectrum(self, array):
         if array is not None:
@@ -139,7 +137,6 @@ class MDSample(object):
             self.spectr = None
             self.Nfreqs = None
             self.DF = None
-        return
 
     def initialize_psd(self, freq_psd=None, psd=None, freqs=None, DT_FS=None):
         """
@@ -187,8 +184,6 @@ class MDSample(object):
         # PSD
         if array is None:
             return
-        else:
-            pass
         self.psd = np.array(array, dtype=float)
         self.logpsd = np.log(self.psd)
         self.logpsd_min = np.min(self.psd)
@@ -209,7 +204,6 @@ class MDSample(object):
         self.Nyquist_f_THz = self.freqs_THz[-1]
         self.DF = 0.5 / (self.Nfreqs - 1)
         self.DF_THz = freq_red_to_THz(self.DF, self.DT_FS)
-        return
 
     #############################################
     ###################################
@@ -228,7 +222,6 @@ class MDSample(object):
         full_spectr = np.append(self.spectr, self.spectr[-2:0:-1].conj())
         self.traj = np.real(np.fft.ifft(full_spectr))   #*np.sqrt(self.Nfreqs-1)
         self.N = self.traj.size
-        return
 
     def compute_spectrum(self):
         """Compute spectrum from trajectory by FFT."""
@@ -238,7 +231,6 @@ class MDSample(object):
         self.spectr = full_spectr[:self.N / 2 + 1]
         self.Nfreqs = self.spectr.size
         self.DF = 0.5 / (self.Nfreqs - 1)
-        return
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='thz', method='trajectory', DT_FS=None, normalize=False):
         # overridden in HeatCurrent (will call, at the end, this method)
@@ -279,7 +271,6 @@ class MDSample(object):
         # (re)compute filtered psd, if a window has been defined
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
-        return
 
     def filter_psd(self, PSD_FILTER_W=None, freq_units='red', window_type='rectangular', logpsd_filter_type=1):
         """
@@ -326,7 +317,6 @@ class MDSample(object):
                 self.flogpsd = np.log(self.fpsd)
         else:
             raise KeyError('Window type unknown.')
-        return
 
     def compute_acf(self, NLAGS=None):
         """Computes the autocovariance function of the trajectory."""
@@ -338,7 +328,6 @@ class MDSample(object):
         for d in range(self.N_COMPONENTS):
             self.acf[:, d] = acovf(self.traj[:, d], unbiased=True, fft=True)[:NLAGS]
         self.acfm = np.mean(self.acf, axis=1)   # average acf
-        return
 
     def compute_gkintegral(self):
         """Compute the integral of the autocovariance function."""
@@ -346,7 +335,6 @@ class MDSample(object):
             raise RuntimeError('Autocovariance is not defined.')
         self.tau = integrate_acf(self.acf)
         self.taum = np.mean(self.tau, axis=1)   # average tau
-        return
 
     def compute_kappa_multi(self, others, PSD_FILTER_W=None, freq_units='red', method='trajectory', DT_FS=None,
                             normalize=False, call_other=True):   # yapf: disable
@@ -428,7 +416,6 @@ class MDSample(object):
         self.psd_power = np.trapz(self.psd)   # one-side PSD power
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
-        return
 
     ###################################
     ###  PLOT METHODS
@@ -447,7 +434,6 @@ class MDSample(object):
         plt.xlabel(r'$t$')
         plt.grid()
         plt.legend()
-        return
 
     def plot_psd(self, param_dict={'label': 'psd'}):
         """Plot the periodogram."""
@@ -457,7 +443,6 @@ class MDSample(object):
         plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
         plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
-        return
 
     def plot_logpsd(self, param_dict={'label': 'log(psd)'}):
         """Plot the periodogram."""
@@ -467,7 +452,6 @@ class MDSample(object):
         plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
         plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
-        return
 
     def plot_fpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-psd'}):
         """Plot the filtered periodogram.
@@ -482,7 +466,6 @@ class MDSample(object):
         plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
         plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
-        return
 
     def plot_flogpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-log(psd)'}):
         """Plot the filtered periodogram.
@@ -497,4 +480,3 @@ class MDSample(object):
         plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
         plt.xticks(np.linspace(0., 0.5, 11))
         plt.legend()
-        return
