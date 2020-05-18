@@ -58,6 +58,20 @@ class HeatCurrent(MDSample):
             msg += self.dct.__repr__()
         return msg
 
+    def _get_builder(self):
+        """
+        Get a tuple (class, builder) that can be used to build a new object with same parameters:
+          TimeSeries, builder = self._get_builder()
+          new_ts = TimeSeries(**builder)
+        """
+        if self.MANY_CURRENTS:
+            traj_array = np.row_stack(([self.traj], [j.traj for j in self.otherMD]))
+        else:
+            traj_array = self.traj
+        builder = dict(traj=traj_array, UNITS=self.UNITS, DT_FS=self.DT_FS, TEMPERATURE=self.TEMPERATURE,
+                       VOLUME=self.VOLUME, PSD_FILTER_W=self.PSD_FILTER_W_THZ, freq_units='THz')
+        return type(self), builder
+
     def initialize_currents(self, j, DT_FS):
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)

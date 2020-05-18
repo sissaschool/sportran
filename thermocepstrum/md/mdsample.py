@@ -97,6 +97,15 @@ class MDSample(object):
             msg += '  acf:    {}  lags\n'.format(self.NLAGS)
         return msg
 
+    def _get_builder(self):
+        """
+        Get a tuple (class, builder) that can be used to build a new object with same parameters:
+          TimeSeries, builder = self._get_builder()
+          new_ts = TimeSeries(**builder)
+        """
+        builder = dict(traj=self.traj, DT_FS=self.DT_FS)
+        return type(self), builder
+
     #############################################
     ###################################
     ###  INITIALIZE METHODS
