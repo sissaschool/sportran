@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
 ################################################################################

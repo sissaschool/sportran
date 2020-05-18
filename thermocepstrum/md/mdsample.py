@@ -6,6 +6,16 @@ from thermocepstrum.utils.loadAfterPlt import plt
 from .tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from .tools.filter import runavefilter
 from .tools.acf import acovf, integrate_acf
+from .tools.resample import filter_and_sample
+
+from thermocepstrum.utils.loadAfterPlt import plt
+from thermocepstrum.utils.utils import PrintMethod
+log = PrintMethod()
+
+try:
+    plt
+except:
+    log.write_log('Warning: plt undefined')
 
 
 class MDSample(object):
@@ -336,6 +346,7 @@ class MDSample(object):
         self.tau = integrate_acf(self.acf)
         self.taum = np.mean(self.tau, axis=1)   # average tau
 
+    # TODO: move this to (Heat)Current
     def compute_kappa_multi(self, others, PSD_FILTER_W=None, freq_units='red', method='trajectory', DT_FS=None,
                             normalize=False, call_other=True):   # yapf: disable
         # called by HeatCurrent

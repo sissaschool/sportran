@@ -10,7 +10,6 @@ from .md.mdsample import MDSample
 from .md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from .md.tools.resample import filter_and_sample
 
-#import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
@@ -52,9 +51,10 @@ class HeatCurrent(MDSample):
         msg = 'HeatCurrent:\n' +\
               '  N_CURRENTS =  {}\n'.format(self.N_CURRENTS) +\
               super().__repr__()
-        for current in self.otherMD:
-            msg += current.__repr__()
-        if self.dct is not None:
+        if self.otherMD:
+            for current in self.otherMD:
+                msg += current.__repr__()
+        if self.dct:
             msg += self.dct.__repr__()
         return msg
 
@@ -82,6 +82,7 @@ class HeatCurrent(MDSample):
         else:
             log.write_log('Using single component code.')
             super().__init__(traj=j, DT_FS=DT_FS)
+            self.otherMD = None
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='red'):
         # overrides MDSample method

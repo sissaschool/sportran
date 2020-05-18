@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+
 
 class AR_Model(object):
     """An AR_Model defines an AutoRegressive process of order P.
