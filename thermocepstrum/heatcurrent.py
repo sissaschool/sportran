@@ -26,7 +26,7 @@ class HeatCurrent(MDSample):
     Defines a HeatCurrent object with useful tools to perform analysis.
 
     INPUT:
-     - j             the heat current time series (N * N_COMPONENTS array)
+     - traj          the heat current time series (N * N_COMPONENTS array)
        For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
      - units         the units of current ('metal', 'real')
      - DT_FS         MD time step [fs]
@@ -36,8 +36,8 @@ class HeatCurrent(MDSample):
      - freq_units    frequency units   [THz or red] (optional)
     """
 
-    def __init__(self, j, UNITS, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
-        self.initialize_currents(j, DT_FS)
+    def __init__(self, traj, UNITS, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
+        self.initialize_currents(traj, DT_FS)
         self.initialize_units(UNITS, TEMPERATURE, VOLUME, DT_FS)
         if self.traj is not None:
             self.compute_psd(PSD_FILTER_W, freq_units)
@@ -84,7 +84,7 @@ class HeatCurrent(MDSample):
             super().__init__(traj=j, DT_FS=DT_FS)
             self.otherMD = None
 
-    def compute_psd(self, PSD_FILTER_W=None, freq_units='red'):
+    def compute_psd(self, PSD_FILTER_W=None, freq_units='THz'):
         # overrides MDSample method
         """
         Compute the periodogram from the heat current time series.

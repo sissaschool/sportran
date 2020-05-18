@@ -242,7 +242,7 @@ class MDSample(object):
         self.Nfreqs = self.spectr.size
         self.DF = 0.5 / (self.Nfreqs - 1)
 
-    def compute_psd(self, PSD_FILTER_W=None, freq_units='thz', method='trajectory', DT_FS=None, normalize=False):
+    def compute_psd(self, PSD_FILTER_W=None, freq_units='THz', method='trajectory', DT_FS=None, normalize=False):
         # overridden in HeatCurrent (will call, at the end, this method)
         """
         Compute the periodogram from the trajectory or the spectrum.
@@ -282,7 +282,7 @@ class MDSample(object):
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
 
-    def filter_psd(self, PSD_FILTER_W=None, freq_units='red', window_type='rectangular', logpsd_filter_type=1):
+    def filter_psd(self, PSD_FILTER_W=None, freq_units='THz', window_type='rectangular', logpsd_filter_type=1):
         """
         Filter the periodogram with the given PSD_FILTER_W [freq_units].
           - PSD_FILTER_W  PSD filter window [freq_units]
