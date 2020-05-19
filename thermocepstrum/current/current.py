@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-
-################################################################################
-###   heatcurrent API
-################################################################################
+"""Current defines a generic flux time series that can be associated to a transport coefficient."""
 
 import numpy as np
-from . import md
-from .md.mdsample import MDSample
-from .md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
-from .md.tools.resample import filter_and_sample
+from .. import md
+from ..md.mdsample import MDSample
+from ..md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
+from ..md.tools.resample import filter_and_sample
 
 from thermocepstrum.utils.loadAfterPlt import plt
 from thermocepstrum.utils.utils import PrintMethod
@@ -20,27 +17,49 @@ except:
     log.write_log('Warning: plt undefined')
 
 
-class HeatCurrent(MDSample):
+class Current(MDSample):
     """
-    HeatCurrent API for thermo-cepstral analysis.
-    Defines a HeatCurrent object with useful tools to perform analysis.
+    Current API for thermo-cepstral analysis.
+    Defines a Current object with useful tools to perform analysis.
 
     INPUT:
      - traj          the heat current time series (N * N_COMPONENTS array)
        For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
-     - units         the units of current ('metal', 'real')
+     - UNITS         the units of current ('metal', 'real')
      - DT_FS         MD time step [fs]
      - TEMPERATURE   average temperature [K]
      - VOLUME        simulation cell volume [A^3]
      - PSD_FILTER_W  PSD filter window [freq_units] (optional)
-     - freq_units    frequency units   [THz or red] (optional)
+     - FREQ_UNITS    frequency units   [THz or red] (optional)
     """
+    _current_type = None
+    _input_parameters = {'DT_FS'}
+    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS'}
 
-    def __init__(self, traj, UNITS, DT_FS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, freq_units='THz'):
+    # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent)
+
+    def __init__(self, traj, **params):
+        # e.g. params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
+        # validate input parameters
+        params = {k.upper(): v for k, v in params.items()}   # convert keys to uppercase
+        keyset = set(params.keys())
+        if not self._input_parameters.issubset(keyset):
+            raise ValueError('The input parameters {} must be defined.'.format(self._input_parameters - keyset))
+        if not keyset.issubset(self._input_parameters | self._optional_parameters):
+            raise ValueError(
+                'The input parameters {} are not valid.'.format(keyset -
+                                                                (self._input_parameters | self._optional_parameters)))
+        print(params)
+
+        # pop non unit-specific parameters
+        PSD_FILTER_W = params.pop('PSD_FILTER_W', None)
+        FREQ_UNITS = params.pop('FREQ_UNITS', 'THz')
+
+        DT_FS = params.get('DT_FS')
         self.initialize_currents(traj, DT_FS)
-        self.initialize_units(UNITS, TEMPERATURE, VOLUME, DT_FS)
+        self.initialize_units(**params)   # (UNITS, TEMPERATURE, VOLUME, DT_FS)
         if self.traj is not None:
-            self.compute_psd(PSD_FILTER_W, freq_units)
+            self.compute_psd(PSD_FILTER_W, FREQ_UNITS)
             self.initialize_cepstral_parameters()
         else:
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
@@ -48,9 +67,11 @@ class HeatCurrent(MDSample):
         self.dct = None
 
     def __repr__(self):
-        msg = 'HeatCurrent:\n' +\
-              '  N_CURRENTS =  {}\n'.format(self.N_CURRENTS) +\
-              super().__repr__()
+        msg = type(self).__name__ +\
+              '\n  N_CURRENTS  =  {}\n'.format(self.N_CURRENTS)
+        for key in self._input_parameters - {'DT_FS'}:
+            msg += '  {:11} =  {}\n'.format(key, getattr(self, key))
+        msg += super().__repr__()
         if self.otherMD:
             for current in self.otherMD:
                 msg += current.__repr__()
@@ -64,13 +85,8 @@ class HeatCurrent(MDSample):
           TimeSeries, builder = self._get_builder()
           new_ts = TimeSeries(**builder)
         """
-        if self.MANY_CURRENTS:
-            traj_array = np.row_stack(([self.traj], [j.traj for j in self.otherMD]))
-        else:
-            traj_array = self.traj
-        builder = dict(traj=traj_array, UNITS=self.UNITS, DT_FS=self.DT_FS, TEMPERATURE=self.TEMPERATURE,
-                       VOLUME=self.VOLUME, PSD_FILTER_W=self.PSD_FILTER_W_THZ, freq_units='THz')
-        return type(self), builder
+        # this is a virtual method
+        pass
 
     def initialize_currents(self, j, DT_FS):
         # check if we have a multicomponent fluid
@@ -98,6 +114,20 @@ class HeatCurrent(MDSample):
             super().__init__(traj=j, DT_FS=DT_FS)
             self.otherMD = None
 
+    @staticmethod
+    def get_units_list():
+        # this is a virtual method
+        # TODO: find a way to read units from the functions defined in the module 'current/units/*_current_type*.py'
+        # TODO: another method should return the function directly from the key
+        pass
+
+    def initialize_units(self, **parameters):
+        """
+        Initializes the units and define the kappa_scale.
+        """
+        # this is a virtual method
+        pass
+
     def compute_psd(self, PSD_FILTER_W=None, freq_units='THz'):
         # overrides MDSample method
         """
@@ -111,32 +141,6 @@ class HeatCurrent(MDSample):
             self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units)
         else:
             super().compute_psd(PSD_FILTER_W, freq_units)
-
-    @staticmethod
-    def get_units_list():
-        return ['metal', 'real', 'qepw', 'gpumd', 'dlpoly']
-
-    def initialize_units(self, UNITS, TEMPERATURE, VOLUME, DT_FS):
-        """
-        Initializes the units and define the kappa_scale.
-        """
-        self.UNITS = UNITS
-        self.TEMPERATURE = TEMPERATURE
-        self.VOLUME = VOLUME
-        self.DT_FS = DT_FS
-        # timestep is already included in the PSD definition, so it will be ignored here
-        if (self.UNITS == 'metal'):
-            self.kappa_scale = md.units.scale_kappa_METALtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.UNITS == 'real'):
-            self.kappa_scale = md.units.scale_kappa_REALtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.UNITS == 'qepw'):
-            self.kappa_scale = md.units.scale_kappa_QEPWtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.UNITS == 'gpumd'):
-            self.kappa_scale = md.units.scale_kappa_GPUMDtoSI(TEMPERATURE, VOLUME, 1.0)
-        elif (self.UNITS == 'dlpoly'):
-            self.kappa_scale = md.units.scale_kappa_DLPOLYtoSI(TEMPERATURE, VOLUME, 1.0)
-        else:
-            raise ValueError('Units not supported.')
 
     def initialize_cepstral_parameters(self):
         """

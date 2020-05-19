@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['md', 'i_o', 'heatcurrent', 'utils']
+__all__ = ['md', 'i_o', 'current', 'utils']
 
 from . import *
-from .heatcurrent import HeatCurrent
+from .current import *

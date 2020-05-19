@@ -334,7 +334,8 @@ Contact: lercole@sissa.it
     log.write_log(currents)
 
     # create HeatCurrent object
-    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
+    j = tc.heatcurrent.HeatCurrent(currents, DT_FS=DT_FS, UNITS=units, TEMPERATURE=temperature, VOLUME=volume,
+                                   PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(ncurrents))
     logfile.write(' Number of currrents = {}\n'.format(ncurrents))
