@@ -20,7 +20,7 @@ def test_example_NaCl():
     print(j.Nyquist_f_THz)
 
     FSTAR_THZ = 14.0
-    jf = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
+    jf = j.resample(fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
     jf.cepstral_analysis()
     print('K of AIC_min = {:d}'.format(jf.dct.aic_Kmin))
     print('AIC_min = {:f}'.format(jf.dct.aic_min))
@@ -50,7 +50,7 @@ def test_example_SiO2():
     print(j.Nyquist_f_THz)
 
     FSTAR_THZ = 28.0
-    jf = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
+    jf = j.resample(fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
     jf.cepstral_analysis()
     print('K of AIC_min = {:d}'.format(jf.dct.aic_Kmin))
     print('AIC_min = {:f}'.format(jf.dct.aic_min))

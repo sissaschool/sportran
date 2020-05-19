@@ -322,9 +322,51 @@ class HeatCurrent(MDSample):
         axes[1].grid()
         return axes
 
-    def resample_current(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
-                         freq_units='THz', FIGSIZE=None):   # yapf: disable
-        return resample_current(self, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W, freq_units, FIGSIZE)
+    def resample(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
+                 freq_units='THz', FIGSIZE=None, verbose=True):   # yapf: disable
+        """
+        Simulate the resampling of the time series.
+
+        Parameters
+        ----------
+        TSKIP        = sampling time [steps]
+        fstar_THz    = target cutoff frequency [THz]
+        TSKIP and fstar_THZ are mutually exclusive.
+
+        FILTER_W     = pre-sampling filter window width [steps]
+        plot         = plot the PSD [True]
+        PSD_FILTER_W = PSD filtering window width [chosen frequency units]
+        freq_units   = 'thz'  [THz]
+                       'red'  [omega*DT/(2*pi)]
+        FIGSIZE      = plot figure size
+        verbose      = print log [True]
+
+        Returns
+        -------
+        xf : a filtered & resampled time series object
+        ax : an array of plot axes, optional (if plot=True)
+        """
+        xf = super().resample(TSKIP, fstar_THz, FILTER_W, False, PSD_FILTER_W, freq_units, None, verbose)
+
+        if plot:
+            fstar_THz = xf.Nyquist_f_THz
+            TSKIP = int(self.Nyquist_f_THz / xf.Nyquist_f_THz)
+
+            figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+            axes = self.plot_periodogram(PSD_FILTER_W, freq_units, axes=axes)   # this also updates self.PSD_FILTER_W
+            xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes)
+            if freq_units in ('THz', 'thz'):
+                axes[0].axvline(x=fstar_THz, ls='--', c='k')
+                axes[1].axvline(x=fstar_THz, ls='--', c='k')
+                axes[0].set_xlim([0., self.Nyquist_f_THz])
+                axes[1].set_xlim([0., self.Nyquist_f_THz])
+            elif (freq_units == 'red'):
+                axes[0].axvline(x=0.5 / TSKIP, ls='--', c='k')
+                axes[1].axvline(x=0.5 / TSKIP, ls='--', c='k')
+                axes[0].set_xlim([0., 0.5])
+                axes[1].set_xlim([0., 0.5])
+            return xf, axes
+        return xf
 
     def fstar_analysis(self, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
                        verbose=False, **plot_kwargs):   # yapf: disable
@@ -332,118 +374,6 @@ class HeatCurrent(MDSample):
 
 
 ################################################################################
-
-
-def resample_current(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None, freq_units='THz',
-                     FIGSIZE=None, verbose=True):   # yapf: disable
-    """
-    Simulate the resampling of x.
-
-    Parameters
-    ----------
-    TSKIP        = sampling time [steps]
-    fstar_THz    = target cutoff frequency [THz]
-    FILTER_W     = pre-sampling filter window width [steps]
-    plot         = plot the PSD (True/False)
-    PSD_FILTER_W = PSD filtering window width [chosen frequency units]
-    freq_units   = 'thz'  THz
-                   'red'  omega*DT/(2*pi)
-    FIGSIZE      = plot figure size
-
-    Returns
-    -------
-    xf : HeatCurrent object
-        a filtered & resampled HeatCurrent
-    ax : array_like, optional (if plot=True)
-        an array of plot axes
-    """
-
-    if not isinstance(x, HeatCurrent):
-        raise ValueError('x must be a HeatCurrent object.')
-    if (TSKIP is not None) and (fstar_THz is not None):
-        raise ValueError('Please specify either TSKIP or fstar_THz.')
-    if TSKIP is None:
-        if fstar_THz is None:
-            raise ValueError('Please specify either TSKIP or fstar_THz.')
-        else:
-            TSKIP = int(round(x.Nyquist_f_THz / fstar_THz))
-    if plot:
-        figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, axes=axes)   # this also updates x.PSD_FILTER_W
-
-    fstar_THz = x.Nyquist_f_THz / TSKIP
-    fstar_idx = np.argmin(x.freqs_THz < fstar_THz)
-
-    # filter and sample
-    if FILTER_W is None:
-        FILTER_W = TSKIP
-    trajf = filter_and_sample(x.traj, FILTER_W, TSKIP, 'rectangular')
-
-    # resample filtering window width in order to use the same filtering frequency window in the plot
-    # if PSD_FILTER_W was specified, then x.PSD_FILTER_W was updated by the previous plot function
-
-    # define new HeatCurrent
-    if not x.MANY_CURRENTS:
-        xf = HeatCurrent(trajf, x.UNITS, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
-    else:
-        if x.otherMD is None:
-            raise RuntimeError('x.otherMD cannot be none (wrong/missing initialization?)')
-        # filter and sample other trajectories
-        yf = []
-        yf.append(trajf)
-        for y in x.otherMD:
-            tmp = filter_and_sample(y.traj, FILTER_W, TSKIP, 'rectangular')
-            yf.append(tmp)
-        xf = HeatCurrent(yf, x.UNITS, x.DT_FS * TSKIP, x.TEMPERATURE, x.VOLUME, PSD_FILTER_W, freq_units)
-
-    if plot:
-        if freq_units in ('THz', 'thz'):
-            xf.plot_periodogram(x.PSD_FILTER_W_THZ, 'THz', TSKIP, axes=axes)
-        elif (freq_units == 'red'):
-            # log.write_log(PSD_FILTER_W)
-            # log.write_log(x.PSD_FILTER_W)
-            xf.plot_periodogram(x.PSD_FILTER_W * TSKIP, 'red', TSKIP, axes=axes)
-
-    # write log
-    xf.resample_log = \
-        '-----------------------------------------------------\n' +\
-        '  RESAMPLE TIME SERIES\n' +\
-        '-----------------------------------------------------\n' +\
-        ' Original Nyquist freq  f_Ny =  {:12.5f} THz\n'.format(x.Nyquist_f_THz) +\
-        ' Resampling freq          f* =  {:12.5f} THz\n'.format(fstar_THz) +\
-        ' Sampling time         TSKIP =  {:12d} steps\n'.format(TSKIP) +\
-        '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
-        ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
-        ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
-    if x.fpsd is not None and xf.fpsd is not None:
-        xf.resample_log += \
-            ' PSD      @cutoff  (pre-filter) = {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\
-            '                  (post-filter) = {:12.5f}\n'.format(xf.fpsd[-1]) +\
-            ' log(PSD) @cutoff  (pre-filter) = {:12.5f}\n'.format(x.flogpsd[fstar_idx]) +\
-            '                  (post-filter) = {:12.5f}\n'.format(xf.flogpsd[-1]) +\
-            ' min(PSD)          (pre-filter) = {:12.5f}\n'.format(x.psd_min) +\
-            ' min(PSD)         (post-filter) = {:12.5f}\n'.format(xf.psd_min) +\
-            ' % of original PSD Power f<f* (pre-filter)  = {:5f}\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
-    else:
-        xf.resample_log += ' fPSD not calculated before resampling!\n '
-    xf.resample_log += '-----------------------------------------------------\n'
-    if verbose:
-        log.write_log(xf.resample_log)
-
-    if plot:
-        if freq_units in ('THz', 'thz'):
-            axes[0].axvline(x=fstar_THz, ls='--', c='k')
-            axes[1].axvline(x=fstar_THz, ls='--', c='k')
-            axes[0].set_xlim([0., x.Nyquist_f_THz])
-            axes[1].set_xlim([0., x.Nyquist_f_THz])
-        elif (freq_units == 'red'):
-            axes[0].axvline(x=0.5 / TSKIP, ls='--', c='k')
-            axes[1].axvline(x=0.5 / TSKIP, ls='--', c='k')
-            axes[0].set_xlim([0., 0.5 / TSKIP])
-            axes[1].set_xlim([0., 0.5 / TSKIP])
-        return xf, axes
-    else:
-        return xf
 
 
 def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,

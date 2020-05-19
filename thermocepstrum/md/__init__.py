@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['aic', 'cepstral', 'mdsample', 'tools', 'units']
+__all__ = ['aic', 'cepstral', 'mdsample', 'resample', 'tools', 'units']
 
 #from scipy.fftpack import fft, ifft, dct
 #from scipy.signal import periodogram, lfilter

@@ -392,9 +392,9 @@ Contact: lercole@sissa.it
         # resample and plot
         if resample:
             if TSKIP is not None:
-                jf, ax = tc.heatcurrent.resample_current(j, TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
+                jf, ax = j.resample(TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
             else:
-                jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
+                jf, ax = j.resample(fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
             ax[0].set_xlim([0, 2.5 * FSTAR])
             pdf.savefig()
             plt.close()

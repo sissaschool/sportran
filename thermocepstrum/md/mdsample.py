@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-#import matplotlib.pyplot as plt
 from thermocepstrum.utils.loadAfterPlt import plt
 from .tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from .tools.filter import runavefilter
 from .tools.acf import acovf, integrate_acf
-from .tools.resample import filter_and_sample
+from .resample import resample_timeseries
 
 from thermocepstrum.utils.loadAfterPlt import plt
 from thermocepstrum.utils.utils import PrintMethod
@@ -436,6 +435,32 @@ class MDSample(object):
         self.psd_power = np.trapz(self.psd)   # one-side PSD power
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
+
+    def resample(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False, PSD_FILTER_W=None,
+                 freq_units='THz', FIGSIZE=None, verbose=True):   # yapf: disable
+        """
+        Simulate the resampling of the time series.
+
+        Parameters
+        ----------
+        TSKIP        = sampling time [steps]
+        fstar_THz    = target cutoff frequency [THz]
+        TSKIP and fstar_THZ are mutually exclusive.
+
+        FILTER_W     = pre-sampling filter window width [steps]
+        plot         = plot the PSD [False]
+        PSD_FILTER_W = PSD filtering window width [chosen frequency units]
+        freq_units   = 'thz'  [THz]
+                       'red'  [omega*DT/(2*pi)]
+        FIGSIZE      = plot figure size
+        verbose      = print log [True]
+
+        Returns
+        -------
+        xf : a filtered & resampled time series object
+        ax : an array of plot axes, optional (if plot=True)
+        """
+        return resample_timeseries(self, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W, freq_units, FIGSIZE, verbose)
 
     ###################################
     ###  PLOT METHODS
