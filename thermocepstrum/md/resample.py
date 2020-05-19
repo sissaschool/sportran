@@ -91,8 +91,8 @@ def resample_timeseries(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False
         ' Resampling freq          f* =  {:12.5f} THz\n'.format(fstar_THz) +\
         ' Sampling time         TSKIP =  {:12d} steps\n'.format(TSKIP) +\
         '                             =  {:12.3f} fs\n'.format(TSKIP * x.DT_FS) +\
-        ' Original  n. of frequencies =  {:12d}\n'.format(x.Nfreqs) +\
-        ' Resampled n. of frequencies =  {:12d}\n'.format(xf.Nfreqs)
+        ' Original  n. of frequencies =  {:12d}\n'.format(x.NFREQS) +\
+        ' Resampled n. of frequencies =  {:12d}\n'.format(xf.NFREQS)
     if x.fpsd is not None and xf.fpsd is not None:   # TODO: maybe substitute with if x.PSD_FILTER_W != 0
         xf.resample_log += \
             ' PSD      @cutoff  (pre-filter&sample) ~ {:12.5f}\n'.format(x.fpsd[fstar_idx]) +\

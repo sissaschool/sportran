@@ -148,12 +148,12 @@ class Current(MDSample):
         """
         if not self.MANY_CURRENTS:
             self.ck_THEORY_var, self.psd_THEORY_mean = \
-                md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.N_COMPONENTS)
+                md.cepstral.multicomp_cepstral_parameters(self.NFREQS, self.N_COMPONENTS)
         else:
             if self.ndf_chi is None:
                 raise RuntimeError('self.ndf_chi cannot be None.')
             self.ck_THEORY_var, self.psd_THEORY_mean = \
-                md.cepstral.multicomp_cepstral_parameters(self.Nfreqs, self.ndf_chi)
+                md.cepstral.multicomp_cepstral_parameters(self.NFREQS, self.ndf_chi)
 
     def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None):
         """
@@ -258,9 +258,9 @@ class Current(MDSample):
         if axes is None:
             figure, axes = plt.subplots(1, figsize=FIGSIZE)
         color = next(axes._get_lines.prop_cycler)['color']
-        axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau, '.-', c=color, label=label)
-        axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau + self.dct.logtau_THEORY_std, '--', c=color)
-        axes.plot(np.arange(self.Nfreqs) + 1, self.dct.logtau - self.dct.logtau_THEORY_std, '--', c=color)
+        axes.plot(np.arange(self.NFREQS) + 1, self.dct.logtau, '.-', c=color, label=label)
+        axes.plot(np.arange(self.NFREQS) + 1, self.dct.logtau + self.dct.logtau_THEORY_std, '--', c=color)
+        axes.plot(np.arange(self.NFREQS) + 1, self.dct.logtau - self.dct.logtau_THEORY_std, '--', c=color)
         axes.axvline(x=self.dct.aic_Kmin + 1, ls='--', c=color)
         axes.set_xlim([0, 3 * self.dct.aic_Kmin])
         max_y = np.amax((self.dct.logtau + self.dct.logtau_THEORY_std)[self.dct.aic_Kmin:3 * self.dct.aic_Kmin])
@@ -274,10 +274,10 @@ class Current(MDSample):
         if axes is None:
             figure, axes = plt.subplots(1, figsize=FIGSIZE)
         color = next(axes._get_lines.prop_cycler)['color']
-        axes.plot(np.arange(self.Nfreqs) + 1, self.dct.tau * self.kappa_scale * 0.5, '.-', c=color, label=label)
-        axes.plot(np.arange(self.Nfreqs) + 1, (self.dct.tau + self.dct.tau_THEORY_std) * self.kappa_scale * 0.5,
+        axes.plot(np.arange(self.NFREQS) + 1, self.dct.tau * self.kappa_scale * 0.5, '.-', c=color, label=label)
+        axes.plot(np.arange(self.NFREQS) + 1, (self.dct.tau + self.dct.tau_THEORY_std) * self.kappa_scale * 0.5,
                   '--', c=color)   # yapf: disable
-        axes.plot(np.arange(self.Nfreqs) + 1, (self.dct.tau - self.dct.tau_THEORY_std) * self.kappa_scale * 0.5,
+        axes.plot(np.arange(self.NFREQS) + 1, (self.dct.tau - self.dct.tau_THEORY_std) * self.kappa_scale * 0.5,
                   '--', c=color)   # yapf: disable
         axes.axvline(x=self.dct.aic_Kmin + 1, ls='--', c=color)
         axes.axhline(y=self.kappa_Kmin, ls='--', c=color)
