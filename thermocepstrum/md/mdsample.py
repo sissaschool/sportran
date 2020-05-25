@@ -41,7 +41,7 @@ class MDSample(object):
                     It contains N points.
        - spectr     the spectrum, i.e. trajectory's FFT.
                     For now it is assumed to be one sided, i.e. it contains
-                    Nfreqs = N/2+1 normalized frequencies contained
+                    NFREQS = N/2+1 normalized frequencies contained
                     in the interval [0, 1/(2N*DT)]
        - psd        the Power Spectral Density (periodogram), defined as
                               DT    N-1
@@ -49,7 +49,7 @@ class MDSample(object):
                                N    n=0
                     with f = [0, 1/(2N*DT)]
        - N          size of traj
-       - Nfreqs     number of trajectories, should be N/2+1
+       - NFREQS     number of trajectories, should be N/2+1
        - freqs      an array of frequencies, should be [0, 1/(2N*DT)]
        - freqs_THz  an array of frequencies, expressed in THz
 
@@ -81,11 +81,11 @@ class MDSample(object):
               '  traj:   {}  steps  *  {} components\n'.format(self.N, self.N_COMPONENTS) + \
               '          {}  fs\n'.format(None if self.traj is None else self.DT_FS * self.N)
         if self.spectr is not None:
-            msg += '  spectr: {}  frequencies\n'.format(self.Nfreqs)
+            msg += '  spectr: {}  frequencies\n'.format(self.NFREQS)
         if self.psd is not None:
             msg += '  psd:    {}  frequencies\n'.format(self.psd.size) + \
                    '      DF =      {}  [omega*DT/(2*pi)]\n'.format(self.DF) + \
-                   '                {}  [THz]\n'.format(self.DF_THz) + \
+                   '                {}  [THz]\n'.format(self.DF_THZ) + \
                    '      Nyquist Frequency = {}  [THz]\n'.format(self.Nyquist_f_THz)
         if self.fpsd is not None:
             msg += '  fpsd:   {}  frequencies\n'.format(self.fpsd.size) +\
@@ -149,11 +149,11 @@ class MDSample(object):
     def initialize_spectrum(self, array):
         if array is not None:
             self.spectr = np.array(array, dtype=complex)
-            self.Nfreqs = self.spectr.size
-            self.DF = 0.5 / (self.Nfreqs - 1)
+            self.NFREQS = self.spectr.size
+            self.DF = 0.5 / (self.NFREQS - 1)
         else:
             self.spectr = None
-            self.Nfreqs = None
+            self.NFREQS = None
             self.DF = None
 
     def initialize_psd(self, freq_psd=None, psd=None, freqs=None, DT_FS=None):
@@ -207,12 +207,12 @@ class MDSample(object):
         self.logpsd_min = np.min(self.psd)
 
         # frequencies
-        self.Nfreqs = self.psd.size
+        self.NFREQS = self.psd.size
         if frequencies is None:   # recompute frequencies
-            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
+            self.freqs = np.linspace(0., 0.5, self.NFREQS)
         else:
             self.freqs = np.array(frequencies, dtype=float)
-            if (self.freqs.size != self.Nfreqs):
+            if (self.freqs.size != self.NFREQS):
                 raise ValueError('Number of frequencies different from PSD array size.')
 
         # freqs conversions to THz
@@ -220,8 +220,8 @@ class MDSample(object):
             self.DT_FS = DT_FS
         self.freqs_THz = freq_red_to_THz(self.freqs, self.DT_FS)
         self.Nyquist_f_THz = self.freqs_THz[-1]
-        self.DF = 0.5 / (self.Nfreqs - 1)
-        self.DF_THz = freq_red_to_THz(self.DF, self.DT_FS)
+        self.DF = 0.5 / (self.NFREQS - 1)
+        self.DF_THZ = freq_red_to_THz(self.DF, self.DT_FS)
 
     #############################################
     ###################################
@@ -238,7 +238,7 @@ class MDSample(object):
         if self.spectr is None:
             raise ValueError('Spectrum not defined.')
         full_spectr = np.append(self.spectr, self.spectr[-2:0:-1].conj())
-        self.traj = np.real(np.fft.ifft(full_spectr))   #*np.sqrt(self.Nfreqs-1)
+        self.traj = np.real(np.fft.ifft(full_spectr))   #*np.sqrt(self.NFREQS-1)
         self.N = self.traj.size
 
     def compute_spectrum(self):
@@ -247,8 +247,8 @@ class MDSample(object):
             raise ValueError('Trajectory not defined.')
         full_spectr = np.fft.fft(self.traj)
         self.spectr = full_spectr[:self.N / 2 + 1]
-        self.Nfreqs = self.spectr.size
-        self.DF = 0.5 / (self.Nfreqs - 1)
+        self.NFREQS = self.spectr.size
+        self.DF = 0.5 / (self.NFREQS - 1)
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='THz', method='trajectory', DT_FS=None, normalize=False):
         # overridden in HeatCurrent (will call, at the end, this method)
@@ -267,14 +267,14 @@ class MDSample(object):
             self.psd = np.mean(self.psdALL, axis=1)
             self.psd[1:-1] = self.psd[1:-1] * 0.5
             self.psd *= self.DT_FS
-            self.Nfreqs = self.freqs.size
-            self.DF = 0.5 / (self.Nfreqs - 1)
-            self.DF_THz = freq_red_to_THz(self.DF, self.DT_FS)
+            self.NFREQS = self.freqs.size
+            self.DF = 0.5 / (self.NFREQS - 1)
+            self.DF_THZ = freq_red_to_THz(self.DF, self.DT_FS)
         elif (method == 'spectrum'):
             if self.spectr is None:
                 raise ValueError('Spectrum not defined.')
-            self.psd = self.DT_FS * np.abs(self.spectr)**2 / (2 * (self.Nfreqs - 1))
-            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
+            self.psd = self.DT_FS * np.abs(self.spectr)**2 / (2 * (self.NFREQS - 1))
+            self.freqs = np.linspace(0., 0.5, self.NFREQS)
         else:
             raise KeyError('method not understood')
 
@@ -311,7 +311,7 @@ class MDSample(object):
         else:
             pass   # try to use the internal value
         if self.PSD_FILTER_W is not None:
-            self.PSD_FILTER_WF = int(round(self.PSD_FILTER_W * self.Nfreqs * 2.))
+            self.PSD_FILTER_WF = int(round(self.PSD_FILTER_W * self.NFREQS * 2.))
         else:
             raise ValueError('Filter window width not defined.')
 
@@ -385,10 +385,10 @@ class MDSample(object):
             if self.traj is None:
                 raise ValueError('Trajectory not defined.')
             self.spectrALL = np.fft.rfft(self.traj, axis=0)
-            self.Nfreqs = self.spectrALL.shape[0]
-            self.freqs = np.linspace(0., 0.5, self.Nfreqs)
-            self.DF = 0.5 / (self.Nfreqs - 1)
-            self.DF_THz = freq_red_to_THz(self.DF, self.DT_FS)
+            self.NFREQS = self.spectrALL.shape[0]
+            self.freqs = np.linspace(0., 0.5, self.NFREQS)
+            self.DF = 0.5 / (self.NFREQS - 1)
+            self.DF_THZ = freq_red_to_THz(self.DF, self.DT_FS)
         else:
             raise KeyError('method not understood')
         self.freqs_THz = self.freqs / self.DT_FS * 1000.
@@ -402,7 +402,7 @@ class MDSample(object):
         else:
             return
 
-        # define the cospectrum matrix. Its shape is (2, 2, Nfreqs,n_spatial_dim)
+        # define the cospectrum matrix. Its shape is (2, 2, NFREQS,n_spatial_dim)
         #  [  self.spectrALL*self.spectrALL.conj()     self.spectrALL*other.spectrALL.conj() ]
         #  [ other.spectrALL*self.spectrALL.conj()    other.spectrALL*other.spectrALL.conj() ]
         other_spectrALL = []
@@ -410,7 +410,7 @@ class MDSample(object):
             other_spectrALL.append(other.spectrALL)
 
         # compute the matrix defined by the outer product of only the first indexes of the two arrays
-        covarALL = self.DT_FS / (2.*(self.Nfreqs - 1.)) *\
+        covarALL = self.DT_FS / (2.*(self.NFREQS - 1.)) *\
                     np.einsum('a...,b...->ab...', np.array([self.spectrALL] + other_spectrALL),
                                                   np.array([self.spectrALL] + other_spectrALL).conj())
 

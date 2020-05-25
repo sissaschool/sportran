@@ -36,10 +36,10 @@ def filter_and_sample(y_big, W, DT, window='rectangular', even_NSTEPS=True, detr
 def resample_psd(freqs, psd, cutfrequency):
     if (cutfrequency >= freqs[-1]):
         return freqs, psd
-    Nfreqs = freqs.size - 1
+    NFREQS = freqs.size - 1
     cutidx = (np.abs(freqs - cutfrequency)).argmin()
-    if (Nfreqs % cutidx == 0):   # cut frequency is sub-multiple of max freq
-        DT = Nfreqs / cutidx
+    if (NFREQS % cutidx == 0):   # cut frequency is sub-multiple of max freq
+        DT = NFREQS / cutidx
         if (DT > 2):
             raise Warning('DT Not implemented.')
         newpsd = psd.copy()[:cutidx + 1]

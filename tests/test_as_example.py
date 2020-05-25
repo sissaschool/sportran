@@ -16,7 +16,8 @@ def test_example_NaCl():
     print('T = {:f} K'.format(TEMPERATURE))
     print('V = {:f} A^3'.format(VOLUME))
 
-    j = tc.HeatCurrent([jfile.data['flux'], jfile.data['vcm[1]']], 'metal', DT_FS, TEMPERATURE, VOLUME)
+    j = tc.HeatCurrent([jfile.data['flux'], jfile.data['vcm[1]']], DT_FS=DT_FS, UNITS='metal', TEMPERATURE=TEMPERATURE,
+                       VOLUME=VOLUME)
     print(j.Nyquist_f_THz)
 
     FSTAR_THZ = 14.0
@@ -46,7 +47,7 @@ def test_example_SiO2():
     TEMPERATURE = 1065.705630   # temperature [K]
     VOLUME = 3130.431110818   # volume [A^3]
 
-    j = tc.HeatCurrent(jfile.data['flux1'], 'metal', DT_FS, TEMPERATURE, VOLUME)
+    j = tc.HeatCurrent(jfile.data['flux1'], DT_FS=DT_FS, UNITS='metal', TEMPERATURE=TEMPERATURE, VOLUME=VOLUME)
     print(j.Nyquist_f_THz)
 
     FSTAR_THZ = 28.0
