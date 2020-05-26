@@ -35,8 +35,7 @@
         "notebook": [
             "jupyter==1.0.0"
         ],
-        "testing": [
-            "tox>=2.0",
+        "tests": [
             "pytest>=4.0"
         ]
     },
