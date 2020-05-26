@@ -396,7 +396,7 @@ Contact: lercole@sissa.it
         if resample:
             if TSKIP is not None:
                 jf, ax = tc.heatcurrent.resample_current(j, TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
-                FSTAR = j.Nyquist_f_THz / TSKIP # from tc.heatcurrent.resample_current
+                FSTAR = j.Nyquist_f_THz / TSKIP   # from tc.heatcurrent.resample_current
             else:
                 jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
             ax[0].set_xlim([0, 2.5 * FSTAR])

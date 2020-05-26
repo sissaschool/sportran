@@ -7,7 +7,8 @@ from tkinter import scrolledtext
 from tkinter import font
 from . import html_parser
 
-VERSION = "0.4.0"
+VERSION = '0.4.0'
+
 
 class _ScrolledText(tk.Text):
     #----------------------------------------------------------------------------------------------
@@ -21,7 +22,7 @@ class _ScrolledText(tk.Text):
 
         tk.Text.__init__(self, self.frame, **kw)
         self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
+
         text_meths = vars(tk.Text).keys()
         methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
         methods = methods.difference(text_meths)
@@ -33,11 +34,13 @@ class _ScrolledText(tk.Text):
     def __str__(self):
         return str(self.frame)
 
+
 class HTMLScrolledText(_ScrolledText):
     #----------------------------------------------------------------------------------------------
     """
     HTML scrolled text widget
     """
+
     def __init__(self, *args, html=None, **kwargs):
         #------------------------------------------------------------------------------------------
         super().__init__(*args, **kwargs)
@@ -45,7 +48,6 @@ class HTMLScrolledText(_ScrolledText):
         self.html_parser = html_parser.HTMLTextParser()
         if isinstance(html, str):
             self.set_html(html)
-
 
     def _w_init(self, kwargs):
         #------------------------------------------------------------------------------------------
@@ -56,7 +58,6 @@ class HTMLScrolledText(_ScrolledText):
                 self.config(background='SystemWindow')
             else:
                 self.config(background='white')
-
 
     def fit_height(self):
         #------------------------------------------------------------------------------------------
@@ -69,8 +70,7 @@ class HTMLScrolledText(_ScrolledText):
             if self.yview()[1] >= 1:
                 break
         else:
-            self.config(height=0.5+3/self.yview()[1])
-
+            self.config(height=0.5 + 3 / self.yview()[1])
 
     def set_html(self, html, strip=True):
         #------------------------------------------------------------------------------------------
@@ -91,6 +91,7 @@ class HTMLText(HTMLScrolledText):
     """
     HTML text widget
     """
+
     def _w_init(self, kwargs):
         #------------------------------------------------------------------------------------------
         super()._w_init(kwargs)
@@ -102,11 +103,13 @@ class HTMLText(HTMLScrolledText):
         #self.master.update()
         self.vbar.pack_forget()
 
+
 class HTMLLabel(HTMLText):
     #----------------------------------------------------------------------------------------------
     """
     HTML label widget
     """
+
     def _w_init(self, kwargs):
         #------------------------------------------------------------------------------------------
         super()._w_init(kwargs)
@@ -115,15 +118,14 @@ class HTMLLabel(HTMLText):
                 self.config(background='SystemButtonFace')
             else:
                 self.config(background='#d9d9d9')
-                
+
         if not 'borderwidth' in kwargs.keys():
             self.config(borderwidth=0)
 
         if not 'padx' in kwargs.keys():
             self.config(padx=3)
-        
+
     def set_html(self, *args, **kwargs):
         #------------------------------------------------------------------------------------------
         super().set_html(*args, **kwargs)
         self.config(state=tk.DISABLED)
-
