@@ -16,6 +16,12 @@ try:
 except:
     log.write_log('Warning: plt undefined')
 
+try:
+    from thermocepstrum.utils.plotter import Plotter
+except ImportError:
+    log.write_log('Warning: cannot locate Plotter. Plots will be not created and displayed')
+    plotManager = None
+
 
 class Current(MDSample):
     """
@@ -36,11 +42,13 @@ class Current(MDSample):
     _input_parameters = {'DT_FS'}
     _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS'}
 
+    plot = Plotter
     # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent)
 
-    def __init__(self, traj, plotter=None, **params):
+    def __init__(self, traj, **params):
         # e.g. params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
         # validate input parameters
+
         params = {k.upper(): v for k, v in params.items()}   # convert keys to uppercase
         keyset = set(params.keys())
         if not self._input_parameters.issubset(keyset):
@@ -49,14 +57,6 @@ class Current(MDSample):
             raise ValueError(
                 'The input parameters {} are not valid.'.format(keyset -
                                                                 (self._input_parameters | self._optional_parameters)))
-
-        if plotter:
-            self.plotter = plotter
-        else:
-            log.write_log('Warning: plotter not initialized. Plotts will be not created.')
-            self.plotter = None
-
-        print(params)
 
         # pop non unit-specific parameters
         PSD_FILTER_W = params.pop('PSD_FILTER_W', None)
@@ -197,26 +197,26 @@ class Current(MDSample):
     def plot_periodogram(self, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
                          FIGSIZE=None, **plot_kwargs):   # yapf: disable
         if self.check_plotter():
-            return self.plotter.plot_periodogram(self, PSD_FILTER_W, freq_units,
+            return self.plot.plot_periodogram(self, PSD_FILTER_W, freq_units,
                                                  freq_scale, axes, kappa_units,
                                                  FIGSIZE, **plot_kwargs)
 
     def plot_ck(self, axes=None, label=None, FIGSIZE=None):
         if self.check_plotter():
-            return self.plotter.plot_ck(self, axes, label, FIGSIZE)
+            return self.plot.plot_ck(self, axes, label, FIGSIZE)
 
     def plot_L0_Pstar(self, axes=None, label=None, FIGSIZE=None):
         if self.check_plotter():
-            return self.plot_L0_Pstar(self, axes, label, FIGSIZE)
+            return self.plot.plot_L0_Pstar(self, axes, label, FIGSIZE)
 
     def plot_kappa_Pstar(self, axes=None, label=None, FIGSIZE=None):
         if self.check_plotter():
-            return self.plotter.plot_kappa_Pstar(self, axes, label, FIGSIZE)
+            return self.plot.plot_kappa_Pstar(self, axes, label, FIGSIZE)
 
     def plot_cepstral_spectrum(self, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
                                **plot_kwargs):   # yapf: disable
         if self.check_plotter():
-            return self.plot_cepstral_spectrum(self, freq_units, freq_scale, axes, kappa_units, FIGSIZE, **plot_kwargs)
+            return self.plot.plot_cepstral_spectrum(self, freq_units, freq_scale, axes, kappa_units, FIGSIZE, **plot_kwargs)
 
     def resample(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
                  freq_units='THz', FIGSIZE=None, verbose=True):   # yapf: disable
@@ -245,7 +245,7 @@ class Current(MDSample):
         xf = super().resample(TSKIP, fstar_THz, FILTER_W, False, PSD_FILTER_W, freq_units, None, verbose)
 
         if plot and self.check_plotter():
-            return self.plotter.plt_resample(self, xf, freq_units, PSD_FILTER_W, FIGSIZE)
+            return self.plot.plt_resample(self, xf, freq_units, PSD_FILTER_W, FIGSIZE)
         return xf
 
     def fstar_analysis(self, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
@@ -253,7 +253,7 @@ class Current(MDSample):
         return fstar_analysis(self, TSKIP_LIST, aic_type, Kmin_corrfactor, plot, axes, FIGSIZE, verbose, **plot_kwargs)
 
     def check_plotter(self):
-        if self.plotter:
+        if self.plot:
             return True
         else:
             return False
@@ -301,6 +301,6 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
     FSTAR_THZ_LIST = [xff.Nyquist_f_THz for xff in xf]
 
     if plot and x.check_plotter():
-        return x.plotter.plot_fstar_analysis(x, xf, FSTAR_THZ_LIST, axes, FIGSIZE, **plot_kwargs)
+        return x.plot.plot_fstar_analysis(x, xf, FSTAR_THZ_LIST, axes, FIGSIZE, **plot_kwargs)
     else:
         return xf

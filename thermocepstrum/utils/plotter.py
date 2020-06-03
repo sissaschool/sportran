@@ -1,37 +1,17 @@
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
 
-import sys
+import math
 import os
 from os import path
 
 import numpy as np
-abs_path = os.path.abspath(sys.argv[0])
-tc_path = abs_path[:abs_path.rfind('/')]
-tc_path = tc_path[:tc_path.rfind('/')]
-sys.path.append(tc_path[:tc_path.rfind('/')])
-log.write_log(tc_path)
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-#plt.rcParams['figure.figsize'] = (16, 9)
-plt.style.reload_library()
-try:
-    plt.style.use('./plot_style.mplstyle')
-except:
-    plt.style.use(tc_path + 'utils/plot_style.mplstyle')
-#plt.rc('text', usetex=True)
-c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 from matplotlib.ticker import MultipleLocator
 
-try:
-    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-except:
-    log.write_log('Error: cannot import inset_axes (will not be able to plot some parts of the plots)')
-
-#try to import plotstyle (not fundamental)
 try:
     import pkg_resources
     pltstyle_filename = pkg_resources.resource_filename('thermocepstrum.utils', 'plot_style.mplstyle')
@@ -50,6 +30,8 @@ except:
     pass
 
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+
 
 
 class Plotter:
@@ -77,9 +59,9 @@ class Plotter:
         # (re)compute filtered psd, if a window has been defined
         if (PSD_FILTER_W is not None) or (current.PSD_FILTER_W is not None):
             current.filter_psd(PSD_FILTER_W, freq_units)
-        else:   # use a zero-width (non-filtering) window
+        else:  # use a zero-width (non-filtering) window
             current.filter_psd(0.)
-        if kappa_units:   # plot psd in units of kappa - the log(psd) is not converted
+        if kappa_units:  # plot psd in units of kappa - the log(psd) is not converted
             psd_scale = 0.5 * current.kappa_scale
         else:
             psd_scale = 1.0
@@ -218,7 +200,7 @@ class Plotter:
             axes[0].set_xlim([0., current.Nyquist_f_THz])
             axes[1].set_xlim([0., current.Nyquist_f_THz])
             axes[1].set_xlabel(r'$f$ [THz]')
-        elif (freq_units == 'red'):
+        elif freq_units == 'red':
             axes[0].plot(current.freqs / freq_scale, current.dct.psd * psd_scale, **plot_kwargs)
             axes[1].plot(current.freqs / freq_scale, current.dct.logpsd, **plot_kwargs)
             axes[0].set_xlim([0., 0.5 / freq_scale])
@@ -294,7 +276,7 @@ class Plotter:
             axes[1].axvline(x=fstar_THz, ls='--', c='k')
             axes[0].set_xlim([0., current.Nyquist_f_THz])
             axes[1].set_xlim([0., current.Nyquist_f_THz])
-        elif (freq_units == 'red'):
+        elif freq_units == 'red':
             axes[0].axvline(x=0.5 / TSKIP, ls='--', c='k')
             axes[1].axvline(x=0.5 / TSKIP, ls='--', c='k')
             axes[0].set_xlim([0., 0.5])
@@ -310,11 +292,11 @@ class Plotter:
 
         f, ax2 = plt.subplots(1, 1, figsize=(3.8, 2.3))
         ax2.axvline(x=jf.dct.aic_Kmin + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
-        ax2.fill_between(np.arange(jf.dct.logtau.shape[0]) + 1, \
-                         (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5, \
-                         (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5, \
+        ax2.fill_between(np.arange(jf.dct.logtau.shape[0]) + 1,
+                         (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,
+                         (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,
                          alpha=0.3, color=c[4], zorder=-3)
-        ax2.plot(np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.kappa_scale * 0.5, \
+        ax2.plot(np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.kappa_scale * 0.5,
                  label=r'Cepstral method', marker='o', c=c[4], zorder=-3)
         ax2.set_xlabel(r'$P^*$')
         ax2.set_ylabel(r'$\kappa$ (W/mK)')
@@ -345,7 +327,7 @@ class Plotter:
             f_THz_max = jf.freqs_THz[idx_max]
         else:
             maxT = jf.freqs_THz[-1]
-            if (maxT < f_THz_max):
+            if maxT < f_THz_max:
                 f_THz_max = maxT
 
         if k_SI_max is None:
@@ -434,8 +416,130 @@ class Plotter:
         ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
     @staticmethod
+    def GUI_plot_periodogram(x, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
+                             data=None, FIGSIZE=None, **plot_kwargs):
+        """
+        Plot the periodogram.
+          PSD_FILTER_W  = width of the filtering window
+          freq_units    = 'thz'  THz
+                          'red'  omega*DT/(2*pi)
+          freq_scale    = rescale red frequencies by this factor (e.g. 2 --> freq = [0, 0.25])
+          axes          = matplotlib.axes.Axes object (if None, create one)
+          FIGSIZE       = size of the plot
+
+        Returns a matplotlib.axes.Axes object.
+        """
+        # recompute PSD if needed
+        if x.psd is None:
+            if not x.multicomponent:
+                x.compute_psd()
+            else:
+                if x.otherMD is None:
+                    raise ValueError('x.otherMD cannot be None (missing initialization?)')
+                x.compute_kappa_multi(others=x.otherMD)
+        if PSD_FILTER_W is None:
+            if x.FILTER_WINDOW_WIDTH is None:
+                x.filter_psd(0.)
+        else:
+            if (freq_units == 'thz') or (freq_units == 'THz'):
+                x.filter_psd(Plotter._freq_THz_to_red(PSD_FILTER_W, x.DT_FS))
+            elif freq_units == 'red':
+                x.filter_psd(PSD_FILTER_W)
+            else:
+                raise ValueError('Units not valid.')
+
+        if kappa_units:
+            # plot psd in units of kappa - the log(psd) is not converted
+            psd_scale = 0.5 * x.kappa_scale
+        else:
+            psd_scale = 1.0
+        # if axis is None:
+        #    figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+        # plt.subplots_adjust(hspace = 0.1)
+        if (freq_units == 'thz') or (freq_units == 'THz'):
+            axis.plot(x.freqs_THz, psd_scale * x.fpsd, **plot_kwargs)
+            # axes[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
+            axis.set_xlim([0., x.Nyquist_f_THz])
+            # axes[1].set_xlim([0., x.Nyquist_f_THz])
+        elif freq_units == 'red':
+            axis.plot(x.freqs / freq_scale, psd_scale * x.fpsd, **plot_kwargs)
+            # axes[1].plot(x.freqs/freq_scale, x.flogpsd, **plot_kwargs)
+            axis.set_xlim([0., 0.5 / freq_scale])
+            # axes[1].set_xlim([0., 0.5/freq_scale])
+        # else:
+        #    raise ValueError('Units not valid.')
+        # axes[0].xaxis.set_ticks_position('top')
+        # if kappa_units:
+        #    axes[0].set_ylabel(r'PSD [W/mK]')
+        # else:
+        #    axes[0].set_ylabel(r'PSD')
+        axis.grid()
+        axis.xaxis.set_ticks_position('bottom')
+        axis.set_xlabel(r'$f$ [THz]')
+        # axes[1].set_ylabel(r'log(PSD)')
+        axis.grid()
+        return axis
+
+    @staticmethod
+    def GUI_resample_current(current, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
+                             freq_units='thz', FIGSIZE=None, axis=None, data=None):
+
+        if data.changes:
+            print('resampling current')
+            xf = current.resample(TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=False,
+                                  PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units)
+        else:
+            print('not resampling current (data is same) {}'.format(data.changes))
+            xf = data.xf
+
+        if plot:
+            if (freq_units == 'thz') or (freq_units == 'THz'):
+                Plotter.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
+            elif freq_units == 'red':
+                Plotter.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axis=axis)
+
+        if plot:
+            if (freq_units == 'thz') or (freq_units == 'THz'):
+                axis.axvline(x=xf.Nyquist_f_THz, ls='--', c='k')
+                axis.set_xlim([0., current.Nyquist_f_THz])
+            elif freq_units == 'red':
+                axis.axvline(x=0.5 / TSKIP, ls='--', c='k')
+                axis.set_xlim([0., 0.5 / TSKIP])
+        if data:
+            data.xf = xf
+
+    @staticmethod
+    def GUI_plot_cepstral_spectrum(x, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None,
+                                   data=None, **plot_kwargs):
+        if kappa_units:
+            psd_scale = 0.5 * x.kappa_scale
+        else:
+            psd_scale = 1.0
+        if (freq_units == 'thz') or (freq_units == 'THz'):
+            axis.plot(x.freqs_THz, x.dct.psd * psd_scale, **plot_kwargs)
+            # axes[1].plot(x.freqs_THz, x.dct.logpsd, **plot_kwargs)
+            axis.set_xlim([0., x.Nyquist_f_THz])
+            # axes[1].set_xlim([0., x.Nyquist_f_THz])
+        elif freq_units == 'red':
+            axis.plot(x.freqs / freq_scale, x.dct.psd * psd_scale, **plot_kwargs)
+            # axes[1].plot(x.freqs / freq_scale, x.dct.logpsd, **plot_kwargs)
+            axis.set_xlim([0., 0.5 / freq_scale])
+            # axes[1].set_xlim([0., 0.5 / freq_scale])
+        else:
+            raise ValueError('Units not valid.')
+        axis.xaxis.set_ticks_position('top')
+        axis.set_ylabel(r'PSD')
+        if kappa_units:
+            axis.set_ylabel(r'PSD [W/mK]')
+        else:
+            axis.set_ylabel(r'PSD')
+        axis.xaxis.set_ticks_position('bottom')
+        axis.set_xlabel(r'$f$ [THz]')
+        axis.grid()
+        return axis
+
+    @staticmethod
     def _n_tick_in_range(beg, end, n):
-        import math
         size = end - beg
         n_cifre = math.floor(math.log(size / n, 10.0))
         delta = math.ceil((size / n) / 10 ** n_cifre) * 10 ** n_cifre
@@ -443,11 +547,23 @@ class Plotter:
 
     @staticmethod
     def _index_cumsum(arr, p):
-        if (p > 1 or p < 0):
+        if p > 1 or p < 0:
             raise ValueError('p must be between 0 and 1')
         arr_int = np.cumsum(arr)
         arr_int = arr_int / arr_int[-1]
         idx = 0
-        while (arr_int[idx] < p):
+        while arr_int[idx] < p:
             idx = idx + 1
         return idx
+
+    @staticmethod
+    def _freq_THz_to_red(f, DT_FS):
+        return f / 1000. * DT_FS
+
+
+def addPlotToPdf(func, pdf, *args, **kwargs):
+    result = func(*args, **kwargs)
+    pdf.savefig()
+    plt.close()
+    return result
+

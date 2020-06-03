@@ -17,7 +17,7 @@ class FStarSelector(Frame):
         self.main_frame_scroll = ScrollFrame(self, self)
         self.main_frame = self.main_frame_scroll.viewPort
 
-        #self.main_frame.grid(column=0, row=0, sticky='nsew')
+        # self.main_frame.grid(column=0, row=0, sticky='nsew')
 
         # Label(self.main_frame, text='Select F*', font='Arial 14 bold').grid(row=0, column=0)
 
@@ -91,7 +91,7 @@ class FStarSelector(Frame):
         next_button.grid(row=0, column=1, sticky='we', padx=5)
 
         self.main_frame.rowconfigure(0, weight=1)
-        self.main_frame.columnconfigure(0, weight=1)   #, minsize=720)
+        self.main_frame.columnconfigure(0, weight=1)   # , minsize=720)
 
         self.setted = False
 
@@ -126,7 +126,7 @@ class FStarSelector(Frame):
         cu.data.psd_filter_width = filter_width
 
         if cu.data.fstar > 0:
-            self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
+            self.graph.add_graph(cu.gm.GUI_resample_current, 'resample', current=cu.data.j, fstar_THz=cu.data.fstar,
                                  PSD_FILTER_W=cu.data.psd_filter_width)
             self.graph.update_cut()
 

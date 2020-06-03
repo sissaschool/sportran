@@ -5,12 +5,10 @@ import os
 from sys import path, argv
 import argparse
 import numpy as np
-#import scipy as sp
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# import scipy as sp
+
 from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.ticker import MultipleLocator
+import matplotlib.pyplot as plt
 
 try:
     import thermocepstrum as tc
@@ -28,129 +26,108 @@ from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
 log.set_method('bash')
 
-#try to import plotstyle (not fundamental)
 try:
-    import pkg_resources
-    pltstyle_filename = pkg_resources.resource_filename('thermocepstrum.utils', 'plot_style.mplstyle')
-except:
-    # fallback (maybe it is not installed...)
-    try:
-        abs_path = os.path.abspath(__file__)
-        tc_path = abs_path[:abs_path.rfind('/')]
-        path.append(tc_path[:tc_path.rfind('/')])
-    except:
-        abs_path = '.'
-    pltstyle_filename = tc_path + '/utils/plot_style.mplstyle'
-try:
-    plt.style.use(pltstyle_filename)
-except:
-    pass
-
-c = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
-try:
-    from thermocepstrum.utils.plotter import Plotter
-    plotManager = Plotter
+    from thermocepstrum.utils.plotter import Plotter, addPlotToPdf
+    plotManager = Plotter()
 except ImportError:
     log.write_log('Warning: cannot locate Plotter. Plots will be not created and displayed')
     plotManager = None
 
-
 def main():
     """
---------------------------------------------------------------------------------
-  *** THERMOCEPSTRUM ***  command line interface  (beta)
---------------------------------------------------------------------------------
-This script performs the cepstral analysis. It outputs some results in the stdout and log file, and plots in pdf format.
+    --------------------------------------------------------------------------------
+      *** THERMOCEPSTRUM ***  command line interface  (beta)
+    --------------------------------------------------------------------------------
+    This script performs the cepstral analysis. It outputs some results in the stdout and log file, and plots in pdf format.
 
-INPUT FORMAT:
- - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the LAMMPS compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
- - dict   : a Numpy binary file containing a dictionary (e.g. obtained from the script i_o/read_lammps_log.py)
- - LAMMPS : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
-The average temperature is computed if a column with the header 'Temp' is found; otherwise you have to specify it.
-You must provide the name of the heat flux compute. You can also provide additional currents if your system is a multi-component fluid.
-(Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
-Units can be metal or real (see LAMMPS documentation at http://lammps.sandia.gov/doc/units.html )
+    INPUT FORMAT:
+     - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the LAMMPS compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
+     - dict   : a Numpy binary file containing a dictionary (e.g. obtained from the script i_o/read_lammps_log.py)
+     - LAMMPS : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
+    The average temperature is computed if a column with the header 'Temp' is found; otherwise you have to specify it.
+    You must provide the name of the heat flux compute. You can also provide additional currents if your system is a multi-component fluid.
+    (Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
+    Units can be metal or real (see LAMMPS documentation at http://lammps.sandia.gov/doc/units.html )
 
-OUTPUT files:
-  [output].logfile
-      A log of the available information.
-  [output].plots.pdf
-      A PDF with all the plots generated.
-OUTPUT DATA files (can be text ".dat" or binary ".npy"):
-  [output].psd
-      freqs [THz], original periodogram, original log(periodogram)
-  [output].cospectrum (if any)
-      freqs [THz], full matrix cospectrum
-  [output].resampled_psd
-      freqs [THz], resampled periodogram, resampled log(periodogram)
-  [output].cepstral
-      cepstral coefficients ck, error(ck), L0(P*), err(L0(P*)), kappa(P*) [W/mK], err(kappa(P*)) [W/mK]
-      the line number minus one is the number of cepstral coefficients used (P*).
-  [output].cepstrumfiltered_psd
-      freqs [THz], cepstrum-filtered periodogram, cepstrum-filtered log(periodogram)
+    OUTPUT files:
+      [output].logfile
+          A log of the available information.
+      [output].plots.pdf
+          A PDF with all the plots generated.
+    OUTPUT DATA files (can be text ".dat" or binary ".npy"):
+      [output].psd
+          freqs [THz], original periodogram, original log(periodogram)
+      [output].cospectrum (if any)
+          freqs [THz], full matrix cospectrum
+      [output].resampled_psd
+          freqs [THz], resampled periodogram, resampled log(periodogram)
+      [output].cepstral
+          cepstral coefficients ck, error(ck), L0(P*), err(L0(P*)), kappa(P*) [W/mK], err(kappa(P*)) [W/mK]
+          the line number minus one is the number of cepstral coefficients used (P*).
+      [output].cepstrumfiltered_psd
+          freqs [THz], cepstrum-filtered periodogram, cepstrum-filtered log(periodogram)
 
--------------------------
-Example:
-  read and analyze "example/Silica.dat" file. The heat-flux columns are called c_flux[1], c_flux[2], c_flux[3]
+    -------------------------
+    Example:
+      read and analyze "example/Silica.dat" file. The heat-flux columns are called c_flux[1], c_flux[2], c_flux[3]
 
-    ./analysis "example/Silica.dat" -V 3130.431110818 -T 1065.705630 -t 1.0 -k flux1 -u metal -r --FSTAR 28.0 -w 0.5 -o silica_test
+        ./analysis "example/Silica.dat" -V 3130.431110818 -T 1065.705630 -t 1.0 -k flux1 -u metal -r --FSTAR 28.0 -w 0.5 -o silica_test
 
--------------------------
-"""
+    -------------------------
+    """
     _epilog = """---
-Enjoy it!
----
-This software was written by Loris Ercole and extended by Riccardo Bertossa to handle the multicomponent stuff, at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY.
-
-Please cite these references:
- - Ercole, Marcolongo, Baroni, Sci. Rep. 7, 15835 (2017), https://doi.org/10.1038/s41598-017-15843-2
- - Bertossa, Grasselli, Ercole, Baroni Phys. Rev. Lett. 122, 255901 (2019), https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.255901
- - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
-
-https://github.com/lorisercole/thermocepstrum
-Contact: lercole@sissa.it
-"""
+    Enjoy it!
+    ---
+    This software was written by Loris Ercole and extended by Riccardo Bertossa to handle the multicomponent stuff, at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY.
+    
+    Please cite these references:
+     - Ercole, Marcolongo, Baroni, Sci. Rep. 7, 15835 (2017), https://doi.org/10.1038/s41598-017-15843-2
+     - Bertossa, Grasselli, Ercole, Baroni Phys. Rev. Lett. 122, 255901 (2019), https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.255901
+     - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
+    
+    https://github.com/lorisercole/thermocepstrum
+    Contact: lercole@sissa.it
+    """
 
     # yapf: disable
     parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument( 'inputfile', type=str, help='input file to read (default format: Table)' )
-    parser.add_argument( '-t', '--timestep', type=float, required=True, help='Time step of the log.write_loged data (fs)' )
-    parser.add_argument( '-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux' )
-    parser.add_argument( '-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)' )
-    parser.add_argument( '-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)' )
-    parser.add_argument( '--input-format', default='table', type=str, choices=['table','dict','lammps'], help='Format of the input file' )
-    parser.add_argument( '--cindex', nargs='*', type=int, help='Column indexes of the heatflux to read (0,1,2,...)' )
-    parser.add_argument( '--sindex', nargs='*', type=int, help='Column indexes of the heatflux to substract from the flux read with --cindex (3,4,5,...)' )
-    parser.add_argument( '--run-keyword', type=str, help='Keyword that identifies the run to be read (only for "lammps" format)' )
-    parser.add_argument( '--split', type=int, default=1, help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m.')
+    parser.add_argument('inputfile', type=str, help='input file to read (default format: Table)')
+    parser.add_argument('-t', '--timestep', type=float, required=True, help='Time step of the log.write_loged data (fs)')
+    parser.add_argument('-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux')
+    parser.add_argument('-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)')
+    parser.add_argument('-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)')
+    parser.add_argument('--input-format', default='table', type=str, choices=['table','dict','lammps'], help='Format of the input file')
+    parser.add_argument('--cindex', nargs='*', type=int, help='Column indexes of the heatflux to read (0,1,2,...)')
+    parser.add_argument('--sindex', nargs='*', type=int, help='Column indexes of the heatflux to substract from the flux read with --cindex (3,4,5,...)')
+    parser.add_argument('--run-keyword', type=str, help='Keyword that identifies the run to be read (only for "lammps" format)')
+    parser.add_argument('--split', type=int, default=1, help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m.')
 
-    parser.add_argument( '-o', '--output', type=str, default='output', help='prefix of the output files' )
-    parser.add_argument( '-O', '--bin-output', action='store_true', help='save also binary files' )
-    parser.add_argument( '--no-text-output', action='store_true', help='do not save text files' )
-    parser.add_argument( '--bin-output-old', action='store_true', help='use old format for binary files (compatibility)' )
+    parser.add_argument('-o', '--output', type=str, default='output', help='prefix of the output files')
+    parser.add_argument('-O', '--bin-output', action='store_true', help='save also binary files')
+    parser.add_argument('--no-text-output', action='store_true', help='do not save text files')
+    parser.add_argument('--bin-output-old', action='store_true', help='use old format for binary files (compatibility)')
 
-    parser.add_argument( '-V', '--volume', type=float, help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile.' )
-    parser.add_argument( '--structure', type=str, help='LAMMPS data file containing the structure. Read to get Volume.' )
-    parser.add_argument( '-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file' )
-    parser.add_argument( '-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'], help='LAMMPS units (default: metal)' )
+    parser.add_argument('-V', '--volume', type=float, help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile.')
+    parser.add_argument('--structure', type=str, help='LAMMPS data file containing the structure. Read to get Volume.')
+    parser.add_argument('-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file')
+    parser.add_argument('-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'], help='LAMMPS units (default: metal)')
 
-    parser.add_argument( '-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR' )
+    parser.add_argument('-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR')
     resamplearg = parser.add_mutually_exclusive_group()
-    resamplearg.add_argument( '--TSKIP', type=int, help='resampling time period (steps)' )
-    resamplearg.add_argument( '--FSTAR', type=float, help='resampling target Nyquist frequency (THz)' )
-    parser.add_argument( '-c', '--corr-factor', type=float, default=1.0, help='correction factor to the AIC' )
-    parser.add_argument( '-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids' )
+    resamplearg.add_argument('--TSKIP', type=int, help='resampling time period (steps)')
+    resamplearg.add_argument('--FSTAR', type=float, help='resampling target Nyquist frequency (THz)')
+    parser.add_argument('-c', '--corr-factor', type=float, default=1.0, help='correction factor to the AIC')
+    parser.add_argument('-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids')
 
-    parser.add_argument( '-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)' )
-    parser.add_argument('--plot-conv-max-pstar',type=int,help='max number of P* in the kappa(P*) plot (x)')
-    parser.add_argument('--plot-conv-max-kappa',type=float,help='max kappa in the kappa(P*) plot (y)')
-    parser.add_argument('--plot-conv-pstar-tick-interval',type=int,help='tick interval on the x-axis for the kappa(P*) plot')
-    parser.add_argument('--plot-conv-kappa-tick-interval',type=float,help='tick interval on the y-axis for the kappa(P*) plot')
-    parser.add_argument('--plot-psd-max-THz',type=float, help='max frequency in THz for the psd plot (x)')
-    parser.add_argument('--plot-psd-max-kappa',type=float, help='max kappa in W/mK for the psd plot (y)')
-    parser.add_argument('--plot-psd-THz-tick-interval',type=float, help='tick interval on the x-axis for the psd plot')
-    parser.add_argument('--plot-psd-kappa-tick-interval',type=float, help='tick interval on the y-axis for the psd plot')
+    parser.add_argument('-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)')
+    parser.add_argument('--plot-conv-max-pstar', type=int, help='max number of P* in the kappa(P*) plot (x)')
+    parser.add_argument('--plot-conv-max-kappa', type=float, help='max kappa in the kappa(P*) plot (y)')
+    parser.add_argument('--plot-conv-pstar-tick-interval', type=int, help='tick interval on the x-axis for the kappa(P*) plot')
+    parser.add_argument('--plot-conv-kappa-tick-interval', type=float, help='tick interval on the y-axis for the kappa(P*) plot')
+    parser.add_argument('--plot-psd-max-THz', type=float, help='max frequency in THz for the psd plot (x)')
+    parser.add_argument('--plot-psd-max-kappa', type=float, help='max kappa in W/mK for the psd plot (y)')
+    parser.add_argument('--plot-psd-THz-tick-interval', type=float, help='tick interval on the x-axis for the psd plot')
+    parser.add_argument('--plot-psd-kappa-tick-interval', type=float, help='tick interval on the y-axis for the psd plot')
     args = parser.parse_args()
 
     # yapf: enable
@@ -182,31 +159,31 @@ Contact: lercole@sissa.it
     psd_filter_w = args.psd_filterw
 
     if volume is not None:
-        if (volume <= 0.):
+        if volume <= 0.:
             raise ValueError('volume must be positive')
-    if (DT_FS <= 0.):
+    if DT_FS <= 0.:
         raise ValueError('timestep must be positive')
-    if (NSTEPS < 0):
+    if NSTEPS < 0:
         raise ValueError('nsteps must be positive')
     if temperature is not None:
-        if (temperature <= 0.):
+        if temperature <= 0.:
             raise ValueError('temperature must be positive')
     if resample:
-        if (TSKIP is not None):
-            if (TSKIP <= 1):
+        if TSKIP is not None:
+            if TSKIP <= 1:
                 raise ValueError('resampling: TSKIP should be > 1')
-        elif (FSTAR is not None):
-            if (FSTAR <= 0.):
+        elif FSTAR is not None:
+            if FSTAR <= 0.:
                 raise ValueError('resampling: FSTAR should be positive')
         else:
             raise ValueError('resampling: you should specify either TSKIP or FSTAR')
-    elif (TSKIP is not None):
+    elif TSKIP is not None:
         raise ValueError('Use flag -r to resample. TSKIP will be ignored')
-    elif (FSTAR is not None):
+    elif FSTAR is not None:
         raise ValueError('Use flag -r to resample. FSTAR will be ignored')
-    if (corr_factor <= 0.):
+    if corr_factor <= 0.:
         raise ValueError('the correction factor must be positive')
-    if (NSPLIT < 1):
+    if NSPLIT < 1:
         raise ValueError('The number of splits must be a positive number')
 
     ncurrents = len(j2_keys) + 1
@@ -225,9 +202,9 @@ Contact: lercole@sissa.it
     log.write_log(' Time step:      {} fs'.format(DT_FS))
     logfile.write(' Time step:      {} fs\n'.format(DT_FS))
 
-    ## Read data
+    # Read data
     jdata = None
-    if (input_format == 'table'):
+    if input_format == 'table':
         if temperature is None:
             selected_keys.append('Temp')
 #      if 'Press' in jfile.ckey:
@@ -236,9 +213,9 @@ Contact: lercole@sissa.it
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         jdata = jfile.data
         START_STEP = 0   # reset to zero, as later we will need to read all of jdata
-    elif (input_format == 'dict'):
+    elif input_format == 'dict':
         jdata = np.load(inputfile, allow_pickle=True).tolist()
-    elif (input_format == 'lammps'):
+    elif input_format == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         if temperature is None:
             selected_keys.append('Temp')
@@ -249,19 +226,19 @@ Contact: lercole@sissa.it
     else:
         raise NotImplemented('input format not implemented.')
 
-    if (NSPLIT > 1):
+    if NSPLIT > 1:
         log.write_log('Splitting input data time series into {:d} segments...'.format(NSPLIT))
         logfile.write('Splitting input data time series into {:d} segments...\n'.format(NSPLIT))
         data_size = jdata[selected_keys[0]].shape[0]
         n_proc = 1
-        try:   ## HORRIBLE
+        try:   # HORRIBLE
             n_proc = jdata[selected_keys[0]].shape[1]
         except:
             pass
         rm = data_size % NSPLIT
         steps_start = data_size - rm
         steps_end = data_size / NSPLIT
-        if (steps_end % 2 == 1):
+        if (steps_end % 2) == 1:
             steps_end = steps_end - 1
         for key, value in jdata.items():
             if key != 'Temp':
@@ -271,10 +248,10 @@ Contact: lercole@sissa.it
         log.write_log('New shape of input data: {}'.format(jdata[selected_keys[0]].shape))
         logfile.write('New shape of input data: {}\n'.format(jdata[selected_keys[0]].shape))
 
-    if (NSTEPS == 0):
+    if NSTEPS == 0:
         NSTEPS = jdata[list(jdata.keys())[0]].shape[0]
 
-    ## Define Temperature
+    # Define Temperature
     if temperature is None:
         if 'Temp' in jdata:
             temperature = np.mean(jdata['Temp'])
@@ -298,7 +275,7 @@ Contact: lercole@sissa.it
         log.write_log(' Mean Temperature (input):  {} K'.format(temperature))
         logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
 
-    ## Define Volume
+    # Define Volume
     if volume is None:
         if structurefile is not None:
             _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
@@ -323,7 +300,7 @@ Contact: lercole@sissa.it
     #   log.write_log ' Mean Pressure (computed):  {} K'.format(pressure)
     #   logfile.write(' Mean Pressure (computed):  {} K'.format(pressure))
 
-    ## Define currents
+    # Define currents
     log.write_log(selected_keys, jindex)
     if jindex is None:
         currents = np.array([jdata[key][START_STEP:(START_STEP + NSTEPS), :] for key in selected_keys])
@@ -341,8 +318,8 @@ Contact: lercole@sissa.it
     log.write_log(currents)
 
     # create HeatCurrent object
-    j = tc.heatcurrent.HeatCurrent(currents, plotter=plotManager, DT_FS=DT_FS, UNITS=units, TEMPERATURE=temperature, VOLUME=volume,
-                                   PSD_FILTER_W=psd_filter_w)
+    j = tc.HeatCurrent(currents, DT_FS=DT_FS, UNITS=units, TEMPERATURE=temperature, VOLUME=volume,
+                       PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(ncurrents))
     logfile.write(' Number of currrents = {}\n'.format(ncurrents))
@@ -354,17 +331,15 @@ Contact: lercole@sissa.it
     logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
     ################################
-    ## OUTPUT SECTION   ## TODO: isolate output from computation
+    ## OUTPUT SECTION   ##  TODO: isolate output from computation
     if binout:
         binoutobj = TCOutput()
 
     with PdfPages(output + '.plots.pdf') as pdf:
 
         # plot periodogram
-        j.plot_periodogram()   #PSD_FILTER_W=psd_filter_w)
-        #pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
-        pdf.savefig()
-        plt.close()
+        addPlotToPdf(j.plot_periodogram, pdf)  # PSD_FILTER_W=psd_filter_w)
+        # pdf.attach_note('Nyquist frequency = {} THz'.format(j.Nyquist_f_THz), positionRect=[0, 0 , 5, 1])
 
         if binout:
             binoutobj.j_DT_FS = j.DT_FS
@@ -378,7 +353,7 @@ Contact: lercole@sissa.it
             if j.MANY_CURRENTS:
                 binoutobj.j_cospectrum = j.cospectrum
                 binoutobj.j_fcospectrum = j.fcospectrum
-        #TODO: move all output in one place?
+        # TODO: move all output in one place?
         if not no_text_out:
             outfile_name = output + '.psd.dat'
             outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
@@ -403,15 +378,14 @@ Contact: lercole@sissa.it
                 jf, ax = j.resample(TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
             else:
                 jf, ax = j.resample(fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
+
             ax[0].set_xlim([0, 2.5 * FSTAR])
             pdf.savefig()
             plt.close()
             logfile.write(jf.resample_log)
 
             # plot resampled periodogram
-            ax = jf.plot_periodogram()   #PSD_FILTER_W=psd_filter_w)
-            pdf.savefig()
-            plt.close()
+            ax = addPlotToPdf(jf.plot_periodogram, pdf)  # PSD_FILTER_W=psd_filter_w)
 
             if binout:
                 binoutobj.jf_DT_FS = jf.DT_FS
@@ -429,21 +403,18 @@ Contact: lercole@sissa.it
                 np.savetxt(outfile_name, outarray, header=outfile_header)
         else:
             jf = j
-        if check_plot_manager():
-            plotManager.plt_psd(j, jf,\
-                      f_THz_max=args.plot_psd_max_THz,\
-                      k_SI_max=args.plot_psd_max_kappa,\
-                      k_tick=args.plot_psd_kappa_tick_interval,\
-                      f_tick=args.plot_psd_THz_tick_interval)
-            pdf.savefig()
-            plt.close()
-            plotManager.plt_psd(jf,\
-                    f_THz_max=args.plot_psd_max_THz,\
-                    k_SI_max=args.plot_psd_max_kappa,\
-                    k_tick=args.plot_psd_kappa_tick_interval,\
-                    f_tick=args.plot_psd_THz_tick_interval)
-            pdf.savefig()
-            plt.close()
+
+        addPlotToPdf(plotManager.plt_psd, pdf, j, jf,
+                     f_THz_max=args.plot_psd_max_THz,
+                     k_SI_max=args.plot_psd_max_kappa,
+                     k_tick=args.plot_psd_kappa_tick_interval,
+                     f_tick=args.plot_psd_THz_tick_interval)
+
+        addPlotToPdf(plotManager.plt_psd, pdf, jf,
+                     f_THz_max=args.plot_psd_max_THz,
+                     k_SI_max=args.plot_psd_max_kappa,
+                     k_tick=args.plot_psd_kappa_tick_interval,
+                     f_tick=args.plot_psd_THz_tick_interval)
 
         # cepstral analysis
         jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor)
@@ -457,50 +428,44 @@ Contact: lercole@sissa.it
             binoutobj.TEMPERATURE = temperature
             binoutobj.VOLUME = volume
 
+        addPlotToPdf(plotManager.plt_psd, pdf, jf, jf, jf,
+                     f_THz_max=args.plot_psd_max_THz,
+                     k_SI_max=args.plot_psd_max_kappa,
+                     k_tick=args.plot_psd_kappa_tick_interval,
+                     f_tick=args.plot_psd_THz_tick_interval)
+
+
+        try:
+            for idx1 in range(ncurrents):
+                for idx2 in range(idx1, ncurrents):
+                    addPlotToPdf(plotManager.plt_other, pdf, j, idx1, idx2)
+        except:
+            pass
+
         if check_plot_manager():
-            plotManager.plt_psd(jf, jf, jf,\
-                    f_THz_max=args.plot_psd_max_THz,\
-                    k_SI_max=args.plot_psd_max_kappa,\
-                    k_tick=args.plot_psd_kappa_tick_interval,\
-                    f_tick=args.plot_psd_THz_tick_interval)
+            # plot cepstral coefficients
+            ax = jf.plot_ck()
+            ax.set_xlim([0, 5 * jf.dct.aic_Kmin])
+            #  ax.set_ylim([-0.5, 0.5])
+            ax.grid()
             pdf.savefig()
             plt.close()
 
-            try:
-                for idx1 in range(ncurrents):
-                    for idx2 in range(idx1, ncurrents):
-                        plotManager.plt_other(j, idx1, idx2)
-                        pdf.savefig()
-                        plt.close()
-            except:
-                pass
-
-        # plot cepstral coefficients
-        ax = jf.plot_ck()
-        ax.set_xlim([0, 5 * jf.dct.aic_Kmin])
-        #  ax.set_ylim([-0.5, 0.5])
-        ax.grid()
-        pdf.savefig()
-        plt.close()
-
-        # plot L0(Pstar)
-        ax = jf.plot_L0_Pstar()
-        ax.set_xlim([0, 10 * jf.dct.aic_Kmin])
-        pdf.savefig()
-        plt.close()
+            # plot L0(Pstar)
+            ax = jf.plot_L0_Pstar()
+            ax.set_xlim([0, 10 * jf.dct.aic_Kmin])
+            pdf.savefig()
+            plt.close()
 
         # plot kappa(Pstar)
         #      ax = jf.plot_kappa_Pstar()
         #      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
 
-        if check_plot_manager():
-            plotManager.plt_cepstral_conv(jf,\
-                              pstar_max=args.plot_conv_max_pstar,\
-                              pstar_tick=args.plot_conv_pstar_tick_interval,\
-                              k_SI_max=args.plot_conv_max_kappa,\
-                              kappa_tick=args.plot_conv_kappa_tick_interval)
-            pdf.savefig()
-            plt.close()
+        addPlotToPdf(plotManager.plt_cepstral_conv, pdf, jf,
+                     pstar_max=args.plot_conv_max_pstar,
+                     pstar_tick=args.plot_conv_pstar_tick_interval,
+                     k_SI_max=args.plot_conv_max_kappa,
+                     kappa_tick=args.plot_conv_kappa_tick_interval)
 
         if binout:
             binoutobj.jf_dct_logpsdK = jf.dct.logpsdK
