@@ -32,8 +32,6 @@ except:
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
-
-
 class Plotter:
 
     @staticmethod
@@ -59,9 +57,9 @@ class Plotter:
         # (re)compute filtered psd, if a window has been defined
         if (PSD_FILTER_W is not None) or (current.PSD_FILTER_W is not None):
             current.filter_psd(PSD_FILTER_W, freq_units)
-        else:  # use a zero-width (non-filtering) window
+        else:   # use a zero-width (non-filtering) window
             current.filter_psd(0.)
-        if kappa_units:  # plot psd in units of kappa - the log(psd) is not converted
+        if kappa_units:   # plot psd in units of kappa - the log(psd) is not converted
             psd_scale = 0.5 * current.kappa_scale
         else:
             psd_scale = 1.0
@@ -134,8 +132,10 @@ class Plotter:
         axes.plot(np.arange(current.NFREQS) + 1, current.dct.logtau - current.dct.logtau_THEORY_std, '--', c=color)
         axes.axvline(x=current.dct.aic_Kmin + 1, ls='--', c=color)
         axes.set_xlim([0, 3 * current.dct.aic_Kmin])
-        max_y = np.amax((current.dct.logtau + current.dct.logtau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
-        min_y = np.amin((current.dct.logtau - current.dct.logtau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
+        max_y = np.amax(
+            (current.dct.logtau + current.dct.logtau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
+        min_y = np.amin(
+            (current.dct.logtau - current.dct.logtau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
         axes.set_ylim([min_y * 0.8, max_y * 1.2])
         axes.set_xlabel(r'$P^*$')
         axes.set_ylabel(r'$L_0(P*)$')
@@ -154,7 +154,8 @@ class Plotter:
         if axes is None:
             figure, axes = plt.subplots(1, figsize=FIGSIZE)
         color = next(axes._get_lines.prop_cycler)['color']
-        axes.plot(np.arange(current.NFREQS) + 1, current.dct.tau * current.kappa_scale * 0.5, '.-', c=color, label=label)
+        axes.plot(
+            np.arange(current.NFREQS) + 1, current.dct.tau * current.kappa_scale * 0.5, '.-', c=color, label=label)
         axes.plot(np.arange(current.NFREQS) + 1, (current.dct.tau + current.dct.tau_THEORY_std) * current.kappa_scale * 0.5,
                   '--', c=color)   # yapf: disable
         axes.plot(np.arange(current.NFREQS) + 1, (current.dct.tau - current.dct.tau_THEORY_std) * current.kappa_scale * 0.5,
@@ -269,7 +270,8 @@ class Plotter:
         TSKIP = int(current.Nyquist_f_THz / xf.Nyquist_f_THz)
 
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = Plotter.plot_periodogram(current, PSD_FILTER_W, freq_units, axes=axes)   # this also updates self.PSD_FILTER_W
+        axes = Plotter.plot_periodogram(current, PSD_FILTER_W, freq_units,
+                                        axes=axes)   # this also updates self.PSD_FILTER_W
         xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes)
         if freq_units in ('THz', 'thz'):
             axes[0].axvline(x=fstar_THz, ls='--', c='k')
@@ -292,12 +294,12 @@ class Plotter:
 
         f, ax2 = plt.subplots(1, 1, figsize=(3.8, 2.3))
         ax2.axvline(x=jf.dct.aic_Kmin + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
-        ax2.fill_between(np.arange(jf.dct.logtau.shape[0]) + 1,
-                         (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,
-                         (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,
-                         alpha=0.3, color=c[4], zorder=-3)
-        ax2.plot(np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.kappa_scale * 0.5,
-                 label=r'Cepstral method', marker='o', c=c[4], zorder=-3)
+        ax2.fill_between(
+            np.arange(jf.dct.logtau.shape[0]) + 1, (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,
+            (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5, alpha=0.3, color=c[4], zorder=-3)
+        ax2.plot(
+            np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.kappa_scale * 0.5, label=r'Cepstral method',
+            marker='o', c=c[4], zorder=-3)
         ax2.set_xlabel(r'$P^*$')
         ax2.set_ylabel(r'$\kappa$ (W/mK)')
         ax2.set_xlim([0, pstar_max])
@@ -438,7 +440,7 @@ class Plotter:
                     raise ValueError('x.otherMD cannot be None (missing initialization?)')
                 x.compute_kappa_multi(others=x.otherMD)
         if PSD_FILTER_W is None:
-            if x.FILTER_WINDOW_WIDTH is None:
+            if x.PSD_FILTER_W is None:
                 x.filter_psd(0.)
         else:
             if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -494,9 +496,9 @@ class Plotter:
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
-                Plotter.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
+                Plotter.GUI_plot_periodogram(xf, xf.PSD_FILTER_W * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
             elif freq_units == 'red':
-                Plotter.GUI_plot_periodogram(xf, xf.FILTER_WINDOW_WIDTH * TSKIP, 'red', TSKIP, axis=axis)
+                Plotter.GUI_plot_periodogram(xf, xf.PSD_FILTER_W * TSKIP, 'red', TSKIP, axis=axis)
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -542,7 +544,7 @@ class Plotter:
     def _n_tick_in_range(beg, end, n):
         size = end - beg
         n_cifre = math.floor(math.log(size / n, 10.0))
-        delta = math.ceil((size / n) / 10 ** n_cifre) * 10 ** n_cifre
+        delta = math.ceil((size / n) / 10**n_cifre) * 10**n_cifre
         return delta, delta / 2
 
     @staticmethod
@@ -566,4 +568,3 @@ def addPlotToPdf(func, pdf, *args, **kwargs):
     pdf.savefig()
     plt.close()
     return result
-
