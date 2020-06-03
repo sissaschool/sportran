@@ -5,7 +5,7 @@ def test_example_NaCl():
 
     print(os.environ)
 
-    jfile = tc.i_o.TableFile('./data/NaCl.dat', group_vectors=True)
+    jfile = tc.i_o.TableFile('./tests/data/NaCl.dat', group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['Temp', 'flux', 'vcm[1]'])
     DT_FS = 5.0   # time step [fs]
     TEMPERATURE = np.mean(jfile.data['Temp'])   # temperature [K]
@@ -37,7 +37,7 @@ def test_example_SiO2():
 
     print(os.environ)
 
-    jfile = tc.i_o.TableFile('./data/Silica.dat', group_vectors=True)
+    jfile = tc.i_o.TableFile('./tests/data/Silica.dat', group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['flux1'])
     DT_FS = 1.0   # time step [fs]
     TEMPERATURE = 1065.705630   # temperature [K]
