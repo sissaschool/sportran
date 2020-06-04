@@ -27,7 +27,7 @@ log = PrintMethod()
 log.set_method('bash')
 
 try:
-    from thermocepstrum.utils.plotter import Plotter, addPlotToPdf
+    from thermocepstrum.plotter import Plotter, addPlotToPdf
     plotManager = Plotter()
 except ImportError:
     log.write_log('Warning: cannot locate Plotter. Plots will be not created and displayed')

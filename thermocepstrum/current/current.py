@@ -4,8 +4,6 @@
 import numpy as np
 from .. import md
 from ..md.mdsample import MDSample
-from ..md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
-from ..md.tools.resample import filter_and_sample
 
 from thermocepstrum.utils.loadAfterPlt import plt
 from thermocepstrum.utils.utils import PrintMethod
@@ -17,7 +15,7 @@ except:
     log.write_log('Warning: plt undefined')
 
 try:
-    from thermocepstrum.utils.plotter import Plotter
+    from thermocepstrum.plotter import Plotter
 except ImportError:
     log.write_log('Warning: cannot locate Plotter. Plots will be not created and displayed')
     plotManager = None

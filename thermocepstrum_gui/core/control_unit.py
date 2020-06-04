@@ -11,7 +11,6 @@ multithread operations and to make requests to the thermocepstrum calculus unit.
 """
 
 import os
-from . import settings
 
 import thermocepstrum as tc
 import numpy as np
@@ -22,7 +21,7 @@ except ImportError:
     from thermocepstrum_gui.utils.utils import PrintMethod
 
 try:
-    from thermocepstrum.utils.plotter import Plotter
+    from thermocepstrum.plotter import Plotter
 except ImportError:
     raise ImportError('Couldn\'t find thermocepstrum.utils plotter.py. The GUI needs this import to work.')
 
