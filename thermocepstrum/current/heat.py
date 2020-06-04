@@ -31,7 +31,8 @@ class HeatCurrent(Current):
     """
     _current_type = 'heat'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
-    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS'}
+
+    # _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 
     def __init__(self, traj, **params):
         # params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')

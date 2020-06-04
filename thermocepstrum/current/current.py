@@ -33,10 +33,10 @@ class Current(MDSample):
      - FREQ_UNITS    frequency units   [THz or red] (optional)
     """
     _current_type = None
-    _input_parameters = {'DT_FS'}
-    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS'}
+    _input_parameters = {'DT_FS', 'KAPPA_SCALE'}
+    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 
-    # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent)
+    # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent) and case-insensitive
 
     def __init__(self, traj, **params):
         # e.g. params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
@@ -55,9 +55,11 @@ class Current(MDSample):
         PSD_FILTER_W = params.pop('PSD_FILTER_W', None)
         FREQ_UNITS = params.pop('FREQ_UNITS', 'THz')
 
-        DT_FS = params.get('DT_FS')
-        self.initialize_currents(traj, DT_FS)
-        self.initialize_units(**params)   # (UNITS, TEMPERATURE, VOLUME, DT_FS)
+        DT_FS = params['DT_FS']
+        MAIN_CURRENT_INDEX = params.get('MAIN_CURRENT_INDEX', 0)
+        MAIN_CURRENT_FACTOR = params.get('MAIN_CURRENT_FACTOR', 1.0)
+        self.initialize_currents(traj, DT_FS, MAIN_CURRENT_INDEX, MAIN_CURRENT_FACTOR)
+        self.initialize_units(**params)   # KAPPA_SCALE or (UNITS, TEMPERATURE, VOLUME, DT_FS)
         if self.traj is not None:
             self.compute_psd(PSD_FILTER_W, FREQ_UNITS)
             self.initialize_cepstral_parameters()
@@ -88,7 +90,7 @@ class Current(MDSample):
         # this is a virtual method
         pass
 
-    def initialize_currents(self, j, DT_FS):
+    def initialize_currents(self, j, DT_FS, main_current_index=0, main_current_factor=1.0):
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)
         if (len(j.shape) == 3):
@@ -106,12 +108,13 @@ class Current(MDSample):
 
         if self.MANY_CURRENTS:
             log.write_log('Using multicomponent code.')
-            super().__init__(traj=j[0], DT_FS=DT_FS)
+            super().__init__(traj=(j[main_current_index] * main_current_factor), DT_FS=DT_FS)
             # initialize other MDSample currents
-            self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[1:]]
+            other_currents_idxs = (np.arange(self.N_CURRENTS) != main_current_index)   # select the other currents
+            self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[other_currents_idxs]]
         else:
             log.write_log('Using single component code.')
-            super().__init__(traj=j, DT_FS=DT_FS)
+            super().__init__(traj=(j * main_current_factor), DT_FS=DT_FS)
             self.otherMD = None
 
     @staticmethod
@@ -125,8 +128,8 @@ class Current(MDSample):
         """
         Initializes the units and define the kappa_scale.
         """
-        # this is a virtual method
-        pass
+        # overridden by the Current's subclasses
+        self.kappa_scale = parameters.get('KAPPA_SCALE')
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='THz'):
         # overrides MDSample method
