@@ -6,6 +6,7 @@ from .. import md
 from ..md.mdsample import MDSample
 from ..md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from ..md.tools.resample import filter_and_sample
+from . import units
 
 from thermocepstrum.utils.loadAfterPlt import plt
 from thermocepstrum.utils.utils import PrintMethod
@@ -117,12 +118,19 @@ class Current(MDSample):
             super().__init__(traj=(j * main_current_factor), DT_FS=DT_FS)
             self.otherMD = None
 
-    @staticmethod
-    def get_units_list():
-        # this is a virtual method
+    @classmethod
+    def _get_units(cls):
         # TODO: find a way to read units from the functions defined in the module 'current/units/*_current_type*.py'
         # TODO: another method should return the function directly from the key
-        pass
+        units_module = getattr(units, _current_type)
+        units = dict(
+            inspect.getmembers(units_module,
+                               predicate=lambda f: inspect.isfunction(f) and f.__name__.startswith('scale_kappa_')))
+        return units
+
+    @classmethod
+    def get_units_list(cls):
+        return cls._get_units().keys()
 
     def initialize_units(self, **parameters):
         """
