@@ -116,7 +116,7 @@ class PStarSelector(Frame):
         cu.data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor - 1)
 
     def _pstar(self):
-        self.value_entry.config(from_=2, to=cu.data.xf.Nfreqs)
+        self.value_entry.config(from_=2, to=cu.data.xf.NFREQS)
 
         if cu.data.xf.dct:
             self.value_entry.delete(0, END)
@@ -147,8 +147,8 @@ class PStarSelector(Frame):
 
     def _draw_graph(self):
         self.graph.graph.clear()
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
-        self.graph.add_graph(cu.gm.GUI_resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
+        self.graph.show(cu.gm.GUI_plot_periodogram, current=cu.data.j)
+        self.graph.add_graph(cu.gm.GUI_resample_current, 'resample', current=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
 
     def recalculate(self):

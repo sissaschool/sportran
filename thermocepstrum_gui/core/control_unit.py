@@ -15,13 +15,14 @@ import os
 import thermocepstrum as tc
 import numpy as np
 
+from . import settings
 try:
     from thermocepstrum.utils.utils import PrintMethod
 except ImportError:
     from thermocepstrum_gui.utils.utils import PrintMethod
 
 try:
-    from thermocepstrum.plotter import Plotter
+    from thermocepstrum.plotter import GUIPlotter, CurrentPlotter
 except ImportError:
     raise ImportError('Couldn\'t find thermocepstrum.utils plotter.py. The GUI needs this import to work.')
 
@@ -210,7 +211,8 @@ This section contains the functions that deal with
 the graph manager.
 """
 
-gm = Plotter()
+gm = GUIPlotter()
+tc.HeatCurrent.set_plotter(CurrentPlotter())
 
 
 def set_graph(axis_, func, **kwargs):

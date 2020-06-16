@@ -1,6 +1,7 @@
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
 
+from thermocepstrum.md.tools.spectrum import freq_THz_to_red
 import math
 import os
 from os import path
@@ -34,8 +35,7 @@ c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 class Plotter:
 
-    @staticmethod
-    def plot_periodogram(current, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
+    def plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
                          FIGSIZE=None, **plot_kwargs):   # yapf: disable
         """
         Plot the periodogram
@@ -90,10 +90,10 @@ class Plotter:
         axes[1].xaxis.set_ticks_position('bottom')
         axes[1].set_ylabel(r'log(PSD)')
         axes[1].grid()
+        print('axes2=', axes)
         return axes
 
-    @staticmethod
-    def plot_ck(current, axes=None, label=None, FIGSIZE=None):
+    def plot_ck(self, current, axes=None, label=None, FIGSIZE=None):
         """
         :param current: current object to plot
         :param axes: matplotlib.axes.Axes object (if None, create one)
@@ -114,8 +114,7 @@ class Plotter:
         axes.set_ylabel(r'$c_k$')
         return axes
 
-    @staticmethod
-    def plot_L0_Pstar(current, axes=None, label=None, FIGSIZE=None):
+    def plot_L0_Pstar(self, current, axes=None, label=None, FIGSIZE=None):
         """
         :param current:         current object to plot
         :param axes:            matplotlib.axes.Axes object (if None, create one)
@@ -141,8 +140,7 @@ class Plotter:
         axes.set_ylabel(r'$L_0(P*)$')
         return axes
 
-    @staticmethod
-    def plot_kappa_Pstar(current, axes=None, label=None, FIGSIZE=None):
+    def plot_kappa_Pstar(self, current, axes=None, label=None, FIGSIZE=None):
         """
         :param current: current object to plot
         :param axes: matplotlib.axes.Axes object (if None, create one)
@@ -172,8 +170,7 @@ class Plotter:
         axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
         return axes
 
-    @staticmethod
-    def plot_cepstral_spectrum(current, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
+    def plot_cepstral_spectrum(self, current, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
                                **plot_kwargs):   # yapf: disable
         """
         Plots the cepstral spectrum
@@ -221,8 +218,7 @@ class Plotter:
         axes[1].grid()
         return axes
 
-    @staticmethod
-    def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **plot_kwargs):
+    def plot_fstar_analysis(self, current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **plot_kwargs):
         if axes is None:
             figure, ax = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         else:
@@ -252,8 +248,7 @@ class Plotter:
         else:
             return xf, ax
 
-    @staticmethod
-    def plt_resample(current, xf, freq_units='THz', PSD_FILTER_W=None, FIGSIZE=None):
+    def plt_resample(self, current, xf, freq_units='THz', PSD_FILTER_W=None, FIGSIZE=None):
         """
         :param current:         current object to plot
         :param xf:              a filtered & resampled time series object
@@ -270,8 +265,10 @@ class Plotter:
         TSKIP = int(current.Nyquist_f_THz / xf.Nyquist_f_THz)
 
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = Plotter.plot_periodogram(current, PSD_FILTER_W, freq_units,
-                                        axes=axes)   # this also updates self.PSD_FILTER_W
+        print('axes ->', figure)
+        axes = self.plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units,
+                                     axes=axes)   # this also updates self.PSD_FILTER_W
+        print('->', axes)
         xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes)
         if freq_units in ('THz', 'thz'):
             axes[0].axvline(x=fstar_THz, ls='--', c='k')
@@ -285,8 +282,7 @@ class Plotter:
             axes[1].set_xlim([0., 0.5])
         return xf, axes
 
-    @staticmethod
-    def plt_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_tick=None):
+    def plt_cepstral_conv(self, jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_tick=None):
         if pstar_max is None:
             pstar_max = (jf.dct.aic_Kmin + 1) * 2.5
         if k_SI_max is None:
@@ -308,12 +304,12 @@ class Plotter:
         ax2.legend()
 
         if pstar_tick is None:
-            dx1, dx2 = Plotter._n_tick_in_range(0, pstar_max, 5)
+            dx1, dx2 = self._n_tick_in_range(0, pstar_max, 5)
         else:
             dx1 = pstar_tick
             dx2 = dx1 / 2
         if kappa_tick is None:
-            dy1, dy2 = Plotter._n_tick_in_range(0, k_SI_max, 5)
+            dy1, dy2 = self._n_tick_in_range(0, k_SI_max, 5)
         else:
             dy1 = kappa_tick
             dy2 = dy1 / 2
@@ -322,10 +318,9 @@ class Plotter:
         ax2.yaxis.set_major_locator(MultipleLocator(dy1))
         ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-    @staticmethod
-    def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_tick=None, f_tick=None):
+    def plt_other(self, jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_tick=None, f_tick=None):
         if f_THz_max is None:
-            idx_max = Plotter._index_cumsum(np.abs(jf.fcospectrum[idx1][idx2]), 0.95)
+            idx_max = self._index_cumsum(np.abs(jf.fcospectrum[idx1][idx2]), 0.95)
             f_THz_max = jf.freqs_THz[idx_max]
         else:
             maxT = jf.freqs_THz[-1]
@@ -349,12 +344,12 @@ class Plotter:
         ax.set_ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
 
         if f_tick is None:
-            dx1, dx2 = Plotter._n_tick_in_range(0, f_THz_max, 5)
+            dx1, dx2 = self._n_tick_in_range(0, f_THz_max, 5)
         else:
             dx1 = f_tick
             dx2 = dx1 / 2
         if k_tick is None:
-            dy1, dy2 = Plotter._n_tick_in_range(0, k_SI_max, 5)
+            dy1, dy2 = self._n_tick_in_range(0, k_SI_max, 5)
         else:
             dy1 = k_tick
             dy2 = dy1 / 2
@@ -364,10 +359,9 @@ class Plotter:
         ax.yaxis.set_major_locator(MultipleLocator(dy1))
         ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-    @staticmethod
-    def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
+    def plt_psd(self, jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
         if f_THz_max is None:
-            idx_max = Plotter._index_cumsum(jf.psd, 0.95)
+            idx_max = self._index_cumsum(jf.psd, 0.95)
             f_THz_max = jf.freqs_THz[idx_max]
         else:
             maxT = jf.freqs_THz[-1]
@@ -402,12 +396,12 @@ class Plotter:
         ax.set_ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
 
         if f_tick is None:
-            dx1, dx2 = Plotter._n_tick_in_range(0, f_THz_max, 5)
+            dx1, dx2 = self._n_tick_in_range(0, f_THz_max, 5)
         else:
             dx1 = f_tick
             dx2 = dx1 / 2
         if k_tick is None:
-            dy1, dy2 = Plotter._n_tick_in_range(0, k_SI_max, 5)
+            dy1, dy2 = self._n_tick_in_range(0, k_SI_max, 5)
         else:
             dy1 = k_tick
             dy2 = dy1 / 2
@@ -417,8 +411,7 @@ class Plotter:
         ax.yaxis.set_major_locator(MultipleLocator(dy1))
         ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-    @staticmethod
-    def GUI_plot_periodogram(x, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
+    def GUI_plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
                              data=None, FIGSIZE=None, **plot_kwargs):
         """
         Plot the periodogram.
@@ -432,39 +425,39 @@ class Plotter:
         Returns a matplotlib.axes.Axes object.
         """
         # recompute PSD if needed
-        if x.psd is None:
-            if not x.multicomponent:
-                x.compute_psd()
+        if current.psd is None:
+            if not current.multicomponent:
+                current.compute_psd()
             else:
-                if x.otherMD is None:
+                if current.otherMD is None:
                     raise ValueError('x.otherMD cannot be None (missing initialization?)')
-                x.compute_kappa_multi(others=x.otherMD)
+                current.compute_kappa_multi(others=current.otherMD)
         if PSD_FILTER_W is None:
-            if x.PSD_FILTER_W is None:
-                x.filter_psd(0.)
+            if current.PSD_FILTER_W is None:
+                current.filter_psd(0.)
         else:
             if (freq_units == 'thz') or (freq_units == 'THz'):
-                x.filter_psd(Plotter._freq_THz_to_red(PSD_FILTER_W, x.DT_FS))
+                current.filter_psd(freq_THz_to_red(PSD_FILTER_W, current.DT_FS))
             elif freq_units == 'red':
-                x.filter_psd(PSD_FILTER_W)
+                current.filter_psd(PSD_FILTER_W)
             else:
                 raise ValueError('Units not valid.')
 
         if kappa_units:
             # plot psd in units of kappa - the log(psd) is not converted
-            psd_scale = 0.5 * x.kappa_scale
+            psd_scale = 0.5 * current.kappa_scale
         else:
             psd_scale = 1.0
         # if axis is None:
         #    figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         # plt.subplots_adjust(hspace = 0.1)
         if (freq_units == 'thz') or (freq_units == 'THz'):
-            axis.plot(x.freqs_THz, psd_scale * x.fpsd, **plot_kwargs)
+            axis.plot(current.freqs_THz, psd_scale * current.fpsd, **plot_kwargs)
             # axes[1].plot(x.freqs_THz, x.flogpsd, **plot_kwargs)
-            axis.set_xlim([0., x.Nyquist_f_THz])
+            axis.set_xlim([0., current.Nyquist_f_THz])
             # axes[1].set_xlim([0., x.Nyquist_f_THz])
         elif freq_units == 'red':
-            axis.plot(x.freqs / freq_scale, psd_scale * x.fpsd, **plot_kwargs)
+            axis.plot(current.freqs / freq_scale, psd_scale * current.fpsd, **plot_kwargs)
             # axes[1].plot(x.freqs/freq_scale, x.flogpsd, **plot_kwargs)
             axis.set_xlim([0., 0.5 / freq_scale])
             # axes[1].set_xlim([0., 0.5/freq_scale])
@@ -482,8 +475,7 @@ class Plotter:
         axis.grid()
         return axis
 
-    @staticmethod
-    def GUI_resample_current(current, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
+    def GUI_resample_current(self, current, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
                              freq_units='thz', FIGSIZE=None, axis=None, data=None):
 
         if data.changes:
@@ -496,9 +488,9 @@ class Plotter:
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
-                Plotter.GUI_plot_periodogram(xf, xf.PSD_FILTER_W * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
+                self.GUI_plot_periodogram(xf, xf.PSD_FILTER_W * 1000. / xf.DT_FS, 'thz', TSKIP, axis=axis)
             elif freq_units == 'red':
-                Plotter.GUI_plot_periodogram(xf, xf.PSD_FILTER_W * TSKIP, 'red', TSKIP, axis=axis)
+                self.GUI_plot_periodogram(xf, xf.PSD_FILTER_W * TSKIP, 'red', TSKIP, axis=axis)
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -510,20 +502,19 @@ class Plotter:
         if data:
             data.xf = xf
 
-    @staticmethod
-    def GUI_plot_cepstral_spectrum(x, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None,
+    def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None,
                                    data=None, **plot_kwargs):
         if kappa_units:
-            psd_scale = 0.5 * x.kappa_scale
+            psd_scale = 0.5 * current.kappa_scale
         else:
             psd_scale = 1.0
         if (freq_units == 'thz') or (freq_units == 'THz'):
-            axis.plot(x.freqs_THz, x.dct.psd * psd_scale, **plot_kwargs)
+            axis.plot(current.freqs_THz, current.dct.psd * psd_scale, **plot_kwargs)
             # axes[1].plot(x.freqs_THz, x.dct.logpsd, **plot_kwargs)
-            axis.set_xlim([0., x.Nyquist_f_THz])
+            axis.set_xlim([0., current.Nyquist_f_THz])
             # axes[1].set_xlim([0., x.Nyquist_f_THz])
         elif freq_units == 'red':
-            axis.plot(x.freqs / freq_scale, x.dct.psd * psd_scale, **plot_kwargs)
+            axis.plot(current.freqs / freq_scale, current.dct.psd * psd_scale, **plot_kwargs)
             # axes[1].plot(x.freqs / freq_scale, x.dct.logpsd, **plot_kwargs)
             axis.set_xlim([0., 0.5 / freq_scale])
             # axes[1].set_xlim([0., 0.5 / freq_scale])
@@ -558,9 +549,50 @@ class Plotter:
             idx = idx + 1
         return idx
 
-    @staticmethod
-    def _freq_THz_to_red(f, DT_FS):
-        return f / 1000. * DT_FS
+
+class CurrentPlotter(Plotter):
+
+    def plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
+                         FIGSIZE=None, **plot_kwargs):   # yapf: disable
+        return super().plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, freq_scale=freq_scale, axes=axes, kappa_units=kappa_units,
+                         FIGSIZE=FIGSIZE, **plot_kwargs)
+
+    def plot_ck(self, current, axes=None, label=None, FIGSIZE=None):
+        return super().plot_ck(current, axes, label, FIGSIZE)
+
+    def plot_L0_Pstar(self, current, axes=None, label=None, FIGSIZE=None):
+        return super().plot_L0_Pstar(current, axes, label, FIGSIZE)
+
+    def plot_kappa_Pstar(self, current, axes=None, label=None, FIGSIZE=None):
+        return super().plot_kappa_Pstar(current, axes, label, FIGSIZE)
+
+    def plot_cepstral_spectrum(self, current, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
+                               **plot_kwargs):   # yapf: disable
+        return super().plot_cepstral_spectrum(current, freq_units, freq_scale, axes, kappa_units, FIGSIZE, **plot_kwargs)
+
+    def plot_fstar_analysis(self, current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **plot_kwargs):
+        return super().plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, axes, FIGSIZE, **plot_kwargs)
+
+    def plt_resample(self, current, xf, freq_units='THz', PSD_FILTER_W=None, FIGSIZE=None):
+        return super().plt_resample(current, xf, freq_units, PSD_FILTER_W, FIGSIZE)
+
+
+class GUIPlotter(Plotter):
+
+    def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None,
+                                   data=None, **plot_kwargs):
+        return super().GUI_plot_cepstral_spectrum(current, freq_units, freq_scale, axis, kappa_units, FIGSIZE,
+                                                  data, **plot_kwargs)
+
+    def GUI_plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
+                             data=None, FIGSIZE=None, **plot_kwargs):
+        return super().GUI_plot_periodogram(current, PSD_FILTER_W, freq_units, freq_scale, axis, kappa_units,
+                                            data, FIGSIZE, **plot_kwargs)
+
+    def GUI_resample_current(self, current, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
+                             freq_units='thz', FIGSIZE=None, axis=None, data=None):
+        return super().GUI_resample_current(current, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W,
+                             freq_units, FIGSIZE, axis, data)
 
 
 def addPlotToPdf(func, pdf, *args, **kwargs):

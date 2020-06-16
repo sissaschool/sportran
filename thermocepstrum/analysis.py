@@ -27,11 +27,13 @@ log = PrintMethod()
 log.set_method('bash')
 
 try:
-    from thermocepstrum.plotter import Plotter, addPlotToPdf
+    from thermocepstrum.plotter import Plotter, CurrentPlotter, addPlotToPdf
     plotManager = Plotter()
+    tc.HeatCurrent.set_plotter(CurrentPlotter())
 except ImportError:
     log.write_log('Warning: cannot locate Plotter. Plots will be not created and displayed')
     plotManager = None
+
 
 def main():
     """

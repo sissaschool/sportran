@@ -196,7 +196,7 @@ class FStarSelector(Frame):
     def recalculate(self, slider_config=None):
         self.graph.other_graph.clear()
         self.graph.graph.clear()
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,
+        self.graph.show(cu.gm.GUI_plot_periodogram, current=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,
                         slider_config=slider_config)
         if float(self.value_entry.get()):
             print('resampled')
