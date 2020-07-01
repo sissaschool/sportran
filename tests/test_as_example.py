@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 def test_example_NaCl():
     import numpy as np
     import os
@@ -13,11 +16,12 @@ def test_example_NaCl():
     print('T = {:f} K'.format(TEMPERATURE))
     print('V = {:f} A^3'.format(VOLUME))
 
-    j = tc.HeatCurrent([jfile.data['flux'], jfile.data['vcm[1]']], 'metal', DT_FS, TEMPERATURE, VOLUME)
+    j = tc.HeatCurrent([jfile.data['flux'], jfile.data['vcm[1]']], DT_FS=DT_FS, UNITS='metal', TEMPERATURE=TEMPERATURE,
+                       VOLUME=VOLUME)
     print(j.Nyquist_f_THz)
 
     FSTAR_THZ = 14.0
-    jf = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
+    jf = j.resample(fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
     jf.cepstral_analysis()
     print('K of AIC_min = {:d}'.format(jf.dct.aic_Kmin))
     print('AIC_min = {:f}'.format(jf.dct.aic_min))
@@ -43,11 +47,11 @@ def test_example_SiO2():
     TEMPERATURE = 1065.705630   # temperature [K]
     VOLUME = 3130.431110818   # volume [A^3]
 
-    j = tc.HeatCurrent(jfile.data['flux1'], 'metal', DT_FS, TEMPERATURE, VOLUME)
+    j = tc.HeatCurrent(jfile.data['flux1'], DT_FS=DT_FS, UNITS='metal', TEMPERATURE=TEMPERATURE, VOLUME=VOLUME)
     print(j.Nyquist_f_THz)
 
     FSTAR_THZ = 28.0
-    jf = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
+    jf = j.resample(fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
     jf.cepstral_analysis()
     print('K of AIC_min = {:d}'.format(jf.dct.aic_Kmin))
     print('AIC_min = {:f}'.format(jf.dct.aic_min))

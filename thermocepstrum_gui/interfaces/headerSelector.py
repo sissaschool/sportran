@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum import HeatCurrent

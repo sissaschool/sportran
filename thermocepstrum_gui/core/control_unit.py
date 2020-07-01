@@ -1,4 +1,4 @@
-# -*- coding: future_fstrings -*-
+# -*- coding: utf-8 -*-
 """
 --------------------------------------------
     Thermocepstrum graphic user interface
@@ -11,16 +11,20 @@ multithread operations and to make requests to the thermocepstrum calculus unit.
 """
 
 import os
-from . import settings
 
 import thermocepstrum as tc
 import numpy as np
-from thermocepstrum_gui.utils import Graph
 
+from . import settings
 try:
     from thermocepstrum.utils.utils import PrintMethod
 except ImportError:
     from thermocepstrum_gui.utils.utils import PrintMethod
+
+try:
+    from thermocepstrum.plotter import GUIPlotter, CurrentPlotter
+except ImportError:
+    raise ImportError('Couldn\'t find thermocepstrum.utils plotter.py. The GUI needs this import to work.')
 
 # Init print method
 log = PrintMethod()
@@ -207,8 +211,8 @@ This section contains the functions that deal with
 the graph manager.
 """
 
-# Setup graph manager
-gm = Graph.GraphManager()
+gm = GUIPlotter()
+tc.HeatCurrent.set_plotter(CurrentPlotter())
 
 
 def set_graph(axis_, func, **kwargs):
@@ -409,8 +413,8 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     emsgs = []
     if volume is not -1:
         if temperature is not -1:
-            data.j = tc.heatcurrent.HeatCurrent(currents, data.units, DT_FS, temperature, volume, psd_filter_w)
-            gm.initialize(data.j)
+            data.j = tc.HeatCurrent(currents, UNITS=data.units, DT_FS=DT_FS, TEMPERATURE=temperature, VOLUME=volume,
+                                    PSD_FILTER_W=psd_filter_w)
         else:
             emsgs.append('Invalid temperature!')
             return -1, emsgs

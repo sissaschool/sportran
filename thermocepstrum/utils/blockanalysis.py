@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ################################################################################
 ###
 ###   Code to analyze heat current trajectories in blocks using the CosFilter
@@ -51,7 +53,6 @@ class MDBlocks(object):
         self.TOT_TIME = self.y_big.shape[0]
         log.write_log(' TOT_TIME     = {:}'.format(self.y_big.shape))
         log.write_log(' NYQUIST_F    = {:10g} = {:10g} THz'.format(self.NYQUIST_F, self.NYQUIST_F / DT_FS * 1000))
-        return
 
     def segment_trajectory(self, BLOCK_SIZE_T):
         """  BLOCK_SIZE_T    block width [original time steps]"""
@@ -67,7 +68,6 @@ class MDBlocks(object):
         self.block = [
             tc.md.MDSample(traj=self.y_big[L * self.BLOCK_SIZE:(L + 1) * self.BLOCK_SIZE]) for L in range(self.N_BLOCKS)
         ]
-        return
 
     def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, bayes_p=False, density_grid=None):
         """Perform the Cepstral Analysis on all blocks."""
@@ -114,7 +114,6 @@ class MDBlocks(object):
             progbar.close()
 
         self.freqs = self.block[0].freqs
-        return
 
     def cepstral_analysis_kappa(self, other, aic_type='aic', Kmin_corrfactor=1.0, bayes_p=False,
                                 density_grid=None):   #need also "other", a class with the charge current!
@@ -163,7 +162,6 @@ class MDBlocks(object):
             progbar.close()
 
         self.freqs = self.block[0].freqs
-        return
 
     def spsd(self):
         """Sample PSD custom generator function."""
@@ -410,7 +408,6 @@ class MDBlocks(object):
                                                                              self.FTAU_density_XSTD))
             #log.write_log('   FTAU[ave AIC_w]    =  {:12f} +/- {:8f}'.format(self.FTAU_avedensity_XAVE, self.FTAU_avedensity_XSTD))
         log.write_log()
-        return
 
     def slogpsd_histogram(self, XBINW=20, NYBINS=100, YEDGE1=-8.0, YEDGE2=8.0):
         """Compute 2D histogram of sample log(PSD)."""
@@ -422,7 +419,6 @@ class MDBlocks(object):
                 np.transpose(list(self.slogpsd())[f * XBINW:(f + 1) * XBINW][:]).flatten(), bins=self.slogpsd_h_yedges,
                 density=True)
         self.slogpsd_h = self.slogpsd_h.T
-        return
 
     def spsd_histogram(self, XBINW=20, NYBINS=200, YEDGE1=0.0, YEDGE2=10.0):
         """Compute 2D histogram of sample PSD."""
@@ -434,4 +430,3 @@ class MDBlocks(object):
                 np.transpose(list(self.spsd())[f * XBINW:(f + 1) * XBINW][:]).flatten(), bins=self.spsd_h_yedges,
                 density=True)
         self.spsd_h = self.spsd_h.T
-        return

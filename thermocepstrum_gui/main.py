@@ -1,4 +1,4 @@
-# -*- coding: future_fstrings -*-
+# -*- coding: utf-8 -*-
 """
 --------------------------------------------
     Thermocepstrum graphic user interface
@@ -108,7 +108,8 @@ class ThermocepstrumGUI(Tk):
         # Init the main interface
         self.show_frame(ThermocepstrumGUI.home)
 
-    def show_software_info(self):
+    @staticmethod
+    def show_software_info():
         """
         This function displays some software info at the startup.
 

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # ugly trick to posticipate the loading of the library
 # import matplotlib.pyplot as plt
 

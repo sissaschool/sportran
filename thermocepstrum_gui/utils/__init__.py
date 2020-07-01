@@ -1,3 +1,3 @@
-__all__ = ['Graph']
+# -*- coding: utf-8 -*-
 
 from . import *

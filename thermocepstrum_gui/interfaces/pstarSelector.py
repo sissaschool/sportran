@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from thermocepstrum_gui.utils.custom_widgets import *
 from thermocepstrum_gui.core import control_unit as cu
 from uncertainties import ufloat
@@ -114,7 +116,7 @@ class PStarSelector(Frame):
         cu.data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor - 1)
 
     def _pstar(self):
-        self.value_entry.config(from_=2, to=cu.data.xf.Nfreqs)
+        self.value_entry.config(from_=2, to=cu.data.xf.NFREQS)
 
         if cu.data.xf.dct:
             self.value_entry.delete(0, END)
@@ -132,7 +134,7 @@ class PStarSelector(Frame):
         else:
             kmin_c = 0
         self._get_pstar(aic_type='aic', Kmin_corrfactor=kmin_c)
-        self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', x=cu.data.xf)
+        self.graph.add_graph(cu.gm.GUI_plot_cepstral_spectrum, 'cepstral', current=cu.data.xf)
         xf = cu.data.xf
         self.graph.update_cut()
         cu.data.xf = xf
@@ -145,8 +147,8 @@ class PStarSelector(Frame):
 
     def _draw_graph(self):
         self.graph.graph.clear()
-        self.graph.show(cu.gm.GUI_plot_periodogram, x=cu.data.j)
-        self.graph.add_graph(cu.gm.resample_current, 'resample', x=cu.data.j, fstar_THz=cu.data.fstar,
+        self.graph.show(cu.gm.GUI_plot_periodogram, current=cu.data.j)
+        self.graph.add_graph(cu.gm.GUI_resample_current, 'resample', current=cu.data.j, fstar_THz=cu.data.fstar,
                              PSD_FILTER_W=cu.data.psd_filter_width)
 
     def recalculate(self):

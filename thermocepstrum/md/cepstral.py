@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 from scipy.special import polygamma
 from scipy.fftpack import dct
-from .tools import logtau_to_tau
+from .tools.spectrum import logtau_to_tau
 from .aic import *
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
@@ -70,9 +72,9 @@ class CosFilter(object):
     CEPSTRAL ANALYSIS based filtering.
 
     ** INPUT VARIABLES:
-    samplelogpsd    = the original sample log-PSD, \hat{L}_k
-    ck_theory_var   = the theoretical variance of cepstral coefficients, \sigma*^2(P*,N)
-    psd_theory_mean = the theoretical bias of log-PSD, \lambda_l
+    samplelogpsd    = the original sample log-PSD, \\hat{L}_k
+    ck_theory_var   = the theoretical variance of cepstral coefficients, \\sigma*^2(P*,N)
+    psd_theory_mean = the theoretical bias of log-PSD, \\lambda_l
     aic_type        = type of AIC to use ('aic' (default), 'aicc')
     Kmin_corrfactor = cutoff correction factor (default: 1.0)
     K_PSD           = cutoff used to compute logpsd (default: K_PSD = aic_Kmin)
@@ -80,7 +82,7 @@ class CosFilter(object):
     ** INTERNAL VARIABLES:
     samplelogpsd  = the original sample log-PSD - logpsd_THEORY_mean
 
-    logpsdK  = the cepstrum of the data, \hat{C}_n (i.e. the DCT of samplelogpsd)
+    logpsdK  = the cepstrum of the data, \\hat{C}_n (i.e. the DCT of samplelogpsd)
     aic_min  = minimum value of the AIC
     aic_Kmin = cutoff K that minimizes the AIC, K = P*-1
 
@@ -159,7 +161,6 @@ class CosFilter(object):
                 self.logtau_THEORY_var[K] = self.logtau_THEORY_var[K - 1] + 4. * self.logpsdK_THEORY_var[K]
             self.logtau_THEORY_var[-1] = self.logtau_THEORY_var[-2] + self.logpsdK_THEORY_var[-1]
             self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
-        return
 
     def __repr__(self):
         msg = 'CosFilter:\n' + \
@@ -209,7 +210,6 @@ class CosFilter(object):
             self.logpsd = self.logpsd + self.logpsd_THEORY_mean
             self.logtau = self.logtau + self.logpsd_THEORY_mean[0]
             self.logtau_Kmin = self.logtau_Kmin + self.logpsd_THEORY_mean[0]
-        return
 
     def scan_filter_psd(self, K_LIST, correct_mean=True):
         """Computes the psd as a function of the cutoff K for the CosFilter.
@@ -231,7 +231,6 @@ class CosFilter(object):
             if correct_mean:
                 self.logpsd_K_LIST[:, k] = self.logpsd_K_LIST[:, k] + self.logpsd_THEORY_mean
                 self.logtau_K_LIST[k] = self.logtau_K_LIST[k] + self.logpsd_THEORY_mean[0]
-        return
 
     #############################
     ####  Bayesian method
@@ -241,7 +240,6 @@ class CosFilter(object):
         NF = self.samplelogpsd.size
         self.p_aic = produce_p(self.aic, method)
         self.p_aic_Kave, self.p_aic_Kstd = grid_statistics(np.arange(NF), self.p_aic)
-        return
 
     def compute_logtau_density(self, method='ba', only_stats=False, density_grid=None, grid_size=1000,
                                correct_mean=True):
@@ -270,7 +268,6 @@ class CosFilter(object):
         self.p_tau_density_xave, self.p_tau_density_xstd = logtau_to_tau(self.p_logtau_density_xave,
                                                                          self.logpsd_THEORY_mean[0],
                                                                          self.p_logtau_density_xstd)
-        return
 
 
 #    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
@@ -289,4 +286,3 @@ class CosFilter(object):
 #            self.optimalK_idx = np.NaN
 #            self.optimalK = np.NaN
 #            log.write_log(Warning: optimal cutoff K NOT FOUND.')
-#        return
