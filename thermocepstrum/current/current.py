@@ -41,6 +41,7 @@ class Current(MDSample):
     _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS'}
 
     plot = Plotter()
+
     # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent)
 
     def __init__(self, traj, **params):
@@ -197,8 +198,8 @@ class Current(MDSample):
         if self.check_plotter():
             print(self.plot)
             return self.plot.plot_periodogram(current=self, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units,
-                                                 freq_scale=freq_scale, axes=axes, kappa_units=kappa_units,
-                                                 FIGSIZE=FIGSIZE, **plot_kwargs)
+                                              freq_scale=freq_scale, axes=axes, kappa_units=kappa_units,
+                                              FIGSIZE=FIGSIZE, **plot_kwargs)
 
     def plot_ck(self, axes=None, label=None, FIGSIZE=None):
         if self.check_plotter():
@@ -215,9 +216,8 @@ class Current(MDSample):
     def plot_cepstral_spectrum(self, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
                                **plot_kwargs):   # yapf: disable
         if self.check_plotter():
-            return self.plot.plot_cepstral_spectrum(current=self, freq_units=freq_units,
-                                                    freq_scale=freq_scale, axes=axes,
-                                                    kappa_units=kappa_units, FIGSIZE=FIGSIZE, **plot_kwargs)
+            return self.plot.plot_cepstral_spectrum(current=self, freq_units=freq_units, freq_scale=freq_scale,
+                                                    axes=axes, kappa_units=kappa_units, FIGSIZE=FIGSIZE, **plot_kwargs)
 
     def resample(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
                  freq_units='THz', FIGSIZE=None, verbose=True):   # yapf: disable
@@ -246,8 +246,8 @@ class Current(MDSample):
         xf = super().resample(TSKIP, fstar_THz, FILTER_W, False, PSD_FILTER_W, freq_units, None, verbose)
 
         if plot and self.check_plotter():
-            return self.plot.plt_resample(current=self, xf=xf, freq_units=freq_units,
-                                          PSD_FILTER_W=PSD_FILTER_W, FIGSIZE=FIGSIZE)
+            return self.plot.plt_resample(current=self, xf=xf, freq_units=freq_units, PSD_FILTER_W=PSD_FILTER_W,
+                                          FIGSIZE=FIGSIZE)
         return xf
 
     def fstar_analysis(self, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
@@ -266,6 +266,7 @@ class Current(MDSample):
             cls.plot = plotter
         else:
             raise ValueError('Invalid plotter')
+
 
 ################################################################################
 

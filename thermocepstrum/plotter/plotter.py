@@ -411,8 +411,8 @@ class Plotter:
         ax.yaxis.set_major_locator(MultipleLocator(dy1))
         ax.yaxis.set_minor_locator(MultipleLocator(dy2))
 
-    def GUI_plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
-                             data=None, FIGSIZE=None, **plot_kwargs):
+    def GUI_plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None,
+                             kappa_units=True, data=None, FIGSIZE=None, **plot_kwargs):
         """
         Plot the periodogram.
           PSD_FILTER_W  = width of the filtering window
@@ -502,8 +502,8 @@ class Plotter:
         if data:
             data.xf = xf
 
-    def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None,
-                                   data=None, **plot_kwargs):
+    def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
+                                   FIGSIZE=None, data=None, **plot_kwargs):
         if kappa_units:
             psd_scale = 0.5 * current.kappa_scale
         else:
@@ -554,8 +554,9 @@ class CurrentPlotter(Plotter):
 
     def plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
                          FIGSIZE=None, **plot_kwargs):   # yapf: disable
-        return super().plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, freq_scale=freq_scale, axes=axes, kappa_units=kappa_units,
-                         FIGSIZE=FIGSIZE, **plot_kwargs)
+        return super().plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units,
+                                        freq_scale=freq_scale, axes=axes, kappa_units=kappa_units, FIGSIZE=FIGSIZE,
+                                        **plot_kwargs)
 
     def plot_ck(self, current, axes=None, label=None, FIGSIZE=None):
         return super().plot_ck(current, axes, label, FIGSIZE)
@@ -568,7 +569,8 @@ class CurrentPlotter(Plotter):
 
     def plot_cepstral_spectrum(self, current, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None,
                                **plot_kwargs):   # yapf: disable
-        return super().plot_cepstral_spectrum(current, freq_units, freq_scale, axes, kappa_units, FIGSIZE, **plot_kwargs)
+        return super().plot_cepstral_spectrum(current, freq_units, freq_scale, axes, kappa_units, FIGSIZE,
+                                              **plot_kwargs)
 
     def plot_fstar_analysis(self, current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **plot_kwargs):
         return super().plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, axes, FIGSIZE, **plot_kwargs)
@@ -579,20 +581,20 @@ class CurrentPlotter(Plotter):
 
 class GUIPlotter(Plotter):
 
-    def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True, FIGSIZE=None,
-                                   data=None, **plot_kwargs):
-        return super().GUI_plot_cepstral_spectrum(current, freq_units, freq_scale, axis, kappa_units, FIGSIZE,
-                                                  data, **plot_kwargs)
+    def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
+                                   FIGSIZE=None, data=None, **plot_kwargs):
+        return super().GUI_plot_cepstral_spectrum(current, freq_units, freq_scale, axis, kappa_units, FIGSIZE, data,
+                                                  **plot_kwargs)
 
-    def GUI_plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
-                             data=None, FIGSIZE=None, **plot_kwargs):
-        return super().GUI_plot_periodogram(current, PSD_FILTER_W, freq_units, freq_scale, axis, kappa_units,
-                                            data, FIGSIZE, **plot_kwargs)
+    def GUI_plot_periodogram(self, current, PSD_FILTER_W=None, freq_units='thz', freq_scale=1.0, axis=None,
+                             kappa_units=True, data=None, FIGSIZE=None, **plot_kwargs):
+        return super().GUI_plot_periodogram(current, PSD_FILTER_W, freq_units, freq_scale, axis, kappa_units, data,
+                                            FIGSIZE, **plot_kwargs)
 
     def GUI_resample_current(self, current, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
                              freq_units='thz', FIGSIZE=None, axis=None, data=None):
-        return super().GUI_resample_current(current, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W,
-                             freq_units, FIGSIZE, axis, data)
+        return super().GUI_resample_current(current, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W, freq_units,
+                                            FIGSIZE, axis, data)
 
 
 def addPlotToPdf(func, pdf, *args, **kwargs):
