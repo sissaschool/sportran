@@ -4,6 +4,9 @@
 import numpy as np
 from .. import md
 from ..md.mdsample import MDSample
+from ..md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
+from ..md.tools.resample import filter_and_sample
+from . import units
 
 from thermocepstrum.utils.loadAfterPlt import plt
 from thermocepstrum.utils.utils import PrintMethod
@@ -37,12 +40,12 @@ class Current(MDSample):
      - FREQ_UNITS    frequency units   [THz or red] (optional)
     """
     _current_type = None
-    _input_parameters = {'DT_FS'}
-    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS'}
+    _input_parameters = {'DT_FS', 'KAPPA_SCALE'}
+    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 
     plot = Plotter()
 
-    # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent)
+    # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent) and case-insensitive
 
     def __init__(self, traj, **params):
         # e.g. params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
@@ -61,9 +64,11 @@ class Current(MDSample):
         PSD_FILTER_W = params.pop('PSD_FILTER_W', None)
         FREQ_UNITS = params.pop('FREQ_UNITS', 'THz')
 
-        DT_FS = params.get('DT_FS')
-        self.initialize_currents(traj, DT_FS)
-        self.initialize_units(**params)   # (UNITS, TEMPERATURE, VOLUME, DT_FS)
+        DT_FS = params['DT_FS']
+        MAIN_CURRENT_INDEX = params.get('MAIN_CURRENT_INDEX', 0)
+        MAIN_CURRENT_FACTOR = params.get('MAIN_CURRENT_FACTOR', 1.0)
+        self.initialize_currents(traj, DT_FS, MAIN_CURRENT_INDEX, MAIN_CURRENT_FACTOR)
+        self.initialize_units(**params)   # KAPPA_SCALE or (UNITS, TEMPERATURE, VOLUME, DT_FS)
         if self.traj is not None:
             self.compute_psd(PSD_FILTER_W, FREQ_UNITS)
             self.initialize_cepstral_parameters()
@@ -94,7 +99,7 @@ class Current(MDSample):
         # this is a virtual method
         pass
 
-    def initialize_currents(self, j, DT_FS):
+    def initialize_currents(self, j, DT_FS, main_current_index=0, main_current_factor=1.0):
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)
         if (len(j.shape) == 3):
@@ -112,27 +117,35 @@ class Current(MDSample):
 
         if self.MANY_CURRENTS:
             log.write_log('Using multicomponent code.')
-            super().__init__(traj=j[0], DT_FS=DT_FS)
+            super().__init__(traj=(j[main_current_index] * main_current_factor), DT_FS=DT_FS)
             # initialize other MDSample currents
-            self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[1:]]
+            other_currents_idxs = (np.arange(self.N_CURRENTS) != main_current_index)   # select the other currents
+            self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[other_currents_idxs]]
         else:
             log.write_log('Using single component code.')
-            super().__init__(traj=j, DT_FS=DT_FS)
+            super().__init__(traj=(j * main_current_factor), DT_FS=DT_FS)
             self.otherMD = None
 
-    @staticmethod
-    def get_units_list():
-        # this is a virtual method
+    @classmethod
+    def _get_units(cls):
         # TODO: find a way to read units from the functions defined in the module 'current/units/*_current_type*.py'
         # TODO: another method should return the function directly from the key
-        pass
+        units_module = getattr(units, _current_type)
+        units = dict(
+            inspect.getmembers(units_module,
+                               predicate=lambda f: inspect.isfunction(f) and f.__name__.startswith('scale_kappa_')))
+        return units
+
+    @classmethod
+    def get_units_list(cls):
+        return cls._get_units().keys()
 
     def initialize_units(self, **parameters):
         """
         Initializes the units and define the kappa_scale.
         """
-        # this is a virtual method
-        pass
+        # overridden by the Current's subclasses
+        self.kappa_scale = parameters.get('KAPPA_SCALE')
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='THz'):
         # overrides MDSample method
