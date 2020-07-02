@@ -1,5 +1,6 @@
 recursive-include examples *
 include LICENSE.txt
+include setup.json
 include thermocepstrum/README.md
 include thermocepstrum/metadata.json
 include thermocepstrum/utils/plot_style.mplstyle

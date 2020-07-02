@@ -12,13 +12,14 @@
     args: ["-i"]
     exclude: &exclude_files >
       (?x)^(
+        thermocepstrum_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         examples/.*|
         setup.py|
       )$
 
 - repo: git://github.com/pre-commit/pre-commit-hooks
-  sha: v2.2.3
+  rev: v2.3.0
   hooks:
   - id: check-yaml
   - id: check-merge-conflict
@@ -30,6 +31,7 @@
   - id: trailing-whitespace
     exclude: >
       (?x)^(
+        thermocepstrum_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         examples/.*|
       )$

@@ -225,6 +225,8 @@ Contact: lercole@sissa.it
             selected_keys.append('Temp')
 #      if 'Press' in jfile.ckey:
 #         selected_keys.append('Press')
+        if volume is None and structurefile is None:
+            selected_keys.append('Volume')
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         jdata = jfile.data
@@ -298,9 +300,11 @@ Contact: lercole@sissa.it
             log.write_log(' Volume (structure file):    {} A^3'.format(volume))
             logfile.write(' Volume (structure file):    {} A^3'.format(volume))
         elif 'Volume' in jdata:
-            volume = jdata['Volume']
+            volume = np.mean(jdata['Volume'])
             log.write_log(' Volume (file):    {} A^3'.format(volume))
             logfile.write(' Volume (file):    {} A^3\n'.format(volume))
+            if 'Volume' in selected_keys:
+                selected_keys.remove('Volume')
         else:
             raise RuntimeError('No Volume key found. Please provide Volume (-V) of structure file (--structure).')
     else:
@@ -394,6 +398,7 @@ Contact: lercole@sissa.it
         if resample:
             if TSKIP is not None:
                 jf, ax = j.resample(TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
+                FSTAR = j.Nyquist_f_THz / TSKIP   # from tc.heatcurrent.resample_current
             else:
                 jf, ax = j.resample(fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
             ax[0].set_xlim([0, 2.5 * FSTAR])
