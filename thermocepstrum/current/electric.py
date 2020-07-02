@@ -13,9 +13,9 @@ try:
 except:
     log.write_log('Warning: plt undefined')
 
-__all__ = ('HeatCurrent',)
+__all__ = ('ElectricCurrent',)
 
-class HeatCurrent(Current):
+class ElectricCurrent(Current):
     """
     HeatCurrent API for thermo-cepstral analysis.
     Defines a HeatCurrent object with useful tools to perform analysis.
@@ -30,7 +30,7 @@ class HeatCurrent(Current):
      - PSD_FILTER_W  PSD filter window [freq_units] (optional)
      - FREQ_UNITS    frequency units   [THz or red] (optional)
     """
-    _current_type = 'heat'
+    _current_type = 'electric'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
 
     # _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
@@ -53,26 +53,3 @@ class HeatCurrent(Current):
                        VOLUME=self.VOLUME, PSD_FILTER_W=self.PSD_FILTER_W_THZ, FREQ_UNITS='THz')
         return type(self), builder
 
-    def initialize_units(self, **parameters):
-        #    def initialize_units(self, UNITS, TEMPERATURE, VOLUME, DT_FS):
-        """
-        Initializes the units and define the kappa_scale.
-        """
-        self.UNITS = parameters.get('UNITS')
-        self.TEMPERATURE = parameters.get('TEMPERATURE')
-        self.VOLUME = parameters.get('VOLUME')
-        self.DT_FS = parameters.get('DT_FS')
-        # timestep is already included in the PSD definition, so it will be ignored here
-        # TODO: call a method `get_units` that returns the scale *function*, so to get rid of these ugly ifs
-        if (self.UNITS == 'metal'):
-            self.kappa_scale = units.heat.scale_kappa_METALtoSI(self.TEMPERATURE, self.VOLUME, 1.0)
-        elif (self.UNITS == 'real'):
-            self.kappa_scale = units.heat.scale_kappa_REALtoSI(self.TEMPERATURE, self.VOLUME, 1.0)
-        elif (self.UNITS == 'qepw'):
-            self.kappa_scale = units.heat.scale_kappa_QEPWtoSI(self.TEMPERATURE, self.VOLUME, 1.0)
-        elif (self.UNITS == 'gpumd'):
-            self.kappa_scale = units.heat.scale_kappa_GPUMDtoSI(self.TEMPERATURE, self.VOLUME, 1.0)
-        elif (self.UNITS == 'dlpoly'):
-            self.kappa_scale = units.heat.scale_kappa_DLPOLYtoSI(self.TEMPERATURE, self.VOLUME, 1.0)
-        else:
-            raise ValueError('Units not supported.')
