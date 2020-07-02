@@ -28,13 +28,12 @@
         "matplotlib>=2.2.0",
         "markdown2>=2.0.0",
         "pillow>=5.4.0",
-        "tk-html-widgets>=0.3.0",
         "uncertainties>=2.4"
     ],
     "extras_require": {
         "pre-commit": [
             "pre-commit>1.11.0",
-            "yapf>0.24.0"
+            "yapf==0.28.0"
         ],
         "notebook": [
             "jupyter"
