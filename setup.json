@@ -39,7 +39,8 @@
             "jupyter"
         ],
         "tests": [
-            "pytest>=4.0"
+            "pytest>=4.0",
+	    "pytest-regressions"
         ]
     },
     "entry_points": {
