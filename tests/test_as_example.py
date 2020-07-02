@@ -1,11 +1,14 @@
-def test_example_NaCl():
+# -*- coding: utf-8 -*-
+
+
+def test_example_NaCl(filepath_tests):
     import numpy as np
     import os
     import thermocepstrum as tc
 
     print(os.environ)
 
-    jfile = tc.i_o.TableFile('./tests/data/NaCl.dat', group_vectors=True)
+    jfile = tc.i_o.TableFile(filepath_tests + '/data/NaCl.dat', group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['Temp', 'flux', 'vcm[1]'])
     DT_FS = 5.0   # time step [fs]
     TEMPERATURE = np.mean(jfile.data['Temp'])   # temperature [K]
@@ -30,14 +33,14 @@ def test_example_NaCl():
     print('*********************\n   TEST:  passed.\n*********************\n')
 
 
-def test_example_SiO2():
+def test_example_SiO2(filepath_tests):
 
     import os
     import thermocepstrum as tc
 
     print(os.environ)
 
-    jfile = tc.i_o.TableFile('./tests/data/Silica.dat', group_vectors=True)
+    jfile = tc.i_o.TableFile(filepath_tests + '/data/Silica.dat', group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['flux1'])
     DT_FS = 1.0   # time step [fs]
     TEMPERATURE = 1065.705630   # temperature [K]
