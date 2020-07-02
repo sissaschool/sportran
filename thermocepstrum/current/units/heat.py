@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 def scale_kappa_REALtoSI(temp, volume, timestep):
     """
     Conversion factor for the thermal conductivity from REAL LAMMPS units to SI units.

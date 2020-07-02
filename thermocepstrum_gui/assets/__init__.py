@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from pkg_resources import resource_stream, resource_string
 import json
 

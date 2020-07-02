@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
@@ -231,17 +232,17 @@ def main():
                 WF = int(round(w / 1000. * self.DT_FS * len(self.freqs_THz) * 2.))
                 log.write_log('filtering: ', WF)
                 if not single:
-                    ffpsd = tc.md.tools.runavefilter(self.mpsd, WF)
+                    ffpsd = tc.md.tools.filter.runavefilter(self.mpsd, WF)
                 else:
-                    ffpsd = tc.md.tools.runavefilter(self.psd, WF)
+                    ffpsd = tc.md.tools.filter.runavefilter(self.psd, WF)
                 self.fpsd = ffpsd
                 try:
                     for i in range(self.ucospectrum.shape[0]):
                         for j in range(self.ucospectrum.shape[1]):
                             if not single:
-                                ffc = tc.md.tools.runavefilter(self.mcospectrum[i, j], WF)
+                                ffc = tc.md.tools.filter.runavefilter(self.mcospectrum[i, j], WF)
                             else:
-                                ffc = tc.md.tools.runavefilter(self.ucospectrum[i, j], WF)
+                                ffc = tc.md.tools.filter.runavefilter(self.ucospectrum[i, j], WF)
                             self.cospectrum[i, j] = ffc
                 except AttributeError:
                     pass

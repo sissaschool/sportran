@@ -1,4 +1,4 @@
-# -*- coding: future_fstrings -*-
+# -*- coding: utf-8 -*-
 """
 --------------------------------------------
     Thermocepstrum graphic user interface

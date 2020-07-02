@@ -8,7 +8,7 @@ Code to compute thermal conductivity through cepstral analysis of heat flux time
 **Acknowledgment**  The development of this software is part of the scientific program of the EU MaX Centre of Excellence for Supercomputing Applications (Grant No. 676598, 824143) and has been partly funded through it.
 
 ### Usage
-There is a [**GUI**](README_GUI.md) that you can try after installing everything (only Python 3).
+There is a [**GUI**](README_GUI.md) that you can try after installing everything.
 
 The code can be used as a **library**, for example in a Jupyter notebook.
 In the [`examples`](examples/) folder you can find some examples.
@@ -19,15 +19,12 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
 
 ### Requirements
 #### only cepstral analysis (command line interface)
- - Python 2.7 or 3.x
  - numpy
  - scipy
  - matplotlib
 #### graphical user interface
  - all the requirements of cepstral analysis
- - Python 3 only
  - tkinter
- - future-fstrings
  - pillow (you may need upgrade it)
  - tk-html-widgets
  - markdown2
@@ -43,9 +40,9 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
 cd thermocepstrum
 pip install .
 ```
-  You are done! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
+  You are all set! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
 
-  If you use Python 3, the Graphical User Interface will be installed and can be started with the command `thermocepstrum-gui`.
+  The Graphical User Interface will be installed and can be started with the command `thermocepstrum-gui`.
 
 ### Issues
   You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/thermocepstrum/issues) GitHub issues page.

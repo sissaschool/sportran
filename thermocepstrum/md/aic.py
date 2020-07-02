@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 
 ################################################################################
@@ -155,9 +157,9 @@ def produce_p_density(p, sigma, mean, grid=None, grid_size=1000):
 
 def grid_statistics(grid, density, grid2=None):
     """Compute distribution mean and std.
-      media   = \sum_i (density[i] * grid[i])
-      std     = sqrt( \sum_i (density[i] * grid[i]^2) - media^2 )
-       oppure = sqrt( \sum_i (density[i] * grid2[i])  - media^2 )"""
+      media   = \\sum_i (density[i] * grid[i])
+      std     = sqrt( \\sum_i (density[i] * grid[i]^2) - media^2 )
+       oppure = sqrt( \\sum_i (density[i] * grid2[i])  - media^2 )"""
     somma = np.sum(density)
     media = np.dot(density, grid) / somma
     if grid2 is None:

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 __all__ = ['read_tablefile', 'read_lammps_dump', 'read_lammps_log', 'read_lammps_datafile']
 
 from . import *

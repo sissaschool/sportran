@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 from sys import path, argv
@@ -337,7 +338,8 @@ Contact: lercole@sissa.it
     log.write_log(currents)
 
     # create HeatCurrent object
-    j = tc.heatcurrent.HeatCurrent(currents, units, DT_FS, temperature, volume, psd_filter_w)
+    j = tc.heatcurrent.HeatCurrent(currents, DT_FS=DT_FS, UNITS=units, TEMPERATURE=temperature, VOLUME=volume,
+                                   PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(ncurrents))
     logfile.write(' Number of currrents = {}\n'.format(ncurrents))
@@ -370,7 +372,7 @@ Contact: lercole@sissa.it
             binoutobj.j_logpsd = j.logpsd
             binoutobj.j_Nyquist_f_THz = j.Nyquist_f_THz
             binoutobj.j_PSD_FILTER_W_THz = psd_filter_w
-            if j.many_currents:
+            if j.MANY_CURRENTS:
                 binoutobj.j_cospectrum = j.cospectrum
                 binoutobj.j_fcospectrum = j.fcospectrum
         #TODO: move all output in one place?
@@ -379,7 +381,7 @@ Contact: lercole@sissa.it
             outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
             outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
-            if j.many_currents:
+            if j.MANY_CURRENTS:
                 outfile_name = output + '.cospectrum.dat'
                 outarray = np.c_[j.freqs_THz,
                                  j.cospectrum.reshape((j.cospectrum.shape[0] * j.cospectrum.shape[1],
@@ -395,10 +397,10 @@ Contact: lercole@sissa.it
         # resample and plot
         if resample:
             if TSKIP is not None:
-                jf, ax = tc.heatcurrent.resample_current(j, TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
+                jf, ax = j.resample(TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
                 FSTAR = j.Nyquist_f_THz / TSKIP   # from tc.heatcurrent.resample_current
             else:
-                jf, ax = tc.heatcurrent.resample_current(j, fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
+                jf, ax = j.resample(fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
             ax[0].set_xlim([0, 2.5 * FSTAR])
             pdf.savefig()
             plt.close()
@@ -448,7 +450,7 @@ Contact: lercole@sissa.it
             binoutobj.kappa_Kmin = jf.kappa_Kmin
             binoutobj.kappa_Kmin_std = jf.kappa_Kmin_std
             binoutobj.cepstral_log = jf.cepstral_log
-            binoutobj.units = jf.units
+            binoutobj.units = jf.UNITS
             binoutobj.kappa_scale = jf.kappa_scale
             binoutobj.TEMPERATURE = temperature
             binoutobj.VOLUME = volume
@@ -747,7 +749,7 @@ class TCOutput(object):
         self.kappa_Kmin     = None
         self.kappa_Kmin_std = None
         self.cepstral_log   = None
-        self.units          = None
+        self.UNITS          = None
         self.kappa_scale    = None
         self.TEMPERATURE    = None
         self.VOLUME         = None
