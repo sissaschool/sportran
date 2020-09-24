@@ -15,20 +15,27 @@ except:
 
 __all__ = ('ElectricCurrent',)
 
+
 class ElectricCurrent(Current):
     """
-    HeatCurrent API for thermo-cepstral analysis.
-    Defines a HeatCurrent object with useful tools to perform analysis.
+    EnergyCurrent API for thermo-cepstral analysis.
+    Defines an ElectricCurrent object with useful tools to perform analysis.
 
-    INPUT:
-     - traj          the heat current time series (N * N_COMPONENTS array)
+    ** TO BE IMPLEMENTED **
+
+    INPUT parameters:
+     - traj          the heat current time series array (N * N_COMPONENTS array)
        For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
-     - UNITS         the units of current ('metal', 'real')
      - DT_FS         MD time step [fs]
+     - UNITS         the units of current ('metal', 'real', ...) - use the method `get_units_list()` to get a list of supported units
      - TEMPERATURE   average temperature [K]
      - VOLUME        simulation cell volume [A^3]
+
+    OPTIONAL parameters:
      - PSD_FILTER_W  PSD filter window [freq_units] (optional)
      - FREQ_UNITS    frequency units   [THz or red] (optional)
+     - MAIN_CURRENT_INDEX for a multi-current time series, the index of the "main" current (e.g. energy) [0]
+     - MAIN_CURRENT_FACTOR factor to be multiplied by the main current [1.0]
     """
     _current_type = 'electric'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
@@ -52,4 +59,3 @@ class ElectricCurrent(Current):
         builder = dict(traj=traj_array, DT_FS=self.DT_FS, UNITS=self.UNITS, TEMPERATURE=self.TEMPERATURE,
                        VOLUME=self.VOLUME, PSD_FILTER_W=self.PSD_FILTER_W_THZ, FREQ_UNITS='THz')
         return type(self), builder
-
