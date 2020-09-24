@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .cepstral import CosFilter
-from .mdsample import MDSample
+from .cepstral import *
+from .mdsample import *
 
-__all__ = ['CosFilter', 'MDSample']
+__all__ = ('CosFilter', 'MDSample')

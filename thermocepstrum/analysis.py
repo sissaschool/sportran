@@ -382,7 +382,8 @@ def main():
         if resample:
             if TSKIP is not None:
                 jf, ax = j.resample(TSKIP=TSKIP, plot=True, PSD_FILTER_W=psd_filter_w)
-                #FIXME: FSTAR = j.Nyquist_f_THz / TSKIP   # from tc.heatcurrent.resample_current
+                # IS THIS OK?
+                FSTAR = j.Nyquist_f_THz / TSKIP   # from tc.heatcurrent.resample_current
             else:
                 jf, ax = j.resample(fstar_THz=FSTAR, plot=True, PSD_FILTER_W=psd_filter_w)
 
@@ -474,9 +475,9 @@ def main():
             binoutobj.jf_dct_Kmin_corrfactor = jf.dct.Kmin_corrfactor
         if not no_text_out:
             outfile_name = output + '.cepstral.dat'
-            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.
-                             logtau_THEORY_std, jf.dct.tau * jf.kappa_scale * 0.5, jf.dct.tau_THEORY_std *
-                             jf.kappa_scale * 0.5]
+            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau,
+                    jf.dct.logtau_THEORY_std, jf.dct.tau * jf.kappa_scale * 0.5,
+                    jf.dct.tau_THEORY_std * jf.kappa_scale * 0.5]
             outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
 
