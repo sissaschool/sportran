@@ -8,6 +8,8 @@ from .aic import *
 from thermocepstrum.utils.utils import PrintMethod
 log = PrintMethod()
 
+__all__ = ('CosFilter',)
+
 EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992   # Euler-Mascheroni constant
 
 ################################################################################

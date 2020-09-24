@@ -6,6 +6,8 @@ from .. import md
 from ..md.mdsample import MDSample
 from ..md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from ..md.tools.resample import filter_and_sample
+from . import units
+import inspect
 
 from thermocepstrum.utils.loadAfterPlt import plt
 from thermocepstrum.utils.utils import PrintMethod
@@ -16,27 +18,31 @@ try:
 except:
     log.write_log('Warning: plt undefined')
 
+__all__ = ('Current',)
+
 
 class Current(MDSample):
     """
     Current API for thermo-cepstral analysis.
     Defines a Current object with useful tools to perform analysis.
 
-    INPUT:
-     - traj          the heat current time series (N * N_COMPONENTS array)
+    INPUT parameters:
+     - traj          the heat current time series array (N * N_COMPONENTS array)
        For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
-     - UNITS         the units of current ('metal', 'real')
      - DT_FS         MD time step [fs]
-     - TEMPERATURE   average temperature [K]
-     - VOLUME        simulation cell volume [A^3]
+     - KAPPA_SCALE   the GK conversion factor, multiplies by the GK integral
+
+    OPTIONAL parameters:
      - PSD_FILTER_W  PSD filter window [freq_units] (optional)
      - FREQ_UNITS    frequency units   [THz or red] (optional)
+     - MAIN_CURRENT_INDEX for a multi-current time series, the index of the "main" current (e.g. energy) [0]
+     - MAIN_CURRENT_FACTOR factor to be multiplied by the main current [1.0]
     """
     _current_type = None
-    _input_parameters = {'DT_FS'}
-    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS'}
+    _input_parameters = {'DT_FS', 'KAPPA_SCALE'}
+    _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 
-    # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent)
+    # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent) and case-insensitive
 
     def __init__(self, traj, **params):
         # e.g. params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
@@ -49,15 +55,16 @@ class Current(MDSample):
             raise ValueError(
                 'The input parameters {} are not valid.'.format(keyset -
                                                                 (self._input_parameters | self._optional_parameters)))
-        print(params)
 
         # pop non unit-specific parameters
         PSD_FILTER_W = params.pop('PSD_FILTER_W', None)
         FREQ_UNITS = params.pop('FREQ_UNITS', 'THz')
 
-        DT_FS = params.get('DT_FS')
-        self.initialize_currents(traj, DT_FS)
-        self.initialize_units(**params)   # (UNITS, TEMPERATURE, VOLUME, DT_FS)
+        DT_FS = params['DT_FS']
+        MAIN_CURRENT_INDEX = params.get('MAIN_CURRENT_INDEX', 0)
+        MAIN_CURRENT_FACTOR = params.get('MAIN_CURRENT_FACTOR', 1.0)
+        self.initialize_currents(traj, DT_FS, MAIN_CURRENT_INDEX, MAIN_CURRENT_FACTOR)
+        self.initialize_units(**params)   # KAPPA_SCALE or (UNITS, TEMPERATURE, VOLUME, DT_FS)
         if self.traj is not None:
             self.compute_psd(PSD_FILTER_W, FREQ_UNITS)
             self.initialize_cepstral_parameters()
@@ -68,8 +75,9 @@ class Current(MDSample):
 
     def __repr__(self):
         msg = type(self).__name__ +\
-              '\n  N_CURRENTS  =  {}\n'.format(self.N_CURRENTS)
-        for key in self._input_parameters - {'DT_FS'}:
+              '\n  N_CURRENTS  =  {}\n'.format(self.N_CURRENTS) +\
+              '  KAPPA_SCALE =  {}\n'.format(self.KAPPA_SCALE)
+        for key in self._input_parameters - {'DT_FS', 'KAPPA_SCALE'}:
             msg += '  {:11} =  {}\n'.format(key, getattr(self, key))
         msg += super().__repr__()
         if self.otherMD:
@@ -88,7 +96,7 @@ class Current(MDSample):
         # this is a virtual method
         pass
 
-    def initialize_currents(self, j, DT_FS):
+    def initialize_currents(self, j, DT_FS, main_current_index=0, main_current_factor=1.0):
         # check if we have a multicomponent fluid
         j = np.array(j, dtype=float)
         if (len(j.shape) == 3):
@@ -106,27 +114,72 @@ class Current(MDSample):
 
         if self.MANY_CURRENTS:
             log.write_log('Using multicomponent code.')
-            super().__init__(traj=j[0], DT_FS=DT_FS)
+            super().__init__(traj=(j[main_current_index] * main_current_factor), DT_FS=DT_FS)
             # initialize other MDSample currents
-            self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[1:]]
+            other_currents_idxs = (np.arange(self.N_CURRENTS) != main_current_index)   # select the other currents
+            self.otherMD = [MDSample(traj=js, DT_FS=DT_FS) for js in j[other_currents_idxs]]
         else:
             log.write_log('Using single component code.')
-            super().__init__(traj=j, DT_FS=DT_FS)
+            super().__init__(traj=(j * main_current_factor), DT_FS=DT_FS)
             self.otherMD = None
 
-    @staticmethod
-    def get_units_list():
-        # this is a virtual method
-        # TODO: find a way to read units from the functions defined in the module 'current/units/*_current_type*.py'
-        # TODO: another method should return the function directly from the key
-        pass
+    @classmethod
+    def _get_units(cls):
+        try:
+            # get the units submodule corresponding to this class
+            units_module = getattr(units, cls._current_type)
+        except AttributeError:
+            print('No units submodule defined for the current type "{}". Add units to a file "current/units/{}.py".'.
+                  format(cls._current_type, cls._current_type))
+            return {}
+        except TypeError:
+            raise RuntimeError('No units can be defined for a generic Current. Define a "KAPPA_SCALE" instead.')
+
+        # get all functions that start with "scale_kappa_" into a dictionary {"name": function}
+        units_prefix = 'scale_kappa_'
+        units_d = {
+            name.replace(units_prefix, ''): function for name, function in inspect.getmembers(
+                units_module, predicate=lambda f: inspect.isfunction(f) and f.__name__.startswith(units_prefix))
+        }
+        if not units_d:
+            print(
+                'Warning: No units defined for a current type "{}". Add them to the module "current/units/{}.py'.format(
+                    cls._current_type, cls._current_type))
+
+        return units_d
+
+    @classmethod
+    def get_units_list(cls):
+        """
+        Get the list of supported units.
+        Units are defined in the module current/units/{current_type}.py, where
+        {current_type} is the _current_type attribute of this class ('heat', 'electric', ...).
+        """
+        return cls._get_units().keys()
 
     def initialize_units(self, **parameters):
         """
-        Initializes the units and define the kappa_scale.
+        Initializes the units and defines the KAPPA_SCALE.
         """
-        # this is a virtual method
-        pass
+        self.UNITS = parameters.pop('UNITS', None)
+
+        # set unit-specific parameters
+        for param, value in parameters.items():
+            self.__setattr__(param, value)
+
+        # validate units and define KAPPA_SCALE from units conversion function
+        if self.UNITS:
+            units_list = self.get_units_list()
+            if len(units_list) == 0:
+                raise RuntimeError(
+                    'No units defined for a current type "{}". Add them to the module "current/units/{}.py'.format(
+                        self._current_type, self._current_type))
+            elif self.UNITS in units_list:
+                units_conversion_func = self._get_units()[self.UNITS]
+                self.KAPPA_SCALE = units_conversion_func(**parameters)
+            else:
+                raise ValueError('Units "{}" not valid. Valid units are:\n  {}'.format(
+                    self.UNITS, self.get_units_list()))
 
     def compute_psd(self, PSD_FILTER_W=None, freq_units='THz'):
         # overrides MDSample method
@@ -168,8 +221,8 @@ class Current(MDSample):
         self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
             psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.dct.scan_filter_tau(K_PSD=K_PSD)
-        self.kappa_Kmin = self.dct.tau_Kmin * self.kappa_scale * 0.5
-        self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.kappa_scale * 0.5
+        self.kappa_Kmin = self.dct.tau_Kmin * self.KAPPA_SCALE * 0.5
+        self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.KAPPA_SCALE * 0.5
 
         self.cepstral_log = \
               '-----------------------------------------------------\n' +\
@@ -210,7 +263,7 @@ class Current(MDSample):
         else:   # use a zero-width (non-filtering) window
             self.filter_psd(0.)
         if kappa_units:   # plot psd in units of kappa - the log(psd) is not converted
-            psd_scale = 0.5 * self.kappa_scale
+            psd_scale = 0.5 * self.KAPPA_SCALE
         else:
             psd_scale = 1.0
 
@@ -274,17 +327,17 @@ class Current(MDSample):
         if axes is None:
             figure, axes = plt.subplots(1, figsize=FIGSIZE)
         color = next(axes._get_lines.prop_cycler)['color']
-        axes.plot(np.arange(self.NFREQS) + 1, self.dct.tau * self.kappa_scale * 0.5, '.-', c=color, label=label)
-        axes.plot(np.arange(self.NFREQS) + 1, (self.dct.tau + self.dct.tau_THEORY_std) * self.kappa_scale * 0.5,
+        axes.plot(np.arange(self.NFREQS) + 1, self.dct.tau * self.KAPPA_SCALE * 0.5, '.-', c=color, label=label)
+        axes.plot(np.arange(self.NFREQS) + 1, (self.dct.tau + self.dct.tau_THEORY_std) * self.KAPPA_SCALE * 0.5,
                   '--', c=color)   # yapf: disable
-        axes.plot(np.arange(self.NFREQS) + 1, (self.dct.tau - self.dct.tau_THEORY_std) * self.kappa_scale * 0.5,
+        axes.plot(np.arange(self.NFREQS) + 1, (self.dct.tau - self.dct.tau_THEORY_std) * self.KAPPA_SCALE * 0.5,
                   '--', c=color)   # yapf: disable
         axes.axvline(x=self.dct.aic_Kmin + 1, ls='--', c=color)
         axes.axhline(y=self.kappa_Kmin, ls='--', c=color)
         axes.set_xlim([0, 3 * self.dct.aic_Kmin])
-        max_y = np.amax(self.kappa_scale * 0.5 *
+        max_y = np.amax(self.KAPPA_SCALE * 0.5 *
                         (self.dct.tau + self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3 * self.dct.aic_Kmin])
-        min_y = np.amin(self.kappa_scale * 0.5 *
+        min_y = np.amin(self.KAPPA_SCALE * 0.5 *
                         (self.dct.tau - self.dct.tau_THEORY_std)[self.dct.aic_Kmin:3 * self.dct.aic_Kmin])
         axes.set_ylim([min_y * 0.8, max_y * 1.2])
         axes.set_xlabel(r'$P^*$')
@@ -297,7 +350,7 @@ class Current(MDSample):
             figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         plt.subplots_adjust(hspace=0.1)
         if kappa_units:
-            psd_scale = 0.5 * self.kappa_scale
+            psd_scale = 0.5 * self.KAPPA_SCALE
         else:
             psd_scale = 1.0
         if freq_units in ('THz', 'thz'):

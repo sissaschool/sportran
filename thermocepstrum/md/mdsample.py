@@ -16,6 +16,7 @@ try:
 except:
     log.write_log('Warning: plt undefined')
 
+__all__ = ('MDSample',)
 
 class MDSample(object):
     """
