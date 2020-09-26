@@ -60,7 +60,7 @@ class Plotter:
         else:   # use a zero-width (non-filtering) window
             current.filter_psd(0.)
         if kappa_units:   # plot psd in units of kappa - the log(psd) is not converted
-            psd_scale = 0.5 * current.kappa_scale
+            psd_scale = 0.5 * current.KAPPA_SCALE
         else:
             psd_scale = 1.0
 
@@ -153,17 +153,17 @@ class Plotter:
             figure, axes = plt.subplots(1, figsize=FIGSIZE)
         color = next(axes._get_lines.prop_cycler)['color']
         axes.plot(
-            np.arange(current.NFREQS) + 1, current.dct.tau * current.kappa_scale * 0.5, '.-', c=color, label=label)
-        axes.plot(np.arange(current.NFREQS) + 1, (current.dct.tau + current.dct.tau_THEORY_std) * current.kappa_scale * 0.5,
+            np.arange(current.NFREQS) + 1, current.dct.tau * current.KAPPA_SCALE * 0.5, '.-', c=color, label=label)
+        axes.plot(np.arange(current.NFREQS) + 1, (current.dct.tau + current.dct.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
                   '--', c=color)   # yapf: disable
-        axes.plot(np.arange(current.NFREQS) + 1, (current.dct.tau - current.dct.tau_THEORY_std) * current.kappa_scale * 0.5,
+        axes.plot(np.arange(current.NFREQS) + 1, (current.dct.tau - current.dct.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
                   '--', c=color)   # yapf: disable
         axes.axvline(x=current.dct.aic_Kmin + 1, ls='--', c=color)
         axes.axhline(y=current.kappa_Kmin, ls='--', c=color)
         axes.set_xlim([0, 3 * current.dct.aic_Kmin])
-        max_y = np.amax(current.kappa_scale * 0.5 *
+        max_y = np.amax(current.KAPPA_SCALE * 0.5 *
                         (current.dct.tau + current.dct.tau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
-        min_y = np.amin(current.kappa_scale * 0.5 *
+        min_y = np.amin(current.KAPPA_SCALE * 0.5 *
                         (current.dct.tau - current.dct.tau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
         axes.set_ylim([min_y * 0.8, max_y * 1.2])
         axes.set_xlabel(r'$P^*$')
@@ -189,7 +189,7 @@ class Plotter:
             figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         plt.subplots_adjust(hspace=0.1)
         if kappa_units:
-            psd_scale = 0.5 * current.kappa_scale
+            psd_scale = 0.5 * current.KAPPA_SCALE
         else:
             psd_scale = 1.0
         if freq_units in ('THz', 'thz'):
@@ -286,15 +286,15 @@ class Plotter:
         if pstar_max is None:
             pstar_max = (jf.dct.aic_Kmin + 1) * 2.5
         if k_SI_max is None:
-            k_SI_max = jf.dct.tau[jf.dct.aic_Kmin] * jf.kappa_scale
+            k_SI_max = jf.dct.tau[jf.dct.aic_Kmin] * jf.KAPPA_SCALE
 
         f, ax2 = plt.subplots(1, 1, figsize=(3.8, 2.3))
         ax2.axvline(x=jf.dct.aic_Kmin + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
         ax2.fill_between(
-            np.arange(jf.dct.logtau.shape[0]) + 1, (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5,
-            (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.kappa_scale * 0.5, alpha=0.3, color=c[4], zorder=-3)
+            np.arange(jf.dct.logtau.shape[0]) + 1, (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.KAPPA_SCALE * 0.5,
+            (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.KAPPA_SCALE * 0.5, alpha=0.3, color=c[4], zorder=-3)
         ax2.plot(
-            np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.kappa_scale * 0.5, label=r'Cepstral method',
+            np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.KAPPA_SCALE * 0.5, label=r'Cepstral method',
             marker='o', c=c[4], zorder=-3)
         ax2.set_xlabel(r'$P^*$')
         ax2.set_ylabel(r'$\kappa$ (W/mK)')
@@ -330,13 +330,13 @@ class Plotter:
         if k_SI_max is None:
             k_SI_max = np.max(
                 np.abs(jf.fcospectrum[idx1][idx2])[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] *
-                jf.kappa_scale * 0.5) * 1.3
+                jf.KAPPA_SCALE * 0.5) * 1.3
         if k_SI_min is None:
             k_SI_min = -k_SI_max
 
         figure, ax = plt.subplots(1, 1, figsize=(3.8, 2.3))
-        ax.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[3], lw=1.0, zorder=1)
-        ax.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.kappa_scale * 0.5, c=c[2], lw=1.0, zorder=1)
+        ax.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.KAPPA_SCALE * 0.5, c=c[3], lw=1.0, zorder=1)
+        ax.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.KAPPA_SCALE * 0.5, c=c[2], lw=1.0, zorder=1)
 
         ax.set_ylim([k_SI_min, k_SI_max])
         ax.set_xlim([0, f_THz_max])
@@ -376,17 +376,17 @@ class Plotter:
 
         if k_SI_max is None:
             k_SI_max = np.max(
-                jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.kappa_scale * 0.5) * 1.3
+                jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.KAPPA_SCALE * 0.5) * 1.3
 
         figure, ax = plt.subplots(1, 1, figsize=(3.8, 2.3))
-        ax.plot(jf.freqs_THz, jf.psd * jf.kappa_scale * 0.5, lw=0.2, c='0.8', zorder=0)
-        ax.plot(jf.freqs_THz, jf.fpsd * jf.kappa_scale * 0.5, c=c[0], zorder=2)
+        ax.plot(jf.freqs_THz, jf.psd * jf.KAPPA_SCALE * 0.5, lw=0.2, c='0.8', zorder=0)
+        ax.plot(jf.freqs_THz, jf.fpsd * jf.KAPPA_SCALE * 0.5, c=c[0], zorder=2)
         if j2 is not None:
             plt.axvline(x=j2.Nyquist_f_THz, ls='--', c='k', dashes=(1.4, 0.6), zorder=3)
         if j2pl is not None:
-            plt.plot(j2pl.freqs_THz, j2pl.dct.psd * j2pl.kappa_scale * 0.5, c=c[1], zorder=1)
+            plt.plot(j2pl.freqs_THz, j2pl.dct.psd * j2pl.KAPPA_SCALE * 0.5, c=c[1], zorder=1)
         try:
-            plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[0][0]) * jf.kappa_scale * 0.5, c=c[3], lw=1.0, zorder=1)
+            plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[0][0]) * jf.KAPPA_SCALE * 0.5, c=c[3], lw=1.0, zorder=1)
         except:
             pass
 
@@ -445,7 +445,7 @@ class Plotter:
 
         if kappa_units:
             # plot psd in units of kappa - the log(psd) is not converted
-            psd_scale = 0.5 * current.kappa_scale
+            psd_scale = 0.5 * current.KAPPA_SCALE
         else:
             psd_scale = 1.0
         # if axis is None:
@@ -505,7 +505,7 @@ class Plotter:
     def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
                                    FIGSIZE=None, data=None, **plot_kwargs):
         if kappa_units:
-            psd_scale = 0.5 * current.kappa_scale
+            psd_scale = 0.5 * current.KAPPA_SCALE
         else:
             psd_scale = 1.0
         if (freq_units == 'thz') or (freq_units == 'THz'):

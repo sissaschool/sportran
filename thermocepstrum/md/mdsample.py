@@ -18,6 +18,7 @@ except:
 
 __all__ = ('MDSample',)
 
+
 class MDSample(object):
     """
     An MDSample object contains all the information that represent a

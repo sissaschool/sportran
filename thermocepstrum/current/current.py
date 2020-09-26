@@ -69,11 +69,11 @@ class Current(MDSample):
         PSD_FILTER_W = params.pop('PSD_FILTER_W', None)
         FREQ_UNITS = params.pop('FREQ_UNITS', 'THz')
 
-        DT_FS = params['DT_FS']
-        MAIN_CURRENT_INDEX = params.get('MAIN_CURRENT_INDEX', 0)
-        MAIN_CURRENT_FACTOR = params.get('MAIN_CURRENT_FACTOR', 1.0)
+        DT_FS = params.pop('DT_FS')
+        MAIN_CURRENT_INDEX = params.pop('MAIN_CURRENT_INDEX', 0)
+        MAIN_CURRENT_FACTOR = params.pop('MAIN_CURRENT_FACTOR', 1.0)
         self.initialize_currents(traj, DT_FS, MAIN_CURRENT_INDEX, MAIN_CURRENT_FACTOR)
-        self.initialize_units(**params)   # KAPPA_SCALE or (e.g. UNITS, TEMPERATURE, VOLUME, DT_FS)
+        self.initialize_units(**params)   # KAPPA_SCALE or (e.g. UNITS, TEMPERATURE, VOLUME)
         if self.traj is not None:
             self.compute_psd(PSD_FILTER_W, FREQ_UNITS)
             self.initialize_cepstral_parameters()
@@ -224,7 +224,7 @@ class Current(MDSample):
            Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
 
         Resulting conductivity:
-            appa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
+           kappa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
         """
 
         self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \

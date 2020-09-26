@@ -15,7 +15,7 @@ def check_reg(num_regression, data_regression):
             'logtau_THEORY_std': jf.dct.logtau_THEORY_std,
         })
         data_regression.check({
-            'kappa_scale': float(jf.kappa_scale),
+            'KAPPA_SCALE': float(jf.KAPPA_SCALE),
             'Nyquist_f_THz': float(jf.Nyquist_f_THz),
             'kappa_Kmin': float(jf.kappa_Kmin),
             'kappa_Kmin_std': float(jf.kappa_Kmin_std),

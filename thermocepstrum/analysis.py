@@ -331,8 +331,8 @@ def main():
     logfile.write(' Number of currrents = {}\n'.format(ncurrents))
     log.write_log(' Number of components = {}'.format(j.N_COMPONENTS))
     logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
-    log.write_log(' kappa_scale = {}'.format(j.kappa_scale))
-    logfile.write(' kappa_scale = {}\n'.format(j.kappa_scale))
+    log.write_log(' KAPPA_SCALE = {}'.format(j.KAPPA_SCALE))
+    logfile.write(' KAPPA_SCALE = {}\n'.format(j.KAPPA_SCALE))
     log.write_log(' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz))
     logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
@@ -426,7 +426,7 @@ def main():
             binoutobj.kappa_Kmin_std = jf.kappa_Kmin_std
             binoutobj.cepstral_log = jf.cepstral_log
             binoutobj.units = jf.UNITS
-            binoutobj.kappa_scale = jf.kappa_scale
+            binoutobj.KAPPA_SCALE = jf.KAPPA_SCALE
             binoutobj.TEMPERATURE = temperature
             binoutobj.VOLUME = volume
 
@@ -469,15 +469,15 @@ def main():
             binoutobj.jf_dct_logpsdK_THEORY_std = jf.dct.logpsdK_THEORY_std
             binoutobj.jf_dct_logtau = jf.dct.logtau
             binoutobj.jf_dct_logtau_THEORY_std = jf.dct.logtau_THEORY_std
-            binoutobj.jf_dct_kappa = jf.dct.tau * jf.kappa_scale * 0.5
-            binoutobj.jf_dct_kappa_THEORY_std = jf.dct.tau_THEORY_std * jf.kappa_scale * 0.5
+            binoutobj.jf_dct_kappa = jf.dct.tau * jf.KAPPA_SCALE * 0.5
+            binoutobj.jf_dct_kappa_THEORY_std = jf.dct.tau_THEORY_std * jf.KAPPA_SCALE * 0.5
             binoutobj.jf_dct_aic_Kmin = jf.dct.aic_Kmin
             binoutobj.jf_dct_Kmin_corrfactor = jf.dct.Kmin_corrfactor
         if not no_text_out:
             outfile_name = output + '.cepstral.dat'
-            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau,
-                    jf.dct.logtau_THEORY_std, jf.dct.tau * jf.kappa_scale * 0.5,
-                    jf.dct.tau_THEORY_std * jf.kappa_scale * 0.5]
+            outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.
+                             logtau_THEORY_std, jf.dct.tau * jf.KAPPA_SCALE * 0.5, jf.dct.tau_THEORY_std *
+                             jf.KAPPA_SCALE * 0.5]
             outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
 
@@ -501,13 +501,13 @@ def main():
             outfile_header = 'freqs_THz  cepf_psd cepf_logpsd\n'
             np.savetxt(outfile_name, outarray, header=outfile_header)
 
-        #conv_fact=open(output+'.kappa_scale_aicKmin.dat','w')
+        #conv_fact=open(output+'.KAPPA_SCALE_aicKmin.dat','w')
         #
         #if units=='metal':
-        #    log.write_log 'kappa_scale (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
+        #    log.write_log 'KAPPA_SCALE (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
         #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
         #elif units=='real':
-        #    log.write_log 'kappa_scale (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
+        #    log.write_log 'KAPPA_SCALE (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
         #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
         #conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
         #conv_fact.close()
@@ -566,7 +566,7 @@ class TCOutput(object):
         self.kappa_Kmin_std = None
         self.cepstral_log   = None
         self.UNITS          = None
-        self.kappa_scale    = None
+        self.KAPPA_SCALE    = None
         self.TEMPERATURE    = None
         self.VOLUME         = None
         self.TSKIP          = None
