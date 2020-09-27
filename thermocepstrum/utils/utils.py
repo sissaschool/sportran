@@ -10,16 +10,16 @@ class PrintMethod:
         pass
 
     @classmethod
-    def write_log(cls, s, *args, **kwargs):
+    def write_log(cls, *args, **kwargs):
         if cls._METHOD == 'bash':
-            print(s, *args, **kwargs)
+            print(*args, **kwargs)
         elif cls._METHOD == 'other':
             if cls._print_func:
-                cls._print_func(s, *args, **kwargs)
+                cls._print_func(*args, **kwargs)
             else:
-                print(s, *args, **kwargs)
+                print(*args, **kwargs)
         else:
-            print(s, *args, **kwargs)
+            print(*args, **kwargs)
 
     @classmethod
     def set_func(cls, func):

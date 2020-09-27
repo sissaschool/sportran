@@ -40,7 +40,8 @@
         ],
         "tests": [
             "pytest>=4.0",
-	    "pytest-regressions"
+            "pytest-regressions",
+            "pandas"
         ]
     },
     "entry_points": {

@@ -1,0 +1,37 @@
+ Input file (table):      /home/bertossa/thermocepstrum/tests/data/NaCl.dat
+ Units:      metal
+ Time step:      5.0 fs
+ Mean Temperature (computed):  1399.3477811999999 K  +/-  19.318785820942594
+ Volume (input):  65013.301261 A^3
+ Time step (input):  5.0 fs
+  currents shape is (2, 20000, 3)
+ Number of currrents = 2
+ Number of components = 3
+ kappa_scale = 1.4604390788939313e-07
+ Nyquist_f   = 100.0  THz
+-----------------------------------------------------
+  RESAMPLE TIME SERIES
+-----------------------------------------------------
+ Original Nyquist freq  f_Ny =     100.00000 THz
+ Resampling freq          f* =      14.28571 THz
+ Sampling time         TSKIP =             7 steps
+                             =        35.000 fs
+ Original  n. of frequencies =         10001
+ Resampled n. of frequencies =          1429
+ PSD      @cutoff  (pre-filter&sample) ~ 443152.37265
+                  (post-filter&sample) ~ 564877.86516
+ log(PSD) @cutoff  (pre-filter&sample) ~     12.89638
+                  (post-filter&sample) ~     13.05597
+ min(PSD)          (pre-filter&sample) =      0.31536
+ min(PSD)         (post-filter&sample) =  22166.11934
+ % of original PSD Power f<f* (pre-filter&sample)  = 96.679 %
+-----------------------------------------------------
+-----------------------------------------------------
+  CEPSTRAL ANALYSIS
+-----------------------------------------------------
+  AIC_Kmin  = 3  (P* = 4, corr_factor = 1.000000)
+  L_0*   =          15.158757 +/-   0.056227
+  S_0*   =     6824108.702608 +/- 383697.095268
+-----------------------------------------------------
+  kappa* =           0.498310 +/-   0.028018  W/mK
+-----------------------------------------------------

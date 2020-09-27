@@ -90,7 +90,7 @@ class Plotter:
         axes[1].xaxis.set_ticks_position('bottom')
         axes[1].set_ylabel(r'log(PSD)')
         axes[1].grid()
-        print('axes2=', axes)
+        #print('axes2=', axes)
         return axes
 
     def plot_ck(self, current, axes=None, label=None, FIGSIZE=None):
@@ -265,10 +265,10 @@ class Plotter:
         TSKIP = int(current.Nyquist_f_THz / xf.Nyquist_f_THz)
 
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        print('axes ->', figure)
+        #print('axes ->', figure)
         axes = self.plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units,
                                      axes=axes)   # this also updates self.PSD_FILTER_W
-        print('->', axes)
+        #print('->', axes)
         xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes)
         if freq_units in ('THz', 'thz'):
             axes[0].axvline(x=fstar_THz, ls='--', c='k')

@@ -130,6 +130,7 @@ def main():
     parser.add_argument('--plot-psd-max-kappa', type=float, help='max kappa in W/mK for the psd plot (y)')
     parser.add_argument('--plot-psd-THz-tick-interval', type=float, help='tick interval on the x-axis for the psd plot')
     parser.add_argument('--plot-psd-kappa-tick-interval', type=float, help='tick interval on the y-axis for the psd plot')
+    parser.add_argument('--test-suite-run', action='store_true')
     args = parser.parse_args()
 
     # yapf: enable
@@ -143,6 +144,8 @@ def main():
     sindex = args.sindex
     run_keyword = args.run_keyword
     NSPLIT = args.split
+    print_elapsed = False if args.test_suite_run else True
+    print_cmd = False if args.test_suite_run else True
 
     output = args.output
     binout = args.bin_output
@@ -191,7 +194,8 @@ def main():
     ncurrents = len(j2_keys) + 1
 
     logfile = open(output + '.log', 'w')
-    logfile.write('Command:\n ' + ' '.join(argv) + '\n\n')
+    if print_cmd:
+        logfile.write('Command:\n ' + ' '.join(argv) + '\n\n')
 
     selected_keys = [j1_key]
     selected_keys.extend(j2_keys)
@@ -213,7 +217,7 @@ def main():
 #         selected_keys.append('Press')
         if volume is None and structurefile is None:
             selected_keys.append('Volume')
-        jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+        jfile = tc.i_o.TableFile(inputfile, group_vectors=True, print_elapsed=print_elapsed)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         jdata = jfile.data
         START_STEP = 0   # reset to zero, as later we will need to read all of jdata

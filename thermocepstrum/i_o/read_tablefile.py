@@ -114,6 +114,7 @@ class TableFile(object):
             raise ValueError('No file given.')
         group_vectors = kwargs.get('group_vectors', True)
         self._GUI = kwargs.get('GUI', False)
+        self._print_elapsed = kwargs.get('print_elapsed', True)
         if self._GUI:
             from ipywidgets import FloatProgress
             from IPython.display import display
@@ -293,5 +294,6 @@ class TableFile(object):
             self.data[key] = self.data[key][:NSTEPS, :]
         log.write_log('  ( %d ) steps read.' % (NSTEPS))
         self.NSTEPS = NSTEPS
-        log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
+        if self._print_elapsed:
+            log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
         return self.data
