@@ -283,6 +283,9 @@ class FileManager(Frame):
         else:
             msg.showerror(LANGUAGES[settings.LANGUAGE]['no_file'], LANGUAGES[settings.LANGUAGE]['no_file_t'])
 
+    def update_data(self):
+        pass
+
     def update(self):
         """
         This function update the GUI.

@@ -107,6 +107,7 @@ class PStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
+        cu.data.pstar = int(self.value_entry.get())
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
         else:
@@ -158,6 +159,9 @@ class PStarSelector(Frame):
 
         if cu.info:
             cu.update_info(cu.info)
+
+    def update_data(self):
+        pass
 
     def update(self):
         super().update()

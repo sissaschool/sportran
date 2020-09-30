@@ -50,7 +50,7 @@ class HeaderSelector(Frame):
         Label(header_frame, text=LANGUAGES[settings.LANGUAGE]['select_units'], font='Arial 14 bold') \
             .grid(row=2, column=0, sticky='w', pady=10)
         self.units_selector_frame = Frame(header_frame)
-        self.units_selector = ttk.Combobox(self.units_selector_frame, values=HeatCurrent.get_units_list(),
+        self.units_selector = ttk.Combobox(self.units_selector_frame, values=list(HeatCurrent.get_units_list()),
                                            state='readonly')
         self.units_selector.current(0)
         Label(self.units_selector_frame,
@@ -119,6 +119,9 @@ class HeaderSelector(Frame):
             self.main.show_frame(self.prev_frame)
         else:
             raise ValueError('Prev frame isn\'t defined')
+
+    def update_data(self):
+        pass
 
     def update(self):
         super().update()

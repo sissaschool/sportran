@@ -147,6 +147,7 @@ class ThermocepstrumGUI(Tk):
         ThermocepstrumGUI.container.grid_columnconfigure(0, weight=1)
 
         ThermocepstrumGUI.frame.tkraise()
+        ThermocepstrumGUI.frame.update_data()
         ThermocepstrumGUI.frame.update()
 
 

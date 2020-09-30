@@ -17,6 +17,7 @@ class FStarSelector(Frame):
         self.main_frame_scroll = ScrollFrame(self, self)
         self.main_frame = self.main_frame_scroll.viewPort
 
+        self.filter_width_value = DoubleVar()
         # self.main_frame.grid(column=0, row=0, sticky='nsew')
 
         # Label(self.main_frame, text='Select F*', font='Arial 14 bold').grid(row=0, column=0)
@@ -69,7 +70,7 @@ class FStarSelector(Frame):
 
         Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['fl_w']+': ')\
             .grid(row=2, column=0, sticky='w', padx=20)
-        self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID)
+        self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID, textvariable=self.filter_width_value)
         self.filter_width.grid(row=2, column=1, sticky='we', pady=10, padx=20)
 
         self.fstar_screen = Label(value_frame, text='F*: ', font='Arial 14 bold', width=20, bd=1, relief=SOLID)
@@ -122,8 +123,7 @@ class FStarSelector(Frame):
 
     def resample(self):
         cu.data.fstar = float(self.value_entry.get())
-        filter_width = float(self.filter_width.get())
-        cu.data.psd_filter_width = filter_width
+        cu.data.psd_filter_width = float(self.filter_width_value.get())
 
         if cu.data.fstar > 0:
             self.graph.add_graph(cu.gm.GUI_resample_current, 'resample', current=cu.data.j, fstar_THz=cu.data.fstar,
@@ -151,40 +151,40 @@ class FStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
-        response = msg.askyesno(LANGUAGES[settings.LANGUAGE]['back_reset'],
-                                LANGUAGES[settings.LANGUAGE]['back_reset_t'])
+        # response = msg.askyesno(LANGUAGES[settings.LANGUAGE]['back_reset'],
+        #                         LANGUAGES[settings.LANGUAGE]['back_reset_t'])
 
+        cu.data.psd_filter_width = self.filter_width_value.get()
         #cu.log.set_func(None)
-        if response:
-            cu.data.fstar = float(self.value_entry.get())
-            cu.Data.loaded = True
-            if self.prev_frame:
-                self.main.show_frame(self.prev_frame)
-            else:
-                raise ValueError('Prev frame isn\'t defined')
-
-        elif response == 0:
-            #cu.data.changes = False
-            cu.data.fstar = 0.0
-            cu.Data.loaded = False
-            cu.data.temperature = 0.0
-            cu.data.volume = 0.0
-            cu.data.DT_FS = 0.0
-            cu.data.psd_filter_width = 0.1
-            self.graph.other_graph.clear()
-            self.graph.graph.clear()
-            self.graph.cut_line = 0
-            self.graph.show_selected_area = False
-            self.change_view_button.config(text='Zoom-in')
-            if self.prev_frame:
-                self.main.show_frame(self.prev_frame)
-            else:
-                raise ValueError('Prev frame isn\'t defined')
+        cu.data.fstar = float(self.value_entry.get())
+        cu.Data.loaded = True
+        if self.prev_frame:
+            self.main.show_frame(self.prev_frame)
         else:
-            pass
+            raise ValueError('Prev frame isn\'t defined')
+
+
+        # elif response == 0:
+        #     #cu.data.changes = False
+        #     cu.data.fstar = 0.0
+        #     cu.Data.loaded = False
+        #     cu.data.temperature = 0.0
+        #     cu.data.volume = 0.0
+        #     cu.data.DT_FS = 0.0
+        #     cu.data.psd_filter_width = 0.1
+        #     self.graph.other_graph.clear()
+        #     self.graph.graph.clear()
+        #     self.graph.cut_line = 0
+        #     self.graph.show_selected_area = False
+        #     self.change_view_button.config(text='Zoom-in')
+        #     if self.prev_frame:
+        #         self.main.show_frame(self.prev_frame)
+        #     else:
+        #         raise ValueError('Prev frame isn\'t defined')
+        # else:
+        #     pass
 
     def next(self):
-
         if (self.resample()):
             #cu.data.fstar = cu.data.xf.Nyquist_f_THz
 
@@ -204,13 +204,15 @@ class FStarSelector(Frame):
         if cu.info:
             cu.update_info(cu.info)
 
+    def update_data(self):
+        self.filter_width_value.set(cu.data.psd_filter_width)
+
     def update(self):
         super().update()
 
-        self.filter_width.config(value=cu.data.psd_filter_width)
         cu.data.fstar = float(self.value_entry.get())
 
-        if (cu.data.first_fstar and '_FSTAR' in cu.data.jdata.keys()):
+        if cu.data.first_fstar and '_FSTAR' in cu.data.jdata.keys():
             cu.data.fstar = cu.data.jdata['_FSTAR']
             self.value_entry.delete(0, END)
             self.value_entry.insert(0, cu.data.fstar)
