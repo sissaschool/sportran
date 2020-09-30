@@ -1,5 +1,5 @@
 Command:
- /home/lercole/.virtualenvs/thermotest3/bin/thermocepstrum-analysis ../data/NaCl.dat -k flux -j vcm[1] -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r
+ ../../thermocepstrum/analysis.py ../data/NaCl.dat -k flux -j vcm[1] -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r -o output_ref
 
  Input file (table):      ../data/NaCl.dat
  Units:      metal
@@ -10,7 +10,7 @@ Command:
   currents shape is (2, 20000, 3)
  Number of currrents = 2
  Number of components = 3
- kappa_scale = 1.4604390788939313e-07
+ KAPPA_SCALE = 1.4604390788939313e-07
  Nyquist_f   = 100.0  THz
 -----------------------------------------------------
   RESAMPLE TIME SERIES
@@ -21,13 +21,13 @@ Command:
                              =        35.000 fs
  Original  n. of frequencies =         10001
  Resampled n. of frequencies =          1429
- PSD      @cutoff  (pre-filter) = 443152.37265
-                  (post-filter) = 564877.86516
- log(PSD) @cutoff  (pre-filter) =     12.89638
-                  (post-filter) =     13.05597
- min(PSD)          (pre-filter) =      0.31536
- min(PSD)         (post-filter) =  22166.11934
- % of original PSD Power f<f* (pre-filter)  = 96.678574
+ PSD      @cutoff  (pre-filter&sample) ~ 443152.37265
+                  (post-filter&sample) ~ 564877.86516
+ log(PSD) @cutoff  (pre-filter&sample) ~     12.89638
+                  (post-filter&sample) ~     13.05597
+ min(PSD)          (pre-filter&sample) =      0.31536
+ min(PSD)         (post-filter&sample) =  22166.11934
+ % of original PSD Power f<f* (pre-filter&sample)  = 96.679 %
 -----------------------------------------------------
 -----------------------------------------------------
   CEPSTRAL ANALYSIS
