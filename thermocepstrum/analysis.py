@@ -377,13 +377,13 @@ def main():
                 outarray = np.c_[j.freqs_THz,
                                  j.cospectrum.reshape((j.cospectrum.shape[0] * j.cospectrum.shape[1],
                                                        j.cospectrum.shape[2])).transpose()]
-                np.savetxt(outfile_name, outarray, fmt=fmt)
+                np.savetxt(outfile_name, outarray.view(float), fmt=fmt)
 
                 outfile_name = output + '.cospectrum.filt.dat'
                 outarray = np.c_[j.freqs_THz,
                                  j.fcospectrum.reshape((j.fcospectrum.shape[0] * j.fcospectrum.shape[1],
                                                         j.fcospectrum.shape[2])).transpose()]
-                np.savetxt(outfile_name, outarray, fmt=fmt)
+                np.savetxt(outfile_name, outarray.view(float), fmt=fmt)
 
         # resample and plot
         if resample:
