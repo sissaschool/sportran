@@ -19,6 +19,8 @@ def integrate_acf(acf):
 
 ################################################################################
 ## functions copied from statstools.tsa
+
+
 def acovf(x, unbiased=False, demean=True, fft=False, missing='none'):
     """
     Autocovariance for 1D

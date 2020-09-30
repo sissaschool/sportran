@@ -7,13 +7,9 @@
 ################################################################################
 
 import numpy as np
-import matplotlib.pyplot as plt
 import thermocepstrum as tc
 from scipy.stats import shapiro
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
-
-################################################################################
+from thermocepstrum.utils import log
 
 
 class MDBlocks(object):

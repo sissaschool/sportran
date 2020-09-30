@@ -7,8 +7,6 @@
 ################################################################################
 
 import numpy as np
-#from thermocepstrum.i_o import __path__
-#from subprocess import check_output
 
 
 def get_box(filename):
@@ -28,4 +26,4 @@ def get_box(filename):
     return box, volume
 
 
-## ** SHOULD ADD REST OF READ FUNCTIONS
+## ** SHOULD ADD ADDITIONAL OF READ FUNCTIONS

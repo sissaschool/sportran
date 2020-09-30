@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# TO BE DEPRECATED
+
 # ugly trick to posticipate the loading of the library
 # import matplotlib.pyplot as plt
 
@@ -23,9 +25,3 @@ class Plt:
     def subplots_adjust(self, *args, **kwargs):
         loadRedefineGlobalPlt()
         return plt.subplots_adjust(*args, **kwargs)
-
-
-try:
-    plt
-except:
-    plt = Plt()

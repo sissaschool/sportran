@@ -4,15 +4,12 @@ import numpy as np
 from scipy.special import polygamma
 from scipy.fftpack import dct
 from .tools.spectrum import logtau_to_tau
-from .aic import *
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
+from . import aic
+from thermocepstrum.utils import log
 
 __all__ = ('CosFilter',)
 
 EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992   # Euler-Mascheroni constant
-
-################################################################################
 
 
 def multicomp_cepstral_parameters(NF, N_COMPONENTS):
@@ -127,9 +124,9 @@ class CosFilter(object):
 
         # estimate AIC
         if (aic_type == 'aic'):
-            self.aic = dct_AIC(self.logpsdK, ck_theory_var)
+            self.aic = aic.dct_AIC(self.logpsdK, ck_theory_var)
         elif (aic_type == 'aicc'):
-            self.aic = dct_AICc(self.logpsdK, ck_theory_var)
+            self.aic = aic.dct_AICc(self.logpsdK, ck_theory_var)
         else:
             raise ValueError('AIC type not valid.')
         self.aic_type = aic_type
@@ -240,8 +237,8 @@ class CosFilter(object):
     def compute_p_aic(self, method='ba'):
         """Define a weight distribution from the AIC, according to a method."""
         NF = self.samplelogpsd.size
-        self.p_aic = produce_p(self.aic, method)
-        self.p_aic_Kave, self.p_aic_Kstd = grid_statistics(np.arange(NF), self.p_aic)
+        self.p_aic = aic.produce_p(self.aic, method)
+        self.p_aic_Kave, self.p_aic_Kstd = aic.grid_statistics(np.arange(NF), self.p_aic)
 
     def compute_logtau_density(self, method='ba', only_stats=False, density_grid=None, grid_size=1000,
                                correct_mean=True):
@@ -250,20 +247,20 @@ class CosFilter(object):
 
         # compute statistics
         self.p_logtau_density_xave, self.p_logtau_density_xstd = \
-                        grid_statistics(self.logtau, self.p_aic, self.logtau_THEORY_var + self.logtau**2)
+                        aic.grid_statistics(self.logtau, self.p_aic, self.logtau_THEORY_var + self.logtau**2)
         self.p_logtau_density_xstd2 = np.dot(
             self.p_aic, np.sqrt(self.logtau_THEORY_var + (self.logtau - self.p_logtau_density_xave)**2))
         ##self.p_logtau_density_xave, self.p_logtau_density_xstd = \
-        ##                ta.grid_statistics(self.p_logtau_grid, self.p_logtau_density)
+        ##                aic.grid_statistics(self.p_logtau_grid, self.p_logtau_density)
 
         # compute distribution
         if not only_stats:
             if density_grid is None:
-                self.p_logtau_density, self.p_logtau_grid = produce_p_density(self.p_aic, \
+                self.p_logtau_density, self.p_logtau_grid = aic.produce_p_density(self.p_aic, \
                                         self.logtau_THEORY_std, self.logtau, grid_size=grid_size)
             else:
                 self.p_logtau_grid = density_grid
-                self.p_logtau_density = produce_p_density(self.p_aic, self.logtau_THEORY_std, \
+                self.p_logtau_density = aic.produce_p_density(self.p_aic, self.logtau_THEORY_std, \
                                             self.logtau, grid=self.p_logtau_grid)
 
         # tau distribution

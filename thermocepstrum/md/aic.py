@@ -2,8 +2,6 @@
 
 import numpy as np
 
-################################################################################
-
 
 def dct_AIC(yk, theory_var=None):
     """AIC[K] = sum_{k>K} c_k^2/theory_var + 2*(K+1)

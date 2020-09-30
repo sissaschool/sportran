@@ -1,27 +1,26 @@
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
+# -*- coding: utf-8 -*-
 
-from thermocepstrum.md.tools.spectrum import freq_THz_to_red
-import math
 import os
-from os import path
-
+import math
 import numpy as np
+from thermocepstrum.utils import log
+from thermocepstrum.md.tools.spectrum import freq_THz_to_red
 
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')  # CHECK THAT IS OK - if needed use force=True, warn=False
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
+# try to import matplotlib style settings
 try:
     import pkg_resources
     pltstyle_filename = pkg_resources.resource_filename('thermocepstrum.utils', 'plot_style.mplstyle')
 except:
-    # fallback (maybe it is not installed...)
+    # fallback (maybe thermocepstrum is not installed...)
     try:
         abs_path = os.path.abspath(__file__)
         tc_path = abs_path[:abs_path.rfind('/')]
-        path.append(tc_path[:tc_path.rfind('/')])
+        os.path.append(tc_path[:tc_path.rfind('/')])
     except:
         abs_path = '.'
     pltstyle_filename = tc_path + '/utils/plot_style.mplstyle'
@@ -30,7 +29,10 @@ try:
 except:
     pass
 
+# list of colors
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+__all__ = ('Plotter', 'CurrentPlotter', 'GUIPlotter', 'addPlotToPdf',)
 
 
 class Plotter:

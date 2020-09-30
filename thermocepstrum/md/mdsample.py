@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from thermocepstrum.utils.loadAfterPlt import plt
 from .tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from .tools.filter import runavefilter
 from .tools.acf import acovf, integrate_acf
 from .resample import resample_timeseries
-
-from thermocepstrum.utils.loadAfterPlt import plt
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
-
-try:
-    plt
-except:
-    log.write_log('Warning: plt undefined')
+from thermocepstrum.utils import log
+from thermocepstrum.utils import plt   # TODO: substitute with Plotter
 
 __all__ = ('MDSample',)
 
@@ -132,7 +124,7 @@ class MDSample(object):
                 self.MANY_COMPONENTS = True
                 if (array.shape[0] % 2 == 1):
                     self.traj = array[:-1]
-                    print('Trajectory has an odd number of points. Removing the last one.')
+                    log.write_log('Trajectory has an odd number of points. Removing the last one.')
                 else:
                     self.traj = array
             else:
