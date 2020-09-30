@@ -20,7 +20,7 @@ def test_cli_NaCl(tmpdir, run_cli, data_NaCl_path, num_regression, file_regressi
         'output.cepstral.dat', 'output.cepstrumfiltered_psd.dat', 'output.cospectrum.dat', 'output.cospectrum.filt.dat',
         'output.psd.dat', 'output.resampled_psd.dat'
     ]
-    with open(tmpdir.join('output.log')) as l:
+    with open(str(tmpdir.join('output.log'))) as l:
         file_regression.check(l.read(), basename='output.log')
     file_regression.check(output.stdout.str(), basename='stdout')
     file_regression.check(output.stderr.str(), basename='stderr')
