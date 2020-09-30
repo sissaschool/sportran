@@ -185,7 +185,7 @@ class TableFile(object):
                 self.header += line
         log.write_log(self.header)
         log.write_log(' #####################################')
-        log.write_log('  all_ckeys = ', self.all_ckeys)
+        log.write_log('  all_ckeys = ', sorted(self.all_ckeys.items(), key=lambda kv: kv[0]))
         log.write_log(' #####################################')
         return
 
@@ -206,7 +206,7 @@ class TableFile(object):
         if (len(self.ckey) == 0):
             raise KeyError('No ckey set. Check selected keys.')
         else:
-            log.write_log('  ckey = ', self.ckey)
+            log.write_log('  ckey = ', sorted(self.ckey.items(), key=lambda kv: kv[0]))
         return
 
     def _initialize_dic(self, NSTEPS=None):

@@ -227,7 +227,7 @@ class LAMMPSLogFile(object):
                 break
         self.NALLCKEYS = np.concatenate(list(self.all_ckeys.values())).size
         log.write_log(' #####################################')
-        log.write_log('  all_ckeys = ', self.all_ckeys)
+        log.write_log('  all_ckeys = ', sorted(self.all_ckeys.items(), key=lambda kv: kv[0]))
         log.write_log(' #####################################')
         return
 
@@ -248,7 +248,7 @@ class LAMMPSLogFile(object):
         if (len(self.ckey) == 0):
             raise KeyError('No ckey set. Check selected keys.')
         else:
-            log.write_log('  ckey = ', self.ckey)
+            log.write_log('  ckey = ', sorted(self.ckey.items(), key=lambda kv: kv[0]))
         return
 
     def _initialize_dic(self, NSTEPS=None):

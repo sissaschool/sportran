@@ -15,7 +15,7 @@ def test_cli_NaCl(tmpdir, run_cli, data_NaCl_path, file_regression):
     #FIXME: test in a branch where cli works
     fileout_pref = tmpdir.join('output')
     output = run_cli(data_NaCl_path, '-k', 'flux', '-j', 'vcm[1]', '-t', '5.0', '-V', '65013.301261', '-w', '0.1',
-                     '--FSTAR', '14.0', '-r', '--test-suite-run', '--savetxt-format', '%.14e', '-o', fileout_pref)
+                     '--FSTAR', '14.0', '-r', '--test-suite-run', '--savetxt-format', '%.13e', '-o', fileout_pref)
     file_list = [
         'output.cepstral.dat', 'output.cepstrumfiltered_psd.dat', 'output.cospectrum.dat', 'output.cospectrum.filt.dat',
         'output.log', 'output.psd.dat', 'output.resampled_psd.dat'
