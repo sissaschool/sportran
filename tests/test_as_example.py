@@ -13,15 +13,13 @@ def check_reg(num_regression, data_regression):
             'logpsdK_THEORY_std': jf.dct.logpsdK_THEORY_std,
             'logtau': jf.dct.logtau,
             'logtau_THEORY_std': jf.dct.logtau_THEORY_std,
+            'KAPPA_SCALE': np.array([float(jf.KAPPA_SCALE)]),
+            'Nyquist_f_THz': np.array([float(jf.Nyquist_f_THz)]),
+            'kappa_Kmin': np.array([float(jf.kappa_Kmin)]),
+            'kappa_Kmin_std': np.array([float(jf.kappa_Kmin_std)]),
+            'aic_min': np.array([float(jf.dct.aic_min)])
         })
-        data_regression.check({
-            'KAPPA_SCALE': float(jf.KAPPA_SCALE),
-            'Nyquist_f_THz': float(jf.Nyquist_f_THz),
-            'kappa_Kmin': float(jf.kappa_Kmin),
-            'kappa_Kmin_std': float(jf.kappa_Kmin_std),
-            'aic_Kmin': int(jf.dct.aic_Kmin),
-            'aic_min': float(jf.dct.aic_min)
-        })
+        data_regression.check({'aic_Kmin': int(jf.dct.aic_Kmin),})
 
     return _check
 

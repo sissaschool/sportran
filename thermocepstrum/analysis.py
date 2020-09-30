@@ -131,6 +131,7 @@ def main():
     parser.add_argument('--plot-psd-THz-tick-interval', type=float, help='tick interval on the x-axis for the psd plot')
     parser.add_argument('--plot-psd-kappa-tick-interval', type=float, help='tick interval on the y-axis for the psd plot')
     parser.add_argument('--test-suite-run', action='store_true')
+    parser.add_argument('--savetxt-format', type=str, default='%.18e', help='format used by numpy.savetxt for printing number in the output files')
     args = parser.parse_args()
 
     # yapf: enable
@@ -162,6 +163,7 @@ def main():
     corr_factor = args.corr_factor
     j2_keys = args.add_currents
     psd_filter_w = args.psd_filterw
+    fmt = args.savetxt_format
 
     if volume is not None:
         if volume <= 0.:
@@ -201,8 +203,9 @@ def main():
     selected_keys.extend(j2_keys)
 
     # Write some parameters
-    log.write_log(' Input file ({}):      {}'.format(input_format, inputfile))
-    logfile.write(' Input file ({}):      {}\n'.format(input_format, inputfile))
+    if print_cmd:
+        log.write_log(' Input file ({}):      {}'.format(input_format, inputfile))
+        logfile.write(' Input file ({}):      {}\n'.format(input_format, inputfile))
     log.write_log(' Units:      {}'.format(units))
     logfile.write(' Units:      {}\n'.format(units))
     log.write_log(' Time step:      {} fs'.format(DT_FS))
@@ -368,19 +371,19 @@ def main():
             outfile_name = output + '.psd.dat'
             outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
             outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
-            np.savetxt(outfile_name, outarray, header=outfile_header)
+            np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
             if j.MANY_CURRENTS:
                 outfile_name = output + '.cospectrum.dat'
                 outarray = np.c_[j.freqs_THz,
                                  j.cospectrum.reshape((j.cospectrum.shape[0] * j.cospectrum.shape[1],
                                                        j.cospectrum.shape[2])).transpose()]
-                np.savetxt(outfile_name, outarray)
+                np.savetxt(outfile_name, outarray, fmt=fmt)
 
                 outfile_name = output + '.cospectrum.filt.dat'
                 outarray = np.c_[j.freqs_THz,
                                  j.fcospectrum.reshape((j.fcospectrum.shape[0] * j.fcospectrum.shape[1],
                                                         j.fcospectrum.shape[2])).transpose()]
-                np.savetxt(outfile_name, outarray)
+                np.savetxt(outfile_name, outarray, fmt=fmt)
 
         # resample and plot
         if resample:
@@ -412,7 +415,7 @@ def main():
                 outfile_name = output + '.resampled_psd.dat'
                 outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
                 outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
-                np.savetxt(outfile_name, outarray, header=outfile_header)
+                np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
         else:
             jf = j
 
@@ -483,7 +486,7 @@ def main():
                              logtau_THEORY_std, jf.dct.tau * jf.KAPPA_SCALE * 0.5, jf.dct.tau_THEORY_std *
                              jf.KAPPA_SCALE * 0.5]
             outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
-            np.savetxt(outfile_name, outarray, header=outfile_header)
+            np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
         # plot cepstral log-PSD
         #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
@@ -503,7 +506,7 @@ def main():
             outfile_name = output + '.cepstrumfiltered_psd.dat'
             outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
             outfile_header = 'freqs_THz  cepf_psd cepf_logpsd\n'
-            np.savetxt(outfile_name, outarray, header=outfile_header)
+            np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
         #conv_fact=open(output+'.KAPPA_SCALE_aicKmin.dat','w')
         #

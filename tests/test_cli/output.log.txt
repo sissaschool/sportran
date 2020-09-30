@@ -1,4 +1,3 @@
- Input file (table):      /home/bertossa/thermocepstrum/tests/data/NaCl.dat
  Units:      metal
  Time step:      5.0 fs
  Mean Temperature (computed):  1399.3477811999999 K  +/-  19.318785820942594
@@ -7,7 +6,7 @@
   currents shape is (2, 20000, 3)
  Number of currrents = 2
  Number of components = 3
- kappa_scale = 1.4604390788939313e-07
+ KAPPA_SCALE = 1.4604390788939313e-07
  Nyquist_f   = 100.0  THz
 -----------------------------------------------------
   RESAMPLE TIME SERIES
