@@ -1,9 +1,12 @@
 # thermocepstrum
+
 Code to compute thermal conductivity through cepstral analysis of heat flux time series, as described in papers:
 
  - (cepstral analysis) [Ercole, Marcolongo, Baroni, *Sci. Rep.* **7**, 15835 (2017)](https://doi.org/10.1038/s41598-017-15843-2)
  - (multicomponent systems) [Bertossa, Grasselli, Ercole, Baroni, *Phys. Rev. Lett.* **122**, 255901 (2019)](https://doi.org/10.1103/PhysRevLett.122.255901) ([arXiv](https://arxiv.org/abs/1808.03341))
  - (review) [Baroni, Bertossa, Ercole, Grasselli, Marcolongo, *Handbook of Materials Modeling* (2018)](https://doi.org/10.1007/978-3-319-50257-1_12-1) ([arXiv](https://arxiv.org/abs/1802.08006))
+
+Developed by Loris Ercole, Riccardo Bertossa, Sebastiano Bisacchi under the supervision of prof. Stefano Baroni
 
 **Acknowledgment**  The development of this software is part of the scientific program of the EU MaX Centre of Excellence for Supercomputing Applications (Grant No. 676598, 824143) and has been partly funded through it.
 
@@ -22,6 +25,7 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
  - numpy
  - scipy
  - matplotlib
+
 #### graphical user interface
  - all the requirements of cepstral analysis
  - tkinter
