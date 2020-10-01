@@ -38,19 +38,22 @@ class OtherVariables(Frame):
         Separator(variable_frame, orient=HORIZONTAL).grid(row=2, sticky='we', columnspan=3)
 
         Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['tmp'] + ' (K):').grid(row=3, column=0, sticky='w')
-        self.temperature_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID, textvariable=self.temperature_value)
+        self.temperature_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID,
+                                         textvariable=self.temperature_value)
         self.temperature_entry.grid(row=3, column=1, padx=2, sticky='w', pady=10)
         self.temp_advertise = Label(variable_frame, text='', font='Arial 10')
         self.temp_advertise.grid(row=3, column=2, sticky='w')
 
         Label(variable_frame,
               text=LANGUAGES[settings.LANGUAGE]['volume'] + ' (angstrom^3):').grid(row=4, column=0, sticky='w')
-        self.volume_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID, textvariable=self.volume_value)
+        self.volume_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID,
+                                    textvariable=self.volume_value)
         self.volume_entry.grid(row=4, column=1, padx=2, sticky='w')
 
         Label(variable_frame,
               text=LANGUAGES[settings.LANGUAGE]['timestep'] + ' (fs):').grid(row=5, column=0, sticky='w')
-        self.DT_FS_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID, textvariable=self.DT_FS_value)
+        self.DT_FS_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID,
+                                   textvariable=self.DT_FS_value)
         self.DT_FS_entry.grid(row=5, column=1, padx=2, sticky='w', pady=10)
 
         Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_v'],
@@ -58,7 +61,8 @@ class OtherVariables(Frame):
         Separator(variable_frame, orient=HORIZONTAL).grid(row=7, sticky='we', columnspan=3)
 
         Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_w'] + ' (THz):').grid(row=8, column=0, sticky='w')
-        self.filter_width_entry = Spinbox(variable_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID, textvariable=self.filter_width_value)
+        self.filter_width_entry = Spinbox(variable_frame, from_=0.1, to=10.0, increment=0.1, bd=1, relief=SOLID,
+                                          textvariable=self.filter_width_value)
         self.filter_width_entry.grid(row=8, column=1, padx=2, sticky='w', pady=10)
 
         variable_frame.rowconfigure(9, weight=1)
@@ -125,8 +129,8 @@ class OtherVariables(Frame):
 
         if not er:
             cu.load_data(cu.data.CURRENT_FILE, cu.data.inputformat, _selected_keys=cu.data.keys,
-                         _descriptions=cu.data.description, temperature=cu.data.temperature, units=cu.data.units, volume=cu.data.volume,
-                         psd_filter_w=cu.data.psd_filter_width, DT_FS=cu.data.DT_FS)
+                         _descriptions=cu.data.description, temperature=cu.data.temperature, units=cu.data.units,
+                         volume=cu.data.volume, psd_filter_w=cu.data.psd_filter_width, DT_FS=cu.data.DT_FS)
 
             if self.next_frame:
                 self.main.show_frame(self.next_frame)

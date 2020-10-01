@@ -578,28 +578,28 @@ class TCOutput(object):
     # yapf: enable
     def write_old_binary(self, output):
         """Write old binary format."""
-        outarray = np.array([self.j_freqs_THz, self.j_fpsd, self.j_flogpsd, self.j_psd, self.j_logpsd])
-        np.save(output + '.psd.npy', outarray)
+        opts = {'allow_pickle': False}
+        optsa = {'axis': 1}
+        outarray = np.c_[self.j_freqs_THz, self.j_fpsd, self.j_flogpsd, self.j_psd, self.j_logpsd]
+        np.save(output + '.psd.npy', outarray, **opts)
 
         if self.j_cospectrum is not None:
-            outarray = np.array([self.j_freqs_THz, self.j_cospectrum])
-            np.save(output + '.cospectrum.npy', outarray)
+            outarray = np.c_[self.j_freqs_THz, self.j_cospectrum.reshape(-1, self.j_cospectrum.shape[-1]).transpose()]
+            np.save(output + '.cospectrum.npy', outarray, **opts)
 
         if self.j_fcospectrum is not None:
-            outarray = np.array([self.j_freqs_THz, self.j_fcospectrum])
-            np.save(output + '.cospectrum.filt.npy', outarray)
+            outarray = np.c_[self.j_freqs_THz, self.j_fcospectrum.reshape(-1, self.j_fcospectrum.shape[-1]).transpose()]
+            np.save(output + '.cospectrum.filt.npy', outarray, **opts)
 
-        outarray = np.array([self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd])
-        np.save(output + '.resampled_psd.npy', outarray)
+        outarray = np.c_[self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd]
+        np.save(output + '.resampled_psd.npy', outarray, **opts)
 
-        outarray = np.array([
-            self.jf_dct_logpsdK, self.jf_dct_logpsdK_THEORY_std, self.jf_dct_logtau, self.jf_dct_logtau_THEORY_std,
-            self.jf_dct_kappa, self.jf_dct_kappa_THEORY_std
-        ])
-        np.save(output + '.cepstral', outarray)
+        outarray = np.c_[self.jf_dct_logpsdK, self.jf_dct_logpsdK_THEORY_std, self.jf_dct_logtau, self.
+                         jf_dct_logtau_THEORY_std, self.jf_dct_kappa, self.jf_dct_kappa_THEORY_std]
+        np.save(output + '.cepstral', outarray, **opts)
 
-        outarray = np.array([self.jf_freqs_THz, self.jf_dct_psd, self.jf_dct_logpsd])
-        np.save(output + '.cepstrumfiltered_psd', outarray)
+        outarray = np.c_[self.jf_freqs_THz, self.jf_dct_psd, self.jf_dct_logpsd]
+        np.save(output + '.cepstrumfiltered_psd', outarray, **opts)
 
 
 def check_plot_manager():

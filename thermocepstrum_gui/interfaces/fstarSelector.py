@@ -70,7 +70,8 @@ class FStarSelector(Frame):
 
         Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['fl_w']+': ')\
             .grid(row=2, column=0, sticky='w', padx=20)
-        self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID, textvariable=self.filter_width_value)
+        self.filter_width = Spinbox(value_frame, from_=0.1, to=10, increment=0.1, bd=1, relief=SOLID,
+                                    textvariable=self.filter_width_value)
         self.filter_width.grid(row=2, column=1, sticky='we', pady=10, padx=20)
 
         self.fstar_screen = Label(value_frame, text='F*: ', font='Arial 14 bold', width=20, bd=1, relief=SOLID)
@@ -162,7 +163,6 @@ class FStarSelector(Frame):
             self.main.show_frame(self.prev_frame)
         else:
             raise ValueError('Prev frame isn\'t defined')
-
 
         # elif response == 0:
         #     #cu.data.changes = False
