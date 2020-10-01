@@ -4,15 +4,6 @@ import numpy as np
 from . import Current
 from . import units
 
-from thermocepstrum.utils.loadAfterPlt import plt
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
-
-try:
-    plt
-except:
-    log.write_log('Warning: plt undefined')
-
 __all__ = ('HeatCurrent',)
 
 

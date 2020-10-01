@@ -49,8 +49,7 @@
 
 import numpy as np
 from time import time
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
+from thermocepstrum.utils import log
 
 
 def is_string(string):

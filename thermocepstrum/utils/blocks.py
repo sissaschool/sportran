@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
-import sys
-import os
-import math
-import os.path
+import sys, os, math
 import thermocepstrum as tc
+from thermocepstrum.utils import log
 
 abs_path = os.path.abspath(sys.argv[0])
 tc_path = abs_path[:abs_path.rfind('/')]
@@ -19,18 +15,16 @@ import numpy as np
 import scipy as sp
 import scipy.stats
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 from matplotlib.backends.backend_pdf import PdfPages
-#plt.rcParams['figure.figsize'] = (16, 9)
 plt.style.reload_library()
 try:
     plt.style.use('./plot_style.mplstyle')
 except:
     plt.style.use(tc_path + 'utils/plot_style.mplstyle')
-#plt.rc('text', usetex=True)
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
-from matplotlib.ticker import MultipleLocator
 
 try:
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes

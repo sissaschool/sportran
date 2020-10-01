@@ -2,27 +2,14 @@
 """Current defines a generic flux time series that can be associated to a transport coefficient."""
 
 import numpy as np
-from .. import md
-from ..md.mdsample import MDSample
-from ..md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
-from ..md.tools.resample import filter_and_sample
-from . import units
 import inspect
-
-from thermocepstrum.utils.loadAfterPlt import plt
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
-
-try:
-    plt
-except:
-    log.write_log('Warning: plt undefined')
-
-try:
-    from thermocepstrum.plotter import Plotter
-except ImportError:
-    log.write_log('Warning: cannot locate Plotter. Plots will be not created and displayed')
-    plotManager = None
+from thermocepstrum import md
+from thermocepstrum.md.mdsample import MDSample
+from thermocepstrum.md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
+from thermocepstrum.md.tools.resample import filter_and_sample
+from . import units
+from thermocepstrum.utils import log
+from thermocepstrum.plotter import Plotter, CurrentPlotter
 
 __all__ = ('Current',)
 
@@ -48,7 +35,7 @@ class Current(MDSample):
     _input_parameters = {'DT_FS', 'KAPPA_SCALE'}
     _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 
-    plot = Plotter()
+    plot = CurrentPlotter()
 
     # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent) and case-insensitive
 
@@ -102,8 +89,14 @@ class Current(MDSample):
           TimeSeries, builder = self._get_builder()
           new_ts = TimeSeries(**builder)
         """
-        # this is a virtual method
-        pass
+        # TODO: unify this method across the subclasse
+        if self.MANY_CURRENTS:
+            traj_array = np.row_stack(([self.traj], [j.traj for j in self.otherMD]))
+        else:
+            traj_array = self.traj
+        builder = dict(traj=traj_array, DT_FS=self.DT_FS, KAPPA_SCALE=self.KAPPA_SCALE,
+                       PSD_FILTER_W=self.PSD_FILTER_W_THZ, FREQ_UNITS='THz')
+        return type(self), builder
 
     def initialize_currents(self, j, DT_FS, main_current_index=0, main_current_factor=1.0):
         # check if we have a multicomponent fluid
@@ -316,6 +309,7 @@ class Current(MDSample):
         else:
             return False
 
+    #TODO: move it to MDSample ?
     @classmethod
     def set_plotter(cls, plotter):
         if isinstance(plotter, Plotter) or issubclass(plotter, Plotter):

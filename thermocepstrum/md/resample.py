@@ -1,17 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from thermocepstrum.utils.loadAfterPlt import plt
 from .tools.resample import filter_and_sample
-
-from thermocepstrum.utils.loadAfterPlt import plt
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
-
-try:
-    plt
-except:
-    log.write_log('Warning: plt undefined')
+from thermocepstrum.utils import log
+from thermocepstrum.utils import plt   # TODO: substitute with Plotter
 
 
 def resample_timeseries(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False, PSD_FILTER_W=None, freq_units='THz',

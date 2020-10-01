@@ -7,9 +7,6 @@ import argparse
 import numpy as np
 # import scipy as sp
 
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
-
 try:
     import thermocepstrum as tc
 except ImportError:
@@ -21,11 +18,11 @@ except ImportError:
     except ImportError:
         raise ImportError('Cannot locate thermocepstrum.')
 
-# import log-print method
-from thermocepstrum.utils.utils import PrintMethod
-log = PrintMethod()
+from thermocepstrum.utils import log
 log.set_method('bash')
 
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
 try:
     from thermocepstrum.plotter import Plotter, CurrentPlotter, addPlotToPdf
     plotManager = Plotter()
