@@ -136,13 +136,12 @@ class FileManager(Frame):
 
         # Get the info of each file
         for file in files:
-            file_component = file.split('.')
-            if len(file_component) == 2:
-                file_name, file_type = file.split('.')
+            file_name_data = file.split('.')
+            if len(file_name_data) > 1 and file_name_data[0]:
+                file_name = file_name_data[0]
+                file_type = file_name_data[len(file_name_data) - 1]
                 file_size = cu.get_file_size(os.path.join(settings.DATA_PATH, file))
                 self.loaded_files.append((file_name, file_type, file_size))
-            else:
-                continue
 
         # Set column header
         for header in self.headers:

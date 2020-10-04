@@ -111,14 +111,32 @@ class HeaderSelector(Frame):
             msg.showerror(LANGUAGES[settings.LANGUAGE]['no_key'], LANGUAGES[settings.LANGUAGE]['no_key_t'])
 
     def back(self):
-        keys, description = self.check_list.get_list()
-        cu.data.keys = keys
-        cu.data.description = description
+        response = msg.askyesno(LANGUAGES[settings.LANGUAGE]['back_reset'],
+                                LANGUAGES[settings.LANGUAGE]['back_reset_t'])
 
-        if self.prev_frame:
-            self.main.show_frame(self.prev_frame)
+        if response:
+            keys, description = self.check_list.get_list()
+            cu.data.keys = keys
+            cu.data.description = description
+            if self.prev_frame:
+                self.main.show_frame(self.prev_frame)
+            else:
+                raise ValueError('Prev frame isn\'t defined')
+
+        elif response == 0:
+            # cu.data.changes = False
+            cu.data.fstar = 0.0
+            cu.Data.loaded = False
+            cu.data.temperature = 0.1
+            cu.data.volume = 0.1
+            cu.data.DT_FS = 0.1
+            cu.data.psd_filter_width = 0.1
+            if self.prev_frame:
+                self.main.show_frame(self.prev_frame)
+            else:
+                raise ValueError('Prev frame isn\'t defined')
         else:
-            raise ValueError('Prev frame isn\'t defined')
+            pass
 
     def update_data(self):
         pass

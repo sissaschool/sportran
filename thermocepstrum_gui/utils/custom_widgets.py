@@ -580,8 +580,8 @@ class ScrollFrame(Frame):
         Reset the scroll region to encompass the inner frame
         """
 
-        # print ("on_canvas_configure: {}".format(self.canvas.winfo_width()))
         self.canvas.itemconfig(self.viewPort_id, width=event.width)
+        self.canvas.itemconfig(self.viewPort_id, height=event.height)
 
     def on_frame_configure(self, event):
         """

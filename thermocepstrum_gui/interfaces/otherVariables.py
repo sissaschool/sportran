@@ -49,12 +49,16 @@ class OtherVariables(Frame):
         self.volume_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID,
                                     textvariable=self.volume_value)
         self.volume_entry.grid(row=4, column=1, padx=2, sticky='w')
+        self.volume_advertise = Label(variable_frame, text='', font='Arial 10')
+        self.volume_advertise.grid(row=4, column=2, sticky='w')
 
         Label(variable_frame,
               text=LANGUAGES[settings.LANGUAGE]['timestep'] + ' (fs):').grid(row=5, column=0, sticky='w')
         self.DT_FS_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID,
                                    textvariable=self.DT_FS_value)
         self.DT_FS_entry.grid(row=5, column=1, padx=2, sticky='w', pady=10)
+        self.DT_FS_advertise = Label(variable_frame, text='', font='Arial 10')
+        self.DT_FS_advertise.grid(row=5, column=2, sticky='w')
 
         Label(variable_frame, text=LANGUAGES[settings.LANGUAGE]['fl_v'],
               font='Arial 11').grid(row=6, column=0, pady=20, sticky='w')
@@ -74,6 +78,8 @@ class OtherVariables(Frame):
 
         Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['next'], bd=1, relief=SOLID, font='Arial 12',
                command=lambda: self.next(), width=10).grid(row=0, column=1, padx=5, sticky='we')
+
+        self.update_data()
 
     def set_next_frame(self, frame):
         self.next_frame = frame
@@ -149,7 +155,7 @@ class OtherVariables(Frame):
             raise ValueError('Prev frame isn\'t defined')
 
     def update_data(self):
-        self.temperature_value.set(cu.data.psd_filter_width)
+        self.temperature_value.set(cu.data.temperature)
         self.DT_FS_value.set(cu.data.DT_FS)
         self.volume_value.set(cu.data.volume)
         self.filter_width_value.set(cu.data.psd_filter_width)
@@ -161,34 +167,30 @@ class OtherVariables(Frame):
         self.DT_FS_entry.config(state=NORMAL)
         self.volume_entry.config(state=NORMAL)
 
-        if cu.Data.options[3] in cu.data.description:
-            self.temperature_entry.config(state=DISABLED)
-            self.temp_advertise.config(text=LANGUAGES[settings.LANGUAGE]['automatic_T'], fg='red')
-        else:
-            self.temperature_entry.config(state=NORMAL)
-            self.temp_advertise.config(text='')
-
         if cu.data.inputformat == 'dict':
             if True:   #not cu.Data.loaded:
                 if cu.Data.options[3] in cu.data.description:
+                    self.temp_advertise.config(text=LANGUAGES[settings.LANGUAGE]['automatic_T'], fg='red')
                     temp = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[3])]]
                     if type(temp) == float:
-                        self.temperature_value.set(temp)
                         cu.data.temperature = temp
                     else:
                         cu.data.temperature = temp.mean()
                         cu.data.temperature_std = temp.std()
-                        self.temperature_value.set(cu.data.temperature)
                 if cu.Data.options[4] in cu.data.description:
+                    self.volume_advertise.config(text='The volume will be automatically calculated', fg='red')
                     vol = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[4])]]
                     if type(vol) == float:
                         cu.data.volume = vol
                     else:
                         cu.data.volume = vol.mean()
                     self.volume_entry.config(state=DISABLED)
-                if cu.Data.options[4] in cu.data.description:
+                if cu.Data.options[5] in cu.data.description:
+                    self.DT_FS_advertise.config(text='The DT_FS will be automatically calculated', fg='red')
                     cu.data.DT_FS = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[5])]]
                     self.DT_FS_entry.config(state=DISABLED)
+
+            self.update_data()
 
         self.main_frame.viewPort.columnconfigure(0, weight=1)
         self.main_frame.viewPort.rowconfigure(0, weight=1)
