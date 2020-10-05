@@ -177,6 +177,7 @@ class OtherVariables(Frame):
                     else:
                         cu.data.temperature = temp.mean()
                         cu.data.temperature_std = temp.std()
+                    self.temperature_entry.config(state=DISABLED)
                 if cu.Data.options[4] in cu.data.description:
                     self.volume_advertise.config(text='The volume will be automatically calculated', fg='red')
                     vol = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[4])]]

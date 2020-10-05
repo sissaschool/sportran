@@ -2,6 +2,7 @@
 
 import os
 import math
+import copy
 import numpy as np
 from thermocepstrum.utils import log
 from thermocepstrum.md.tools.spectrum import freq_THz_to_red
@@ -480,6 +481,7 @@ class Plotter:
     def GUI_resample_current(self, current, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
                              freq_units='thz', FIGSIZE=None, axis=None, data=None):
 
+        const_xf = None
         if data.changes:
             print('resampling current')
             xf = current.resample(TSKIP=TSKIP, fstar_THz=fstar_THz, FILTER_W=FILTER_W, plot=False,
@@ -487,6 +489,8 @@ class Plotter:
         else:
             print('not resampling current (data is same) {}'.format(data.changes))
             xf = data.xf
+
+        const_xf = copy.deepcopy(xf)
 
         if plot:
             if (freq_units == 'thz') or (freq_units == 'THz'):
@@ -502,7 +506,7 @@ class Plotter:
                 axis.axvline(x=0.5 / TSKIP, ls='--', c='k')
                 axis.set_xlim([0., 0.5 / TSKIP])
         if data:
-            data.xf = xf
+            data.xf = const_xf
 
     def GUI_plot_cepstral_spectrum(self, current, freq_units='thz', freq_scale=1.0, axis=None, kappa_units=True,
                                    FIGSIZE=None, data=None, **plot_kwargs):

@@ -125,7 +125,6 @@ class FStarSelector(Frame):
     def resample(self):
         cu.data.fstar = float(self.value_entry.get())
         cu.data.psd_filter_width = float(self.filter_width_value.get())
-
         if cu.data.fstar > 0:
             self.graph.add_graph(cu.gm.GUI_resample_current, 'resample', current=cu.data.j, fstar_THz=cu.data.fstar,
                                  PSD_FILTER_W=cu.data.psd_filter_width)
@@ -152,37 +151,13 @@ class FStarSelector(Frame):
         self.prev_frame = frame
 
     def back(self):
-        # response = msg.askyesno(LANGUAGES[settings.LANGUAGE]['back_reset'],
-        #                         LANGUAGES[settings.LANGUAGE]['back_reset_t'])
-
         cu.data.psd_filter_width = self.filter_width_value.get()
-        #cu.log.set_func(None)
         cu.data.fstar = float(self.value_entry.get())
         cu.Data.loaded = True
         if self.prev_frame:
             self.main.show_frame(self.prev_frame)
         else:
             raise ValueError('Prev frame isn\'t defined')
-
-        # elif response == 0:
-        #     #cu.data.changes = False
-        #     cu.data.fstar = 0.0
-        #     cu.Data.loaded = False
-        #     cu.data.temperature = 0.0
-        #     cu.data.volume = 0.0
-        #     cu.data.DT_FS = 0.0
-        #     cu.data.psd_filter_width = 0.1
-        #     self.graph.other_graph.clear()
-        #     self.graph.graph.clear()
-        #     self.graph.cut_line = 0
-        #     self.graph.show_selected_area = False
-        #     self.change_view_button.config(text='Zoom-in')
-        #     if self.prev_frame:
-        #         self.main.show_frame(self.prev_frame)
-        #     else:
-        #         raise ValueError('Prev frame isn\'t defined')
-        # else:
-        #     pass
 
     def next(self):
         if (self.resample()):
@@ -194,6 +169,7 @@ class FStarSelector(Frame):
                 raise ValueError('Next frame isn\'t defined')
 
     def recalculate(self, slider_config=None):
+        cu.data.psd_filter_width = float(self.filter_width_value.get())
         self.graph.other_graph.clear()
         self.graph.graph.clear()
         self.graph.show(cu.gm.GUI_plot_periodogram, current=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,
@@ -209,7 +185,6 @@ class FStarSelector(Frame):
 
     def update(self):
         super().update()
-
         cu.data.fstar = float(self.value_entry.get())
 
         if cu.data.first_fstar and '_FSTAR' in cu.data.jdata.keys():
