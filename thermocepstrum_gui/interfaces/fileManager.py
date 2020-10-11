@@ -38,14 +38,35 @@ class FileManager(Frame):
         # widgets of the file manager.
         self.main_frame = ScrollFrame(self, self)
 
+        selection_frame = Frame(self.main_frame.viewPort)
+        selection_frame.grid(column=0, row=0, sticky='nswe', padx=20)
+
+        Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['stp1'],
+              font='Arial 11 bold').grid(row=0, column=0, sticky='nswe', columnspan=4, pady=5)
+
+        Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['slct']).grid(row=1, column=0, sticky='w')
+
+        self.selected = Entry(selection_frame, width=60, relief=SOLID, bd=1)
+        self.selected.grid(row=1, column=1, ipadx=1, ipady=1, sticky='we')
+
+        self.find_button = Button(selection_frame, text='...', relief=SOLID, bd=1,
+                                  command=lambda: self._select_file_with_manager())
+        self.find_button.grid(row=1, column=2, padx=4, sticky='we')
+
+        Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['in_frm']).grid(row=1, column=3, padx=5, sticky='we')
+        self.input_selector = ttk.Combobox(selection_frame, values=['table', 'dict', 'lammps'], state='readonly',
+                                           width=10)
+        self.input_selector.current(0)
+        self.input_selector.grid(row=1, column=4, sticky='w')
+
         # Setup the file manager
         file_manager = Frame(self.main_frame.viewPort)
-        file_manager.grid(column=0, row=0, sticky='nswe', padx=20, pady=5)
+        file_manager.grid(column=0, row=1, sticky='nswe', padx=20, pady=5)
 
         # Setup the preview screen
         prev_frame = Frame(self.main_frame.viewPort, height=10)
 
-        prev_frame.grid(column=0, row=1, sticky='nswe', padx=20)
+        prev_frame.grid(column=0, row=2, sticky='nswe', padx=20)
 
         # Setup some widgets
         Label(prev_frame, text=LANGUAGES[settings.LANGUAGE]['f_prv'],
@@ -54,26 +75,9 @@ class FileManager(Frame):
         self.preview.pack(fill=BOTH, expand=True, side=BOTTOM)
         self.preview.config(state=NORMAL)
 
-        selection_frame = Frame(self.main_frame.viewPort)
-        selection_frame.grid(column=0, row=2, sticky='nswe', padx=20, pady=5)
-
-        Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['slct']).grid(row=0, column=0, sticky='w')
-
-        self.selected = Entry(selection_frame, width=60, relief=SOLID, bd=1)
-        self.selected.grid(row=0, column=1, ipadx=1, ipady=1, sticky='we')
-
-        self.find_button = Button(selection_frame, text='...', relief=SOLID, bd=1,
-                                  command=lambda: self._select_file_with_manager())
-        self.find_button.grid(row=0, column=2, padx=4, sticky='we')
-
-        Label(selection_frame, text=LANGUAGES[settings.LANGUAGE]['in_frm']).grid(row=0, column=3, padx=5, sticky='we')
-        self.input_selector = ttk.Combobox(selection_frame, values=['table', 'dict', 'lammps'], state='readonly',
-                                           width=10)
-        self.input_selector.current(0)
-        self.input_selector.grid(row=0, column=4, sticky='w')
-        self.next_button = Button(selection_frame, text=LANGUAGES[settings.LANGUAGE]['next'], relief=SOLID, bd=1,
-                                  command=lambda: self.next(), width=10)
-        self.next_button.grid(row=1, column=0, pady=20, sticky='w')
+        self.next_button = Button(self.main_frame.viewPort, text=LANGUAGES[settings.LANGUAGE]['next'], relief=SOLID,
+                                  bd=1, command=lambda: self.next(), width=10)
+        self.next_button.grid(row=3, column=0, pady=20, padx=20, sticky='w')
         selection_frame.rowconfigure(0, weight=1)
         selection_frame.rowconfigure(1, weight=1)
 
@@ -84,7 +88,7 @@ class FileManager(Frame):
         # Generate the layout
         for i, w, m in zip(range(0, 4), [2, 6, 1, 2, 2], [70, 70, 25, 90, 50]):
             selection_frame.columnconfigure(i, weight=w, minsize=m)
-        for i, w, m in zip(range(0, 2), [7, 7, 4], [70, 70, 40]):
+        for i, w, m in zip(range(0, 2), [1, 7, 7], [5, 70, 70]):
             self.main_frame.viewPort.rowconfigure(i, weight=w, minsize=m)
         self.main_frame.viewPort.columnconfigure(0, weight=1, minsize=300)
 
@@ -97,9 +101,6 @@ class FileManager(Frame):
         """
         inner_frame = parent
 
-        Label(inner_frame, text=LANGUAGES[settings.LANGUAGE]['stp1'],
-              font='Arial 11 bold').grid(row=0, column=0, sticky='nswe')
-
         # create the tree and scrollbars
         self.headers = (LANGUAGES[settings.LANGUAGE]['f_nm'], LANGUAGES[settings.LANGUAGE]['f_tp'],
                         LANGUAGES[settings.LANGUAGE]['size'])
@@ -109,15 +110,14 @@ class FileManager(Frame):
         self.file_list['yscroll'] = ysb.set
 
         # add scrollbars to frame
-        self.file_list.grid(row=1, column=0, sticky='nswe')
-        ysb.grid(row=1, column=1, sticky='nswe')
+        self.file_list.grid(row=0, column=0, sticky='nswe')
+        ysb.grid(row=0, column=1, sticky='nswe')
 
         self.file_list.bind('<<TreeviewSelect>>', self._select_file)
         self.file_list.bind('<Double-1>', self.next)
 
         # set frame resize priorities
-        inner_frame.rowconfigure(0, weight=1, minsize=15)
-        inner_frame.rowconfigure(1, weight=4, minsize=40)
+        inner_frame.rowconfigure(0, weight=4, minsize=40)
         inner_frame.columnconfigure(0, weight=1)
 
     def _parse_files(self):
@@ -137,9 +137,13 @@ class FileManager(Frame):
         # Get the info of each file
         for file in files:
             file_name_data = file.split('.')
-            if len(file_name_data) > 1 and file_name_data[0]:
-                file_name = file_name_data[0]
-                file_type = file_name_data[len(file_name_data) - 1]
+            if file_name_data and not os.path.isdir(os.path.join(settings.DATA_PATH, file)):
+                if len(file_name_data) > 1:
+                    file_name = '.'.join(file_name_data[0:len(file_name_data) - 1])
+                    file_type = file_name_data[-1]
+                else:
+                    file_name = file_name_data[0]
+                    file_type = ''
                 file_size = cu.get_file_size(os.path.join(settings.DATA_PATH, file))
                 self.loaded_files.append((file_name, file_type, file_size))
 
@@ -183,7 +187,11 @@ class FileManager(Frame):
         This function set the value of the entry to the path of the file.
         """
         self.selected.delete(0, END)
-        name = '.'.join(el for el in self.file_list.item(self.file_list.selection())['values'][:2])
+        file_name, file_type = self.file_list.item(self.file_list.selection())['values'][:2]
+        if file_type:
+            name = '.'.join([file_name, file_type])
+        else:
+            name = file_name
         path = os.path.join(settings.DATA_PATH, name)
         self.selected.insert(0, path)
 
@@ -260,22 +268,18 @@ class FileManager(Frame):
         """
         if self.selected.get():
             if os.path.exists(self.selected.get()):
-                if self.selected.get().split('.')[-1] in settings.FILE_EXTENSIONS:
-                    cu.data.CURRENT_FILE = self.selected.get()
+                cu.data.CURRENT_FILE = self.selected.get()
 
-                    # Show the next interface
-                    if self.next_frame:
-                        if not cu.Data.loaded:
-                            #cu.data = cu.Data()
-                            cu.data.CURRENT_FILE = self.selected.get()
-                            cu.data.inputformat = self.input_selector.get()
+                # Show the next interface
+                if self.next_frame:
+                    if not cu.Data.loaded:
+                        #cu.data = cu.Data()
+                        cu.data.CURRENT_FILE = self.selected.get()
+                        cu.data.inputformat = self.input_selector.get()
 
-                        self.main.show_frame(self.next_frame)
-                    else:
-                        raise ValueError('Next frame isn\'t defined')
+                    self.main.show_frame(self.next_frame)
                 else:
-                    msg.showerror(LANGUAGES[settings.LANGUAGE]['invalid_format'],
-                                  LANGUAGES[settings.LANGUAGE]['invalid_format_t'])
+                    raise ValueError('Next frame isn\'t defined')
             else:
                 msg.showerror(LANGUAGES[settings.LANGUAGE]['file_not_exist'],
                               LANGUAGES[settings.LANGUAGE]['file_not_exist_t'])
