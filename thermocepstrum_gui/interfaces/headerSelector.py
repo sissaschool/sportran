@@ -150,16 +150,17 @@ class HeaderSelector(Frame):
             if not cu.Data.loaded:
                 keys = cu.load_keys(cu.data.CURRENT_FILE)
             else:
-                keys = {key: '' for key in cu.data.keys}
+                keys = {key: i for i, key in enumerate(cu.data.keys) if key[0] != '_'}
 
+            print(cu.data.jdata)
             self.check_list.set_list(keys)
 
             #try to set units (if given)
             try:
-                self.units_selector.current(HeatCurrent.get_units_list().index(cu.data.jdata['_UNITS']))
+                self.units_selector.current(list(HeatCurrent.get_units_list()).index(cu.data.jdata['_UNITS']))
                 cu.log.write_log(LANGUAGES[settings.LANGUAGE]['units_loaded'].format(cu.data.jdata['_UNITS']))
             except:
-                pass
+                self.units_selector.current(0)
 
             if cu.Data.loaded:
                 for i, check in enumerate(self.check_list.controller.winfo_children()):

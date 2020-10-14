@@ -342,7 +342,7 @@ def load_keys(inputfile):
             data.jdata = np.load(inputfile, allow_pickle=True).tolist()
         except:   # to allow loading of python2 pickle files
             data.jdata = np.load(inputfile, allow_pickle=True, encoding='latin1').tolist()
-        return {key: i for i, key in enumerate(data.jdata)}
+        return {key: i for i, key in enumerate(data.jdata) if key[0] != '_'}
     elif data.inputformat == 'lammps':
         jfile = tc.i_o.LAMMPSLogFile(inputfile)
         return jfile.all_ckeys
