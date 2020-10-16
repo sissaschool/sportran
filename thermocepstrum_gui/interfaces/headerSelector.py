@@ -61,6 +61,7 @@ class HeaderSelector(Frame):
         button_frame = Frame(header_frame)
         button_frame.grid(row=4, column=0, sticky='w')
 
+        header_frame.config(padx=20)
         header_frame.rowconfigure(0, weight=1, minsize=50)
         header_frame.rowconfigure(1, weight=10, minsize=150)
         header_frame.rowconfigure(2, weight=1, minsize=50)

@@ -211,7 +211,7 @@ This section contains the functions that deal with
 the graph manager.
 """
 
-gm = GUIPlotter()
+gm = CurrentPlotter()
 tc.HeatCurrent.set_plotter(CurrentPlotter())
 
 
@@ -226,7 +226,7 @@ def set_graph(axis_, func, **kwargs):
     :return axis: the new graph.
     """
 
-    axis = func(axis=axis_, data=data, **kwargs)
+    axis = func(axes=[axis_], **kwargs)
     return axis
 
 

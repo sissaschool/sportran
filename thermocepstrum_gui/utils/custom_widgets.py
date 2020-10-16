@@ -151,6 +151,7 @@ class GraphWidget(Frame):
         self.title = ''
         self.size = size
         self.type_ = type_
+        self.mode = 'linear'
 
         # Defines the position of the cut line,
         # This variable is used only if the widget is attached to a slider
@@ -273,7 +274,8 @@ class GraphWidget(Frame):
                 self.entry.insert(0, self.cut_line)
 
             self.graph.clear()
-            cu.set_graph(self.graph, self.func, current=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width)
+            cu.set_graph(self.graph, self.func, mode=self.mode, current=cu.data.j,
+                         PSD_FILTER_W=cu.data.psd_filter_width)
             for graph in self.other_graph:
                 cu.set_graph(self.graph, graph[1], **graph[2])
 

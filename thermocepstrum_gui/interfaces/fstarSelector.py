@@ -126,7 +126,10 @@ class FStarSelector(Frame):
         cu.data.fstar = float(self.value_entry.get())
         cu.data.psd_filter_width = float(self.filter_width_value.get())
         if cu.data.fstar > 0:
-            self.graph.add_graph(cu.gm.GUI_resample_current, 'resample', current=cu.data.j, fstar_THz=cu.data.fstar,
+            if cu.data.changes:
+                cu.data.xf = cu.data.j.resample(fstar_THz=cu.data.fstar, PSD_FILTER_W=cu.data.psd_filter_width,
+                                                plot=False)
+            self.graph.add_graph(cu.gm.plt_resample, 'resample', xf=cu.data.xf, mode='linear', current=cu.data.j,
                                  PSD_FILTER_W=cu.data.psd_filter_width)
             self.graph.update_cut()
 
@@ -172,7 +175,7 @@ class FStarSelector(Frame):
         cu.data.psd_filter_width = float(self.filter_width_value.get())
         self.graph.other_graph.clear()
         self.graph.graph.clear()
-        self.graph.show(cu.gm.GUI_plot_periodogram, current=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,
+        self.graph.show(cu.gm.plot_periodogram, mode='linear', current=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,
                         slider_config=slider_config)
         if float(self.value_entry.get()):
             print('resampled')
