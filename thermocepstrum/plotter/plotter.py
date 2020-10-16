@@ -275,11 +275,11 @@ class Plotter:
 
         if not axes:
             figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        #print('axes ->', figure)
-        axes = self.plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes,
-                                     mode=mode)   # this also updates self.PSD_FILTER_W
+            #print('axes ->', figure)
+            axes = self.plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes,
+                                         mode=mode, kappa_units=True)   # this also updates self.PSD_FILTER_W
         #print('->', axes)
-        xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode)
+        xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode, kappa_units=True)
         if freq_units in ('THz', 'thz'):
             axes[0].axvline(x=fstar_THz, ls='--', c='k')
             axes[0].set_xlim([0., current.Nyquist_f_THz])

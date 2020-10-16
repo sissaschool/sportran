@@ -22,7 +22,7 @@ class FStarSelector(Frame):
 
         # Label(self.main_frame, text='Select F*', font='Arial 14 bold').grid(row=0, column=0)
 
-        self.sections = Frame(self.main_frame)
+        self.sections = Frame(self.main_frame, pady=20)
         self.sections.grid(row=0, column=0, sticky='nsew')
 
         self.graph = GraphWidget(self.sections, self.sections, size=(7, 4), toolbar=True)
@@ -176,7 +176,7 @@ class FStarSelector(Frame):
         self.graph.other_graph.clear()
         self.graph.graph.clear()
         self.graph.show(cu.gm.plot_periodogram, mode='linear', current=cu.data.j, PSD_FILTER_W=cu.data.psd_filter_width,
-                        slider_config=slider_config)
+                        slider_config=slider_config, kappa_units=True)
         if float(self.value_entry.get()):
             print('resampled')
             self.resample()

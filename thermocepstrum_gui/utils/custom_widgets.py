@@ -168,7 +168,7 @@ class GraphWidget(Frame):
 
         self.canvas = FigureCanvasTkAgg(self.f, controller)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=10, fill=BOTH)
+        self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=20, fill=BOTH)
         self.f.subplots_adjust(left=0.03, right=0.89, top=0.95, bottom=0.2)
         self.func = None
 
@@ -275,7 +275,7 @@ class GraphWidget(Frame):
 
             self.graph.clear()
             cu.set_graph(self.graph, self.func, mode=self.mode, current=cu.data.j,
-                         PSD_FILTER_W=cu.data.psd_filter_width)
+                         PSD_FILTER_W=cu.data.psd_filter_width, kappa_units=True)
             for graph in self.other_graph:
                 cu.set_graph(self.graph, graph[1], **graph[2])
 
