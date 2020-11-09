@@ -22,7 +22,7 @@ except ImportError:
     from thermocepstrum_gui.utils.utils import PrintMethod
 
 try:
-    from thermocepstrum.plotter import GUIPlotter, CurrentPlotter
+    from thermocepstrum.plotter import CurrentPlotter
 except ImportError:
     raise ImportError('Couldn\'t find thermocepstrum.utils plotter.py. The GUI needs this import to work.')
 

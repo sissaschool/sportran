@@ -81,8 +81,8 @@ class FStarSelector(Frame):
                command=self.resample, width=20).grid(row=2, column=3, sticky='wens', rowspan=1, padx=50)
 
         value_frame.rowconfigure(3, weight=1)
-        button_frame = Frame(value_frame)
-        button_frame.grid(row=3, column=0, pady=10)
+        button_frame = Frame(self.main_frame)
+        button_frame.grid(row=3, column=0, padx=20, pady=10, sticky='w')
 
         back_button = Button(button_frame, text=LANGUAGES[settings.LANGUAGE]['back'], bd=1, relief=SOLID,
                              command=lambda: self.back(), width=10)
