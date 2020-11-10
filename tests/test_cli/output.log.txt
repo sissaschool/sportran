@@ -4,7 +4,7 @@
  Volume (input):  65013.301261 A^3
  Time step (input):  5.0 fs
   currents shape is (2, 20000, 3)
- Number of currrents = 2
+ Number of currents = 2
  Number of components = 3
  KAPPA_SCALE = 1.4604390788939313e-07
  Nyquist_f   = 100.0  THz

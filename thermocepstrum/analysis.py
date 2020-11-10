@@ -35,20 +35,27 @@ except ImportError:
 def main():
     """
     --------------------------------------------------------------------------------
-      *** THERMOCEPSTRUM ***  command line interface  (beta)
+      *** THERMOCEPSTRUM ***  command line interface
     --------------------------------------------------------------------------------
-    This script performs the cepstral analysis. It outputs some results in the stdout and log file, and plots in pdf format.
+    This script performs the cepstral analysis of a (heat) current.
+    Results are written to stdout and a log file, and plots are saved in PDF format.
 
     INPUT FORMAT:
-     - table  : a column-formatted text file, with a header in the same format of LAMMPS. The name of the LAMMPS compute can start with c_ and end with [#some_number], the code will recognize vectors, and will read automatically all the components.
+     - table  : a column-formatted text file, with a header in the same format of LAMMPS.
+                The name of the LAMMPS compute can start with c_ and end with [#some_number], the code will recognize
+                vectors, and will read automatically all the components.
      - dict   : a Numpy binary file containing a dictionary (e.g. obtained from the script i_o/read_lammps_log.py)
-     - LAMMPS : a LAMMPS log file. In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
-    The average temperature is computed if a column with the header 'Temp' is found; otherwise you have to specify it.
-    You must provide the name of the heat flux compute. You can also provide additional currents if your system is a multi-component fluid.
-    (Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
-    Units can be metal or real (see LAMMPS documentation at http://lammps.sandia.gov/doc/units.html )
+     - LAMMPS : a LAMMPS log file.
+                In this case a --run-keyword  must be provided, that identifies the run to be read (see documentation of i_o/read_lammps_log.py)
 
-    OUTPUT files:
+    Physical parameters (time step, temperature, volume, units) must be provided.
+    The average temperature is computed if a column with the header (or a dictionary key) 'Temp' is found; otherwise you have to specify it.
+
+    You must provide the key that identifies the main current ('-k KEY')
+    You can also provide additional currents if your system is a multi-component fluid ('-j CURRENT2 -j CURRENT3'), or you want to decorrelate the main current with respect to them (see PRL).
+    (Notice that the output is the same with any number of components. If you have a lots of components, note that you may want to use more than 3 independent processes -- see theory.)
+
+    OUTPUT FILES:
       [output].logfile
           A log of the available information.
       [output].plots.pdf
@@ -68,67 +75,114 @@ def main():
 
     -------------------------
     Example:
-      read and analyze "example/Silica.dat" file. The heat-flux columns are called c_flux[1], c_flux[2], c_flux[3]
+      read and analyze "examples/data/Silica.dat" file. The energy-flux columns are called c_flux[1], c_flux[2], c_flux[3]
 
-        ./analysis "example/Silica.dat" -V 3130.431110818 -T 1065.705630 -t 1.0 -k flux1 -u metal -r --FSTAR 28.0 -w 0.5 -o silica_test
-
+        ./analysis "examples/data/Silica.dat" -V 3130.431110818 -T 1065.705630 -t 1.0 -k flux1 -u metal -r --FSTAR 28.0 -w 0.5 -o silica_test
     -------------------------
     """
     _epilog = """---
     Enjoy it!
     ---
-    This software was written by Loris Ercole and extended by Riccardo Bertossa to handle the multicomponent stuff, at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY.
+    Developed by Loris Ercole, Riccardo Bertossa, Sebastiano Bisacchi, under the supervision of prof. Stefano Baroni at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY.
 
     Please cite these references:
      - Ercole, Marcolongo, Baroni, Sci. Rep. 7, 15835 (2017), https://doi.org/10.1038/s41598-017-15843-2
-     - Bertossa, Grasselli, Ercole, Baroni Phys. Rev. Lett. 122, 255901 (2019), https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.122.255901
-     - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, https://arxiv.org/abs/1802.08006
+     - Bertossa, Grasselli, Ercole, Baroni, Phys. Rev. Lett. 122, 255901 (2019), https://doi.org/10.1103/PhysRevLett.122.255901
+     - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, Handbook of Materials Modeling (2018), https://doi.org/10.1007/978-3-319-50257-1_12-1
 
-    https://github.com/lorisercole/thermocepstrum
-    Contact: lercole@sissa.it
+    GitHub:    https://github.com/lorisercole/thermocepstrum
+    Contact:   loris.ercole@epfl.ch, rbertoss@sissa.it
+
+    Acknowledgment
+    The development of this software is part of the scientific program of the EU MaX Centre of Excellence for Supercomputing Applications (Grant No. 676598, 824143) and has been partly funded through it.
     """
 
     # yapf: disable
     parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('inputfile', type=str, help='input file to read (default format: Table)')
-    parser.add_argument('-t', '--timestep', type=float, required=True, help='Time step of the log.write_loged data (fs)')
-    parser.add_argument('-k', '--heatfluxkey', type=str, required=True, help='Name of the column keyword that identifies the heat flux')
-    parser.add_argument('-N', '--nsteps', type=int, default=0, help='Number of steps to read (default: 0=all)')
-    parser.add_argument('-S', '--start-step', type=int, default=0, help='The first step to read (default: 0=first)')
-    parser.add_argument('--input-format', default='table', type=str, choices=['table','dict','lammps'], help='Format of the input file')
-    parser.add_argument('--cindex', nargs='*', type=int, help='Column indexes of the heatflux to read (0,1,2,...)')
-    parser.add_argument('--sindex', nargs='*', type=int, help='Column indexes of the heatflux to substract from the flux read with --cindex (3,4,5,...)')
-    parser.add_argument('--run-keyword', type=str, help='Keyword that identifies the run to be read (only for "lammps" format)')
-    parser.add_argument('--split', type=int, default=1, help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m.')
+    parser.add_argument('inputfile', type=str,
+            help='input file to read (default format: Table)')
 
-    parser.add_argument('-o', '--output', type=str, default='output', help='prefix of the output files')
-    parser.add_argument('-O', '--bin-output', action='store_true', help='save also binary files')
-    parser.add_argument('--no-text-output', action='store_true', help='do not save text files')
-    parser.add_argument('--bin-output-old', action='store_true', help='use old format for binary files (compatibility)')
+    input_file_group = parser.add_argument_group('Input file format')
+    input_file_group.add_argument('--input-format', default='table', type=str, choices=['table', 'dict', 'lammps'],
+            help='Format of the input file. (default: table)')
+    input_file_group.add_argument('-k', '--heatfluxkey', type=str, required=True,
+            help='Name of the column keyword that identifies the heat flux')
+    input_file_group.add_argument('-N', '--nsteps', type=int, default=0,
+            help='Number of steps to read. (optional, default: 0=all)')
+    input_file_group.add_argument('-S', '--start-step', type=int, default=0,
+            help='The first step to read. (optional, default: 0=first)')
+    input_file_group.add_argument('--cindex', nargs='*', type=int,
+            help='Column indexes of the main current to read (0,1,2,...). (optional, default: all)')
+    input_file_group.add_argument('--sindex', nargs='*', type=int,
+            help='Column indexes of a current to be substracted from the main current. (optional)')
+    input_file_group.add_argument('--split', type=int, default=1,
+            help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m. (optional)')
 
-    parser.add_argument('-V', '--volume', type=float, help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile.')
-    parser.add_argument('--structure', type=str, help='LAMMPS data file containing the structure. Read to get Volume.')
-    parser.add_argument('-T', '--temperature', type=float, help='average Temperature (K). If not set it will be read from file')
-    parser.add_argument('-u', '--units', type=str, default='metal', choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'], help='LAMMPS units (default: metal)')
+    lammps_group = input_file_group.add_argument_group('LAMMPS format settings')
+    lammps_group.add_argument('--run-keyword', type=str,
+            help='Keyword that identifies the run to be read. (only for "lammps" format)')
+    lammps_group.add_argument('--structure', type=str,
+            help='LAMMPS data file containing the structure. Read to get Volume. (optional)')
 
-    parser.add_argument('-r', '--resample', action='store_true', help='resample the time series (you should define --TSKIP or --FSTAR')
-    resamplearg = parser.add_mutually_exclusive_group()
-    resamplearg.add_argument('--TSKIP', type=int, help='resampling time period (steps)')
-    resamplearg.add_argument('--FSTAR', type=float, help='resampling target Nyquist frequency (THz)')
-    parser.add_argument('-c', '--corr-factor', type=float, default=1.0, help='correction factor to the AIC')
-    parser.add_argument('-j', '--add-currents', type=str, default=[], action='append', help='additional current for multi-component fluids')
+    output_file_group = parser.add_argument_group('Output file format')
+    output_file_group.add_argument('-o', '--output', type=str, default='output',
+            help='Prefix of the output files')
+    output_file_group.add_argument('-O', '--bin-output', action='store_true',
+            help='Save also binary files. (optional)')
+    output_file_group.add_argument('--no-text-output', action='store_true',
+            help='Do not save text files. (optional)')
+    output_file_group.add_argument('--bin-output-old', action='store_true',
+            help='Use old format for binary files (compatibility). (optional) - *TO BE DEPRECATED*')
 
-    parser.add_argument('-w', '--psd-filterw', type=float, help='plot - periodogram - filter window width (THz)')
-    parser.add_argument('--plot-conv-max-pstar', type=int, help='max number of P* in the kappa(P*) plot (x)')
-    parser.add_argument('--plot-conv-max-kappa', type=float, help='max kappa in the kappa(P*) plot (y)')
-    parser.add_argument('--plot-conv-pstar-tick-interval', type=int, help='tick interval on the x-axis for the kappa(P*) plot')
-    parser.add_argument('--plot-conv-kappa-tick-interval', type=float, help='tick interval on the y-axis for the kappa(P*) plot')
-    parser.add_argument('--plot-psd-max-THz', type=float, help='max frequency in THz for the psd plot (x)')
-    parser.add_argument('--plot-psd-max-kappa', type=float, help='max kappa in W/mK for the psd plot (y)')
-    parser.add_argument('--plot-psd-THz-tick-interval', type=float, help='tick interval on the x-axis for the psd plot')
-    parser.add_argument('--plot-psd-kappa-tick-interval', type=float, help='tick interval on the y-axis for the psd plot')
-    parser.add_argument('--test-suite-run', action='store_true')
-    parser.add_argument('--savetxt-format', type=str, default='%.18e', help='format used by numpy.savetxt for printing number in the output files')
+    input_params_group = parser.add_argument_group('Physical parameters')
+    input_params_group.add_argument('-t', '--timestep', type=float, required=True,
+            help='Time step of the data (fs)')
+    input_params_group.add_argument('-V', '--volume', type=float,
+            help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile')
+    input_params_group.add_argument('-T', '--temperature', type=float,
+            help='Average Temperature (K). If not set it will be read from file')
+    input_params_group.add_argument('-u', '--units', type=str, default='metal',
+            choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'],
+            help='Units. (optional, default: metal)')
+
+    analysis_group = parser.add_argument_group('Analysis options')
+    analysis_group.add_argument('-r', '--resample', action='store_true',
+            help='Resample the time series (using TSKIP or FSTAR). (optional)')
+    resamplearg = analysis_group.add_mutually_exclusive_group()
+    resamplearg.add_argument('--TSKIP', type=int,
+            help='Resampling time period (steps)')
+    resamplearg.add_argument('--FSTAR', type=float,
+            help='Resampling target Nyquist frequency (THz)')
+    analysis_group.add_argument('-c', '--corr-factor', type=float, default=1.0,
+            help='Correction factor to the AIC. (optional, default: 1.0 = no correction)')
+    analysis_group.add_argument('-j', '--add-currents', type=str, default=[], action='append',
+            help='Additional current for multi-component fluids. (optional, repeat -j to add more currents)')
+
+    plot_group = parser.add_argument_group('Plot options (optional)')
+    plot_group.add_argument('-w', '--psd-filterw', type=float,
+            help='Periodogram filter window width (THz)')
+    plot_group.add_argument('--plot-conv-max-pstar', type=int,
+            help='Max number of P* in the kappa(P*) plot (x)')
+    plot_group.add_argument('--plot-conv-max-kappa', type=float,
+            help='Max kappa in the kappa(P*) plot (y)')
+    plot_group.add_argument('--plot-conv-pstar-tick-interval', type=int,
+            help='Tick interval on the x-axis for the kappa(P*) plot')
+    plot_group.add_argument('--plot-conv-kappa-tick-interval', type=float,
+            help='Tick interval on the y-axis for the kappa(P*) plot')
+    plot_group.add_argument('--plot-psd-max-THz', type=float,
+            help='Max frequency (THz) in the psd plot (x)')
+    plot_group.add_argument('--plot-psd-max-kappa', type=float,
+            help='Max kappa (W/m/K) in the psd plot (y)')
+    plot_group.add_argument('--plot-psd-THz-tick-interval', type=float,
+            help='Tick interval on the x-axis for the psd plot')
+    plot_group.add_argument('--plot-psd-kappa-tick-interval', type=float,
+            help='Tick interval on the y-axis for the psd plot')
+
+    beta_group = parser.add_argument_group('Testing options')
+    beta_group.add_argument('--test-suite-run', action='store_true')
+    beta_group.add_argument('--savetxt-format', type=str, default='%.18e',
+            help='Format string used by `numpy.savetxt` in the output files')
+
     args = parser.parse_args()
 
     # yapf: enable
@@ -234,6 +288,7 @@ def main():
     else:
         raise NotImplemented('input format not implemented.')
 
+    # split data
     if NSPLIT > 1:
         log.write_log('Splitting input data time series into {:d} segments...'.format(NSPLIT))
         logfile.write('Splitting input data time series into {:d} segments...\n'.format(NSPLIT))
@@ -332,7 +387,7 @@ def main():
                        PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(ncurrents))
-    logfile.write(' Number of currrents = {}\n'.format(ncurrents))
+    logfile.write(' Number of currents = {}\n'.format(ncurrents))
     log.write_log(' Number of components = {}'.format(j.N_COMPONENTS))
     logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
     log.write_log(' KAPPA_SCALE = {}'.format(j.KAPPA_SCALE))
