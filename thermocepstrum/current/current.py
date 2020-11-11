@@ -267,7 +267,7 @@ class Current(MDSample):
             return self.plot.plot_cepstral_spectrum(current=self, freq_units=freq_units, freq_scale=freq_scale,
                                                     axes=axes, kappa_units=kappa_units, FIGSIZE=FIGSIZE, **plot_kwargs)
 
-    def resample(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=True, PSD_FILTER_W=None,
+    def resample(self, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False, PSD_FILTER_W=None,
                  freq_units='THz', FIGSIZE=None, verbose=True):   # yapf: disable
         """
         Simulate the resampling of the time series.

@@ -10,7 +10,6 @@ Data length =  20000
  Mean Temperature (computed):  1399.3477811999999 K  +/-  19.318785820942594
  Volume (input):  65013.301261 A^3
  Time step (input):  5.0 fs
-['flux', 'vcm[1]'] None
   currents shape is (2, 20000, 3)
 snippet:
 [[[ 2.5086549e+02  2.0619423e+01  2.0011500e+02]

@@ -102,6 +102,7 @@ def resample_timeseries(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False
     if verbose:
         log.write_log(xf.resample_log)
 
+    # TODO: remove these plot lines, substitute them with plotter.plot_resample
     if plot:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         axes = x.plot_periodogram(PSD_FILTER_W, freq_units, axes=axes)   # this also updates x.PSD_FILTER_W
