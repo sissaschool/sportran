@@ -11,7 +11,7 @@ from . import units
 from thermocepstrum.utils import log
 from thermocepstrum.plotter import Plotter, CurrentPlotter
 
-__all__ = ('Current',)
+__all__ = ('Current', 'fstar_analysis',)
 
 
 class Current(MDSample):
@@ -348,13 +348,13 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
         plot figure
     """
 
-    if not isinstance(x, HeatCurrent):
-        raise ValueError('x must be a HeatCurrent object.')
+    if not isinstance(x, Current):
+        raise ValueError('x must be a Current object or a subclass.')
 
     xf = []
     for TSKIP in TSKIP_LIST:
-        log.write_log('TSKIP =  {:d}'.format(TSKIP))
-        xff = resample_current(x, TSKIP, plot=False, verbose=verbose)
+        log.write_log('TSKIP = {:4d} - FSTAR = {:8g} THz'.format(TSKIP, x.Nyquist_f_THz / TSKIP))
+        xff = x.resample(TSKIP=TSKIP, plot=False, verbose=verbose)
         xff.cepstral_analysis(aic_type, Kmin_corrfactor)
         xf.append(xff)
     FSTAR_THZ_LIST = [xff.Nyquist_f_THz for xff in xf]
