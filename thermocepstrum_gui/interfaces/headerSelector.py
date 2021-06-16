@@ -161,7 +161,7 @@ class HeaderSelector(Frame):
                 self.units_selector.current(list(HeatCurrent.get_units_list()).index(cu.data.jdata['_UNITS']))
                 cu.log.write_log(LANGUAGES[settings.LANGUAGE]['units_loaded'].format(cu.data.jdata['_UNITS']))
             except:
-                self.units_selector.current(0)
+                self.units_selector.current(list(HeatCurrent.get_units_list()).index(cu.data.units))
 
             if cu.Data.loaded:
                 for i, check in enumerate(self.check_list.controller.winfo_children()):
