@@ -4,6 +4,7 @@ kB = 1.3806504
 NA = 6.02214
 massunit = 1.660538921
 charge = 1.6021765
+kcal = 4184. # Joule
 
 bohr = 0.529177 # A
 tau_PW = 4.8378e-5 # ps

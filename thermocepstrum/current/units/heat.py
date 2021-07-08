@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-kB = 1.3806504
-NA = 6.02214
-massunit = 1.660538921
-charge = 1.6021765
-
+from . import constants
 
 def scale_kappa_real(TEMPERATURE, VOLUME):
     """
@@ -13,7 +9,7 @@ def scale_kappa_real(TEMPERATURE, VOLUME):
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
     """
-    return (4184. / NA / TEMPERATURE)**2 / kB / VOLUME * 100.
+    return (constants.kcal / constants.NA / TEMPERATURE)**2 / constants.kB / VOLUME * 100.
 
 
 def scale_kappa_metal(TEMPERATURE, VOLUME):
@@ -23,7 +19,7 @@ def scale_kappa_metal(TEMPERATURE, VOLUME):
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
     """
-    return (charge / TEMPERATURE)**2 / kB / VOLUME * 10000.
+    return (constants.charge / TEMPERATURE)**2 / constants.kB / VOLUME * 10000.
 
 
 def scale_kappa_qepw(TEMPERATURE, VOLUME):
@@ -33,8 +29,7 @@ def scale_kappa_qepw(TEMPERATURE, VOLUME):
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
     """
-    J_PWtoMETAL = 1.0 / 6.719329152e-6   # [Ry*Bohr/tau_PW] --> [ev*A/ps]  (1tau_PW = 4.8378e-5 ps)
-    return (charge / TEMPERATURE)**2 / kB / VOLUME * 10000. * J_PWtoMETAL**2
+    return (constants.charge / TEMPERATURE)**2 / constants.kB / VOLUME * 10000. * constants.J_PWtoMETAL**2
 
 
 def scale_kappa_gpumd(TEMPERATURE, VOLUME):
@@ -44,7 +39,7 @@ def scale_kappa_gpumd(TEMPERATURE, VOLUME):
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
     """
-    return (charge)**3 / (TEMPERATURE)**2 / massunit / kB / VOLUME * 1.0e8
+    return (constants.charge)**3 / (TEMPERATURE)**2 / constants.massunit / constants.kB / VOLUME * 1.0e8
 
 
 def scale_kappa_dlpoly(TEMPERATURE, VOLUME):
@@ -54,4 +49,4 @@ def scale_kappa_dlpoly(TEMPERATURE, VOLUME):
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
     """
-    return (1.0 / NA / TEMPERATURE)**2 / kB / VOLUME * 1e10
+    return (1.0 / constants.NA / TEMPERATURE)**2 / constants.kB / VOLUME * 1e10

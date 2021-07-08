@@ -60,4 +60,4 @@ def scale_kappa_dlpoly(TEMPERATURE, VOLUME):
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
     """
-    return constants.charge**2 / TEMPERATURE / kB / VOLUME * 10000.
+    return constants.charge**2 / TEMPERATURE / constants.kB / VOLUME * 10000.
