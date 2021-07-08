@@ -88,7 +88,7 @@ class Plotter:
             raise ValueError('Frequency units not valid.')
         axes[0].xaxis.set_ticks_position('top')
         if kappa_units:
-            axes[0].set_ylabel(r'PSD [W/mK]')
+            axes[0].set_ylabel(r'PSD [{}]'.format(current.KAPPA_SI_UNITS))
         else:
             axes[0].set_ylabel(r'PSD')
         axes[0].grid()
@@ -173,7 +173,7 @@ class Plotter:
                         (current.dct.tau - current.dct.tau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
         axes.set_ylim([min_y * 0.8, max_y * 1.2])
         axes.set_xlabel(r'$P^*$')
-        axes.set_ylabel(r'$\kappa(P^*)$ [W/(m*K)]')
+        axes.set_ylabel(r'$\kappa(P^*)$ [{}]'.format(current.KAPPA_SI_UNITS))
         return axes
 
     def plot_cepstral_spectrum(self, current, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, mode='log',
@@ -217,7 +217,7 @@ class Plotter:
         axes[0].xaxis.set_ticks_position('top')
         axes[0].set_ylabel(r'PSD')
         if kappa_units:
-            axes[0].set_ylabel(r'PSD [W/mK]')
+            axes[0].set_ylabel(r'PSD [{}]'.format(current.KAPPA_SI_UNITS))
         else:
             axes[0].set_ylabel(r'PSD')
         axes[0].grid()
@@ -310,7 +310,7 @@ class Plotter:
             np.arange(jf.dct.logtau.shape[0]) + 1, jf.dct.tau * jf.KAPPA_SCALE * 0.5, label=r'Cepstral method',
             marker='o', c=c[4], zorder=-3)
         ax2.set_xlabel(r'$P^*$')
-        ax2.set_ylabel(r'$\kappa$ (W/mK)')
+        ax2.set_ylabel(r'$\kappa$ [{}]'.format(jf.KAPPA_SI_UNITS))
         ax2.set_xlim([0, pstar_max])
         ax2.set_ylim([0, k_SI_max])
         # ax2.grid()
@@ -406,7 +406,7 @@ class Plotter:
         ax.set_ylim([0, k_SI_max])
         ax.set_xlim([0, f_THz_max])
         ax.set_xlabel(r'$\omega/2\pi$ (THz)')
-        ax.set_ylabel(r'${}^{\ell}\hat{S}_{\,k}$ (W/mK)')
+        ax.set_ylabel(r'${{}}^{{\ell}}\hat{{S}}_{{\,k}}$ [{}]'.format(jf.KAPPA_SI_UNITS))
 
         if f_tick is None:
             dx1, dx2 = self._n_tick_in_range(0, f_THz_max, 5)
