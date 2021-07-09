@@ -2,6 +2,7 @@
 
 from . import constants
 
+
 def scale_kappa_real(TEMPERATURE, VOLUME):
     """
     Conversion factor for the thermal conductivity from REAL LAMMPS units to SI units.

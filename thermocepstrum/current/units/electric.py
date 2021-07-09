@@ -7,9 +7,10 @@ from . import constants
 #       e_SI      ang       ps    kB       ang   fs
 # since the multiplicative factor would be
 # [(charge*1e-19)**2] [velocity**2] / (kB*1e-23) / [TEMPERATURE] / [VOLUME] * [integration DT_FS]
-# 
-# The additional "1.0e6" factor appearing in real units is due to the velocity units, 
+#
+# The additional "1.0e6" factor appearing in real units is due to the velocity units,
 # which are ang/fs in real units, rather than ang/ps as in metal units.
+
 
 def scale_kappa_real(TEMPERATURE, VOLUME):
     """
