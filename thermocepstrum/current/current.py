@@ -32,7 +32,6 @@ class Current(MDSample):
      - MAIN_CURRENT_FACTOR factor to be multiplied by the main current [1.0]
     """
     _current_type = None
-    KAPPA_SI_UNITS = ''
     _input_parameters = {'DT_FS', 'KAPPA_SCALE'}
     _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 
@@ -218,7 +217,7 @@ class Current(MDSample):
            Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
 
         Resulting conductivity:
-           kappa_Kmin  +/-  kappa_Kmin_std   [SI units]
+           kappa_Kmin  +/-  kappa_Kmin_std   [W/(m*K)]
         """
 
         self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
@@ -235,7 +234,7 @@ class Current(MDSample):
               '  L_0*   = {:18f} +/- {:10f}\n'.format(self.dct.logtau_Kmin, self.dct.logtau_std_Kmin) +\
               '  S_0*   = {:18f} +/- {:10f}\n'.format(self.dct.tau_Kmin, self.dct.tau_std_Kmin) +\
               '-----------------------------------------------------\n' +\
-              '  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa_Kmin, self.kappa_Kmin_std, self.KAPPA_SI_UNITS) +\
+              '  kappa* = {:18f} +/- {:10f}  W/mK\n'.format(self.kappa_Kmin, self.kappa_Kmin_std) +\
               '-----------------------------------------------------\n'
         log.write_log(self.cepstral_log)
 

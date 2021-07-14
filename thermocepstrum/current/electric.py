@@ -12,8 +12,10 @@ class ElectricCurrent(Current):
     EnergyCurrent API for thermo-cepstral analysis.
     Defines an ElectricCurrent object with useful tools to perform analysis.
 
+    ** TO BE IMPLEMENTED **
+
     INPUT parameters:
-     - traj          the electric current time series array (N * N_COMPONENTS array)
+     - traj          the heat current time series array (N * N_COMPONENTS array)
        For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
      - DT_FS         MD time step [fs]
      - UNITS         the units of current ('metal', 'real', ...) - use the method `get_units_list()` to get a list of supported units
@@ -27,7 +29,6 @@ class ElectricCurrent(Current):
      - MAIN_CURRENT_FACTOR factor to be multiplied by the main current [1.0]
     """
     _current_type = 'electric'
-    KAPPA_SI_UNITS = 'S/m'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
 
     # _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
