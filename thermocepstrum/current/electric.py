@@ -27,8 +27,8 @@ class ElectricCurrent(Current):
      - MAIN_CURRENT_FACTOR factor to be multiplied by the main current [1.0]
     """
     _current_type = 'electric'
-    KAPPA_SI_UNITS = 'S/m'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
+    _KAPPA_SI_UNITS = 'S/m'
 
     # _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 

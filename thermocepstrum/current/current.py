@@ -32,9 +32,9 @@ class Current(MDSample):
      - MAIN_CURRENT_FACTOR factor to be multiplied by the main current [1.0]
     """
     _current_type = None
-    KAPPA_SI_UNITS = ''
     _input_parameters = {'DT_FS', 'KAPPA_SCALE'}
     _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
+    _KAPPA_SI_UNITS = ''
 
     plot = CurrentPlotter()
 
@@ -235,7 +235,7 @@ class Current(MDSample):
               '  L_0*   = {:18f} +/- {:10f}\n'.format(self.dct.logtau_Kmin, self.dct.logtau_std_Kmin) +\
               '  S_0*   = {:18f} +/- {:10f}\n'.format(self.dct.tau_Kmin, self.dct.tau_std_Kmin) +\
               '-----------------------------------------------------\n' +\
-              '  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa_Kmin, self.kappa_Kmin_std, self.KAPPA_SI_UNITS) +\
+              '  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa_Kmin, self.kappa_Kmin_std, self._KAPPA_SI_UNITS) +\
               '-----------------------------------------------------\n'
         log.write_log(self.cepstral_log)
 
