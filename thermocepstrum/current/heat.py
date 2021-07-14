@@ -28,6 +28,7 @@ class HeatCurrent(Current):
     """
     _current_type = 'heat'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
+    _KAPPA_SI_UNITS = 'W/m/K'
 
     # _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
 
