@@ -10,7 +10,8 @@ from thermocepstrum.md.tools.resample import filter_and_sample
 from . import units
 from thermocepstrum.utils import log
 from thermocepstrum.utils.decorators import add_method
-from thermocepstrum.plotter import Plotter, CurrentPlotter
+from thermocepstrum.plotter import Plotter, use_plot_style
+from thermocepstrum.plotter.current import CurrentPlotter
 
 __all__ = ('Current', 'fstar_analysis',)
 
@@ -106,6 +107,7 @@ class Current(MDSample):
         if issubclass(cls, Current) and cls != Current:
             cls = Current
         cls._plotter = plotter
+        use_plot_style(plotter._plot_style)
         #print('This will change the plotter class used by Current to {}.'.format(plotter))
 
         # delete any plot function already present in this class
