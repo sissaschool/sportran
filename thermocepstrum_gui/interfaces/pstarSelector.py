@@ -151,7 +151,7 @@ class PStarSelector(Frame):
         self.graph.graph.clear()
         self.graph.show(cu.gm.plot_periodogram, current=cu.data.j, mode='linear', kappa_units=True)
         cu.data.xf = cu.data.j.resample(fstar_THz=cu.data.fstar, PSD_FILTER_W=cu.data.psd_filter_width, plot=False)
-        self.graph.add_graph(cu.gm.plt_resample, 'resample', xf=cu.data.xf, mode='linear', current=cu.data.j,
+        self.graph.add_graph(cu.gm.plot_resample, 'resample', xf=cu.data.xf, mode='linear', current=cu.data.j,
                              PSD_FILTER_W=cu.data.psd_filter_width)
 
     def recalculate(self):

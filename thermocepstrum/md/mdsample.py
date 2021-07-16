@@ -462,60 +462,61 @@ class MDSample(object):
     # customized line properties can be passed through the param_dict dictionary
     # see kwargs at: http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.plot
 
-    ## TODO: plots should call Plotter methods
-    ## all these methods have to be updated
 
-    def plot_traj(self, param_dict={'label': 'traj'}):
-        """Plot the time series."""
-        if self.traj is None:
-            raise ValueError('Trajectory not defined.')
-        plt.plot(self.traj, **param_dict)
-        plt.xlabel(r'$t$')
-        plt.grid()
-        plt.legend()
-
-    def plot_psd(self, param_dict={'label': 'psd'}):
-        """Plot the periodogram."""
-        if self.psd is None:
-            raise ValueError('Peridogram not defined.')
-        plt.plot(self.freqs, self.psd, **param_dict)
-        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0., 0.5, 11))
-        plt.legend()
-
-    def plot_logpsd(self, param_dict={'label': 'log(psd)'}):
-        """Plot the periodogram."""
-        if self.logpsd is None:
-            raise ValueError('Log-Peridogram not defined.')
-        plt.plot(self.freqs, self.logpsd, **param_dict)
-        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0., 0.5, 11))
-        plt.legend()
-
-    def plot_fpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-psd'}):
-        """Plot the filtered periodogram.
-        If PSD_FILTER_W is defined/passed a filtered psd is computed,
-        otherwise the internal copy is used.
-        """
-        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
-            self.filter_psd(PSD_FILTER_W, freq_units)
-        if self.fpsd is None:
-            raise ValueError('Filtered peridogram not defined.')
-        plt.plot(self.freqs, self.fpsd, **param_dict)
-        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0., 0.5, 11))
-        plt.legend()
-
-    def plot_flogpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-log(psd)'}):
-        """Plot the filtered periodogram.
-        If PSD_FILTER_W is defined/passed a filtered psd is computed,
-        otherwise the internal copy is used.
-        """
-        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
-            self.filter_psd(PSD_FILTER_W, freq_units)
-        if self.flogpsd is None:
-            raise ValueError('Filtered log-peridogram not defined.')
-        plt.plot(self.freqs, self.flogpsd, **param_dict)
-        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-        plt.xticks(np.linspace(0., 0.5, 11))
-        plt.legend()
+#    ## TODO: plots should call Plotter methods -- verify that all these plots have been moved to plotter
+#    ## all these methods have to be updated
+#
+#    def plot_traj(self, param_dict={'label': 'traj'}):
+#        """Plot the time series."""
+#        if self.traj is None:
+#            raise ValueError('Trajectory not defined.')
+#        plt.plot(self.traj, **param_dict)
+#        plt.xlabel(r'$t$')
+#        plt.grid()
+#        plt.legend()
+#
+#    def plot_psd(self, param_dict={'label': 'psd'}):
+#        """Plot the periodogram."""
+#        if self.psd is None:
+#            raise ValueError('Peridogram not defined.')
+#        plt.plot(self.freqs, self.psd, **param_dict)
+#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
+#        plt.xticks(np.linspace(0., 0.5, 11))
+#        plt.legend()
+#
+#    def plot_logpsd(self, param_dict={'label': 'log(psd)'}):
+#        """Plot the periodogram."""
+#        if self.logpsd is None:
+#            raise ValueError('Log-Peridogram not defined.')
+#        plt.plot(self.freqs, self.logpsd, **param_dict)
+#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
+#        plt.xticks(np.linspace(0., 0.5, 11))
+#        plt.legend()
+#
+#    def plot_fpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-psd'}):
+#        """Plot the filtered periodogram.
+#        If PSD_FILTER_W is defined/passed a filtered psd is computed,
+#        otherwise the internal copy is used.
+#        """
+#        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
+#            self.filter_psd(PSD_FILTER_W, freq_units)
+#        if self.fpsd is None:
+#            raise ValueError('Filtered peridogram not defined.')
+#        plt.plot(self.freqs, self.fpsd, **param_dict)
+#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
+#        plt.xticks(np.linspace(0., 0.5, 11))
+#        plt.legend()
+#
+#    def plot_flogpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-log(psd)'}):
+#        """Plot the filtered periodogram.
+#        If PSD_FILTER_W is defined/passed a filtered psd is computed,
+#        otherwise the internal copy is used.
+#        """
+#        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
+#            self.filter_psd(PSD_FILTER_W, freq_units)
+#        if self.flogpsd is None:
+#            raise ValueError('Filtered log-peridogram not defined.')
+#        plt.plot(self.freqs, self.flogpsd, **param_dict)
+#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
+#        plt.xticks(np.linspace(0., 0.5, 11))
+#        plt.legend()

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .plotter import *
+from .plotter import Plotter, addPlotToPdf
+from .current import CurrentPlotter
 
-#__all__ = ()
+__all__ = (Plotter, CurrentPlotter)
