@@ -9,28 +9,9 @@ import numpy as np
 from thermocepstrum.utils import log
 from thermocepstrum.md.tools.spectrum import freq_THz_to_red
 
-import matplotlib
-# matplotlib.use('Agg')  # CHECK THAT IS OK - if needed use force=True, warn=False
-import matplotlib.pyplot as plt
+# import the matplotlib pyplot module loaded by the __init__
+from . import plt
 from matplotlib.ticker import MultipleLocator
-
-# try to import matplotlib style settings
-try:
-    import pkg_resources
-    pltstyle_filename = pkg_resources.resource_filename('thermocepstrum.utils', 'plot_style.mplstyle')
-except:
-    # fallback (if thermocepstrum is not installed...)
-    try:
-        abs_path = os.path.abspath(__file__)
-        tc_path = abs_path[:abs_path.rfind('/')]
-        os.path.append(tc_path[:tc_path.rfind('/')])
-    except:
-        abs_path = '.'
-    pltstyle_filename = tc_path + '/utils/plot_style.mplstyle'
-try:
-    plt.style.use(pltstyle_filename)
-except:
-    pass
 
 # list of colors
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -44,6 +25,7 @@ class Plotter():
     """
     Plotter abstract class. Essentially empty.
     """
+    _plot_style = None
     pass
 
 
@@ -298,7 +280,7 @@ def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **
         ax2 = [ax[0].twinx(), ax[1].twinx()]
         color = next(ax[0]._get_lines.prop_cycler)['color']
         color = next(ax[1]._get_lines.prop_cycler)['color']
-        current.plot_periodogram(axes=ax2, c=color)
+        plot_periodogram(current, axes=ax2, c=color)
         ax[0].set_ylabel(r'$\kappa$ [W/(m*K)]')
         ax[1].set_ylabel(r'$\kappa$ [W/(m*K)]')
         return xf, ax, figure
@@ -325,7 +307,7 @@ def plot_resample(current, xf, axes=None, freq_units='THz', PSD_FILTER_W=None, F
 
     if not axes:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = plot_periodogram(current=current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes, mode=mode,
+        axes = plot_periodogram(current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes, mode=mode,
                                 kappa_units=True)   # this also updates current.PSD_FILTER_W
     xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode, kappa_units=True)
     if freq_units in ('THz', 'thz'):
@@ -341,13 +323,14 @@ def plot_resample(current, xf, axes=None, freq_units='THz', PSD_FILTER_W=None, F
             axes[1].axvline(x=0.5 / TSKIP, ls='--', c='k')
             axes[1].set_xlim([0., 0.5])
     return xf, axes
+    # NOTE: why does it return xf??
 
 
 ################################################################################
 ## DUPLICATE FUNCTIONS THAT NEED TO BE MERGED IF POSSIBLE
 
 
-def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
+def plot_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, f_tick=None):
     if f_THz_max is None:
         idx_max = _index_cumsum(jf.psd, 0.95)
         f_THz_max = jf.freqs_THz[idx_max]
@@ -366,7 +349,7 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None, 
         k_SI_max = np.max(
             jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.KAPPA_SCALE * 0.5) * 1.3
 
-    figure, ax = plt.subplots(1, 1, figsize=(3.8, 2.3))
+    figure, ax = plt.subplots(1, 1)   # figsize=(3.8, 2.3)
     ax.plot(jf.freqs_THz, jf.psd * jf.KAPPA_SCALE * 0.5, lw=0.2, c='0.8', zorder=0)
     ax.plot(jf.freqs_THz, jf.fpsd * jf.KAPPA_SCALE * 0.5, c=colors[0], zorder=2)
     if j2 is not None:
@@ -413,7 +396,7 @@ def plot_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa
     if k_SI_max is None:
         k_SI_max = jf.dct.tau[jf.dct.aic_Kmin] * jf.KAPPA_SCALE
 
-    f, ax2 = plt.subplots(1, 1, figsize=(3.8, 2.3))
+    f, ax2 = plt.subplots(1, 1)   # figsize=(3.8, 2.3)
     ax2.axvline(x=jf.dct.aic_Kmin + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
     ax2.fill_between(
         np.arange(jf.dct.logtau.shape[0]) + 1, (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.KAPPA_SCALE * 0.5,
@@ -444,7 +427,7 @@ def plot_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa
     ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
 
 
-def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_tick=None, f_tick=None):
+def plot_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_tick=None, f_tick=None):
     """
     MAYBE OBSOLETE
     """
@@ -463,7 +446,7 @@ def plt_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_ti
     if k_SI_min is None:
         k_SI_min = -k_SI_max
 
-    figure, ax = plt.subplots(1, 1, figsize=(3.8, 2.3))
+    figure, ax = plt.subplots(1, 1)   # figsize=(3.8, 2.3)
     ax.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.KAPPA_SCALE * 0.5, c=colors[3], lw=1.0, zorder=1)
     ax.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.KAPPA_SCALE * 0.5, c=colors[2], lw=1.0, zorder=1)
 
