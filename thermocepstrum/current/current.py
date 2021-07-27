@@ -9,8 +9,6 @@ from thermocepstrum.md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from thermocepstrum.md.tools.resample import filter_and_sample
 from . import units
 from thermocepstrum.utils import log
-from thermocepstrum.utils.decorators import add_method
-from thermocepstrum.plotter import Plotter, use_plot_style
 from thermocepstrum.plotter.current import CurrentPlotter
 
 __all__ = ('Current', 'fstar_analysis',)
@@ -86,46 +84,6 @@ class Current(MDSample):
             msg += self.dct.__repr__()
         return msg
 
-    # TODO: move it to MDSample?
-    @classmethod
-    def set_plotter(cls, plotter=None):
-        """
-        Set the plotter class.
-        The _plotter attribute will contain the selected plotter class.
-        All the plot functions of plotter (named 'plot_*') will be transformed into methods of Current.
-
-        **NOTE**
-        If called by a subclass, it will change the plotter of the base class (Current) and all its subclasses.
-        If this is not a good behavior, we should change it in the future.
-        """
-        if plotter is None:
-            plotter = cls._default_plotter
-        if not (isinstance(plotter, Plotter) or issubclass(plotter, Plotter)):
-            raise TypeError('Invalid plotter')
-
-        # if called by a subclass of Current, change the base class (Current)
-        if issubclass(cls, Current) and cls != Current:
-            cls = Current
-        cls._plotter = plotter
-        use_plot_style(plotter._plot_style)
-        #print('This will change the plotter class used by Current to {}.'.format(plotter))
-
-        # delete any plot function already present in this class
-        # (note: it is not possible to delete the parent class' attributes from a child. But here we forcibly do this operation on cls = Current)
-        for funcname in filter(lambda name: name.startswith('plot_'),
-                               dir(cls)):   # same as [name for name in dir(plotter) if name.startswith('plot_')
-            obj = getattr(cls, funcname)
-            if callable(obj):
-                delattr(cls, funcname)
-                #print('{} deleted from class {}'.format(obj, cls))
-
-        # loop over all functions of the plotter class, and transform them into methods of Current
-        for funcname in filter(lambda name: name.startswith('plot_'), dir(plotter)):
-            obj = getattr(plotter, funcname)
-            if callable(obj):
-                add_method(cls)(obj)
-                #print('{} added to class {}'.format(obj, cls))
-
     def _get_builder(self):
         """
         Get a tuple (class, builder) that can be used to build a new object with same parameters:
@@ -140,6 +98,23 @@ class Current(MDSample):
         builder = dict(traj=traj_array, DT_FS=self.DT_FS, KAPPA_SCALE=self.KAPPA_SCALE,
                        PSD_FILTER_W=self.PSD_FILTER_W_THZ, FREQ_UNITS='THz')
         return type(self), builder
+
+    @classmethod
+    def set_plotter(cls, plotter=None):
+        """
+        Set the plotter class.
+        The _plotter attribute will contain the selected plotter class.
+        All the plot functions of plotter (named 'plot_*') will be transformed into methods of Current.
+
+        **NOTE**
+        If called by a subclass, it will change the plotter of the base class (Current) and all its subclasses.
+        If this is not a good behavior, we should change it in the future.
+        """
+        # if called by a subclass of Current, change the base class (Current)
+        if issubclass(cls, Current) and cls != Current:
+            cls = Current
+        # (note: it is not possible to delete the parent class' attributes from a child. But here we forcibly do this operation on cls = Current)
+        super().set_plotter(plotter)
 
     def initialize_currents(self, j, DT_FS, main_current_index=0, main_current_factor=1.0):
         # check if we have a multicomponent fluid

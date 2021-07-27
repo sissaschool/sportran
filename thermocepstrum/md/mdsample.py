@@ -6,7 +6,9 @@ from .tools.filter import runavefilter
 from .tools.acf import acovf, integrate_acf
 from .resample import resample_timeseries
 from thermocepstrum.utils import log
-from thermocepstrum.utils import plt   # TODO: substitute with Plotter
+from thermocepstrum.utils.decorators import add_method
+from thermocepstrum.plotter import Plotter, use_plot_style
+from thermocepstrum.plotter.mdsample import MDSamplePlotter
 
 __all__ = ('MDSample',)
 
@@ -60,6 +62,8 @@ class MDSample(object):
 
     """
 
+    _default_plotter = MDSamplePlotter
+
     def __init__(self, traj=None, spectr=None, psd=None, freqs=None, DT_FS=1.0):
         self.DT_FS = DT_FS
         self.initialize_traj(traj)
@@ -98,6 +102,39 @@ class MDSample(object):
         """
         builder = dict(traj=self.traj, DT_FS=self.DT_FS)
         return type(self), builder
+
+    @classmethod
+    def set_plotter(cls, plotter=None):
+        """
+        Set the plotter class.
+        The _plotter attribute will contain the selected plotter class.
+        All the plot functions of plotter (named 'plot_*') will be transformed into methods of Current.
+        """
+        if plotter is None:
+            plotter = cls._default_plotter
+        if not (isinstance(plotter, Plotter) or issubclass(plotter, Plotter)):
+            raise TypeError('Invalid plotter')
+
+        cls._plotter = plotter
+        use_plot_style(plotter._plot_style)
+
+        # delete any plot function already present in this class
+        for funcname in filter(lambda name: name.startswith('plot_'),
+                               dir(cls)):   # same as [name for name in dir(plotter) if name.startswith('plot_')
+            obj = getattr(cls, funcname)
+            if callable(obj):
+                #print('deleting {} from class {}'.format(obj, cls))
+                try:
+                    delattr(cls, funcname)
+                except AttributeError:
+                    pass
+
+        # loop over all functions of the plotter class, and transform them into methods of Current
+        for funcname in filter(lambda name: name.startswith('plot_'), dir(plotter)):
+            obj = getattr(plotter, funcname)
+            if callable(obj):
+                add_method(cls)(obj)
+                #print('{} added to class {}'.format(obj, cls))
 
     #############################################
     ###################################
@@ -456,67 +493,10 @@ class MDSample(object):
         """
         return resample_timeseries(self, TSKIP, fstar_THz, FILTER_W, plot, PSD_FILTER_W, freq_units, FIGSIZE, verbose)
 
-    ###################################
-    ###  PLOT METHODS
-    ###################################
-    # customized line properties can be passed through the param_dict dictionary
-    # see kwargs at: http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.plot
 
+################################################################################
 
-#    ## TODO: plots should call Plotter methods -- verify that all these plots have been moved to plotter
-#    ## all these methods have to be updated
-#
-#    def plot_traj(self, param_dict={'label': 'traj'}):
-#        """Plot the time series."""
-#        if self.traj is None:
-#            raise ValueError('Trajectory not defined.')
-#        plt.plot(self.traj, **param_dict)
-#        plt.xlabel(r'$t$')
-#        plt.grid()
-#        plt.legend()
-#
-#    def plot_psd(self, param_dict={'label': 'psd'}):
-#        """Plot the periodogram."""
-#        if self.psd is None:
-#            raise ValueError('Peridogram not defined.')
-#        plt.plot(self.freqs, self.psd, **param_dict)
-#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-#        plt.xticks(np.linspace(0., 0.5, 11))
-#        plt.legend()
-#
-#    def plot_logpsd(self, param_dict={'label': 'log(psd)'}):
-#        """Plot the periodogram."""
-#        if self.logpsd is None:
-#            raise ValueError('Log-Peridogram not defined.')
-#        plt.plot(self.freqs, self.logpsd, **param_dict)
-#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-#        plt.xticks(np.linspace(0., 0.5, 11))
-#        plt.legend()
-#
-#    def plot_fpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-psd'}):
-#        """Plot the filtered periodogram.
-#        If PSD_FILTER_W is defined/passed a filtered psd is computed,
-#        otherwise the internal copy is used.
-#        """
-#        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
-#            self.filter_psd(PSD_FILTER_W, freq_units)
-#        if self.fpsd is None:
-#            raise ValueError('Filtered peridogram not defined.')
-#        plt.plot(self.freqs, self.fpsd, **param_dict)
-#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-#        plt.xticks(np.linspace(0., 0.5, 11))
-#        plt.legend()
-#
-#    def plot_flogpsd(self, PSD_FILTER_W=None, freq_units='red', param_dict={'label': 'f-log(psd)'}):
-#        """Plot the filtered periodogram.
-#        If PSD_FILTER_W is defined/passed a filtered psd is computed,
-#        otherwise the internal copy is used.
-#        """
-#        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
-#            self.filter_psd(PSD_FILTER_W, freq_units)
-#        if self.flogpsd is None:
-#            raise ValueError('Filtered log-peridogram not defined.')
-#        plt.plot(self.freqs, self.flogpsd, **param_dict)
-#        plt.xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
-#        plt.xticks(np.linspace(0., 0.5, 11))
-#        plt.legend()
+# set the default plotter of this class
+MDSample.set_plotter()
+
+################################################################################

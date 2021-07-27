@@ -13,6 +13,8 @@ def use_plot_style(plot_style_filename=None):
     """
     if plot_style_filename is None:
         plot_style_filename = DEFAULT_PLOT_STYLE
+    #print('Using {} plot style.'.format(plot_style_filename))
+
     # try to import matplotlib style settings
     if isfile(plot_style_filename):
         pltstyle_file = plot_style_filename

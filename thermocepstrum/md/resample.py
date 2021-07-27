@@ -3,7 +3,6 @@
 import numpy as np
 from .tools.resample import filter_and_sample
 from thermocepstrum.utils import log
-from thermocepstrum.utils import plt   # TODO: substitute with Plotter
 
 
 def resample_timeseries(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False, PSD_FILTER_W=None, freq_units='THz',
@@ -102,21 +101,8 @@ def resample_timeseries(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False
     if verbose:
         log.write_log(xf.resample_log)
 
-    # TODO: remove these plot lines, substitute them with plotter.plot_resample
     if plot:
-        figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = x.plot_periodogram(PSD_FILTER_W, freq_units, axes=axes)   # this also updates x.PSD_FILTER_W
-        xf.plot_periodogram(new_PSD_FILTER_W_THZ, freq_units, freq_scale=TSKIP, axes=axes)
-        if freq_units in ('THz', 'thz'):
-            axes[0].axvline(x=fstar_THz, ls='--', c='k')
-            axes[1].axvline(x=fstar_THz, ls='--', c='k')
-            axes[0].set_xlim([0., x.Nyquist_f_THz])
-            axes[1].set_xlim([0., x.Nyquist_f_THz])
-        elif (freq_units == 'red'):
-            axes[0].axvline(x=0.5 / TSKIP, ls='--', c='k')
-            axes[1].axvline(x=0.5 / TSKIP, ls='--', c='k')
-            axes[0].set_xlim([0., 0.5])
-            axes[1].set_xlim([0., 0.5])
+        axes = x.plot_resample(x, xf, axes, freq_units, PSD_FILTER_W, FIGSIZE, mode='log')
         return xf, axes
     else:
         return xf

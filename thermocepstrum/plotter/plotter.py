@@ -59,7 +59,21 @@ def addPlotToPdf(func, pdf, *args, **kwargs):
 
 ################################################################################
 ## Plot functions
-## The first argument should be a Current object, if they are supposed to be transformed into a method by the add_method decorator.
+## The first argument should be a Current or MDSample object, if they are supposed to be transformed into a method by the add_method decorator.
+
+
+def plot_trajectory(x, axes=None, FIGSIZE=None, **plot_kwargs):
+    """
+    Plot the time series.
+    """
+    if x.traj is None:
+        raise ValueError('Trajectory not defined.')
+    if axes is None:
+        figure, axes = plt.subplots(1, figsize=FIGSIZE)
+    axes.plot(x.traj, **plot_kwargs)
+    axes.set_xlabel(r'$t$ [ps]')
+    axes.grid()
+    return axes
 
 def plot_periodogram(current, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
                      FIGSIZE=None, mode='log', **plot_kwargs):   # yapf: disable
@@ -288,10 +302,10 @@ def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **
         return xf, ax
 
 
-def plot_resample(current, xf, axes=None, freq_units='THz', PSD_FILTER_W=None, FIGSIZE=None, mode='log'):
+def plot_resample(x, xf, axes=None, freq_units='THz', PSD_FILTER_W=None, FIGSIZE=None, mode='log'):
     """
-    Plots the periodogram of a current and of a filtered/resampled current for comparison.
-    :param current:         current object to plot
+    Plots the periodogram of a time series and of a filtered/resampled one for comparison.
+    :param x:               a time series object to plot
     :param xf:              a filtered & resampled time series object
     :param freq_units:      'thz'  [THz]
                             'red'  [omega*DT/(2*pi)]
@@ -303,27 +317,26 @@ def plot_resample(current, xf, axes=None, freq_units='THz', PSD_FILTER_W=None, F
 
     """
     fstar_THz = xf.Nyquist_f_THz
-    TSKIP = int(current.Nyquist_f_THz / xf.Nyquist_f_THz)
+    TSKIP = int(x.Nyquist_f_THz / xf.Nyquist_f_THz)
 
     if not axes:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
-        axes = plot_periodogram(current, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes, mode=mode,
-                                kappa_units=True)   # this also updates current.PSD_FILTER_W
+        axes = plot_periodogram(x, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes, mode=mode,
+                                kappa_units=True)   # this also updates x.PSD_FILTER_W
     xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode, kappa_units=True)
     if freq_units in ('THz', 'thz'):
         axes[0].axvline(x=fstar_THz, ls='--', c='k')
-        axes[0].set_xlim([0., current.Nyquist_f_THz])
+        axes[0].set_xlim([0., x.Nyquist_f_THz])
         if mode == 'log':
             axes[1].axvline(x=fstar_THz, ls='--', c='k')
-            axes[1].set_xlim([0., current.Nyquist_f_THz])
+            axes[1].set_xlim([0., x.Nyquist_f_THz])
     elif freq_units == 'red':
         axes[0].axvline(x=0.5 / TSKIP, ls='--', c='k')
         axes[0].set_xlim([0., 0.5])
         if mode == 'log':
             axes[1].axvline(x=0.5 / TSKIP, ls='--', c='k')
             axes[1].set_xlim([0., 0.5])
-    return xf, axes
-    # NOTE: why does it return xf??
+    return axes
 
 
 ################################################################################
