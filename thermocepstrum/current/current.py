@@ -341,7 +341,7 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
 
     if plot:
         try:
-            x.plot_fstar_analysis(xf, FSTAR_THZ_LIST, axes, FIGSIZE, **plot_kwargs)
+            x.plot_fstar_analysis(xf, FSTAR_THZ_LIST, axes=axes, FIGSIZE=FIGSIZE, **plot_kwargs)
         except AttributeError:
             print('Plotter does not support the plot_resample method')
     else:

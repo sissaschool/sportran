@@ -62,7 +62,7 @@ def addPlotToPdf(func, pdf, *args, **kwargs):
 ## The first argument should be a Current or MDSample object, if they are supposed to be transformed into a method by the add_method decorator.
 
 
-def plot_trajectory(x, axes=None, FIGSIZE=None, **plot_kwargs):
+def plot_trajectory(x, *, axes=None, FIGSIZE=None, **plot_kwargs):
     """
     Plot the time series.
     """
@@ -75,7 +75,7 @@ def plot_trajectory(x, axes=None, FIGSIZE=None, **plot_kwargs):
     axes.grid()
     return axes
 
-def plot_periodogram(current, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
+def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
                      FIGSIZE=None, mode='log', **plot_kwargs):   # yapf: disable
     """
     Plots the current's periodogram (psd)
@@ -137,7 +137,7 @@ def plot_periodogram(current, PSD_FILTER_W=None, freq_units='THz', freq_scale=1.
     return axes
 
 
-def plot_ck(current, axes=None, label=None, FIGSIZE=None):
+def plot_ck(current, *, axes=None, label=None, FIGSIZE=None):
     """
     Plots the cepstral coefficients c_K.
     :param current: current object to plot
@@ -160,7 +160,7 @@ def plot_ck(current, axes=None, label=None, FIGSIZE=None):
     return axes
 
 
-def plot_L0_Pstar(current, axes=None, label=None, FIGSIZE=None):
+def plot_L0_Pstar(current, *, axes=None, label=None, FIGSIZE=None):
     """
     Plots L0 as a function of P*.
     :param current:         current object to plot
@@ -186,7 +186,7 @@ def plot_L0_Pstar(current, axes=None, label=None, FIGSIZE=None):
     return axes
 
 
-def plot_kappa_Pstar(current, axes=None, label=None, FIGSIZE=None):
+def plot_kappa_Pstar(current, *, axes=None, label=None, FIGSIZE=None):
     """
     Plots the value of kappa as a function of P*.
     :param current: current object to plot
@@ -216,7 +216,7 @@ def plot_kappa_Pstar(current, axes=None, label=None, FIGSIZE=None):
     axes.set_ylabel(r'$\kappa(P^*)$ [{}]'.format(current._KAPPA_SI_UNITS))
     return axes
 
-def plot_cepstral_spectrum(current, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, mode='log',
+def plot_cepstral_spectrum(current, *, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, mode='log',
                            **plot_kwargs):   # yapf: disable
     """
     Plots the cepstral spectrum.
@@ -268,7 +268,7 @@ def plot_cepstral_spectrum(current, freq_units='THz', freq_scale=1.0, axes=None,
     return axes
 
 
-def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **plot_kwargs):
+def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, *, axes=None, FIGSIZE=None, **plot_kwargs):
     """
     Plots kappa(P*) as a function of the f*.
     """
@@ -302,7 +302,7 @@ def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, axes=None, FIGSIZE=None, **
         return xf, ax
 
 
-def plot_resample(x, xf, axes=None, freq_units='THz', PSD_FILTER_W=None, FIGSIZE=None, mode='log'):
+def plot_resample(x, xf, PSD_FILTER_W=None, *, freq_units='THz', axes=None, FIGSIZE=None, mode='log'):
     """
     Plots the periodogram of a time series and of a filtered/resampled one for comparison.
     :param x:               a time series object to plot

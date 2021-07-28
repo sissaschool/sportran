@@ -102,7 +102,7 @@ def resample_timeseries(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False
         log.write_log(xf.resample_log)
 
     if plot:
-        axes = x.plot_resample(x, xf, axes, freq_units, PSD_FILTER_W, FIGSIZE, mode='log')
+        axes = x.plot_resample(xf, PSD_FILTER_W, freq_units=freq_units, axes=axes, FIGSIZE=FIGSIZE, mode='log')
         return xf, axes
     else:
         return xf
