@@ -5,7 +5,6 @@ import os
 from sys import path, argv
 import argparse
 import numpy as np
-# import scipy as sp
 
 try:
     import thermocepstrum as tc
@@ -20,24 +19,12 @@ except ImportError:
 
 from thermocepstrum.utils import log
 log.set_method('bash')
+from thermocepstrum.plotter.cli import CLIPlotter
+tc.Current.set_plotter(CLIPlotter)
+from thermocepstrum.plotter import plt   # this imports matplotlib.pyplot
+from thermocepstrum.plotter import addPlotToPdf, PdfPages
 
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
-try:
-    from thermocepstrum.plotter import Plotter, CurrentPlotter, addPlotToPdf
-    plotManager = Plotter()
-    tc.HeatCurrent.set_plotter(CurrentPlotter())
-except ImportError:
-    log.write_log('Warning: cannot locate Plotter. Plots will be not created and displayed')
-    plotManager = None
-
-
-# ??? NOT NEEDED?
-def check_plot_manager():
-    if plotManager:
-        return True
-    else:
-        return False
+np.set_printoptions(precision=8)
 
 
 def main():
@@ -434,9 +421,7 @@ def run_analysis(args):
 
     ############################################################################
     ## OUTPUT SECTION
-    ## TODO: remove resample reduntant call
     ## TODO: cleanup data files
-    ## TODO: cleanup plots, to use the plotter module
     ############################################################################
 
     # DATA OUTPUT
@@ -525,17 +510,6 @@ def run_analysis(args):
         outfile_header = 'freqs_THz  cepf_psd cepf_logpsd\n'
         np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
-    #conv_fact=open(output+'.KAPPA_SCALE_aicKmin.dat','w')
-    #
-    #if units=='metal':
-    #    log.write_log 'KAPPA_SCALE (with DT_FS, can be used for gk-conversion)= {}'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS))
-    #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_METALtoSI(temperature,volume,DT_FS)))
-    #elif units=='real':
-    #    log.write_log 'KAPPA_SCALE (with DT_FS, can be used for gk-conversion) = {}'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS))
-    #    conv_fact.write('{}\n'.format(tc.md.scale_kappa_REALtoSI(temperature,volume,DT_FS)))
-    #conv_fact.write('{}\n'.format(jf.dct.aic_Kmin))
-    #conv_fact.close()
-
     ####################################
     # PLOTS
     ####################################
@@ -543,73 +517,49 @@ def run_analysis(args):
     if do_plot:
         pdf = PdfPages(output + '.plots.pdf')
 
-        # plot periodogram
-        addPlotToPdf(j.plot_periodogram, pdf)   # PSD_FILTER_W=psd_filter_w)
-
-        # plot: resample and plot
-        # TODO: remove resample commands, and just call plotter.plot_resample (once we checked that it works)
+        addPlotToPdf(j.plot_periodogram, pdf)
         if resample:
-
-            def plot_resample(x, xf):   # provisional (TODO: remove it)
-                figure, axes = plt.subplots(2, sharex=True)
-                axes = x.plot_periodogram(axes=axes)
-                xf.plot_periodogram(axes=axes)
-                axes[0].axvline(x=FSTAR, ls='--', c='k')
-                axes[1].axvline(x=FSTAR, ls='--', c='k')
-                axes[0].set_xlim([0, 2.5 * FSTAR])
-                return axes
-
-            ax = plot_resample(j, jf)
+            ax = j.plot_resample(jf)
+            ax[0].set_xlim([0, 2.5 * FSTAR])
             pdf.savefig()
             plt.close()
-
-            # plot resampled periodogram
-            ax = addPlotToPdf(jf.plot_periodogram, pdf)   # PSD_FILTER_W=psd_filter_w)
-
-        addPlotToPdf(plotManager.plt_psd, pdf, j, jf, f_THz_max=args.plot_psd_max_THz, k_SI_max=args.plot_psd_max_kappa,
+        addPlotToPdf(j.plot_psd, pdf, jf, f_THz_max=args.plot_psd_max_THz, k_SI_max=args.plot_psd_max_kappa,
                      k_tick=args.plot_psd_kappa_tick_interval, f_tick=args.plot_psd_THz_tick_interval)
-
-        addPlotToPdf(plotManager.plt_psd, pdf, jf, f_THz_max=args.plot_psd_max_THz, k_SI_max=args.plot_psd_max_kappa,
+        addPlotToPdf(jf.plot_psd, pdf, f_THz_max=args.plot_psd_max_THz, k_SI_max=args.plot_psd_max_kappa,
                      k_tick=args.plot_psd_kappa_tick_interval, f_tick=args.plot_psd_THz_tick_interval)
-
-        addPlotToPdf(plotManager.plt_psd, pdf, jf, jf, jf, f_THz_max=args.plot_psd_max_THz,
-                     k_SI_max=args.plot_psd_max_kappa, k_tick=args.plot_psd_kappa_tick_interval,
-                     f_tick=args.plot_psd_THz_tick_interval)
-
+        addPlotToPdf(jf.plot_psd, pdf, jf, jf, f_THz_max=args.plot_psd_max_THz, k_SI_max=args.plot_psd_max_kappa,
+                     k_tick=args.plot_psd_kappa_tick_interval, f_tick=args.plot_psd_THz_tick_interval)
         try:
             for idx1 in range(j.N_CURRENTS):
                 for idx2 in range(idx1, j.N_CURRENTS):
-                    addPlotToPdf(plotManager.plt_other, pdf, j, idx1, idx2)
+                    addPlotToPdf(j.plot_other, pdf, idx1, idx2)
         except:
             pass
 
-        # ???
-        if check_plot_manager():
-            # plot cepstral coefficients
-            ax = jf.plot_ck()
-            ax.set_xlim([0, 5 * jf.dct.aic_Kmin])
-            #  ax.set_ylim([-0.5, 0.5])
-            ax.grid()
-            pdf.savefig()
-            plt.close()
+        # plot cepstral coefficients
+        ax = jf.plot_ck()
+        ax.set_xlim([0, 5 * jf.dct.aic_Kmin])
+        ax.set_ylim([-1, 15])
+        ax.grid()
+        pdf.savefig()
+        plt.close()
 
-            # plot L0(Pstar)
-            ax = jf.plot_L0_Pstar()
-            ax.set_xlim([0, 10 * jf.dct.aic_Kmin])
-            pdf.savefig()
-            plt.close()
+        # plot L0(Pstar)
+        ax = jf.plot_L0_Pstar()
+        ax.set_xlim([0, 10 * jf.dct.aic_Kmin])
+        pdf.savefig()
+        plt.close()
 
-        # plot kappa(Pstar)
-        #      ax = jf.plot_kappa_Pstar()
-        #      ax.set_xlim([0, 10*jf.dct.aic_Kmin])
+        # # plot kappa(Pstar)
+        # ax = jf.plot_kappa_Pstar()
+        # ax.set_xlim([0, 10*jf.dct.aic_Kmin])
 
-        addPlotToPdf(plotManager.plt_cepstral_conv, pdf, jf, pstar_max=args.plot_conv_max_pstar,
+        addPlotToPdf(jf.plot_cepstral_conv, pdf, pstar_max=args.plot_conv_max_pstar,
                      pstar_tick=args.plot_conv_pstar_tick_interval, k_SI_max=args.plot_conv_max_kappa,
                      kappa_tick=args.plot_conv_kappa_tick_interval)
 
         # plot cepstral log-PSD
-        #ax = j.plot_periodogram(()  #PSD_FILTER_W=psd_filter_w)
-        ax = jf.plot_periodogram()   #PSD_FILTER_W=psd_filter_w)
+        ax = jf.plot_periodogram()
         jf.plot_cepstral_spectrum(axes=ax, label='cepstrum-filtered')
         ax[0].axvline(x=jf.Nyquist_f_THz, ls='--', c='r')
         ax[1].axvline(x=jf.Nyquist_f_THz, ls='--', c='r')

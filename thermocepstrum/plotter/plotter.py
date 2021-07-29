@@ -12,11 +12,10 @@ from thermocepstrum.md.tools.spectrum import freq_THz_to_red
 # import the matplotlib pyplot module loaded by the __init__
 from . import plt
 from matplotlib.ticker import MultipleLocator
+from matplotlib.backends.backend_pdf import PdfPages
 
 # list of colors
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
-#__all__ = ('Plotter', 'CurrentPlotter', 'addPlotToPdf',)
 
 ################################################################################
 
