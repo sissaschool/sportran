@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+from scipy.signal import periodogram
 from .tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from .tools.filter import runavefilter
 from .tools.acf import acovf, integrate_acf
@@ -288,7 +289,6 @@ class MDSample(object):
         If a PSD_FILTER_W (expressed in freq_units) is known or given, the psd is also filtered.
         The PSD is multiplied by DT_FS at the end.
         """
-        from scipy.signal import periodogram
         if DT_FS is not None:
             self.DT_FS = DT_FS
         if (method == 'trajectory'):

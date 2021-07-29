@@ -27,7 +27,6 @@ def test_cli_NaCl(tmpdir, run_cli, data_NaCl_path, num_regression, file_regressi
     readed = {}
     for f in file_list:
         file_out = tmpdir.join(f)
-        print(f)
         readed[f] = np.loadtxt(file_out).flatten()
 
     num_regression.check(readed)
@@ -48,6 +47,6 @@ def test_cli_bin_output_NaCl(tmpdir, run_cli, data_NaCl_path, num_regression, fi
     readed = {}
     for f in file_list:
         file_out = tmpdir.join(f)
-        print(f)
-        readed[f] = np.load(str(file_out), allow_pickle=True).flatten().astype(float)
+        readed[f] = np.load(str(file_out), allow_pickle=True).flatten().real
+        # NOTE: TODO: imaginary part of cospectrum is not checked!
     num_regression.check(readed)
