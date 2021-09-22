@@ -3,5 +3,6 @@
 from .current import *
 from .heat import *
 from .electric import *
+from .stress import *
 
-__all__ = ('Current', 'HeatCurrent', 'ElectricCurrent',)
+__all__ = ('Current', 'HeatCurrent', 'ElectricCurrent', 'StressCurrent',)
