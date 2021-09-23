@@ -11,7 +11,7 @@ bohr = 0.529177   # A
 tau_PW = 4.8378e-5   # ps
 atm = 1.01325   # bars
 
-J_PWtoMETAL = Ry * bohr / tau_PW   # [Ry*Bohr/tau_PW] --> [eV*A/ps]
+J_PWtoMETAL = bohr / tau_PW   # [Bohr/tau_PW] --> [A/ps]
 Ry_per_bohr3 = Ry / bohr**3   # [Ry/bohr^3] --> [eV/A^3]
 dlpoly_press = massunit * 1.0e2   # bars
 

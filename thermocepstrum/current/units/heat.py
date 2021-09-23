@@ -30,7 +30,7 @@ def scale_kappa_qepw(TEMPERATURE, VOLUME):
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
     """
-    return (constants.charge / TEMPERATURE)**2 / constants.kB / VOLUME * 10000. * constants.J_PWtoMETAL**2
+    return (constants.charge / TEMPERATURE)**2 / constants.kB / VOLUME * 10000. * (constants.Ry * constants.J_PWtoMETAL)**2
 
 
 def scale_kappa_gpumd(TEMPERATURE, VOLUME):
