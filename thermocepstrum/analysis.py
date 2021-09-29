@@ -19,6 +19,7 @@ except ImportError:
 
 from thermocepstrum.utils import log
 log.set_method('bash')
+log.append_method('file')
 from thermocepstrum.plotter.cli import CLIPlotter
 tc.Current.set_plotter(CLIPlotter)
 from thermocepstrum.plotter import plt   # this imports matplotlib.pyplot
@@ -72,7 +73,7 @@ def main():
     Example:
       read and analyze "examples/data/Silica.dat" file. The energy-flux columns are called c_flux[1], c_flux[2], c_flux[3]
 
-        ./analysis "examples/data/Silica.dat" -V 3130.431110818 -T 1065.705630 -t 1.0 -k flux1 -u metal -r --FSTAR 28.0 -w 0.5 -o silica_test
+        ./analysis "examples/data/Silica.dat" --VOLUME 3130.431110818 --TEMPERATURE 1065.705630 -t 1.0 -k flux1 -u metal -r --FSTAR 28.0 -w 0.5 -o silica_test
     -------------------------
     """
     _epilog = """---
@@ -93,6 +94,15 @@ def main():
     """
 
     # yapf: disable
+    if '--list-currents' in argv:
+        print('units and docstrings list for each current:')
+        print('=================')
+        print(tc.current._list_of_currents_and_units(verbose=True))
+        print('=================')
+        print('currents and units implementation table')
+        print(tc.current.build_currents_units_table())
+        return 0
+
     parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('inputfile', type=str,
             help='input file to read (default format: Table)')
@@ -134,13 +144,20 @@ def main():
     input_params_group = parser.add_argument_group('Physical parameters')
     input_params_group.add_argument('-t', '--timestep', type=float, required=True,
             help='Time step of the data (fs)')
-    input_params_group.add_argument('-V', '--volume', type=float,
-            help='Volume of the cell (Angstrom). If not set it will be read from structure file or inputfile')
-    input_params_group.add_argument('-T', '--temperature', type=float,
-            help='Average Temperature (K). If not set it will be read from file')
+    for parameter in tc.current.all_parameters:
+        input_params_group.add_argument(f'--{parameter}', type=float,
+            help='Usually Angstrom or Kelvins, see description of units and currents implemented available with --list-currents')
     input_params_group.add_argument('-u', '--units', type=str, default='metal',
-            choices=['metal', 'real', 'qepw', 'gpumd', 'dlpoly'],
+            choices=tc.current.all_units,
             help='Units. (optional, default: metal)')
+    input_params_group.add_argument('-C', '--current', type=str, default='heat',
+            choices=list(tc.current.all_currents.keys()),
+            help='Type of currents that is provided to the code. Usually this just changes the conversion factor')
+    input_params_group.add_argument('--param-from-input-file-column', type=str,
+            action='append', dest='parameters_from_input_file',
+            help='in order: header of the column and name of the parameter that will be setted to the average of that column of the input file')
+    input_params_group.add_argument('--list-currents', action='store_true',
+            help='show the list of currents implemented, the docstrings of the units, then exit')
 
     analysis_group = parser.add_argument_group('Analysis options')
     analysis_group.add_argument('-r', '--resample', action='store_true',
@@ -182,6 +199,7 @@ def main():
     # yapf: enable
     args = parser.parse_args()
 
+
     run_analysis(args)
     return 0
 
@@ -206,9 +224,18 @@ def run_analysis(args):
     no_text_out = args.no_text_output
 
     DT_FS = args.timestep
-    volume = args.volume
-    temperature = args.temperature
+    parameters={}
+    for parameter in tc.current.all_parameters:
+       p = getattr(args, parameter)
+       if p is not None:
+           if p <= 0.:
+               raise ValueError(f'{parameter} must be positive')
+           parameters[parameter] = p
+    parameters_from_input_file=args.parameters_from_input_file if args.parameters_from_input_file else []
+    parameters_from_input_file_key = [x[0] for x in parameters_from_input_file]
+    parameters_from_input_file_name = [x[1] for x in parameters_from_input_file]
     units = args.units
+    current_type = args.current
 
     resample = args.resample
     TSKIP = args.TSKIP
@@ -222,15 +249,10 @@ def run_analysis(args):
     print_cmd = not args.test_suite_run
     fmt = args.savetxt_format
 
-    if volume is not None:
-        if volume <= 0.:
-            raise ValueError('volume must be positive')
     if DT_FS <= 0.:
         raise ValueError('Time step must be positive')
     if NSTEPS < 0:
         raise ValueError('nsteps must be positive')
-    if temperature is not None and temperature <= 0.:
-        raise ValueError('temperature must be positive')
     if resample:
         if TSKIP is not None:
             if TSKIP <= 1:
@@ -249,18 +271,15 @@ def run_analysis(args):
     if NSPLIT < 1:
         raise ValueError('The number of splits must be a positive number')
 
-    logfile = open(output + '.log', 'w')
+    log.open_file(output + '.log')
     if print_cmd:
-        logfile.write('Command:\n ' + ' '.join(argv) + '\n\n')
+        log.write_log('Command:\n ' + ' '.join(argv) + '\n\n')
 
     # Write some parameters
     if print_cmd:
         log.write_log(' Input file ({}):      {}'.format(input_format, inputfile))
-        logfile.write(' Input file ({}):      {}\n'.format(input_format, inputfile))
     log.write_log(' Units:      {}'.format(units))
-    logfile.write(' Units:      {}\n'.format(units))
     log.write_log(' Time step:      {} fs'.format(DT_FS))
-    logfile.write(' Time step:      {} fs\n'.format(DT_FS))
 
     # Read data
     selected_keys = [j1_key]
@@ -268,10 +287,9 @@ def run_analysis(args):
     jdata = None
     if input_format == 'table':
         # Table format: data is organized in columns, the selected_keys determines which to read
-        if temperature is None:
-            selected_keys.append('Temp')
-        if volume is None and structurefile is None:
-            selected_keys.append('Volume')
+        #input parameters that are read from file
+        for col, pname in parameters_from_input_file:
+            selected_keys.append(col)
         jfile = tc.i_o.TableFile(inputfile, group_vectors=True, print_elapsed=print_elapsed)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         jdata = jfile.data
@@ -295,7 +313,6 @@ def run_analysis(args):
     # split data
     if NSPLIT > 1:
         log.write_log('Splitting input data time series into {:d} segments...'.format(NSPLIT))
-        logfile.write('Splitting input data time series into {:d} segments...\n'.format(NSPLIT))
         data_size = jdata[selected_keys[0]].shape[0]
         if len(jdata[selected_keys[0]].shape) > 1:
             n_proc = jdata[selected_keys[0]].shape[1]
@@ -307,68 +324,40 @@ def run_analysis(args):
         if (steps_end % 2) == 1:
             steps_end = steps_end - 1
         for key, value in jdata.items():
-            if key != 'Temp':
+            if not key in parameters_from_input_file_key:
                 newdata = value[:steps_start].reshape((NSPLIT, data_size / NSPLIT, n_proc)).transpose(
                     (1, 0, 2)).reshape((data_size / NSPLIT, NSPLIT * n_proc))
                 jdata[key] = newdata[:steps_end]
         log.write_log('New shape of input data: {}'.format(jdata[selected_keys[0]].shape))
-        logfile.write('New shape of input data: {}\n'.format(jdata[selected_keys[0]].shape))
 
     if NSTEPS == 0:
         NSTEPS = jdata[list(jdata.keys())[0]].shape[0]
 
-    # Define Temperature
-    if temperature is None:
-        # temperature not set: try to read it from file
-        if 'Temp' in jdata:
-            # compute mean of the temperature time-series
-            temperature = np.mean(jdata['Temp'])
-            temperature_std = np.std(jdata['Temp'])   # this is wrong (needs block average)
-            if 'Temp' in selected_keys:
-                selected_keys.remove('Temp')
-            log.write_log(' Mean Temperature (computed):  {} K  +/-  {}'.format(temperature, temperature_std))
-            logfile.write(' Mean Temperature (computed):  {} K  +/-  {}\n'.format(temperature, temperature_std))
-        elif 'Temp_ave' in jdata:
-            # read mean temperature from input data
-            temperature = jdata['Temp_ave']
-            if 'Temp_std' in jdata:
-                temperature_std = jdata['Temp_std']
-                log.write_log(' Mean Temperature (file):      {} K  +/-  {}'.format(temperature, temperature_std))
-                logfile.write(' Mean Temperature (file):      {} K  +/-  {}\n'.format(temperature, temperature_std))
-            else:
-                log.write_log(' Mean Temperature (file):      {} K'.format(temperature))
-                logfile.write(' Mean Temperature (file):      {} K\n'.format(temperature))
-        else:
-            raise RuntimeError('No Temp key found. Please provide Temperature (-T).')
-    else:
-        log.write_log(' Mean Temperature (input):  {} K'.format(temperature))
-        logfile.write(' Mean Temperature (input):  {} K\n'.format(temperature))
+    # compute average parameters from input file, if requested
+    def average(data, name, units=''):
+        ave = np.mean(data)
+        std = np.std(data)
+        log.write_log(f'Mean {name} (computed): {ave} +/- {std}')
+        return ave
+    for key, value in parameters.items(): 
+        log.write_log(f'{key} (input): {value}')
+    for key, name in parameters_from_input_file:
+        parameters[name] = average(jdata[key], name)
+        selected_keys.remove(key)
 
-    # Define Volume
-    if volume is None:
-        # volume not set: try to read it from file
-        if structurefile is not None:
-            # read volume from LAMMPS data file
-            _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
-            log.write_log(' Volume (structure file):    {} A^3'.format(volume))
-            logfile.write(' Volume (structure file):    {} A^3'.format(volume))
-        elif 'Volume' in jdata:
-            # compute mean of the volume time-series
-            volume = np.mean(jdata['Volume'])
-            log.write_log(' Volume (file):    {} A^3'.format(volume))
-            logfile.write(' Volume (file):    {} A^3\n'.format(volume))
-            if 'Volume' in selected_keys:
-                selected_keys.remove('Volume')
-        else:
-            raise RuntimeError(
-                'No Volume key found. Please provide Volume (-V) or LAMMPS structure file (--structure).')
-    else:
-        log.write_log(' Volume (input):  {} A^3'.format(volume))
-        logfile.write(' Volume (input):  {} A^3\n'.format(volume))
+
+    if structurefile is not None:
+        # read volume from LAMMPS data file
+        _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
+        log.write_log(' Volume (structure file):    {} A^3'.format(volume))
+        #note: here I hardcoded the volume key
+        #      nothing guarantees that in the parameter list
+        #      of the function that calculates KAPPA_SCALE
+        #      you are going to find the VOLUME parameter with this meaning
+        parameters['VOLUME'] = volume
 
     # Time step
     log.write_log(' Time step (input):  {} fs'.format(DT_FS))
-    logfile.write(' Time step (input):  {} fs\n'.format(DT_FS))
 
     # Define currents
     if jindex is None:
@@ -386,22 +375,17 @@ def run_analysis(args):
                 jdata[key][START_STEP:(START_STEP + NSTEPS), sindex] for key in selected_keys
             ])
     log.write_log('  currents shape is {}'.format(currents.shape))
-    logfile.write('  currents shape is {}\n'.format(currents.shape))
     log.write_log('snippet:')
     log.write_log(currents)
 
     # create HeatCurrent object
-    j = tc.HeatCurrent(currents, DT_FS=DT_FS, UNITS=units, TEMPERATURE=temperature, VOLUME=volume,
+    j = tc.current.all_currents[current_type][0](currents, DT_FS=DT_FS, UNITS=units, **parameters,
                        PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(j.N_CURRENTS))
-    logfile.write(' Number of currents = {}\n'.format(j.N_CURRENTS))
     log.write_log(' Number of components = {}'.format(j.N_COMPONENTS))
-    logfile.write(' Number of components = {}\n'.format(j.N_COMPONENTS))
     log.write_log(' KAPPA_SCALE = {}'.format(j.KAPPA_SCALE))
-    logfile.write(' KAPPA_SCALE = {}\n'.format(j.KAPPA_SCALE))
     log.write_log(' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz))
-    logfile.write(' Nyquist_f   = {}  THz\n'.format(j.Nyquist_f_THz))
 
     # resample
     if resample:
@@ -411,13 +395,13 @@ def run_analysis(args):
             FSTAR = jf.Nyquist_f_THz
         else:
             jf = j.resample(fstar_THz=FSTAR, PSD_FILTER_W=psd_filter_w)
-        logfile.write(jf.resample_log)
+        #log.write_log(jf.resample_log)
     else:
         jf = j
 
     # cepstral analysis
     jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor)
-    logfile.write(jf.cepstral_log)
+    #log.write_log(jf.cepstral_log)
 
     ############################################################################
     ## OUTPUT SECTION
@@ -570,7 +554,7 @@ def run_analysis(args):
 
         pdf.close()
 
-    logfile.close()
+    log.close_file()
 
     return 0
 
