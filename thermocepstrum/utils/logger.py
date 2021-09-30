@@ -25,7 +25,7 @@ class PrintMethod:
             s = ''
             for a in args:
                 s += str(a)
-            cls.lfile.write(s+'\n')
+            cls.lfile.write(s + '\n')
         if 'other' in cls._METHOD:
             if cls._print_func:
                 cls._print_func(*args, **kwargs)
