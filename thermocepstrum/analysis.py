@@ -154,7 +154,7 @@ def main():
             choices=list(tc.current.all_currents.keys()),
             help='Type of currents that is provided to the code. Usually this just changes the conversion factor')
     input_params_group.add_argument('--param-from-input-file-column', type=str,
-            action='append', dest='parameters_from_input_file',
+            action='append', dest='parameters_from_input_file', nargs=2,
             help='in order: header of the column and name of the parameter that will be setted to the average of that column of the input file')
     input_params_group.add_argument('--list-currents', action='store_true',
             help='show the list of currents implemented, the docstrings of the units, then exit')
@@ -199,7 +199,6 @@ def main():
     # yapf: enable
     args = parser.parse_args()
 
-
     run_analysis(args)
     return 0
 
@@ -224,14 +223,14 @@ def run_analysis(args):
     no_text_out = args.no_text_output
 
     DT_FS = args.timestep
-    parameters={}
+    parameters = {}
     for parameter in tc.current.all_parameters:
-       p = getattr(args, parameter)
-       if p is not None:
-           if p <= 0.:
-               raise ValueError(f'{parameter} must be positive')
-           parameters[parameter] = p
-    parameters_from_input_file=args.parameters_from_input_file if args.parameters_from_input_file else []
+        p = getattr(args, parameter)
+        if p is not None:
+            if p <= 0.:
+                raise ValueError(f'{parameter} must be positive')
+            parameters[parameter] = p
+    parameters_from_input_file = args.parameters_from_input_file if args.parameters_from_input_file else []
     parameters_from_input_file_key = [x[0] for x in parameters_from_input_file]
     parameters_from_input_file_name = [x[1] for x in parameters_from_input_file]
     units = args.units
@@ -339,12 +338,12 @@ def run_analysis(args):
         std = np.std(data)
         log.write_log(f'Mean {name} (computed): {ave} +/- {std}')
         return ave
-    for key, value in parameters.items(): 
+
+    for key, value in parameters.items():
         log.write_log(f'{key} (input): {value}')
     for key, name in parameters_from_input_file:
         parameters[name] = average(jdata[key], name)
         selected_keys.remove(key)
-
 
     if structurefile is not None:
         # read volume from LAMMPS data file
@@ -380,7 +379,7 @@ def run_analysis(args):
 
     # create HeatCurrent object
     j = tc.current.all_currents[current_type][0](currents, DT_FS=DT_FS, UNITS=units, **parameters,
-                       PSD_FILTER_W=psd_filter_w)
+                                                 PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(j.N_CURRENTS))
     log.write_log(' Number of components = {}'.format(j.N_COMPONENTS))
@@ -439,8 +438,8 @@ def run_analysis(args):
         binoutobj.cepstral_log = jf.cepstral_log
         binoutobj.units = jf.UNITS
         binoutobj.KAPPA_SCALE = jf.KAPPA_SCALE
-        binoutobj.TEMPERATURE = temperature
-        binoutobj.VOLUME = volume
+        binoutobj.TEMPERATURE = jf.TEMPERATURE
+        binoutobj.VOLUME = jf.VOLUME
 
         binoutobj.jf_dct_logpsdK = jf.dct.logpsdK
         binoutobj.jf_dct_logpsdK_THEORY_std = jf.dct.logpsdK_THEORY_std

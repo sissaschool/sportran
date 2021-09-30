@@ -22,10 +22,10 @@ class PrintMethod:
         if 'bash' in cls._METHOD:
             print(*args, **kwargs)
         if 'file' in cls._METHOD:
-            s=''
+            s = ''
             for a in args:
                 s += str(a)
-            cls.lfile.write(s)
+            cls.lfile.write(s+'\n')
         if 'other' in cls._METHOD:
             if cls._print_func:
                 cls._print_func(*args, **kwargs)

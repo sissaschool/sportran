@@ -14,8 +14,9 @@ def run_cli(testdir, filepath_tests):
 
 def test_cli_NaCl(tmpdir, run_cli, data_NaCl_path, num_regression, file_regression):
     fileout_pref = tmpdir.join('output')
-    output = run_cli(data_NaCl_path, '-k', 'flux', '-j', 'vcm[1]', '-t', '5.0', '-V', '65013.301261', '-w', '0.1',
-                     '--FSTAR', '14.0', '-r', '--test-suite-run', '-o', fileout_pref)
+    output = run_cli(data_NaCl_path, '-k', 'flux', '-j', 'vcm[1]', '-t', '5.0', '--VOLUME', '65013.301261',
+                     '--param-from-input-file-column', 'Temp', 'TEMPERATURE', '-w', '0.1', '--FSTAR', '14.0', '-r',
+                     '--test-suite-run', '-o', fileout_pref)
     file_list = [
         'output.cepstral.dat', 'output.cepstrumfiltered_psd.dat', 'output.cospectrum.dat', 'output.cospectrum.filt.dat',
         'output.psd.dat', 'output.resampled_psd.dat'
@@ -34,8 +35,9 @@ def test_cli_NaCl(tmpdir, run_cli, data_NaCl_path, num_regression, file_regressi
 
 def test_cli_bin_output_NaCl(tmpdir, run_cli, data_NaCl_path, num_regression, file_regression):
     fileout_pref = tmpdir.join('output')
-    output = run_cli(data_NaCl_path, '-k', 'flux', '-j', 'vcm[1]', '-t', '5.0', '-V', '65013.301261', '-w', '0.1',
-                     '--FSTAR', '14.0', '-r', '--test-suite-run', '-O', '--bin-output-old', '-o', fileout_pref)
+    output = run_cli(data_NaCl_path, '-k', 'flux', '-j', 'vcm[1]', '-t', '5.0', '--VOLUME', '65013.301261',
+                     '--param-from-input-file-column', 'Temp', 'TEMPERATURE', '-w', '0.1', '--FSTAR', '14.0', '-r',
+                     '--test-suite-run', '-O', '--bin-output-old', '-o', fileout_pref)
     file_list = [
         'output.cepstral.npy', 'output.cepstrumfiltered_psd.npy', 'output.cospectrum.npy', 'output.cospectrum.filt.npy',
         'output.psd.npy', 'output.resampled_psd.npy'
