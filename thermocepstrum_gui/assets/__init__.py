@@ -5,6 +5,13 @@ import json
 
 with resource_stream('thermocepstrum', 'metadata.json') as JS:
     METADATA = json.load(JS)
+dev_state = ''
+if 'classifiers' in METADATA:
+    dev_state = [x for x in METADATA['classifiers'] if 'Development Status ::' in x]
+    if len(dev_state) > 0:
+        dev_state = dev_state[0].split('::')[1]
+    else:
+        dev_state = ''
 
 with resource_stream(__name__, 'languages.json') as JS:
     LANGUAGES = json.load(JS)

@@ -18,7 +18,7 @@ This file contains the GUI of the Thermocepstrum project developed at SISSA.
 
 from thermocepstrum_gui.interfaces import *
 from thermocepstrum_gui.utils.custom_widgets import *
-from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES
+from thermocepstrum_gui.assets import ICON, METADATA, LANGUAGES, dev_state
 # Verify that thermocepstrum is installed
 try:
     import thermocepstrum
@@ -119,8 +119,8 @@ class ThermocepstrumGUI(Tk):
         print('')
         print('\t\t\tGUI version: {}'.format(METADATA['gui_version']))
         print('\t\t\tThermocepstrum version: {}'.format(METADATA['version']))
-        print('\t\t\tDev state: {}'.format(METADATA['dev_state']))
-        print('\t\t\tLast release: {}'.format(METADATA['release_date']))
+        print('\t\t\tDev state: {}'.format(dev_state))
+        #print('\t\t\tLast release: {}'.format(METADATA['release_date']))
         print('\t\t\tDevelopers: {}'.format(METADATA['author']))
         print('\t\t\tURL: {}'.format(METADATA['url']))
         print('')
