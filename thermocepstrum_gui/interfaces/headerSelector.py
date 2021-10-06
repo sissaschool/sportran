@@ -2,8 +2,8 @@
 
 from tkinter import messagebox as msg
 from thermocepstrum_gui.utils.custom_widgets import *
-from thermocepstrum import HeatCurrent
-
+from thermocepstrum_gui.core.control_unit import Current, select_current
+import thermocepstrum as tc
 import traceback
 
 
@@ -50,12 +50,22 @@ class HeaderSelector(Frame):
         Label(header_frame, text=LANGUAGES[settings.LANGUAGE]['select_units'], font='Arial 14 bold') \
             .grid(row=2, column=0, sticky='w', pady=10)
         self.units_selector_frame = Frame(header_frame)
-        self.units_selector = ttk.Combobox(self.units_selector_frame, values=list(HeatCurrent.get_units_list()),
-                                           state='readonly')
-        self.units_selector.current(0)
+        self.current_selector_value = StringVar()
+
+        def on_current_sel(index, value, op):
+            current_type = self.current_selector_value.get()
+            select_current(current_type)
+            self.units_selector['values'] = tc.current.all_currents[current_type][1]
+            self.units_selector.current(0)
+
+        self.current_selector_value.trace('w', on_current_sel)
+        self.current_selector = ttk.Combobox(self.units_selector_frame, values=list(tc.current.all_currents.keys()),
+                                             state='readonly', textvar=self.current_selector_value)
+        self.units_selector = ttk.Combobox(self.units_selector_frame, values=[], state='readonly')
         Label(self.units_selector_frame,
               text=LANGUAGES[settings.LANGUAGE]['units']).grid(row=0, column=0, sticky='we', pady=2)
-        self.units_selector.grid(row=0, column=1, sticky='we', pady=2)
+        self.current_selector.grid(row=0, column=1, sticky='we', pady=2)
+        self.units_selector.grid(row=1, column=1, sticky='we', pady=2)
         self.units_selector_frame.grid(row=3, column=0, sticky='nswe', pady=2)
 
         button_frame = Frame(header_frame)
@@ -93,6 +103,7 @@ class HeaderSelector(Frame):
                             cu.data.description = description
                             cu.Data.loaded = True
                             cu.data.units = self.units_selector.get()
+                            cu.data.current_type = self.current_selector.get()
                             if self.next_frame:
                                 self.main.show_frame(self.next_frame)
                             else:
@@ -158,10 +169,22 @@ class HeaderSelector(Frame):
 
             #try to set units (if given)
             try:
-                self.units_selector.current(list(HeatCurrent.get_units_list()).index(cu.data.jdata['_UNITS']))
+                if '_CURRENT' in cu.data.jdata:
+                    current_type = cu.data.jdata['_CURRENT']
+                else:
+                    current_type = 'heat'
+                select_current(current_type)
+                self.current_selector_value.set(current_type)
+                self.units_selector.current(tc.current.all_currents[current_type][1].index(cu.data.jdata['_UNITS']))
                 cu.log.write_log(LANGUAGES[settings.LANGUAGE]['units_loaded'].format(cu.data.jdata['_UNITS']))
-            except:
-                self.units_selector.current(list(HeatCurrent.get_units_list()).index(cu.data.units))
+            except BaseException as e:
+                print(e)
+                try:
+                    self.current_selector.current(list(tc.current.all_currents.keys()).index(cu.data.current_type))
+                    self.units_selector.current(tc.current.all_currents[cu.data.current_type][1].index(cu.data.units))
+                except BaseException as e:
+                    print(e)
+                    pass
 
             if cu.Data.loaded:
                 for i, check in enumerate(self.check_list.controller.winfo_children()):

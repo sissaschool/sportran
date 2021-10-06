@@ -77,6 +77,7 @@ class Data:
         self.old_fstar = 0.0
         self._psd_filter_width = 0.1
         self._units = 'metal'
+        self._current_type = 'heat'
 
     @property
     def temperature(self):
@@ -117,6 +118,16 @@ class Data:
         self._verify_changes(value, self.psd_filter_width)
         self._psd_filter_width = value
         print(self.changes, ' filter')
+
+    @property
+    def current_type(self):
+        return self._current_type
+
+    @current_type.setter
+    def current_type(self, value):
+        self._verify_changes(value, self.current_type)
+        self._current_type = value
+        print(self.changes, ' current_type')
 
     @property
     def units(self):
@@ -212,7 +223,24 @@ the graph manager.
 """
 
 gm = CurrentPlotter
-tc.HeatCurrent.set_plotter(CurrentPlotter)
+
+
+class FakeCurrent:
+
+    def __init__(self):
+        raise RuntimeError('you must set the current type by calling select_current method')
+
+
+Current = FakeCurrent
+
+
+def select_current(current):
+    global Current
+    if current in tc.current.all_currents.keys():
+        Current = tc.current.all_currents[current][0]
+    else:
+        raise KeyError(f'{current} is not a valid type of current {list(tc.current.all_currents.keys())}')
+    Current.set_plotter(CurrentPlotter)
 
 
 def set_graph(axis_, func, **kwargs):
@@ -408,12 +436,12 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     #     #     currents = np.array([Data.jdata[key][START_STEP:(START_STEP + NSTEPS), jindex] - Data.jdata[key][START_STEP:(
     #     #                 START_STEP + NSTEPS), sindex] for key in selected_keys])
     data.currents = currents
-    # create HeatCurrent object
+    # create Current object
     emsgs = []
     if volume is not -1:
         if temperature is not -1:
-            data.j = tc.HeatCurrent(currents, UNITS=data.units, DT_FS=DT_FS, TEMPERATURE=temperature, VOLUME=volume,
-                                    PSD_FILTER_W=psd_filter_w)
+            data.j = Current(currents, UNITS=data.units, DT_FS=DT_FS, TEMPERATURE=temperature, VOLUME=volume,
+                             PSD_FILTER_W=psd_filter_w)
         else:
             emsgs.append('Invalid temperature!')
             return -1, emsgs
@@ -440,6 +468,8 @@ def export_data(fileout):
                 data.jdata['DT_FS'] = data.DT_FS
             if (not '_UNITS' in data.jdata.keys() or settings.OVERWRITE) and data.units is not None:
                 data.jdata['_UNITS'] = data.units
+            if (not '_CURRENT' in data.jdata.keys() or settings.OVERWRITE) and data.current_type is not None:
+                data.jdata['_CURRENT'] = data.current_type
             if (not '_HEADERS' in data.jdata.keys() or
                     settings.OVERWRITE) and data.keys is not None and data.description is not None:
                 data.jdata['_HEADERS'] = {}
