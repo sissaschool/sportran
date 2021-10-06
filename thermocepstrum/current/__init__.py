@@ -13,6 +13,9 @@ _all = dir()
 
 
 def _get_currents_with_units():
+    """Inspect all the classes accessible from this module, and detect the ones that contains the member `_current_type`. Then calls the methods to inspect the units implemented for each discovered class
+    :return: ( {'_current_type': (CurrentClass, ['unit_list'], ['parameter_list])}  )
+    """
     currents_with_units = {}
     all_units = []
     all_parameters = []
@@ -47,10 +50,12 @@ def _list_of_currents_and_units(verbose=False):
     return s
 
 
+#: list of currents classes, units implemented and parameters that are found dinamically when the module is imported
 all_currents, all_units, all_parameters = _get_currents_with_units()
 
 
 def build_currents_units_table(col=9):
+    """print a table with the Current classes and the units implemented for each class"""
     table = ''
     table += ' ' * col
     for u in all_units:
@@ -65,7 +70,3 @@ def build_currents_units_table(col=9):
                 table += ' ' * col
         table += '\n'
     return table
-
-
-def get_Current_class_and_units(key):
-    return all_currents[key]

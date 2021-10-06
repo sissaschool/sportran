@@ -211,8 +211,8 @@ This section contains the functions that deal with
 the graph manager.
 """
 
-gm = CurrentPlotter()
-tc.HeatCurrent.set_plotter(CurrentPlotter())
+gm = CurrentPlotter
+tc.HeatCurrent.set_plotter(CurrentPlotter)
 
 
 def set_graph(axis_, func, **kwargs):
@@ -225,7 +225,6 @@ def set_graph(axis_, func, **kwargs):
     :param kwargs: other arguments to pass to the file manager.
     :return axis: the new graph.
     """
-
     axis = func(axes=[axis_], **kwargs)
     return axis
 
