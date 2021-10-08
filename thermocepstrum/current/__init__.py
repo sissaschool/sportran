@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
+"""
+This module handles all the various type of currents and units of measure that can be handled natively by this library.
 
+To add a new current type and/or unit you have to do the following.
+1. define in a new file a class derived from :class:`Current` with the following class variables:
+  - :attribute:`_current_type` that you can set to the name of the current that will be used in all the user interfaces
+  - :attribute:`_input_parameters` is the set of the parameters that your current needs. Usually {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
+  - :attribute:`_KAPPA_SI_UNITS` string that describes the units of the final result to be displayed where appropriate
+2. define `__init__` like
+  ```
+  def __init__(self, traj, **params):
+     super().__init__(traj, **params)
+  ```
+3. define `_get_builder` that must return the current class type and a list of parameters that applied to the class constructor generate an instance identical to the current one, so that it can be used like
+   ```
+   CurrentType, builder = self._get_builder()
+   new_ts = CurrentType(**builder)
+   ```
+4. define the units for your class. The units are automatically retrieved from the module :module:`units`. You must do the following:
+   - add a file named :attribute:`_current_type`.py (a file with the same name of your class attribute value)
+   - write inside the file some functions :func:`scale_kappa_*` the part of the name after `scale_kappa_` will be the name of the unit used in the user interfaces.
+     The parameters must be consistent with :attribute:`_input_parameters`. The parameters (with the same name) will be provided by the user in the class constructor or in the various interfaces
+
+"""
 from .current import *
 from .heat import *
 from .electric import *
@@ -14,7 +37,7 @@ _all = dir()
 
 def _get_currents_with_units():
     """Inspect all the classes accessible from this module, and detect the ones that contains the member `_current_type`. Then calls the methods to inspect the units implemented for each discovered class
-    :return: ( {'_current_type': (CurrentClass, ['unit_list'], ['parameter_list])}  )
+    :return: ( {'_current_type': (CurrentClass, ['unit_list'], ['parameter_list'])}  )
     """
     currents_with_units = {}
     all_units = []
