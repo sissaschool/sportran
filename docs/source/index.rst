@@ -7,23 +7,13 @@ Welcome to SporTran's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 2
    :caption: Contents:
 
-   readme
-   gui_readme
-   contributing
+   README.md
+   README_GUI.md
+   CONTRIBUTING.md
+   modules
 
-
-Classes
-=======
-
-.. automodule:: thermocepstrum
-   :members:
-
-.. automodule:: thermocepstrum
-   :members:
-   :inherited-members:
 
 Indices and tables
 ==================

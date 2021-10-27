@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """
---------------------------------------------
+===========================================
     Thermocepstrum graphic user interface
-
+===========================================
     Version: 0.0.2
     Release state: Beta
     Last update: 09/2019
 
     Main Developer:     Sebastiano Bisacchi
     Other developer:    Riccardo   Bertossa
---------------------------------------------
 
 This file contains the GUI of the Thermocepstrum project developed at SISSA.
 """

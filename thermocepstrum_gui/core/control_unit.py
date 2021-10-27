@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
---------------------------------------------
+===========================================
     Thermocepstrum graphic user interface
-
+===========================================
+--------------------------
     Control unit file
---------------------------------------------
+--------------------------
 
 This file contains the functions that the GUI will directly call to start new
 multithread operations and to make requests to the thermocepstrum calculus unit.

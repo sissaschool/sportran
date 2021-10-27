@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
---------------------------------------------
+===========================================
     Thermocepstrum graphic user interface
-
+===========================================
+---------------------------
     Settings file
---------------------------------------------
+---------------------------
 
 This file contains the main settings and preferences of the Thermocepstrum GUI
 '''
