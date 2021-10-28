@@ -10,4 +10,3 @@ Library API
    :recursive:
 
    thermocepstrum
-   thermocepstrum_gui

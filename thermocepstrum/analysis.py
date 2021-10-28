@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+This module is the CLI of the library, that can be called after installing it from the command line
+"""
 
 import os
 from sys import path, argv

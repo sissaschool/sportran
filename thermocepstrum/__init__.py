@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+==========================
+Thermocepstrum library
+==========================
 
+this library contains all the code necessary to perform a nice and fast cepstral analysis on your time series
+"""
 from . import md
 from .current import *
 from . import utils

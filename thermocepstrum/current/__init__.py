@@ -2,9 +2,7 @@
 """
 This module handles all the various type of currents and units of measure that can be handled natively by this library.
 
-the currently supported units and currents are
-
->>> build_currents_units_table()
+The currently supported units and currents can be viewed by calling the function :py:func:`build_currents_units_table`
 
 To add a new current type and/or unit you have to do the following.
 1. define in a new file a class derived from :py:class:`.current.Current` with the following class variables:

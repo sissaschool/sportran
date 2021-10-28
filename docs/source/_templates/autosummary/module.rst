@@ -48,6 +48,11 @@
    {% endif %}
    {% endblock %}
 
+
+   {% for item in functions %}
+   .. autofunction:: {{ item }}
+   {% endfor %}
+
 {% block modules %}
 {% if modules %}
 .. rubric:: Modules

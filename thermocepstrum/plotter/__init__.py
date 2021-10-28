@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Utilities to pretty-plot the results
+"""
 
 import matplotlib
 # matplotlib.use('Agg')  # if needed use force=True, warn=False

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Various utilities like for example a global logger instance
+"""
 
 from .logger import PrintMethod
 
