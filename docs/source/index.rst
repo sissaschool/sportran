@@ -6,12 +6,23 @@
 Welcome to SporTran's documentation!
 ====================================
 
-.. toctree::
-   :caption: Contents:
 
+Introduction
+============
+.. toctree::
    README.md
    README_GUI.md
    CONTRIBUTING.md
+
+Examples
+========
+.. toctree::
+   example_cepstrum_doublecomp_NaCl
+   example_cepstrum_singlecomp_silica
+
+API
+===
+.. toctree::
    modules
 
 

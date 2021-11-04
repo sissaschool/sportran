@@ -32,6 +32,7 @@ extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.autosummary',
         'myst_parser',
+        'nbsphinx',
 ]
 
 napoleon_google_docstring = False

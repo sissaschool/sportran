@@ -45,7 +45,8 @@
         ],
         "doc": [
             "sphinx==4.2.0",
-            "myst_parser==0.15.2"
+            "myst_parser==0.15.2",
+            "nbsphinx==0.8.7"
         ]
     },
     "entry_points": {
