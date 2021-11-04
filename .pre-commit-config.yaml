@@ -39,6 +39,7 @@
         thermocepstrum_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         tests/test_cli/.*|
+        tests/test_notebooks/.*|
         examples/.*|
       )$
 

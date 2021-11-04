@@ -283,10 +283,12 @@ class Current(MDSample):
 
         if plot:
             try:
-                self.plot_resample(xf=xf, freq_units=freq_units, PSD_FILTER_W=PSD_FILTER_W, FIGSIZE=FIGSIZE)
+                axs = self.plot_resample(xf=xf, freq_units=freq_units, PSD_FILTER_W=PSD_FILTER_W, FIGSIZE=FIGSIZE)
+                return xf, axs
             except AttributeError:
                 print('Plotter does not support the plot_resample method')
-        return xf
+        else:
+            return xf
 
     def fstar_analysis(self, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
                        verbose=False, **plot_kwargs):   # yapf: disable

@@ -41,7 +41,9 @@
         "tests": [
             "pytest>=5.1.0",
             "pytest-regressions",
-            "pandas"
+            "pandas",
+            "testbook",
+            "ipykernel"
         ],
         "doc": [
             "sphinx==4.2.0",
