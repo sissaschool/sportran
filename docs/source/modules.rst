@@ -9,4 +9,4 @@ Library API
    :toctree: _autosummary
    :recursive:
 
-   thermocepstrum
+   sportran

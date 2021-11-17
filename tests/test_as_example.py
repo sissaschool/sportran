@@ -4,7 +4,7 @@ import numpy as np
 
 
 def test_example_NaCl(data_NaCl, check_reg):
-    import thermocepstrum as tc
+    import sportran as tc
 
     jfile, DT_FS, TEMPERATURE, VOLUME = data_NaCl
     j = tc.HeatCurrent([jfile.data['flux'], jfile.data['vcm[1]']], DT_FS=DT_FS, UNITS='metal', TEMPERATURE=TEMPERATURE,
@@ -18,7 +18,7 @@ def test_example_NaCl(data_NaCl, check_reg):
 
 
 def test_example_SiO2(data_SiO2, check_reg):
-    import thermocepstrum as tc
+    import sportran as tc
 
     jfile, DT_FS, TEMPERATURE, VOLUME = data_SiO2
     j = tc.HeatCurrent(jfile.data['flux1'], DT_FS=DT_FS, UNITS='metal', TEMPERATURE=TEMPERATURE, VOLUME=VOLUME)

@@ -12,7 +12,7 @@
     args: ["-i"]
     exclude: &exclude_files >
       (?x)^(
-        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        sportran_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         tests/test_cli/.*|
         examples/.*|
@@ -36,7 +36,7 @@
   - id: trailing-whitespace
     exclude: >
       (?x)^(
-        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        sportran_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         tests/test_cli/.*|
         tests/test_notebooks/.*|

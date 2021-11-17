@@ -28,7 +28,7 @@ def data_SiO2_path(filepath_tests):
 
 @pytest.fixture(scope='session')
 def data_NaCl(data_NaCl_path):
-    import thermocepstrum as tc
+    import sportran as tc
     import numpy as np
 
     jfile = tc.i_o.TableFile(data_NaCl_path, group_vectors=True)
@@ -43,7 +43,7 @@ def data_NaCl(data_NaCl_path):
 
 @pytest.fixture(scope='session')
 def data_SiO2(data_SiO2_path):
-    import thermocepstrum as tc
+    import sportran as tc
 
     jfile = tc.i_o.TableFile(data_SiO2_path, group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['flux1'])

@@ -6,7 +6,7 @@ import numpy as np
 def run_cli(testdir, filepath_tests):
 
     def do_run(*args):
-        args = [filepath_tests + '/../thermocepstrum/analysis.py'] + list(args)
+        args = [filepath_tests + '/../sportran/analysis.py'] + list(args)
         return testdir.run(*args)
 
     return do_run
