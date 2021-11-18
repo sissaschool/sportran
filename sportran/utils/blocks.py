@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys, os, math
-import sportran as tc
+import sportran as st
 from sportran.utils import log
 
 abs_path = os.path.abspath(sys.argv[0])
@@ -226,17 +226,17 @@ def main():
                 WF = int(round(w / 1000. * self.DT_FS * len(self.freqs_THz) * 2.))
                 log.write_log('filtering: ', WF)
                 if not single:
-                    ffpsd = tc.md.tools.filter.runavefilter(self.mpsd, WF)
+                    ffpsd = st.md.tools.filter.runavefilter(self.mpsd, WF)
                 else:
-                    ffpsd = tc.md.tools.filter.runavefilter(self.psd, WF)
+                    ffpsd = st.md.tools.filter.runavefilter(self.psd, WF)
                 self.fpsd = ffpsd
                 try:
                     for i in range(self.ucospectrum.shape[0]):
                         for j in range(self.ucospectrum.shape[1]):
                             if not single:
-                                ffc = tc.md.tools.filter.runavefilter(self.mcospectrum[i, j], WF)
+                                ffc = st.md.tools.filter.runavefilter(self.mcospectrum[i, j], WF)
                             else:
-                                ffc = tc.md.tools.filter.runavefilter(self.ucospectrum[i, j], WF)
+                                ffc = st.md.tools.filter.runavefilter(self.ucospectrum[i, j], WF)
                             self.cospectrum[i, j] = ffc
                 except AttributeError:
                     pass

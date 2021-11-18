@@ -10,13 +10,13 @@ import argparse
 import numpy as np
 
 try:
-    import sportran as tc
+    import sportran as st
 except ImportError:
     abs_path = os.path.abspath(__file__)
     tc_path = abs_path[:abs_path.rfind('/')]
     path.append(tc_path[:tc_path.rfind('/')])
     try:
-        import sportran as tc
+        import sportran as st
     except ImportError:
         raise ImportError('Cannot locate sportran.')
 
@@ -24,7 +24,7 @@ from sportran.utils import log
 log.set_method('bash')
 log.append_method('file')
 from sportran.plotter.cli import CLIPlotter
-tc.Current.set_plotter(CLIPlotter)
+st.Current.set_plotter(CLIPlotter)
 from sportran.plotter import plt   # this imports matplotlib.pyplot
 from sportran.plotter import addPlotToPdf, PdfPages
 
@@ -100,10 +100,10 @@ def main():
     if '--list-currents' in argv:
         print('units and docstrings list for each current:')
         print('=================')
-        print(tc.current._list_of_currents_and_units(verbose=True))
+        print(st.current._list_of_currents_and_units(verbose=True))
         print('=================')
         print('currents and units implementation table')
-        print(tc.current.build_currents_units_table())
+        print(st.current.build_currents_units_table())
         return 0
 
     parser = argparse.ArgumentParser(description=main.__doc__, epilog=_epilog, formatter_class=argparse.RawTextHelpFormatter)
@@ -147,14 +147,14 @@ def main():
     input_params_group = parser.add_argument_group('Physical parameters')
     input_params_group.add_argument('-t', '--timestep', type=float, required=True,
             help='Time step of the data (fs)')
-    for parameter in tc.current.all_parameters:
+    for parameter in st.current.all_parameters:
         input_params_group.add_argument(f'--{parameter}', type=float,
             help='Usually Angstrom or Kelvins, see description of units and currents implemented available with --list-currents')
     input_params_group.add_argument('-u', '--units', type=str, default='metal',
-            choices=tc.current.all_units,
+            choices=st.current.all_units,
             help='Units. (optional, default: metal)')
     input_params_group.add_argument('-C', '--current', type=str, default='heat',
-            choices=list(tc.current.all_currents.keys()),
+            choices=list(st.current.all_currents.keys()),
             help='Type of currents that is provided to the code. Usually this just changes the conversion factor')
     input_params_group.add_argument('--param-from-input-file-column', type=str,
             action='append', dest='parameters_from_input_file', nargs=2,
@@ -227,7 +227,7 @@ def run_analysis(args):
 
     DT_FS = args.timestep
     parameters = {}
-    for parameter in tc.current.all_parameters:
+    for parameter in st.current.all_parameters:
         p = getattr(args, parameter)
         if p is not None:
             if p <= 0.:
@@ -292,7 +292,7 @@ def run_analysis(args):
         #input parameters that are read from file
         for col, pname in parameters_from_input_file:
             selected_keys.append(col)
-        jfile = tc.i_o.TableFile(inputfile, group_vectors=True, print_elapsed=print_elapsed)
+        jfile = st.i_o.TableFile(inputfile, group_vectors=True, print_elapsed=print_elapsed)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         jdata = jfile.data
         START_STEP = 0   # reset to zero, as later we will need to read all of jdata
@@ -303,7 +303,7 @@ def run_analysis(args):
 
     elif input_format == 'lammps':
         # LAMMPS format: a LAMMPS log file is scanned until the run_keywork is found
-        jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
+        jfile = st.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         if temperature is None:
             selected_keys.append('Temp')
         jfile.read_datalines(NSTEPS, select_ckeys=selected_keys)
@@ -350,7 +350,7 @@ def run_analysis(args):
 
     if structurefile is not None:
         # read volume from LAMMPS data file
-        _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
+        _, volume = st.i_o.read_lammps_datafile.get_box(structurefile)
         log.write_log(' Volume (structure file):    {} A^3'.format(volume))
         #note: here I hardcoded the volume key
         #      nothing guarantees that in the parameter list
@@ -381,7 +381,7 @@ def run_analysis(args):
     log.write_log(currents)
 
     # create HeatCurrent object
-    j = tc.current.all_currents[current_type][0](currents, DT_FS=DT_FS, UNITS=units, **parameters,
+    j = st.current.all_currents[current_type][0](currents, DT_FS=DT_FS, UNITS=units, **parameters,
                                                  PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(j.N_CURRENTS))
@@ -393,7 +393,7 @@ def run_analysis(args):
     if resample:
         if TSKIP is not None:
             jf = j.resample(TSKIP=TSKIP, PSD_FILTER_W=psd_filter_w)
-            #FSTAR = j.Nyquist_f_THz / TSKIP   # from tc.heatcurrent.resample_current
+            #FSTAR = j.Nyquist_f_THz / TSKIP   # from st.heatcurrent.resample_current
             FSTAR = jf.Nyquist_f_THz
         else:
             jf = j.resample(fstar_THz=FSTAR, PSD_FILTER_W=psd_filter_w)

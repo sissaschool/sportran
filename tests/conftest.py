@@ -28,10 +28,10 @@ def data_SiO2_path(filepath_tests):
 
 @pytest.fixture(scope='session')
 def data_NaCl(data_NaCl_path):
-    import sportran as tc
+    import sportran as st
     import numpy as np
 
-    jfile = tc.i_o.TableFile(data_NaCl_path, group_vectors=True)
+    jfile = st.i_o.TableFile(data_NaCl_path, group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['Temp', 'flux', 'vcm[1]'])
     DT_FS = 5.0   # time step [fs]
     TEMPERATURE = np.mean(jfile.data['Temp'])   # temperature [K]
@@ -43,9 +43,9 @@ def data_NaCl(data_NaCl_path):
 
 @pytest.fixture(scope='session')
 def data_SiO2(data_SiO2_path):
-    import sportran as tc
+    import sportran as st
 
-    jfile = tc.i_o.TableFile(data_SiO2_path, group_vectors=True)
+    jfile = st.i_o.TableFile(data_SiO2_path, group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['flux1'])
     DT_FS = 1.0   # time step [fs]
     TEMPERATURE = 1065.705630   # temperature [K]

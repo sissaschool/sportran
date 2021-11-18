@@ -13,7 +13,7 @@ multithread operations and to make requests to the sportran calculus unit.
 
 import os
 
-import sportran as tc
+import sportran as st
 import numpy as np
 
 from . import settings
@@ -237,10 +237,10 @@ Current = FakeCurrent
 
 def select_current(current):
     global Current
-    if current in tc.current.all_currents.keys():
-        Current = tc.current.all_currents[current][0]
+    if current in st.current.all_currents.keys():
+        Current = st.current.all_currents[current][0]
     else:
-        raise KeyError(f'{current} is not a valid type of current {list(tc.current.all_currents.keys())}')
+        raise KeyError(f'{current} is not a valid type of current {list(st.current.all_currents.keys())}')
     Current.set_plotter(CurrentPlotter)
 
 
@@ -363,7 +363,7 @@ def load_keys(inputfile):
     """
     global data
     if data.inputformat == 'table':
-        jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+        jfile = st.i_o.TableFile(inputfile, group_vectors=True)
         return jfile.all_ckeys
     elif data.inputformat == 'dict':
         try:
@@ -372,7 +372,7 @@ def load_keys(inputfile):
             data.jdata = np.load(inputfile, allow_pickle=True, encoding='latin1').tolist()
         return {key: i for i, key in enumerate(data.jdata) if key[0] != '_'}
     elif data.inputformat == 'lammps':
-        jfile = tc.i_o.LAMMPSLogFile(inputfile)
+        jfile = st.i_o.LAMMPSLogFile(inputfile)
         return jfile.all_ckeys
     else:
         raise RuntimeError('inputformat {} not handled'.format(data.inputformat))
@@ -395,7 +395,7 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
         data.units = units
 
     if input_format == 'table':
-        jfile = tc.i_o.TableFile(inputfile, group_vectors=True)
+        jfile = st.i_o.TableFile(inputfile, group_vectors=True)
         data.jfile = jfile
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         data.jdata = jfile.data
@@ -404,7 +404,7 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
 
         # data.jdata = np.load(inputfile) #already loaded at the header selector section
     elif input_format == 'lammps':
-        jfile = tc.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
+        jfile = st.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
         jfile.read_datalines(start_step=START_STEP, NSTEPS=NSTEPS, select_ckeys=selected_keys)
         data.jdata = jfile.data
     else:
@@ -532,7 +532,7 @@ def get_temp(jdata, selected_key):
 
 def get_volume(jdata, structurefile):
     if structurefile is not None:
-        _, volume = tc.i_o.read_lammps_datafile.get_box(structurefile)
+        _, volume = st.i_o.read_lammps_datafile.get_box(structurefile)
         print(' Volume (structure file):    {} A^3'.format(volume))
         # logfile.write(' Volume (structure file):    {} A^3'.format(volume))
     elif 'Volume' in jdata:

@@ -62,7 +62,7 @@ Per rendere tutto più lineare (dall'alto in basso) metterei:
 # GENERAL WISH LIST
 - [ ] Vanno inserite delle spiegazioni che aiutino a capire cosa rappresenta ogni schermata, senza aver letto approfonditamente il paper. Ad esempio spiegare come scegliere $f^*$.
 
-- [ ] L'help per come è adesso è difficile da leggere. Avrebbe più senso preparare un help html più dettagliato, con degli screenshot di esempio. Tra le cose che vorrei implementare per la versione 1.0 di TC c'è la documentazione su readthedocs, fatta con sphinx.
+- [ ] L'help per come è adesso è difficile da leggere. Avrebbe più senso preparare un help html più dettagliato, con degli screenshot di esempio. Tra le cose che vorrei implementare per la versione 1.0 di st c'è la documentazione su readthedocs, fatta con sphinx.
 
 - [ ] si potrebbe fare che se il file letto ha estensione `.npy` o `.npz` viene riconosciuto come binario (dict) direttamente.
 

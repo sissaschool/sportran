@@ -3,7 +3,7 @@
 from tkinter import messagebox as msg
 from sportran_gui.utils.custom_widgets import *
 from sportran_gui.core.control_unit import Current, select_current
-import sportran as tc
+import sportran as st
 import traceback
 
 
@@ -55,11 +55,11 @@ class HeaderSelector(Frame):
         def on_current_sel(index, value, op):
             current_type = self.current_selector_value.get()
             select_current(current_type)
-            self.units_selector['values'] = tc.current.all_currents[current_type][1]
+            self.units_selector['values'] = st.current.all_currents[current_type][1]
             self.units_selector.current(0)
 
         self.current_selector_value.trace('w', on_current_sel)
-        self.current_selector = ttk.Combobox(self.units_selector_frame, values=list(tc.current.all_currents.keys()),
+        self.current_selector = ttk.Combobox(self.units_selector_frame, values=list(st.current.all_currents.keys()),
                                              state='readonly', textvar=self.current_selector_value)
         self.units_selector = ttk.Combobox(self.units_selector_frame, values=[], state='readonly')
         Label(self.units_selector_frame,
@@ -175,13 +175,13 @@ class HeaderSelector(Frame):
                     current_type = 'heat'
                 select_current(current_type)
                 self.current_selector_value.set(current_type)
-                self.units_selector.current(tc.current.all_currents[current_type][1].index(cu.data.jdata['_UNITS']))
+                self.units_selector.current(st.current.all_currents[current_type][1].index(cu.data.jdata['_UNITS']))
                 cu.log.write_log(LANGUAGES[settings.LANGUAGE]['units_loaded'].format(cu.data.jdata['_UNITS']))
             except BaseException as e:
                 print(e)
                 try:
-                    self.current_selector.current(list(tc.current.all_currents.keys()).index(cu.data.current_type))
-                    self.units_selector.current(tc.current.all_currents[cu.data.current_type][1].index(cu.data.units))
+                    self.current_selector.current(list(st.current.all_currents.keys()).index(cu.data.current_type))
+                    self.units_selector.current(st.current.all_currents[cu.data.current_type][1].index(cu.data.units))
                 except BaseException as e:
                     print(e)
                     pass

@@ -7,7 +7,7 @@
 ################################################################################
 
 import numpy as np
-import sportran as tc
+import sportran as st
 from scipy.stats import shapiro
 from sportran.utils import log
 
@@ -43,7 +43,7 @@ class MDBlocks(object):
             global FloatProgress, display
 
         # filter & sample big trajectory
-        self.y_big = tc.md.tools.filter_and_sample(traj, self.FILTER_WIDTH_T, self.TSKIP, 'rectangular', \
+        self.y_big = st.md.tools.filter_and_sample(traj, self.FILTER_WIDTH_T, self.TSKIP, 'rectangular', \
                                             even_NSTEPS=True, detrend=False, drop_first=True )
         self.NYQUIST_F = 0.5 / TSKIP   # Nyquist frequency (rescaled) [\omega*DT/(2*pi)]
         self.TOT_TIME = self.y_big.shape[0]
@@ -62,7 +62,7 @@ class MDBlocks(object):
 
         # define blocks from segments of y_big
         self.block = [
-            tc.md.MDSample(traj=self.y_big[L * self.BLOCK_SIZE:(L + 1) * self.BLOCK_SIZE]) for L in range(self.N_BLOCKS)
+            st.md.MDSample(traj=self.y_big[L * self.BLOCK_SIZE:(L + 1) * self.BLOCK_SIZE]) for L in range(self.N_BLOCKS)
         ]
 
     def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, bayes_p=False, density_grid=None):
@@ -76,7 +76,7 @@ class MDBlocks(object):
         self.BLOCK_NFREQS = self.BLOCK_SIZE / 2 + 1
         if self.MULTI_COMPONENT:
             log.write_log(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
-            self.ck_THEORY_var, self.psd_THEORY_mean = tc.md.cepstral.multicomp_cepstral_parameters(
+            self.ck_THEORY_var, self.psd_THEORY_mean = st.md.cepstral.multicomp_cepstral_parameters(
                 self.BLOCK_NFREQS, self.N_COMPONENTS)
         self.bayes_p = bayes_p
 
@@ -86,11 +86,11 @@ class MDBlocks(object):
         for L in range(self.N_BLOCKS):
             if self.MULTI_COMPONENT:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS, average_components=True)
-                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, \
+                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor, normalization=self.BLOCK_SIZE)
             else:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS)
-                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
+                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor,
                                                     normalization=self.BLOCK_SIZE)   # theory_var=None
 
@@ -123,7 +123,7 @@ class MDBlocks(object):
         self.BLOCK_NFREQS = self.BLOCK_SIZE / 2 + 1
         if self.MULTI_COMPONENT:
             log.write_log(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
-            self.ck_THEORY_var, self.psd_THEORY_mean = tc.md.cepstral.multicomp_cepstral_parameters(
+            self.ck_THEORY_var, self.psd_THEORY_mean = st.md.cepstral.multicomp_cepstral_parameters(
                 self.BLOCK_NFREQS, self.N_COMPONENTS - 1)   #different number of degrees of freedom!
         self.bayes_p = bayes_p
 
@@ -134,12 +134,12 @@ class MDBlocks(object):
             if self.MULTI_COMPONENT:
                 self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP, DT_FS=self.DT_FS,
                                             average_components=True)   #different method call!
-                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, \
+                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)#, normalization=self.BLOCK_SIZE) #removed (personal comunication with Loris)
             else:
                 self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP,
                                             DT_FS=self.DT_FS)   #different method call!
-                self.block[L].dct = tc.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
+                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor)
 
             self.block[L].dct.scan_filter_tau()
@@ -333,7 +333,7 @@ class MDBlocks(object):
             self.p_aic_KAVE = np.mean(list(self.p_aic_Kave()))
             self.p_aic_KSTD = np.std(list(self.p_aic_Kave()))
             self.avep_aic = np.mean(list(self.p_aic()), axis=1)
-            self.avep_aic_KAVE, self.avep_aic_KSTD = tc.md.aic.grid_statistics(np.arange(self.BLOCK_NFREQS),
+            self.avep_aic_KAVE, self.avep_aic_KSTD = st.md.aic.grid_statistics(np.arange(self.BLOCK_NFREQS),
                                                                                self.avep_aic)
             log.write_log('   AIC_weight_distr   =  {:12.3f} +/- {:8f}'.format(self.p_aic_KAVE, self.p_aic_KSTD))
             log.write_log('       ave_AIC_w check:  {:12.3f} +/- {:8f}'.format(self.avep_aic_KAVE, self.avep_aic_KSTD))
@@ -379,7 +379,7 @@ class MDBlocks(object):
             self.flogtau_density_XAVE = np.mean(list(self.flogtau_density_xave()))
             self.flogtau_density_XSTD = np.std(list(self.flogtau_density_xave()))
             self.flogtau_avedensity = np.mean(list(self.flogtau_density()), axis=1)
-            self.flogtau_avedensity_XAVE, self.flogtau_avedensity_XSTD = tc.md.aic.grid_statistics(
+            self.flogtau_avedensity_XAVE, self.flogtau_avedensity_XSTD = st.md.aic.grid_statistics(
                 self.density_grid, self.flogtau_avedensity)
             log.write_log('\n   flogtau[AIC_w]     =  {:12f} +/- {:8f} (errcheck: {:8f} +/- {:8f})'.format(
                 self.flogtau_density_XAVE, self.flogtau_density_XSTD,
