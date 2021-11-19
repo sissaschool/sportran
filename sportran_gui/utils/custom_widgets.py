@@ -706,9 +706,8 @@ class Version:
         Label(self.frame, text='Sportran GUI', font='Arial 12 bold').grid(row=0, column=0, sticky='we', pady=5)
         ttk.Separator(self.frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we')
 
-        Label(self.frame,
-              text='Sportran {}: {}'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(),
-                                                  METADATA['version'])).grid(row=2, column=0, sticky='w', pady=5)
+        Label(self.frame, text='Sportran {}: {}'.format(LANGUAGES[settings.LANGUAGE]['version'].lower(),
+                                                        METADATA['version'])).grid(row=2, column=0, sticky='w', pady=5)
 
         Label(
             self.frame,
