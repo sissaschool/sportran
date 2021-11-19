@@ -34,7 +34,7 @@ np.set_printoptions(precision=8)
 def main():
     """
     --------------------------------------------------------------------------------
-      *** THERMOCEPSTRUM ***  command line interface
+      *** SPORTRAN ***  command line interface
     --------------------------------------------------------------------------------
     This script performs the cepstral analysis of a (heat) current.
     Results are written to stdout and a log file, and plots are saved in PDF format.
