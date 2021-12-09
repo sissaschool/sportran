@@ -170,7 +170,6 @@ class GraphWidget(Frame):
         self.canvas = FigureCanvasTkAgg(self.f, controller)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=TOP, anchor='w', padx=20, fill=BOTH)
-        self.f.subplots_adjust(left=0.03, right=0.89, top=0.95, bottom=0.2)
         self.func = None
 
         # This variable contains other possible graphs to be drawn.

@@ -33,15 +33,16 @@ class FStarSelector(Frame):
         slider_frame.pack(side=TOP, anchor='w', padx=20, fill=BOTH)
 
         Label(slider_frame, text=LANGUAGES[settings.LANGUAGE]['stp4'],
-              font='Arial 12').grid(row=0, column=0, sticky='w', padx=20)
+              font='Arial 12').grid(row=0, column=1, sticky='w', padx=20)
 
         self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1)
-        self.slider.grid(row=1, column=0, sticky='we', columnspan=1, padx=20, pady=5)
-        slider_frame.columnconfigure(0, weight=10)
-        slider_frame.columnconfigure(1, weight=1)
+        self.slider.grid(row=1, column=1, sticky='we', columnspan=1, padx=20, pady=5)
+        slider_frame.columnconfigure(0, weight=2)
+        slider_frame.columnconfigure(1, weight=11)
+        slider_frame.columnconfigure(2, weight=2)
 
         slider_options_frame = Frame(slider_frame)
-        slider_options_frame.grid(row=2, column=0, sticky='w', padx=20, pady=2)
+        slider_options_frame.grid(row=2, column=1, sticky='w', padx=20, pady=2)
 
         lock_slider = Button(slider_options_frame, command=lambda: self._lock_unlock_slider(), bd=1, relief=SOLID)
         lock_slider.grid(row=0, column=0, padx=2, sticky='w')

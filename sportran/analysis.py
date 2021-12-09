@@ -113,8 +113,8 @@ def main():
     input_file_group = parser.add_argument_group('Input file format')
     input_file_group.add_argument('--input-format', default='table', type=str, choices=['table', 'dict', 'lammps'],
             help='Format of the input file. (default: table)')
-    input_file_group.add_argument('-k', '--heatfluxkey', type=str, required=True,
-            help='Name of the column keyword that identifies the heat flux')
+    input_file_group.add_argument('-k', '--mainfluxkey', type=str, required=True,
+            help='Name of the column keyword that identifies the first flux in the onsager matrix')
     input_file_group.add_argument('-N', '--nsteps', type=int, default=0,
             help='Number of steps to read. (optional, default: 0=all)')
     input_file_group.add_argument('-S', '--start-step', type=int, default=0,
