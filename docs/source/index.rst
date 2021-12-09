@@ -17,8 +17,8 @@ Introduction
 Examples
 ========
 .. toctree::
-   example_cepstrum_doublecomp_NaCl
    example_cepstrum_singlecomp_silica
+   example_cepstrum_doublecomp_NaCl
 
 API
 ===
