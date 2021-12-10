@@ -210,7 +210,7 @@ def run_analysis(args):
 
     inputfile = args.inputfile
     input_format = args.input_format
-    j1_key = args.heatfluxkey
+    j1_key = args.mainfluxkey
     NSTEPS = args.nsteps
     START_STEP = args.start_step
     jindex = args.cindex
