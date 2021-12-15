@@ -1,4 +1,4 @@
-# thermocepstrum
+# sportran
 
 Code to compute thermal conductivity through cepstral analysis of heat flux time series, as described in papers:
 
@@ -34,19 +34,19 @@ See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/
  - markdown2
 
 ### Installation
-  You can simply pip-install thermocepstrum downloading it from PyPI with `pip install thermocepstrum`.
+  You can simply pip-install sportran downloading it from PyPI with `pip install sportran`.
 
   Alternatively:
 
-  1. Clone this repository: `git clone https://github.com/lorisercole/thermocepstrum.git`
+  1. Clone this repository: `git clone https://github.com/lorisercole/sportran.git`
   2. Install the package with pip (dependencies will be automatically downloaded). For example:
 ```
-cd thermocepstrum
+cd sportran
 pip install .
 ```
-  You are all set! You can check that the installation is working by trying to run the command `thermocepstrum-analysis`.
+  You are all set! You can check that the installation is working by trying to run the command `sportran-analysis`.
 
-  The Graphical User Interface will be installed and can be started with the command `thermocepstrum-gui`.
+  The Graphical User Interface will be installed and can be started with the command `sportran-gui`.
 
 ### Issues
-  You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/thermocepstrum/issues) GitHub issues page.
+  You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/sportran/issues) GitHub issues page.

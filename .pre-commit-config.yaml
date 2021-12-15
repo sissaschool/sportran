@@ -12,7 +12,7 @@
     args: ["-i"]
     exclude: &exclude_files >
       (?x)^(
-        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        sportran_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         tests/test_cli/.*|
         examples/.*|
@@ -29,12 +29,17 @@
   - id: check-executables-have-shebangs
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
+    exclude: >
+      (?x)^(
+        tests/test_cli/.*|
+      )$
   - id: trailing-whitespace
     exclude: >
       (?x)^(
-        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        sportran_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         tests/test_cli/.*|
+        tests/test_notebooks/.*|
         examples/.*|
       )$
 

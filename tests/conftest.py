@@ -1,5 +1,6 @@
 import pytest
 import os
+import numpy as np
 
 pytest_plugins = 'pytester'
 
@@ -27,10 +28,10 @@ def data_SiO2_path(filepath_tests):
 
 @pytest.fixture(scope='session')
 def data_NaCl(data_NaCl_path):
-    import thermocepstrum as tc
+    import sportran as st
     import numpy as np
 
-    jfile = tc.i_o.TableFile(data_NaCl_path, group_vectors=True)
+    jfile = st.i_o.TableFile(data_NaCl_path, group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['Temp', 'flux', 'vcm[1]'])
     DT_FS = 5.0   # time step [fs]
     TEMPERATURE = np.mean(jfile.data['Temp'])   # temperature [K]
@@ -42,11 +43,32 @@ def data_NaCl(data_NaCl_path):
 
 @pytest.fixture(scope='session')
 def data_SiO2(data_SiO2_path):
-    import thermocepstrum as tc
+    import sportran as st
 
-    jfile = tc.i_o.TableFile(data_SiO2_path, group_vectors=True)
+    jfile = st.i_o.TableFile(data_SiO2_path, group_vectors=True)
     jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['flux1'])
     DT_FS = 1.0   # time step [fs]
     TEMPERATURE = 1065.705630   # temperature [K]
     VOLUME = 3130.431110818   # volume [A^3]
     return jfile, DT_FS, TEMPERATURE, VOLUME
+
+
+@pytest.fixture
+def check_reg(num_regression, data_regression):
+
+    def _check(jf):
+        num_regression.check({
+            'psd': jf.psd,
+            'logpsdK': jf.dct.logpsdK,
+            'logpsdK_THEORY_std': jf.dct.logpsdK_THEORY_std,
+            'logtau': jf.dct.logtau,
+            'logtau_THEORY_std': jf.dct.logtau_THEORY_std,
+            'KAPPA_SCALE': np.array([float(jf.KAPPA_SCALE)]),
+            'Nyquist_f_THz': np.array([float(jf.Nyquist_f_THz)]),
+            'kappa_Kmin': np.array([float(jf.kappa_Kmin)]),
+            'kappa_Kmin_std': np.array([float(jf.kappa_Kmin_std)]),
+            'aic_min': np.array([float(jf.dct.aic_min)])
+        })
+        data_regression.check({'aic_Kmin': int(jf.dct.aic_Kmin),})
+
+    return _check

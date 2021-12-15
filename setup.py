@@ -14,7 +14,7 @@ if __name__ == '__main__':
     with open(path.join(THIS_FOLDER, 'setup.json'), 'r') as info:
         SETUP_JSON = json.load(info)
 
-    with open(path.join(THIS_FOLDER, 'thermocepstrum/metadata.json'), 'w') as fh:
+    with open(path.join(THIS_FOLDER, 'sportran/metadata.json'), 'w') as fh:
         json.dump(SETUP_JSON, fh)
 
     setup(include_package_data=True,
