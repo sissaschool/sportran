@@ -3,12 +3,8 @@
 ===========================================
     Sportran graphic user interface
 ===========================================
-    Version: 0.0.2
-    Release state: Beta
-    Last update: 09/2019
 
-    Main Developer:     Sebastiano Bisacchi
-    Other developer:    Riccardo   Bertossa
+    Developers: Sebastiano Bisacchi, Riccardo Bertossa
 
 This file contains the GUI of the Sportran project developed at SISSA.
 """

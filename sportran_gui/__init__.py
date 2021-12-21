@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 """
 ==========================================
-    Sportran graphic user interface
+Sportran graphic user interface
 ==========================================
-This contains an optional GUI written in Tk, great for making fast experiments. The GUI is called from the command line when the package is installed
+
+This is a GUI written in Tk, great for making fast experiments. The GUI can be called from the command line with `sportrain-gui` if this package is installed.
 """
