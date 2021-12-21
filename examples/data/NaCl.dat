@@ -1,6 +1,7 @@
-# Molten NaCl - ?? potential
-# ?? atoms, T~1400K
-# NVE, dt = ?, 100 ps, print_step = 5.0 fs
+# Molten NaCl - Fumi-Tosi potential
+# https://journals.aps.org/prl/supplemental/10.1103/PhysRevLett.122.255901/Bertossa_et_al_Supplemental_Material.pdf
+# 1728 atoms, T~1400K
+# NVE, dt = 1.0 fs, 100 ps, print_step = 5.0 fs
 # Volume = 65013.301261 A^3
 # LAMMPS metal units
 Temp    c_flux[1] c_flux[2] c_flux[3] c_vcm[1][1] c_vcm[1][2] c_vcm[1][3]
