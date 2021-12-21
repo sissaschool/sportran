@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 tkinter HTML text widgets
 """

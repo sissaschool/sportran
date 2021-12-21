@@ -1,6 +1,6 @@
 # Solid Silica - BKS potential, melted and quenched
 # 216 atoms, T~1000K, dens~2.295g/cm^3
-# NVE, dt = 1.0 fs, 50 ns, output_step = 1.0 fs
+# NVE, dt = 1.0 fs, 100 ps, print_step = 1.0 fs
 # Temperature = 1065.705630 K, Volume = 3130.431110818 A^3
 # LAMMPS metal units
 c_flux1[1] c_flux1[2] c_flux1[3]
