@@ -11,7 +11,7 @@ from . import units
 from sportran.utils import log
 from sportran.plotter.current import CurrentPlotter
 
-__all__ = ('Current', 'fstar_analysis',)
+__all__ = ['Current', 'fstar_analysis']
 
 
 class Current(MDSample):

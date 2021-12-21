@@ -3,7 +3,7 @@
 Defines the CLIPlotter class.
 """
 
-__all__ = ('CLIPlotter')
+__all__ = ['CLIPlotter']
 
 from . import plotter
 

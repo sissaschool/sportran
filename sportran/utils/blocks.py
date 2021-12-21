@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# ! THIS FILE IS DEPRECATED !
+
 import sys, os, math
 import sportran as st
 from sportran.utils import log
@@ -19,12 +21,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.backends.backend_pdf import PdfPages
-plt.style.reload_library()
-try:
-    plt.style.use('./plot_style.mplstyle')
-except:
-    plt.style.use(tc_path + 'utils/plot_style.mplstyle')
-c = plt.rcParams['axes.prop_cycle'].by_key()['color']
+#plt.style.reload_library()
+#try:
+#    plt.style.use('./plot_style.mplstyle')
+#except:
+#    plt.style.use(tc_path + 'utils/plot_style.mplstyle')
+#c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 try:
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes

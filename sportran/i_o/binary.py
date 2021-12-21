@@ -4,7 +4,7 @@ from sportran.utils.attributedict import AttributeDict
 from sportran.current import Current
 import pickle
 
-__all__ = ('SportranBinaryFile', 'SportranInput', 'SportranOutput', 'SportranSettings')
+__all__ = ['SportranBinaryFile', 'SportranInput', 'SportranOutput', 'SportranSettings']
 
 
 def multi_pickle_dump(self, filename, **objs):

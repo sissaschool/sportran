@@ -3,7 +3,7 @@
 Defines the MDSamplePlotter class.
 """
 
-__all__ = ('MDSamplePlotter')
+__all__ = ['MDSamplePlotter']
 
 from . import plotter
 

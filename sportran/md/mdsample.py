@@ -11,7 +11,7 @@ from sportran.utils.decorators import add_method
 from sportran.plotter import Plotter, use_plot_style
 from sportran.plotter.mdsample import MDSamplePlotter
 
-__all__ = ('MDSample',)
+__all__ = ['MDSample']
 
 
 class MDSample(object):

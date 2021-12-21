@@ -6,4 +6,4 @@ Basic classes and facilities to perform a complete cepstral analysis
 from .cepstral import *
 from .mdsample import *
 
-__all__ = ('CosFilter', 'MDSample')
+__all__ = ['CosFilter', 'MDSample']

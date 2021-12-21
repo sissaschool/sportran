@@ -7,7 +7,7 @@ from .tools.spectrum import logtau_to_tau
 from . import aic
 from sportran.utils import log
 
-__all__ = ('CosFilter',)
+__all__ = ['CosFilter']
 
 EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992   # Euler-Mascheroni constant
 

@@ -10,4 +10,4 @@ try:
 except:
     raise RuntimeError('PrintMethod not defined.')
 
-__all__ = ('log')
+__all__ = ['log']

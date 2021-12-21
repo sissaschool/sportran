@@ -3,7 +3,7 @@
 Defines the CurrentPlotter class.
 """
 
-__all__ = ('CurrentPlotter')
+__all__ = ['CurrentPlotter']
 
 from . import plotter
 

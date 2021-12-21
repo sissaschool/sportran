@@ -4,7 +4,7 @@ import numpy as np
 from . import Current
 from . import units
 
-__all__ = ('HeatCurrent',)
+__all__ = ['HeatCurrent']
 
 
 class HeatCurrent(Current):

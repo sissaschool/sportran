@@ -4,7 +4,7 @@ import numpy as np
 from . import Current
 from . import units
 
-__all__ = ('ElectricCurrent',)
+__all__ = ['ElectricCurrent']
 
 
 class ElectricCurrent(Current):
