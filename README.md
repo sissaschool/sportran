@@ -2,6 +2,11 @@
 
 A code to estimate transport coefficients from the cepstral analysis of a multi-variate current stationary time series.
 
+[![PyPI version](https://badge.fury.io/py/sportran.svg)](https://badge.fury.io/py/sportran)
+[![Documentation Status](https://readthedocs.org/projects/sportran/badge/?version=latest)](https://sportran.readthedocs.io/en/latest/?badge=latest)
+
+### Documentation
+https://sportran.readthedocs.io
 
 ### References
  - Ercole L., Bertossa R., Bisacchi S., and Baroni S., _SporTran: a code to estimate transport coefficients from the cepstral analysis of (multivariate) current time series_. (in preparation)
