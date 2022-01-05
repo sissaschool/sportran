@@ -40,7 +40,7 @@
         ],
         "tests": [
             "pytest>=5.1.0",
-            "pytest-regressions",
+            "pytest-regressions==2.2.0",
             "pandas",
             "testbook",
             "ipykernel"
