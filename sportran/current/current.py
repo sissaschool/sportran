@@ -23,7 +23,7 @@ class Current(MDSample):
      - traj          the heat current time series array (N * N_COMPONENTS array)
        For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
      - DT_FS         MD time step [fs]
-     - KAPPA_SCALE   the GK conversion factor, multiplies by the GK integral
+     - KAPPA_SCALE   the GK conversion factor, multiplies the GK integral
 
     OPTIONAL parameters:
      - PSD_FILTER_W  PSD filter window [freq_units] (optional)
@@ -210,9 +210,82 @@ class Current(MDSample):
         if self.MANY_CURRENTS:
             if self.otherMD is None:
                 raise RuntimeError('self.otherMD cannot be None (wrong/missing initialization?)')
-            self.compute_kappa_multi(self.otherMD, PSD_FILTER_W, freq_units)
+            self._compute_psd_multi(self.otherMD, PSD_FILTER_W, freq_units)
         else:
             super().compute_psd(PSD_FILTER_W, freq_units)
+
+    def _compute_psd_multi(self, others, PSD_FILTER_W=None, freq_units='THz', normalize=False, call_other=True):
+        """
+        For multi-component (many current) systems: compute the cospectrum matrix and the transport coefficient.
+        The results have almost the same statistical properties. The chi-square distribution has ndf = n - l + 1,
+        where n is the number of time series, l is the number of currents (self.ndf_chi).
+         ! NOTICE: if n < l this will not work.
+
+        In this routine the mean over the number of temporal series is already multiplied by the correct factor (the
+        transport coefficient will be obtained by multiplying the result by 0.5, as in the one-component case).
+        The output arrays are the same as in the one-component case.
+        If a PSD_FILTER_W is known or given, the psd is also filtered.
+        The elements of the matrix are multiplied by DT_FS at the end.
+        others is a list of other currents, i.e. MDSample objects.
+        For example, in the case of 4 currents, of which j is the energy current and j1, j2, j3 are mass currents:
+
+           j._compute_psd_multi([j1,j2,j3], PSD_FILTER_W, freq_units)
+        """
+        # check if others is an array
+        if not isinstance(others, (list, tuple, np.ndarray)):
+            others = [others]
+        N_CURRENTS = len(others)
+
+        if self.traj is None:
+            raise ValueError('Trajectory not defined.')
+        self.spectrALL = np.fft.rfft(self.traj, axis=0)
+        self.NFREQS = self.spectrALL.shape[0]
+        self.freqs = np.linspace(0., 0.5, self.NFREQS)
+        self.DF = 0.5 / (self.NFREQS - 1)
+        self.DF_THZ = freq_red_to_THz(self.DF, self.DT_FS)
+        self.freqs_THz = self.freqs / self.DT_FS * 1000.
+        self.Nyquist_f_THz = self.freqs_THz[-1]
+
+        # calculate the same thing on the other trajectory
+        if (call_other):
+            for other in others:   # call other._compute_psd_multi (MDsample method)
+                Current._compute_psd_multi(other, [self], PSD_FILTER_W, freq_units, normalize, False)
+        else:
+            return
+
+        # define the cospectrum matrix. Its shape is (2, 2, NFREQS,n_spatial_dim)
+        #  [  self.spectrALL*self.spectrALL.conj()     self.spectrALL*other.spectrALL.conj() ]
+        #  [ other.spectrALL*self.spectrALL.conj()    other.spectrALL*other.spectrALL.conj() ]
+        other_spectrALL = []
+        for other in others:
+            other_spectrALL.append(other.spectrALL)
+
+        # compute the matrix defined by the outer product of only the first indexes of the two arrays
+        covarALL = self.DT_FS / (2.*(self.NFREQS - 1.)) *\
+                    np.einsum('a...,b...->ab...', np.array([self.spectrALL] + other_spectrALL),
+                                                  np.array([self.spectrALL] + other_spectrALL).conj())
+
+        # number of degrees of freedom of the chi-square distribution of the psd
+        ndf_chi = covarALL.shape[3] - len(other_spectrALL)
+
+        # compute the sum over the last axis (equivalent cartesian components):
+        self.L = covarALL.shape[3]   ## isn't is == to N_CURRENTS?
+        self.cospectrum = covarALL.sum(axis=3)
+
+        # compute the element 1/"(0,0) of the inverse" (aka the transport coefficient)
+        # the diagonal elements of the inverse have very convenient statistical properties
+        multi_psd = (np.linalg.inv(self.cospectrum.transpose((2, 0, 1)))[:, 0, 0]**-1).real / ndf_chi
+
+        if normalize:
+            multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
+
+        self.ndf_chi = ndf_chi
+        self.psd = multi_psd
+        self.logpsd = np.log(self.psd)
+        self.psd_min = np.min(self.psd)
+        self.psd_power = np.trapz(self.psd)   # one-side PSD power
+        if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
+            self.filter_psd(PSD_FILTER_W, freq_units)
 
     def initialize_cepstral_parameters(self):
         """
