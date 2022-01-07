@@ -5,6 +5,7 @@ import numpy as np
 import inspect
 from sportran.md.mdsample import MDSample
 from sportran.md.cepstral import CosFilter, multicomp_cepstral_parameters
+from sportran.md.tools.filter import runavefilter
 from sportran.md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from sportran.md.tools.resample import filter_and_sample
 from . import units
@@ -142,6 +143,10 @@ class Current(MDSample):
             log.write_log('Using single component code.')
             super().__init__(traj=(j * main_current_factor), DT_FS=DT_FS)
             self.otherMD = None
+
+        # initialize cospectrum, that is not initialized by MDSample.initialize_psd
+        self.cospectrum = None
+        self.fcospectrum = None
 
     @classmethod
     def _get_units(cls):
@@ -290,6 +295,26 @@ class Current(MDSample):
         self.psd_power = np.trapz(self.psd)   # one-side PSD power
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
+
+    def filter_psd(self, PSD_FILTER_W=None, freq_units='THz', window_type='rectangular', logpsd_filter_type=1):
+        """
+        Filter the periodogram with the given PSD_FILTER_W [freq_units].
+          - PSD_FILTER_W  PSD filter window [freq_units]
+          - freq_units    frequency units   ['THz', 'red' (default)]
+          - window_type   filtering window type ['rectangular']
+        """
+        super().filter_psd(PSD_FILTER_W, freq_units, window_type, logpsd_filter_type)
+
+        if (window_type == 'rectangular'):
+            # try to filter the other currents (if present)
+            if self.cospectrum is not None:
+                self.fcospectrum = []
+                for i in range(self.cospectrum.shape[0]):
+                    self.fcospectrum.append([])
+                    for j in range(self.cospectrum.shape[1]):
+                        ffpsd = runavefilter(self.cospectrum[i, j], self.PSD_FILTER_WF)
+                        self.fcospectrum[i].append(ffpsd / self.N_COMPONENTS)
+                self.fcospectrum = np.asarray(self.fcospectrum)
 
     def initialize_cepstral_parameters(self):
         """

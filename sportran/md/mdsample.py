@@ -71,9 +71,6 @@ class MDSample(object):
         self.initialize_spectrum(spectr)
         self.initialize_psd(freqs=freqs, psd=psd, DT_FS=DT_FS)
 
-        self.cospectrum = None
-        self.fcospectrum = None
-
     def __repr__(self):
         msg = 'MDSample:\n' + \
               '  DT_FS:  {}  fs\n'.format(self.DT_FS) + \
@@ -348,16 +345,6 @@ class MDSample(object):
 
         if (window_type == 'rectangular'):
             self.fpsd = runavefilter(self.psd, self.PSD_FILTER_WF)
-
-            # try to filter the other currents (if present)
-            if self.cospectrum is not None:
-                self.fcospectrum = []
-                for i in range(self.cospectrum.shape[0]):
-                    self.fcospectrum.append([])
-                    for j in range(self.cospectrum.shape[1]):
-                        ffpsd = runavefilter(self.cospectrum[i, j], self.PSD_FILTER_WF)
-                        self.fcospectrum[i].append(ffpsd / self.N_COMPONENTS)
-                self.fcospectrum = np.asarray(self.fcospectrum)
 
             # filter log-psd
             if (logpsd_filter_type == 1):
