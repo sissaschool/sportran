@@ -36,16 +36,11 @@ class HeatCurrent(Current):
         # params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
         super().__init__(traj, **params)
 
-    def _get_builder(self):
+    @property
+    def _builder(self):
         """
-        Get a tuple (class, builder) that can be used to build a new object with same parameters:
-          TimeSeries, builder = self._get_builder()
-          new_ts = TimeSeries(**builder)
+        Returns a dictionary of all keyworded parameters needed to rebuild an identical object of the same class.
+        The trajectory is excluded. Used by self._get_builder().
         """
-        if self.MANY_CURRENTS:
-            traj_array = np.row_stack(([self.traj], [j.traj for j in self.otherMD]))
-        else:
-            traj_array = self.traj
-        builder = dict(traj=traj_array, DT_FS=self.DT_FS, UNITS=self.UNITS, TEMPERATURE=self.TEMPERATURE,
-                       VOLUME=self.VOLUME, PSD_FILTER_W=self.PSD_FILTER_W_THZ, FREQ_UNITS='THz')
-        return type(self), builder
+        return dict(DT_FS=self.DT_FS, UNITS=self.UNITS, TEMPERATURE=self.TEMPERATURE, VOLUME=self.VOLUME,
+                    PSD_FILTER_W=self.PSD_FILTER_W_THZ, FREQ_UNITS='THz')

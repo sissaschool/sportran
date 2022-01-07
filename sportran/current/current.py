@@ -85,20 +85,28 @@ class Current(MDSample):
             msg += self.dct.__repr__()
         return msg
 
+    @property
+    def _builder(self):
+        """
+        Returns a dictionary of all keyworded parameters needed to rebuild an identical object of the same class.
+        The trajectory is excluded. Used by self._get_builder().
+        """
+        return dict(DT_FS=self.DT_FS, KAPPA_SCALE=self.KAPPA_SCALE, PSD_FILTER_W=self.PSD_FILTER_W_THZ,
+                    FREQ_UNITS='THz')
+
     def _get_builder(self):
         """
         Get a tuple (class, builder) that can be used to build a new object with same parameters:
           TimeSeries, builder = self._get_builder()
           new_ts = TimeSeries(**builder)
         """
-        # TODO: unify this method across the subclasse
         if self.MANY_CURRENTS:
             traj_array = np.row_stack(([self.traj], [j.traj for j in self.otherMD]))
         else:
             traj_array = self.traj
-        builder = dict(traj=traj_array, DT_FS=self.DT_FS, KAPPA_SCALE=self.KAPPA_SCALE,
-                       PSD_FILTER_W=self.PSD_FILTER_W_THZ, FREQ_UNITS='THz')
-        return type(self), builder
+        kwargs = self._builder
+        kwargs.update(traj=traj_array)
+        return type(self), kwargs
 
     @classmethod
     def set_plotter(cls, plotter=None):

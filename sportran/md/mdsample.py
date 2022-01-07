@@ -98,8 +98,8 @@ class MDSample(object):
           TimeSeries, builder = self._get_builder()
           new_ts = TimeSeries(**builder)
         """
-        builder = dict(traj=self.traj, DT_FS=self.DT_FS)
-        return type(self), builder
+        kwargs = dict(traj=self.traj, DT_FS=self.DT_FS)
+        return type(self), kwargs
 
     @classmethod
     def set_plotter(cls, plotter=None):
