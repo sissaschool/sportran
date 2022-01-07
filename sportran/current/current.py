@@ -3,8 +3,8 @@
 
 import numpy as np
 import inspect
-from sportran import md
 from sportran.md.mdsample import MDSample
+from sportran.md.cepstral import CosFilter, multicomp_cepstral_parameters
 from sportran.md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from sportran.md.tools.resample import filter_and_sample
 from . import units
@@ -207,6 +207,12 @@ class Current(MDSample):
         If a PSD_FILTER_W (expressed in freq_units) is known or given, the psd is also filtered.
         The PSD is multiplied by DT_FS at the end.
         """
+        # number of degrees of freedom of the chi-square distribution of the psd / 2
+        self.ndf_chi = self.N_COMPONENTS - self.N_CURRENTS + 1
+        if self.ndf_chi <= 0:
+            raise RuntimeError('The number of degrees of freedom of the chi-squared distribution is <=0. The number of '
+                               'equivalent (Cartesian) components of the input current must be >= number of currents.')
+
         if self.MANY_CURRENTS:
             if self.otherMD is None:
                 raise RuntimeError('self.otherMD cannot be None (wrong/missing initialization?)')
@@ -216,28 +222,28 @@ class Current(MDSample):
 
     def _compute_psd_multi(self, others, PSD_FILTER_W=None, freq_units='THz', normalize=False, call_other=True):
         """
-        For multi-component (many current) systems: compute the cospectrum matrix and the transport coefficient.
-        The results have almost the same statistical properties. The chi-square distribution has ndf = n - l + 1,
-        where n is the number of time series, l is the number of currents (self.ndf_chi).
-         ! NOTICE: if n < l this will not work.
+        For multi-component (many-current) systems: compute the cospectrum matrix and the transport coefficient.
+        The results have almost the same statistical properties.
+        The chi-square distribution has ndf = 2(ndf_chi) = 2(l - M + 1), where l is the number of time series for each
+        current (N_COMPONENTS), M is the number of currents (N_CURRENTS).
+        ! NOTICE: if l < M this will not work.
 
         In this routine the mean over the number of temporal series is already multiplied by the correct factor (the
         transport coefficient will be obtained by multiplying the result by 0.5, as in the one-component case).
         The output arrays are the same as in the one-component case.
-        If a PSD_FILTER_W is known or given, the psd is also filtered.
         The elements of the matrix are multiplied by DT_FS at the end.
+        If a PSD_FILTER_W is known or given, the psd is also filtered.
         others is a list of other currents, i.e. MDSample objects.
-        For example, in the case of 4 currents, of which j is the energy current and j1, j2, j3 are mass currents:
 
+        For example, in the case of 4 currents, of which j is the energy current and j1, j2, j3 are mass currents:
            j._compute_psd_multi([j1,j2,j3], PSD_FILTER_W, freq_units)
         """
         # check if others is an array
         if not isinstance(others, (list, tuple, np.ndarray)):
             others = [others]
-        N_CURRENTS = len(others)
-
         if self.traj is None:
             raise ValueError('Trajectory not defined.')
+
         self.spectrALL = np.fft.rfft(self.traj, axis=0)
         self.NFREQS = self.spectrALL.shape[0]
         self.freqs = np.linspace(0., 0.5, self.NFREQS)
@@ -253,7 +259,7 @@ class Current(MDSample):
         else:
             return
 
-        # define the cospectrum matrix. Its shape is (2, 2, NFREQS,n_spatial_dim)
+        # define the cospectrum matrix. Its shape is (2, 2, NFREQS, n_spatial_dim)
         #  [  self.spectrALL*self.spectrALL.conj()     self.spectrALL*other.spectrALL.conj() ]
         #  [ other.spectrALL*self.spectrALL.conj()    other.spectrALL*other.spectrALL.conj() ]
         other_spectrALL = []
@@ -261,25 +267,23 @@ class Current(MDSample):
             other_spectrALL.append(other.spectrALL)
 
         # compute the matrix defined by the outer product of only the first indexes of the two arrays
-        covarALL = self.DT_FS / (2.*(self.NFREQS - 1.)) *\
+        covarALL = self.DT_FS / (2. * (self.NFREQS - 1.)) *\
                     np.einsum('a...,b...->ab...', np.array([self.spectrALL] + other_spectrALL),
                                                   np.array([self.spectrALL] + other_spectrALL).conj())
 
-        # number of degrees of freedom of the chi-square distribution of the psd
-        ndf_chi = covarALL.shape[3] - len(other_spectrALL)
+        # number of degrees of freedom of the chi-square distribution of the psd / 2
+        assert self.ndf_chi == (covarALL.shape[3] - len(other_spectrALL))
 
         # compute the sum over the last axis (equivalent cartesian components):
-        self.L = covarALL.shape[3]   ## isn't is == to N_CURRENTS?
         self.cospectrum = covarALL.sum(axis=3)
 
         # compute the element 1/"(0,0) of the inverse" (aka the transport coefficient)
         # the diagonal elements of the inverse have very convenient statistical properties
-        multi_psd = (np.linalg.inv(self.cospectrum.transpose((2, 0, 1)))[:, 0, 0]**-1).real / ndf_chi
+        multi_psd = (np.linalg.inv(self.cospectrum.transpose((2, 0, 1)))[:, 0, 0]**-1).real / self.ndf_chi
 
         if normalize:
             multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
 
-        self.ndf_chi = ndf_chi
         self.psd = multi_psd
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
@@ -292,13 +296,11 @@ class Current(MDSample):
         Defines the parameters of the theoretical distribution of the cepstrum.
         """
         if not self.MANY_CURRENTS:
-            self.ck_THEORY_var, self.psd_THEORY_mean = \
-                md.cepstral.multicomp_cepstral_parameters(self.NFREQS, self.N_COMPONENTS)
+            self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.NFREQS, self.N_COMPONENTS)
         else:
             if self.ndf_chi is None:
                 raise RuntimeError('self.ndf_chi cannot be None.')
-            self.ck_THEORY_var, self.psd_THEORY_mean = \
-                md.cepstral.multicomp_cepstral_parameters(self.NFREQS, self.ndf_chi)
+            self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.NFREQS, self.ndf_chi)
 
     def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None):
         """
@@ -310,7 +312,7 @@ class Current(MDSample):
            kappa_Kmin  +/-  kappa_Kmin_std   [SI units]
         """
 
-        self.dct = md.CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
+        self.dct = CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
             psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.dct.scan_filter_tau(K_PSD=K_PSD)
         self.kappa_Kmin = self.dct.tau_Kmin * self.KAPPA_SCALE * 0.5

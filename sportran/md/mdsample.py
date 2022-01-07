@@ -356,7 +356,7 @@ class MDSample(object):
                     self.fcospectrum.append([])
                     for j in range(self.cospectrum.shape[1]):
                         ffpsd = runavefilter(self.cospectrum[i, j], self.PSD_FILTER_WF)
-                        self.fcospectrum[i].append(ffpsd / self.L)
+                        self.fcospectrum[i].append(ffpsd / self.N_COMPONENTS)
                 self.fcospectrum = np.asarray(self.fcospectrum)
 
             # filter log-psd
