@@ -13,8 +13,8 @@ class StressCurrent(Current):
     Defines a StressCurrent object with useful tools to perform analysis.
 
     INPUT parameters:
-     - traj          the stress current time series array (N * N_COMPONENTS array)
-       For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
+     - traj          the current time series (N, N_EQUIV_COMPONENTS) array
+       For a multi-component fluid use a (N_CURRENTS, N, N_EQUIV_COMPONENTS) array
      - DT_FS         MD time step [fs]
      - UNITS         the units of current ('metal', 'real', ...) - use the method `get_units_list()` to get a list of supported units
      - TEMPERATURE   average temperature [K]

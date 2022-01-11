@@ -34,8 +34,7 @@ class MDSample(object):
     information.
 
     ATTRIBUTES:
-       - traj       the trajectory (any n-dim real time series).
-                    It contains N points.
+       - traj       the trajectory, a (N, N_EQUIV_COMPONENTS) array
        - spectr     the spectrum, i.e. trajectory's FFT.
                     For now it is assumed to be one sided, i.e. it contains
                     NFREQS = N/2+1 normalized frequencies contained
@@ -50,16 +49,15 @@ class MDSample(object):
        - freqs      an array of frequencies, should be [0, 1/(2N*DT)]
        - freqs_THz  an array of frequencies, expressed in THz
 
-    MEMBERS:
-        self.DT_FS                  timestep in femtoseconds
-        self.fpsd                   filtered periodogram
-        self.flogpsd                filtered log-periodogram
-        self.acf                    autocorrelation function
-        self.N_COMPONENTS           number of EQUIVALENT (cartesian) components (an average over them will be computed)
-        self.MANY_COMPONENTS        True if N_COMPONENTS > 1
-        self.PSD_FILTER_W           width of the moving average filter (reduced frequency units)
-        self.PSD_FILTER_W_THZ       width of the moving average filter (THz)
-        self.PSD_FILTER_WF          width of the moving average filter (number of frequencies)
+       - DT_FS                  timestep in femtoseconds
+       - fpsd                   filtered periodogram
+       - flogpsd                filtered log-periodogram
+       - acf                    autocorrelation function
+       - N_EQUIV_COMPONENTS     number of EQUIVALENT (e.g. Cartesian) components (an average over them will be computed)
+       - MANY_COMPONENTS        True if N_EQUIV_COMPONENTS > 1
+       - PSD_FILTER_W           width of the moving average filter (reduced frequency units)
+       - PSD_FILTER_W_THZ       width of the moving average filter (THz)
+       - PSD_FILTER_WF          width of the moving average filter (number of frequencies)
 
     """
 
@@ -74,7 +72,7 @@ class MDSample(object):
     def __repr__(self):
         msg = 'MDSample:\n' + \
               '  DT_FS:  {}  fs\n'.format(self.DT_FS) + \
-              '  traj:   {}  steps  *  {} components\n'.format(self.N, self.N_COMPONENTS) + \
+              '  traj:   {}  steps  *  {} equivalent components\n'.format(self.N, self.N_EQUIV_COMPONENTS) + \
               '          {}  fs\n'.format(None if self.traj is None else self.DT_FS * self.N)
         if self.spectr is not None:
             msg += '  spectr: {}  frequencies\n'.format(self.NFREQS)
@@ -145,7 +143,7 @@ class MDSample(object):
         Initialize a trajectory from an array.
         The dimensions of the array should be:
           (number of time points, number of equivalent components)
-        or, in the case of 1 component:
+        or, in the case of one component:
           (number of time points)
         """
         if not isinstance(array, (list, np.ndarray, tuple)):
@@ -164,14 +162,14 @@ class MDSample(object):
                     self.traj = array
             else:
                 raise TypeError('Input trajectory array has > 2 dimensions.')
-            self.N, self.N_COMPONENTS = self.traj.shape
-            if (self.N < 2) or (self.N_COMPONENTS < 1):
-                raise ValueError('Input trajectory size too small (N = {}, N_COMPONENTS = {}).'.format(
-                    self.N, self.N_COMPONENTS))
+            self.N, self.N_EQUIV_COMPONENTS = self.traj.shape
+            if (self.N < 2) or (self.N_EQUIV_COMPONENTS < 1):
+                raise ValueError('Input trajectory size too small (N = {}, N_EQUIV_COMPONENTS = {}).'.format(
+                    self.N, self.N_EQUIV_COMPONENTS))
         else:
             self.traj = None
             self.N = None
-            self.N_COMPONENTS = None
+            self.N_EQUIV_COMPONENTS = None
         self.acf = None
         self.NLAGS = None
 
@@ -360,8 +358,8 @@ class MDSample(object):
             self.NLAGS = NLAGS
         else:
             self.NLAGS = self.N
-        self.acf = np.zeros((self.NLAGS, self.N_COMPONENTS))
-        for d in range(self.N_COMPONENTS):
+        self.acf = np.zeros((self.NLAGS, self.N_EQUIV_COMPONENTS))
+        for d in range(self.N_EQUIV_COMPONENTS):
             self.acf[:, d] = acovf(self.traj[:, d], unbiased=True, fft=True)[:NLAGS]
         self.acfm = np.mean(self.acf, axis=1)   # average acf
 

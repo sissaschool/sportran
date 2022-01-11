@@ -387,7 +387,7 @@ def run_analysis(args):
                                                  PSD_FILTER_W=psd_filter_w)
 
     log.write_log(' Number of currents = {}'.format(j.N_CURRENTS))
-    log.write_log(' Number of components = {}'.format(j.N_COMPONENTS))
+    log.write_log(' Number of equivalent components = {}'.format(j.N_EQUIV_COMPONENTS))
     log.write_log(' KAPPA_SCALE = {}'.format(j.KAPPA_SCALE))
     log.write_log(' Nyquist_f   = {}  THz'.format(j.Nyquist_f_THz))
 

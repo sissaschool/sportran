@@ -21,7 +21,7 @@ class MDBlocks(object):
         if (len(traj.shape) > 1):
             #raise NotImplementedError('Sorry, only 1-Dimensional trajectories accepted. For now.')
             self.MULTI_COMPONENT = True
-            self.N_COMPONENTS = traj.shape[1]
+            self.N_EQUIV_COMPONENTS = traj.shape[1]
         else:
             self.MULTI_COMPONENT = False
         self.DT_FS = DT_FS   # traj physical time step [fs]
@@ -75,9 +75,9 @@ class MDBlocks(object):
 
         self.BLOCK_NFREQS = self.BLOCK_SIZE / 2 + 1
         if self.MULTI_COMPONENT:
-            log.write_log(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
+            log.write_log(' N_EQUIV_COMPONENTS = {:10d}'.format(self.N_EQUIV_COMPONENTS))
             self.ck_THEORY_var, self.psd_THEORY_mean = st.md.cepstral.multicomp_cepstral_parameters(
-                self.BLOCK_NFREQS, self.N_COMPONENTS)
+                self.BLOCK_NFREQS, self.N_EQUIV_COMPONENTS)
         self.bayes_p = bayes_p
 
         if (self.N_BLOCKS == 1):
@@ -122,9 +122,9 @@ class MDBlocks(object):
 
         self.BLOCK_NFREQS = self.BLOCK_SIZE / 2 + 1
         if self.MULTI_COMPONENT:
-            log.write_log(' N_COMPONENTS = {:10d}'.format(self.N_COMPONENTS))
+            log.write_log(' N_EQUIV_COMPONENTS = {:10d}'.format(self.N_EQUIV_COMPONENTS))
             self.ck_THEORY_var, self.psd_THEORY_mean = st.md.cepstral.multicomp_cepstral_parameters(
-                self.BLOCK_NFREQS, self.N_COMPONENTS - 1)   #different number of degrees of freedom!
+                self.BLOCK_NFREQS, self.N_EQUIV_COMPONENTS - 1)   #different number of degrees of freedom!
         self.bayes_p = bayes_p
 
         if (self.N_BLOCKS == 1):

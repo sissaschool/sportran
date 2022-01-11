@@ -21,8 +21,8 @@ class Current(MDSample):
     Defines a Current object with useful tools to perform analysis.
 
     INPUT parameters:
-     - traj          the heat current time series array (N * N_COMPONENTS array)
-       For a multi-component fluid use a (N_FLUID_COMPONENTS * N * N_COMPONENTS array)
+     - traj          the current time series (N, N_EQUIV_COMPONENTS) array
+       For a multi-component fluid use a (N_CURRENTS, N, N_EQUIV_COMPONENTS) array
      - DT_FS         MD time step [fs]
      - KAPPA_SCALE   the GK conversion factor, multiplies the GK integral
 
@@ -221,7 +221,7 @@ class Current(MDSample):
         The PSD is multiplied by DT_FS at the end.
         """
         # number of degrees of freedom of the chi-square distribution of the psd / 2
-        self.ndf_chi = self.N_COMPONENTS - self.N_CURRENTS + 1
+        self.ndf_chi = self.N_EQUIV_COMPONENTS - self.N_CURRENTS + 1
         if self.ndf_chi <= 0:
             raise RuntimeError('The number of degrees of freedom of the chi-squared distribution is <=0. The number of '
                                'equivalent (Cartesian) components of the input current must be >= number of currents.')
@@ -238,7 +238,7 @@ class Current(MDSample):
         For multi-component (many-current) systems: compute the cospectrum matrix and the transport coefficient.
         The results have almost the same statistical properties.
         The chi-square distribution has ndf = 2(ndf_chi) = 2(l - M + 1), where l is the number of time series for each
-        current (N_COMPONENTS), M is the number of currents (N_CURRENTS).
+        current (N_EQUIV_COMPONENTS), M is the number of currents (N_CURRENTS).
         ! NOTICE: if l < M this will not work.
 
         In this routine the mean over the number of temporal series is already multiplied by the correct factor (the
@@ -287,7 +287,7 @@ class Current(MDSample):
         # number of degrees of freedom of the chi-square distribution of the psd / 2
         assert self.ndf_chi == (covarALL.shape[3] - len(other_spectrALL))
 
-        # compute the sum over the last axis (equivalent cartesian components):
+        # compute the sum over the last axis (equivalent Cartesian components):
         self.cospectrum = covarALL.sum(axis=3)
 
         # compute the element 1/"(0,0) of the inverse" (aka the transport coefficient)
@@ -321,7 +321,7 @@ class Current(MDSample):
                     self.fcospectrum.append([])
                     for j in range(self.cospectrum.shape[1]):
                         ffpsd = runavefilter(self.cospectrum[i, j], self.PSD_FILTER_WF)
-                        self.fcospectrum[i].append(ffpsd / self.N_COMPONENTS)
+                        self.fcospectrum[i].append(ffpsd / self.N_EQUIV_COMPONENTS)
                 self.fcospectrum = np.asarray(self.fcospectrum)
 
     def initialize_cepstral_parameters(self):
@@ -329,7 +329,8 @@ class Current(MDSample):
         Defines the parameters of the theoretical distribution of the cepstrum.
         """
         if not self.MANY_CURRENTS:
-            self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.NFREQS, self.N_COMPONENTS)
+            self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(
+                self.NFREQS, self.N_EQUIV_COMPONENTS)
         else:
             if self.ndf_chi is None:
                 raise RuntimeError('self.ndf_chi cannot be None.')

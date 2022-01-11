@@ -35,7 +35,7 @@ snippet:
   [-1.8385053e-01 -1.3693430e-01  1.1434060e-01]]]
 Using multicomponent code.
  Number of currents = 2
- Number of components = 3
+ Number of equivalent components = 3
  KAPPA_SCALE = 1.4604390788939313e-07
  Nyquist_f   = 100.0  THz
 Using multicomponent code.

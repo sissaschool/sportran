@@ -12,21 +12,21 @@ __all__ = ['CosFilter']
 EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992   # Euler-Mascheroni constant
 
 
-def multicomp_cepstral_parameters(NF, N_COMPONENTS):
+def multicomp_cepstral_parameters(NF, N_EQUIV_COMPONENTS):
     """
     Returns the theoretical variance of the cepstral coefficients and the mean of the log(PSD) distribution,
-    generated from a periodogram that is the average of N_COMPONENTS.
+    generated from a periodogram that is the average of N_EQUIV_COMPONENTS.
     """
 
     N = 2 * (NF - 1)
 
     # variance of cepstral coefficients
-    trigamma = polygamma(1, N_COMPONENTS)
+    trigamma = polygamma(1, N_EQUIV_COMPONENTS)
     ck_THEORY_var = 1. / N * np.concatenate(([2 * trigamma], [trigamma] * (NF - 2), [2 * trigamma]))
 
     # bias of log(PSD)
-    psd_THEORY_mean = (polygamma(0, N_COMPONENTS) - np.log(N_COMPONENTS)) * np.ones(NF)
-    psd_THEORY_mean[0] = polygamma(0, 0.5 * N_COMPONENTS) - np.log(0.5 * N_COMPONENTS)
+    psd_THEORY_mean = (polygamma(0, N_EQUIV_COMPONENTS) - np.log(N_EQUIV_COMPONENTS)) * np.ones(NF)
+    psd_THEORY_mean[0] = polygamma(0, 0.5 * N_EQUIV_COMPONENTS) - np.log(0.5 * N_EQUIV_COMPONENTS)
     psd_THEORY_mean[-1] = psd_THEORY_mean[0]
 
     return ck_THEORY_var, psd_THEORY_mean
