@@ -20,7 +20,7 @@ repos:
         setup.py|
       )$
 
-- repo: git://github.com/pre-commit/pre-commit-hooks
+- repo: https://github.com/pre-commit/pre-commit-hooks.git
   rev: v2.3.0
   hooks:
   - id: check-yaml
@@ -37,7 +37,7 @@ repos:
   - id: trailing-whitespace
     exclude: >
       (?x)^(
-        sportran_gui/utils/tk_html_widgets/*.py|
+        sportran_gui/utils/tk_html_widgets/.*py|
         docs/.*|
         tests/test_cli/.*|
         tests/test_notebooks/.*|

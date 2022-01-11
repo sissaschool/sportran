@@ -33,7 +33,7 @@
     "extras_require": {
         "pre-commit": [
             "pre-commit>=1.11.0",
-            "yapf==0.28.0"
+            "yapf==0.32.0"
         ],
         "notebook": [
             "jupyter"

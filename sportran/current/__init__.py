@@ -34,6 +34,7 @@ __all__ = ['Current', 'HeatCurrent', 'ElectricCurrent', 'StressCurrent']
 
 # define list of all classes with units defined
 import inspect
+
 _all = dir()
 
 
