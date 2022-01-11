@@ -1,6 +1,7 @@
 # Install pre-commit hooks via
 # pre-commit install
 
+repos:
 - repo: local
   hooks:
   # yapf = yet another python formatter

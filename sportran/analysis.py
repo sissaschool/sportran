@@ -21,9 +21,11 @@ except ImportError:
         raise ImportError('Cannot locate sportran.')
 
 from sportran.utils import log
+
 log.set_method('bash')
 log.append_method('file')
 from sportran.plotter.cli import CLIPlotter
+
 st.Current.set_plotter(CLIPlotter)
 from sportran.plotter import plt   # this imports matplotlib.pyplot
 from sportran.plotter import addPlotToPdf, PdfPages
@@ -115,6 +117,8 @@ def main():
             help='Format of the input file. (default: table)')
     input_file_group.add_argument('-k', '--mainfluxkey', type=str, required=True,
             help='Name of the column keyword that identifies the first flux in the onsager matrix')
+    input_file_group.add_argument('-j', '--add-currents', type=str, default=[], action='append',
+            help='Additional current for multi-component fluids. (optional, repeat -j to add more currents)')
     input_file_group.add_argument('-N', '--nsteps', type=int, default=0,
             help='Number of steps to read. (optional, default: 0=all)')
     input_file_group.add_argument('-S', '--start-step', type=int, default=0,
@@ -172,8 +176,6 @@ def main():
             help='Resampling target Nyquist frequency (THz)')
     analysis_group.add_argument('-c', '--corr-factor', type=float, default=1.0,
             help='Correction factor to the AIC. (optional, default: 1.0 = no correction)')
-    analysis_group.add_argument('-j', '--add-currents', type=str, default=[], action='append',
-            help='Additional current for multi-component fluids. (optional, repeat -j to add more currents)')
 
     plot_group = parser.add_argument_group('Plot options (optional)')
     plot_group.add_argument('-w', '--psd-filterw', type=float,
@@ -304,7 +306,7 @@ def run_analysis(args):
     elif input_format == 'lammps':
         # LAMMPS format: a LAMMPS log file is scanned until the run_keywork is found
         jfile = st.i_o.LAMMPSLogFile(inputfile, run_keyword=run_keyword)
-        if temperature is None:
+        if args.TEMPERATURE is None:
             selected_keys.append('Temp')
         jfile.read_datalines(NSTEPS, select_ckeys=selected_keys)
         jdata = jfile.data
@@ -485,9 +487,8 @@ def run_analysis(args):
             np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
         outfile_name = output + '.cepstral.dat'
-        outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.
-                         logtau_THEORY_std, jf.dct.tau * jf.KAPPA_SCALE * 0.5, jf.dct.tau_THEORY_std * jf.KAPPA_SCALE *
-                         0.5]
+        outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std,
+                         jf.dct.tau * jf.KAPPA_SCALE * 0.5, jf.dct.tau_THEORY_std * jf.KAPPA_SCALE * 0.5]
         outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
         np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
@@ -627,8 +628,8 @@ class TCOutput(object):
         outarray = np.c_[self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd]
         np.save(output + '.resampled_psd.npy', outarray, **opts)
 
-        outarray = np.c_[self.jf_dct_logpsdK, self.jf_dct_logpsdK_THEORY_std, self.jf_dct_logtau, self.
-                         jf_dct_logtau_THEORY_std, self.jf_dct_kappa, self.jf_dct_kappa_THEORY_std]
+        outarray = np.c_[self.jf_dct_logpsdK, self.jf_dct_logpsdK_THEORY_std, self.jf_dct_logtau,
+                         self.jf_dct_logtau_THEORY_std, self.jf_dct_kappa, self.jf_dct_kappa_THEORY_std]
         np.save(output + '.cepstral', outarray, **opts)
 
         outarray = np.c_[self.jf_freqs_THz, self.jf_dct_psd, self.jf_dct_logpsd]
