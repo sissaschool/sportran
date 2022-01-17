@@ -336,11 +336,12 @@ class Current(MDSample):
                 raise RuntimeError('self.ndf_chi cannot be None.')
             self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.NFREQS, self.ndf_chi)
 
-    def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, K_PSD=None):
+    def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, forced_Kmin_value=None):
         """
         Performs Cepstral Analysis on the heat current trajectory.
-           aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
-           Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
+           aic_type          = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
+           Kmin_corrfactor   = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
+           forced_Kmin_value = (P*-1) = forced manual cutoff. If set, the AIC cutoff will be ignored.
 
         Resulting conductivity:
            kappa_Kmin  +/-  kappa_Kmin_std   [SI units]
@@ -348,15 +349,21 @@ class Current(MDSample):
 
         self.dct = CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
             psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
-        self.dct.scan_filter_tau(K_PSD=K_PSD)
+        self.dct.scan_filter_tau(K_PSD=forced_Kmin_value)
         self.kappa_Kmin = self.dct.tau_Kmin * self.KAPPA_SCALE * 0.5
         self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.KAPPA_SCALE * 0.5
 
         self.cepstral_log = \
               '-----------------------------------------------------\n' +\
               '  CEPSTRAL ANALYSIS\n' +\
-              '-----------------------------------------------------\n' +\
-              '  AIC_Kmin  = {:d}  (P* = {:d}, corr_factor = {:4f})\n'.format(self.dct.aic_Kmin, self.dct.aic_Kmin + 1, self.dct.Kmin_corrfactor) +\
+              '-----------------------------------------------------\n'
+        if not self.dct.manual_K_PSD:
+            self.cepstral_log += \
+                '  cutoff_K = {:d}  (auto, AIC_Kmin = (P*-1) = {:d}, corr_factor = {:4})\n'.format(self.dct.K_PSD, self.dct.aic_Kmin, self.dct.Kmin_corrfactor)
+        else:
+            self.cepstral_log += \
+                '  cutoff_K  = {:d}  (manual, AIC_Kmin = (P*-1) = {:d})\n'.format(self.dct.K_PSD, self.dct.aic_Kmin, self.dct.Kmin_corrfactor)
+        self.cepstral_log += \
               '  L_0*   = {:18f} +/- {:10f}\n'.format(self.dct.logtau_Kmin, self.dct.logtau_std_Kmin) +\
               '  S_0*   = {:18f} +/- {:10f}\n'.format(self.dct.tau_Kmin, self.dct.tau_std_Kmin) +\
               '-----------------------------------------------------\n' +\
