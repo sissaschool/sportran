@@ -76,7 +76,8 @@ class CosFilter(object):
     psd_theory_mean = the theoretical bias of log-PSD, \\lambda_l
     aic_type        = type of AIC to use ('aic' (default), 'aicc')
     Kmin_corrfactor = cutoff correction factor (default: 1.0)
-    K_PSD           = cutoff used to compute logpsd (default: K_PSD = aic_Kmin)
+    K_PSD           = cutoff used to compute logtau, logpsd (default: K_PSD = aic_Kmin)
+    manual_K_PSD    = boolean, True if K_PSD was specified, False if aic_Kmin is being used
 
     ** INTERNAL VARIABLES:
     samplelogpsd  = the original sample log-PSD - logpsd_THEORY_mean
@@ -135,6 +136,10 @@ class CosFilter(object):
         self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
         if (self.aic_Kmin >= NF):
             log.write_log('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
+        if (self.aic_Kmin == 0):
+            log.write_log('! Warning:  aic_Kmin is zero. You may want to use a larger number of frequencies.')
+        self.K_PSD = None
+        self.manual_K_PSD = False
 
         # set theoretical errors
         if ck_theory_var is None:
@@ -168,20 +173,27 @@ class CosFilter(object):
               '  AIC_Kmin  = {:d}  (P* = {:d})\n'.format(self.aic_Kmin, self.aic_Kmin + 1) + \
               '  L_0*   = {:15f} +/- {:10f}\n'.format(self.logtau_Kmin, self.logtau_std_Kmin) + \
               '  S_0*   = {:15f} +/- {:10f}\n'.format(self.tau_Kmin, self.tau_std_Kmin) + \
-              '  K_PSD  = {:d}\n'.format(self.K_PSD)
+              '  K_PSD  = {:d} {:}\n'.format(self.K_PSD, '(manual)' if self.manual_K_PSD else '(auto)')
         return msg
 
     def scan_filter_tau(self, K_PSD=None, correct_mean=True):
-        """Computes the tau as a function of the cutoff K for the CosFilter.
-        Also computes psd and logpsd for the given K_PSD cutoff (or otherwise the aic_Kmin is used)."""
+        """
+        Computes the tau as a function of the cutoff K (= P*-1).
+        Also computes psd and logpsd for the given K_PSD cutoff.
+        If not set, aic_Kmin will be used.
+
+        self.tau_Kmin will contain the value of tau for the specified cutoff K_PSD
+        """
         if K_PSD is None:
             self.K_PSD = self.aic_Kmin
+            self.manual_K_PSD = False
         else:
             self.K_PSD = K_PSD
             self.aic_Kmin = self.K_PSD
+            self.manual_K_PSD = True
 
-        if (self.aic_Kmin >= self.samplelogpsd.size):
-            log.write_log('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
+        if (self.K_PSD >= self.samplelogpsd.size):
+            log.write_log('! Warning:  K_PSD ({:}) is out of range.'.format(self.K_PSD))
 
         # COS-filter analysis with frequency cutoff K
         self.logtau = dct_filter_tau(self.samplelogpsd)
@@ -190,12 +202,12 @@ class CosFilter(object):
         self.tau = np.exp(self.logtau)
         self.tau_THEORY_std = self.tau * self.logtau_THEORY_std
 
-        if (self.aic_Kmin < self.samplelogpsd.size):
-            self.logtau_Kmin = self.logtau[self.aic_Kmin]
-            self.logtau_var_Kmin = self.logtau_THEORY_var[self.aic_Kmin]
-            self.logtau_std_Kmin = self.logtau_THEORY_std[self.aic_Kmin]
-            self.tau_Kmin = self.tau[self.aic_Kmin]
-            self.tau_std_Kmin = self.tau_THEORY_std[self.aic_Kmin]
+        if (self.K_PSD < self.samplelogpsd.size):
+            self.logtau_Kmin = self.logtau[self.K_PSD]
+            self.logtau_var_Kmin = self.logtau_THEORY_var[self.K_PSD]
+            self.logtau_std_Kmin = self.logtau_THEORY_std[self.K_PSD]
+            self.tau_Kmin = self.tau[self.K_PSD]
+            self.tau_std_Kmin = self.tau_THEORY_std[self.K_PSD]
             self.tau_var_Kmin = self.tau_std_Kmin**2
         else:
             self.logtau_Kmin = np.NaN

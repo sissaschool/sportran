@@ -1,8 +1,8 @@
 # Command line example
 
-In this example we perform the same analysis that is perfomed in the `example_cepstrum_doublecomp_NaCl.ipynb` example notebook, but using the command-line interface.
+In this example we perform the same analysis that is performed in the `example_cepstrum_doublecomp_NaCl.ipynb` example notebook, but using the command-line interface.
 
-Symply run, after installing the package, the following command (see `run_example.sh`):
+Simply run, after installing the package, the following command (see `run_example.sh`):
 
 ```
 sportran-analysis ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 --VOLUME 65013.301261 --param-from-input-file-column Temp TEMPERATURE -w 0.1 --FSTAR 14.0 -r
@@ -14,7 +14,7 @@ The options have the following meaning:
 * `-j 'vcm[1]` : use the columns with header `vcm[1]` as the convective (mass) flux
 * `-t 5.0` : set the timestep to 5.0 fs
 * `--VOLUME 65013.301261` : set the volume of the system
-* `--param-from-input-file-column Temp TEMPERATURE` : use the colum with header `Temp` as the temperature of the system
+* `--param-from-input-file-column Temp TEMPERATURE` : use the column with header `Temp` as the temperature of the system
 * `-w 0.1` : set the width of the moving average filter to 0.1 THz, that is used only to visualize the spectrum
 * `--FSTAR 14.0` : set the $f^*$ cutoff frequency to 14.0 THz
 * `-r` : resample the time-series according to the value of $f^*$ specified with `--FSTAR`
@@ -84,7 +84,7 @@ Using multicomponent code.
 -----------------------------------------------------
   CEPSTRAL ANALYSIS
 -----------------------------------------------------
-  AIC_Kmin  = 3  (P* = 4, corr_factor = 1.000000)
+  cutoff_K = 3  (auto, AIC_Kmin = (P*-1) = 3, corr_factor =  1.0)
   L_0*   =          15.158757 +/-   0.056227
   S_0*   =     6824108.702608 +/- 383697.095268
 -----------------------------------------------------
@@ -93,5 +93,5 @@ Using multicomponent code.
 
 ```
 
-The program outputs raw data and some pdf plots.\
+The program outputs raw data and some PDF plots.\
 In this example the output files are called `output.*`.
