@@ -2,7 +2,7 @@
 
 ################################################################################
 ###
-###   Code to analyze heat current trajectories in blocks using the CosFilter
+###   Code to analyze heat current trajectories in blocks using the CepstralFilter
 ###
 ################################################################################
 
@@ -86,11 +86,11 @@ class MDBlocks(object):
         for L in range(self.N_BLOCKS):
             if self.MULTI_COMPONENT:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS, average_components=True)
-                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, \
+                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor, normalization=self.BLOCK_SIZE)
             else:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS)
-                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
+                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor,
                                                     normalization=self.BLOCK_SIZE)   # theory_var=None
 
@@ -134,12 +134,12 @@ class MDBlocks(object):
             if self.MULTI_COMPONENT:
                 self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP, DT_FS=self.DT_FS,
                                             average_components=True)   #different method call!
-                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, \
+                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)#, normalization=self.BLOCK_SIZE) #removed (personal comunication with Loris)
             else:
                 self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP,
                                             DT_FS=self.DT_FS)   #different method call!
-                self.block[L].dct = st.md.CosFilter(self.block[L].logpsd, aic_type=aic_type,
+                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor)
 
             self.block[L].dct.scan_filter_tau()

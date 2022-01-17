@@ -4,7 +4,7 @@
 import numpy as np
 import inspect
 from sportran.md.mdsample import MDSample
-from sportran.md.cepstral import CosFilter, multicomp_cepstral_parameters
+from sportran.md.cepstral import CepstralFilter, multicomp_cepstral_parameters
 from sportran.md.tools.filter import runavefilter
 from sportran.md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from sportran.md.tools.resample import filter_and_sample
@@ -347,7 +347,7 @@ class Current(MDSample):
            kappa_Kmin  +/-  kappa_Kmin_std   [SI units]
         """
 
-        self.dct = CosFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
+        self.dct = CepstralFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
             psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
         self.dct.scan_filter_tau(K_PSD=forced_Kmin_value)
         self.kappa_Kmin = self.dct.tau_Kmin * self.KAPPA_SCALE * 0.5
