@@ -7,7 +7,7 @@ from .tools.spectrum import logtau_to_tau
 from . import aic
 from sportran.utils import log
 
-__all__ = ['CosFilter']
+__all__ = ['CepstralFilter']
 
 EULER_GAMMA = 0.57721566490153286060651209008240243104215933593992   # Euler-Mascheroni constant
 
@@ -66,7 +66,7 @@ def dct_filter_tau(y):
 ################################################################################
 
 
-class CosFilter(object):
+class CepstralFilter(object):
     """
     CEPSTRAL ANALYSIS based filtering.
 
@@ -167,7 +167,7 @@ class CosFilter(object):
             self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
 
     def __repr__(self):
-        msg = 'CosFilter:\n' + \
+        msg = 'CepstralFilter:\n' + \
               '  AIC type  = {:}\n'.format(self.aic_type) + \
               '  AIC min   = {:f}\n'.format(self.aic_min) + \
               '  AIC_Kmin  = {:d}  (P* = {:d})\n'.format(self.aic_Kmin, self.aic_Kmin + 1) + \
@@ -223,7 +223,7 @@ class CosFilter(object):
             self.logtau_Kmin = self.logtau_Kmin + self.logpsd_THEORY_mean[0]
 
     def scan_filter_psd(self, K_LIST, correct_mean=True):
-        """Computes the psd as a function of the cutoff K for the CosFilter.
+        """Computes the psd as a function of the cutoff K for the CepstralFilter.
         Repeats the procedure for all the cutoffs in the K_LIST."""
         self.K_LIST = K_LIST
         self.logpsd_K_LIST = np.zeros((self.samplelogpsd.size, len(self.K_LIST)))
