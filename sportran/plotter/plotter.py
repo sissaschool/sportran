@@ -153,7 +153,8 @@ def plot_ck(current, *, axes=None, label=None, FIGSIZE=None):
     axes.plot(current.dct.logpsdK, 'o-', c=color, label=label)
     axes.plot(current.dct.logpsdK + current.dct.logpsdK_THEORY_std, '--', c=color)
     axes.plot(current.dct.logpsdK - current.dct.logpsdK_THEORY_std, '--', c=color)
-    axes.axvline(x=current.dct.aic_Kmin, ls='--', c=color)
+    axes.axvline(x=current.dct.aic_Kmin, ls=':', c=color)
+    axes.axvline(x=current.dct.cutoffK, ls='--', c=color)
     axes.set_xlabel(r'$k$')
     axes.set_ylabel(r'$c_k$')
     return axes
@@ -175,10 +176,11 @@ def plot_L0_Pstar(current, *, axes=None, label=None, FIGSIZE=None):
     axes.plot(np.arange(current.NFREQS) + 1, current.dct.logtau, '.-', c=color, label=label)
     axes.plot(np.arange(current.NFREQS) + 1, current.dct.logtau + current.dct.logtau_THEORY_std, '--', c=color)
     axes.plot(np.arange(current.NFREQS) + 1, current.dct.logtau - current.dct.logtau_THEORY_std, '--', c=color)
-    axes.axvline(x=current.dct.aic_Kmin + 1, ls='--', c=color)
-    axes.set_xlim([0, 3 * current.dct.aic_Kmin])
-    max_y = np.amax((current.dct.logtau + current.dct.logtau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
-    min_y = np.amin((current.dct.logtau - current.dct.logtau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
+    axes.axvline(x=current.dct.aic_Kmin + 1, ls=':', c=color)
+    axes.axvline(x=current.dct.cutoffK + 1, ls='--', c=color)
+    axes.set_xlim([0, 3 * current.dct.cutoffK])
+    max_y = np.amax((current.dct.logtau + current.dct.logtau_THEORY_std)[current.dct.cutoffK:3 * current.dct.cutoffK])
+    min_y = np.amin((current.dct.logtau - current.dct.logtau_THEORY_std)[current.dct.cutoffK:3 * current.dct.cutoffK])
     axes.set_ylim([min_y * 0.8, max_y * 1.2])
     axes.set_xlabel(r'$P^*$')
     axes.set_ylabel(r'$L_0(P*)$')
@@ -203,13 +205,14 @@ def plot_kappa_Pstar(current, *, axes=None, label=None, FIGSIZE=None):
               '--', c=color)   # yapf: disable
     axes.plot(np.arange(current.NFREQS) + 1, (current.dct.tau - current.dct.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
               '--', c=color)   # yapf: disable
-    axes.axvline(x=current.dct.aic_Kmin + 1, ls='--', c=color)
-    axes.axhline(y=current.kappa_Kmin, ls='--', c=color)
-    axes.set_xlim([0, 3 * current.dct.aic_Kmin])
+    axes.axvline(x=current.dct.aic_Kmin + 1, ls=':', c=color)
+    axes.axvline(x=current.dct.cutoffK + 1, ls='--', c=color)
+    axes.axhline(y=current.kappa, ls='--', c=color)
+    axes.set_xlim([0, 3 * current.dct.cutoffK])
     max_y = np.amax(current.KAPPA_SCALE * 0.5 *
-                    (current.dct.tau + current.dct.tau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
+                    (current.dct.tau + current.dct.tau_THEORY_std)[current.dct.cutoffK:3 * current.dct.cutoffK])
     min_y = np.amin(current.KAPPA_SCALE * 0.5 *
-                    (current.dct.tau - current.dct.tau_THEORY_std)[current.dct.aic_Kmin:3 * current.dct.aic_Kmin])
+                    (current.dct.tau - current.dct.tau_THEORY_std)[current.dct.cutoffK:3 * current.dct.cutoffK])
     axes.set_ylim([min_y * 0.8, max_y * 1.2])
     axes.set_xlabel(r'$P^*$')
     axes.set_ylabel(r'$\kappa(P^*)$ [{}]'.format(current._KAPPA_SI_UNITS))
@@ -275,10 +278,9 @@ def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, *, axes=None, FIGSIZE=None,
         figure, ax = plt.subplots(2, sharex=True, figsize=FIGSIZE)
     else:
         ax = axes
-    ax[0].errorbar(FSTAR_THZ_LIST, [xff.kappa_Kmin for xff in xf], yerr=[xff.kappa_Kmin_std for xff in xf],
-                   **plot_kwargs)
-    ax[1].errorbar(FSTAR_THZ_LIST, [xff.dct.logtau_Kmin for xff in xf], yerr=[xff.dct.logtau_std_Kmin for xff in xf],
-                   **plot_kwargs)
+    ax[0].errorbar(FSTAR_THZ_LIST, [xff.kappa for xff in xf], yerr=[xff.kappa_std for xff in xf], **plot_kwargs)
+    ax[1].errorbar(FSTAR_THZ_LIST, [xff.dct.logtau_cutoffK for xff in xf],
+                   yerr=[xff.dct.logtau_std_cutoffK for xff in xf], **plot_kwargs)
     # ax[0].plot(current.freqs_THz, current.fpsd,    **plot_kwargs)
     # ax[1].plot(current.freqs_THz, current.flogpsd, **plot_kwargs)
     ax[0].xaxis.set_ticks_position('top')
@@ -404,12 +406,12 @@ def plot_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa
     MAYBE OBSOLETE
     """
     if pstar_max is None:
-        pstar_max = (jf.dct.aic_Kmin + 1) * 2.5
+        pstar_max = (jf.dct.cutoffK + 1) * 2.5
     if k_SI_max is None:
-        k_SI_max = jf.dct.tau[jf.dct.aic_Kmin] * jf.KAPPA_SCALE
+        k_SI_max = jf.dct.tau[jf.dct.cutoffK] * jf.KAPPA_SCALE
 
     f, ax2 = plt.subplots(1, 1)   # figsize=(3.8, 2.3)
-    ax2.axvline(x=jf.dct.aic_Kmin + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
+    ax2.axvline(x=jf.dct.cutoffK + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
     ax2.fill_between(
         np.arange(jf.dct.logtau.shape[0]) + 1, (jf.dct.tau - jf.dct.tau_THEORY_std) * jf.KAPPA_SCALE * 0.5,
         (jf.dct.tau + jf.dct.tau_THEORY_std) * jf.KAPPA_SCALE * 0.5, alpha=0.3, color=colors[4], zorder=-3)
