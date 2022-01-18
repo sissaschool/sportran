@@ -69,7 +69,7 @@ class Current(MDSample):
             self.initialize_cepstral_parameters()
         else:
             log.write_log('Warning: trajectory not initialized. You should manually initialize what you need.')
-        self.dct = None
+        self.cepf = None
 
     def __repr__(self):
         msg = type(self).__name__ +\
@@ -82,8 +82,8 @@ class Current(MDSample):
             msg += 'additional currents:\n'
             for current in self.otherMD:
                 msg += current.__repr__()
-        if self.dct:
-            msg += self.dct.__repr__()
+        if self.cepf:
+            msg += self.cepf.__repr__()
         try:
             msg += '\n  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa, self.kappa_std, self._KAPPA_SI_UNITS)
         except AttributeError:
@@ -362,25 +362,25 @@ class Current(MDSample):
         The log of the analysis can be retried from the variable `self.cepstral_log`.
         """
 
-        self.dct = CepstralFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
+        self.cepf = CepstralFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
             psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type)
-        self.dct.scan_filter_tau(cutoffK=manual_cutoffK, aic_Kmin_corrfactor=aic_Kmin_corrfactor)
-        self.kappa = self.dct.tau_cutoffK * self.KAPPA_SCALE * 0.5
-        self.kappa_std = self.dct.tau_std_cutoffK * self.KAPPA_SCALE * 0.5
+        self.cepf.scan_filter_tau(cutoffK=manual_cutoffK, aic_Kmin_corrfactor=aic_Kmin_corrfactor)
+        self.kappa = self.cepf.tau_cutoffK * self.KAPPA_SCALE * 0.5
+        self.kappa_std = self.cepf.tau_std_cutoffK * self.KAPPA_SCALE * 0.5
 
         self.cepstral_log = \
               '-----------------------------------------------------\n' +\
               '  CEPSTRAL ANALYSIS\n' +\
               '-----------------------------------------------------\n'
-        if not self.dct.manual_cutoffK_flag:
+        if not self.cepf.manual_cutoffK_flag:
             self.cepstral_log += \
-                '  cutoffK = {:d}  (auto, AIC_Kmin = (P*-1) = {:d}, corr_factor = {:4})\n'.format(self.dct.cutoffK, self.dct.aic_Kmin, self.dct.aic_Kmin_corrfactor)
+                '  cutoffK = {:d}  (auto, AIC_Kmin = (P*-1) = {:d}, corr_factor = {:4})\n'.format(self.cepf.cutoffK, self.cepf.aic_Kmin, self.cepf.aic_Kmin_corrfactor)
         else:
             self.cepstral_log += \
-                '  cutoffK  = {:d}  (manual, AIC_Kmin = (P*-1) = {:d})\n'.format(self.dct.cutoffK, self.dct.aic_Kmin, self.dct.aic_Kmin_corrfactor)
+                '  cutoffK  = {:d}  (manual, AIC_Kmin = (P*-1) = {:d})\n'.format(self.cepf.cutoffK, self.cepf.aic_Kmin, self.cepf.aic_Kmin_corrfactor)
         self.cepstral_log += \
-              '  L_0*   = {:18f} +/- {:10f}\n'.format(self.dct.logtau_cutoffK, self.dct.logtau_std_cutoffK) +\
-              '  S_0*   = {:18f} +/- {:10f}\n'.format(self.dct.tau_cutoffK, self.dct.tau_std_cutoffK) +\
+              '  L_0*   = {:18f} +/- {:10f}\n'.format(self.cepf.logtau_cutoffK, self.cepf.logtau_std_cutoffK) +\
+              '  S_0*   = {:18f} +/- {:10f}\n'.format(self.cepf.tau_cutoffK, self.cepf.tau_std_cutoffK) +\
               '-----------------------------------------------------\n' +\
               '  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa, self.kappa_std, self._KAPPA_SI_UNITS) +\
               '-----------------------------------------------------\n'

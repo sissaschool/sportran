@@ -61,16 +61,16 @@ def check_reg(num_regression, data_regression):
     def _check(jf):
         num_regression.check({
             'psd': jf.psd,
-            'logpsdK': jf.dct.logpsdK,
-            'logpsdK_THEORY_std': jf.dct.logpsdK_THEORY_std,
-            'logtau': jf.dct.logtau,
-            'logtau_THEORY_std': jf.dct.logtau_THEORY_std,
+            'logpsdK': jf.cepf.logpsdK,
+            'logpsdK_THEORY_std': jf.cepf.logpsdK_THEORY_std,
+            'logtau': jf.cepf.logtau,
+            'logtau_THEORY_std': jf.cepf.logtau_THEORY_std,
             'KAPPA_SCALE': np.array([float(jf.KAPPA_SCALE)]),
             'Nyquist_f_THz': np.array([float(jf.Nyquist_f_THz)]),
             'kappa_Kmin': np.array([float(jf.kappa)]),
             'kappa_Kmin_std': np.array([float(jf.kappa_std)]),
-            'aic_min': np.array([float(jf.dct.aic_min)])
+            'aic_min': np.array([float(jf.cepf.aic_min)])
         })
-        data_regression.check({'aic_Kmin': int(jf.dct.aic_Kmin),})
+        data_regression.check({'aic_Kmin': int(jf.cepf.aic_Kmin),})
 
     return _check
