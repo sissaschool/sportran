@@ -67,8 +67,8 @@ def check_reg(num_regression, data_regression):
             'logtau_THEORY_std': jf.dct.logtau_THEORY_std,
             'KAPPA_SCALE': np.array([float(jf.KAPPA_SCALE)]),
             'Nyquist_f_THz': np.array([float(jf.Nyquist_f_THz)]),
-            'kappa_Kmin': np.array([float(jf.kappa_Kmin)]),
-            'kappa_Kmin_std': np.array([float(jf.kappa_Kmin_std)]),
+            'kappa_Kmin': np.array([float(jf.kappa)]),
+            'kappa_Kmin_std': np.array([float(jf.kappa_std)]),
             'aic_min': np.array([float(jf.dct.aic_min)])
         })
         data_regression.check({'aic_Kmin': int(jf.dct.aic_Kmin),})

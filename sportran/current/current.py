@@ -79,10 +79,15 @@ class Current(MDSample):
             msg += '  {:11} =  {}\n'.format(key, getattr(self, key))
         msg += super().__repr__()
         if self.otherMD:
+            msg += 'additional currents:\n'
             for current in self.otherMD:
                 msg += current.__repr__()
         if self.dct:
             msg += self.dct.__repr__()
+        try:
+            msg += '\n  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa, self.kappa_std, self._KAPPA_SI_UNITS)
+        except AttributeError:
+            pass
         return msg
 
     @property
@@ -336,38 +341,48 @@ class Current(MDSample):
                 raise RuntimeError('self.ndf_chi cannot be None.')
             self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.NFREQS, self.ndf_chi)
 
-    def cepstral_analysis(self, aic_type='aic', Kmin_corrfactor=1.0, forced_Kmin_value=None):
+    def cepstral_analysis(self, aic_type='aic', aic_Kmin_corrfactor=1.0, manual_cutoffK=None):
         """
-        Performs Cepstral Analysis on the heat current trajectory.
-           aic_type          = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
-           Kmin_corrfactor   = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
-           forced_Kmin_value = (P*-1) = forced manual cutoff. If set, the AIC cutoff will be ignored.
+        Performs Cepstral Analysis on the Current's trajectory.
 
-        Resulting conductivity:
-           kappa_Kmin  +/-  kappa_Kmin_std   [SI units]
+        `cutoffK` = (P*-1) is the number of cepstral coefficients retained by the filter.
+        By default, this is chosen as the number of cepstral coefficients that minimizes the Akaike Information Criterion,
+        multiplied by a correction factor (`aic_Kmin_corrfactor`):
+           self.cfilt.cutoffK = argmin(self.cfilt.aic) * aic_Kmin_corrfactor
+        This choice can be manually overridden by setting `manual_cutoffK` to the desired value.
+
+        Input parameters:
+           aic_type            = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
+           aic_Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoffK = aic_Kmin * Kmin_corrfactor) (default: 1.0)
+           manual_cutoffK      = (P*-1) = manual cutoff. If set, the AIC cutoff will be ignored.
+
+        The resulting conductivity is returned in the chosen units, generally:
+            kappa  +/-  kappa_std   [SI units]
+
+        The log of the analysis can be retried from the variable `self.cepstral_log`.
         """
 
         self.dct = CepstralFilter(self.logpsd, ck_theory_var=self.ck_THEORY_var, \
-            psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)
-        self.dct.scan_filter_tau(K_PSD=forced_Kmin_value)
-        self.kappa_Kmin = self.dct.tau_Kmin * self.KAPPA_SCALE * 0.5
-        self.kappa_Kmin_std = self.dct.tau_std_Kmin * self.KAPPA_SCALE * 0.5
+            psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type)
+        self.dct.scan_filter_tau(cutoffK=manual_cutoffK, aic_Kmin_corrfactor=aic_Kmin_corrfactor)
+        self.kappa = self.dct.tau_cutoffK * self.KAPPA_SCALE * 0.5
+        self.kappa_std = self.dct.tau_std_cutoffK * self.KAPPA_SCALE * 0.5
 
         self.cepstral_log = \
               '-----------------------------------------------------\n' +\
               '  CEPSTRAL ANALYSIS\n' +\
               '-----------------------------------------------------\n'
-        if not self.dct.manual_K_PSD:
+        if not self.dct.manual_cutoffK_flag:
             self.cepstral_log += \
-                '  cutoff_K = {:d}  (auto, AIC_Kmin = (P*-1) = {:d}, corr_factor = {:4})\n'.format(self.dct.K_PSD, self.dct.aic_Kmin, self.dct.Kmin_corrfactor)
+                '  cutoffK = {:d}  (auto, AIC_Kmin = (P*-1) = {:d}, corr_factor = {:4})\n'.format(self.dct.cutoffK, self.dct.aic_Kmin, self.dct.aic_Kmin_corrfactor)
         else:
             self.cepstral_log += \
-                '  cutoff_K  = {:d}  (manual, AIC_Kmin = (P*-1) = {:d})\n'.format(self.dct.K_PSD, self.dct.aic_Kmin, self.dct.Kmin_corrfactor)
+                '  cutoffK  = {:d}  (manual, AIC_Kmin = (P*-1) = {:d})\n'.format(self.dct.cutoffK, self.dct.aic_Kmin, self.dct.aic_Kmin_corrfactor)
         self.cepstral_log += \
-              '  L_0*   = {:18f} +/- {:10f}\n'.format(self.dct.logtau_Kmin, self.dct.logtau_std_Kmin) +\
-              '  S_0*   = {:18f} +/- {:10f}\n'.format(self.dct.tau_Kmin, self.dct.tau_std_Kmin) +\
+              '  L_0*   = {:18f} +/- {:10f}\n'.format(self.dct.logtau_cutoffK, self.dct.logtau_std_cutoffK) +\
+              '  S_0*   = {:18f} +/- {:10f}\n'.format(self.dct.tau_cutoffK, self.dct.tau_std_cutoffK) +\
               '-----------------------------------------------------\n' +\
-              '  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa_Kmin, self.kappa_Kmin_std, self._KAPPA_SI_UNITS) +\
+              '  kappa* = {:18f} +/- {:10f}  {}\n'.format(self.kappa, self.kappa_std, self._KAPPA_SI_UNITS) +\
               '-----------------------------------------------------\n'
         log.write_log(self.cepstral_log)
 
@@ -406,9 +421,10 @@ class Current(MDSample):
         else:
             return xf
 
-    def fstar_analysis(self, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
-                       verbose=False, **plot_kwargs):   # yapf: disable
-        return fstar_analysis(self, TSKIP_LIST, aic_type, Kmin_corrfactor, plot, axes, FIGSIZE, verbose, **plot_kwargs)
+    def fstar_analysis(self, TSKIP_LIST, aic_type='aic', aic_Kmin_corrfactor=1.0, manual_cutoffK=None, plot=True,
+                       axes=None, FIGSIZE=None, verbose=False, **plot_kwargs):   # yapf: disable
+        return fstar_analysis(self, TSKIP_LIST, aic_type, aic_Kmin_corrfactor, manual_cutoffK, plot, axes, FIGSIZE,
+                              verbose, **plot_kwargs)
 
 
 ################################################################################
@@ -419,8 +435,8 @@ Current.set_plotter()
 ################################################################################
 
 
-def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True, axes=None, FIGSIZE=None,
-                   verbose=False, **plot_kwargs):   # yapf: disable
+def fstar_analysis(x, TSKIP_LIST, aic_type='aic', aic_Kmin_corrfactor=1.0, manual_cutoffK=None, plot=True, axes=None,
+                   FIGSIZE=None, verbose=False, **plot_kwargs):   # yapf: disable
     """
     Perform cepstral analysis on a set of resampled time series, to study the effect of f*.
     For each TSKIP in TSKIP_LIST, the HeatCurrent x is filtered & resampled, and then cesptral-analysed.
@@ -429,8 +445,10 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
     ----------
     TSKIP_LIST    = list of sampling times [steps]
     aic_type      = the Akaike Information Criterion function used to choose the cutoff ('aic', 'aicc')
-    Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoff = Kmin_corrfactor * aic_Kmin)
-    plot          = plot the PSD (True/False)
+    aic_Kmin_corrfactor = correction factor multiplied by the AIC cutoff (cutoffK = aic_Kmin * aic_Kmin_corrfactor)
+    manual_cutoffK = (P*-1) = manual cutoff. If set, the AIC cutoff will be ignored.
+
+    plot          = plot the PSD (default: True)
     axes          = matplotlib.axes.Axes object (if None, create one)
     FIGSIZE       = plot figure size
     verbose       = verbose output (default: False)
@@ -453,7 +471,7 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', Kmin_corrfactor=1.0, plot=True
     for TSKIP in TSKIP_LIST:
         log.write_log('TSKIP = {:4d} - FSTAR = {:8g} THz'.format(TSKIP, x.Nyquist_f_THz / TSKIP))
         xff = x.resample(TSKIP=TSKIP, plot=False, verbose=verbose)
-        xff.cepstral_analysis(aic_type, Kmin_corrfactor)
+        xff.cepstral_analysis(aic_type=aic_type, aic_Kmin_corrfactor=aic_Kmin_corrfactor, manual_cutoffK=manual_cutoffK)
         xf.append(xff)
     FSTAR_THZ_LIST = [xff.Nyquist_f_THz for xff in xf]
 

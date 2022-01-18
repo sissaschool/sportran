@@ -174,8 +174,11 @@ def main():
             help='Resampling time period (steps)')
     resamplearg.add_argument('--FSTAR', type=float,
             help='Resampling target Nyquist frequency (THz)')
-    analysis_group.add_argument('-c', '--corr-factor', type=float, default=1.0,
+    cutoff_group = analysis_group.add_mutually_exclusive_group()
+    cutoff_group.add_argument('-c', '--corr-factor', type=float, default=1.0,
             help='Correction factor to the AIC. (optional, default: 1.0 = no correction)')
+    cutoff_group.add_argument('-P', '--manual-Pstar', type=int,
+            help='Manual P* value. (optional, default: use automatic P*)')
 
     plot_group = parser.add_argument_group('Plot options (optional)')
     plot_group.add_argument('-w', '--psd-filterw', type=float,
@@ -245,6 +248,10 @@ def run_analysis(args):
     TSKIP = args.TSKIP
     FSTAR = args.FSTAR
     corr_factor = args.corr_factor
+    if args.manual_Pstar is not None:
+        manual_cutoffK = args.manual_Pstar - 1
+    else:
+        manual_cutoffK = None
     j2_keys = args.add_currents
 
     psd_filter_w = args.psd_filterw
@@ -404,7 +411,7 @@ def run_analysis(args):
         jf = j
 
     # cepstral analysis
-    jf.cepstral_analysis(aic_type='aic', Kmin_corrfactor=corr_factor)
+    jf.cepstral_analysis(aic_type='aic', aic_Kmin_corrfactor=corr_factor, manual_cutoffK=manual_cutoffK)
     #log.write_log(jf.cepstral_log)
 
     ############################################################################
@@ -438,8 +445,8 @@ def run_analysis(args):
             binoutobj.jf_Nyquist_f_THz = jf.Nyquist_f_THz
             binoutobj.jf_resample_log = jf.resample_log
 
-        binoutobj.kappa_Kmin = jf.kappa_Kmin
-        binoutobj.kappa_Kmin_std = jf.kappa_Kmin_std
+        binoutobj.kappa = jf.kappa
+        binoutobj.kappa_std = jf.kappa_std
         binoutobj.cepstral_log = jf.cepstral_log
         binoutobj.units = jf.UNITS
         binoutobj.KAPPA_SCALE = jf.KAPPA_SCALE
@@ -453,7 +460,8 @@ def run_analysis(args):
         binoutobj.jf_dct_kappa = jf.dct.tau * jf.KAPPA_SCALE * 0.5
         binoutobj.jf_dct_kappa_THEORY_std = jf.dct.tau_THEORY_std * jf.KAPPA_SCALE * 0.5
         binoutobj.jf_dct_aic_Kmin = jf.dct.aic_Kmin
-        binoutobj.jf_dct_Kmin_corrfactor = jf.dct.Kmin_corrfactor
+        binoutobj.jf_dct_aic_Kmin_corrfactor = jf.dct.aic_Kmin_corrfactor
+        binoutobj.jf_dct_cutoffK = jf.dct.cutoffK
         binoutobj.jf_dct_psd = jf.dct.psd
         binoutobj.jf_dct_logpsd = jf.dct.logpsd
 
@@ -525,7 +533,7 @@ def run_analysis(args):
 
         # plot cepstral coefficients
         ax = jf.plot_ck()
-        ax.set_xlim([0, 5 * jf.dct.aic_Kmin])
+        ax.set_xlim([0, 5 * jf.dct.cutoffK])
         ax.set_ylim([-1, 15])
         ax.grid()
         pdf.savefig()
@@ -533,13 +541,13 @@ def run_analysis(args):
 
         # plot L0(Pstar)
         ax = jf.plot_L0_Pstar()
-        ax.set_xlim([0, 10 * jf.dct.aic_Kmin])
+        ax.set_xlim([0, 10 * jf.dct.cutoffK])
         pdf.savefig()
         plt.close()
 
         # # plot kappa(Pstar)
         # ax = jf.plot_kappa_Pstar()
-        # ax.set_xlim([0, 10*jf.dct.aic_Kmin])
+        # ax.set_xlim([0, 10*jf.dct.cutoffK])
 
         addPlotToPdf(jf.plot_cepstral_conv, pdf, pstar_max=args.plot_conv_max_pstar,
                      pstar_tick=args.plot_conv_pstar_tick_interval, k_SI_max=args.plot_conv_max_kappa,
@@ -598,10 +606,11 @@ class TCOutput(object):
         self.jf_dct_psd                = None
         self.jf_dct_logpsd             = None
         self.jf_dct_aic_Kmin           = None
-        self.jf_dct_Kmin_corrfactor    = None
+        self.jf_dct_aic_Kmin_corrfactor = None
+        self.jf_dct_cutoffK            = None
 
-        self.kappa_Kmin     = None
-        self.kappa_Kmin_std = None
+        self.kappa          = None
+        self.kappa_std      = None
         self.cepstral_log   = None
         self.UNITS          = None
         self.KAPPA_SCALE    = None

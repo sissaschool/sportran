@@ -75,35 +75,88 @@ class CepstralFilter(object):
     ck_theory_var   = the theoretical variance of cepstral coefficients, \\sigma*^2(P*,N)
     psd_theory_mean = the theoretical bias of log-PSD, \\lambda_l
     aic_type        = type of AIC to use ('aic' (default), 'aicc')
-    Kmin_corrfactor = cutoff correction factor (default: 1.0)
-    K_PSD           = cutoff used to compute logtau, logpsd (default: K_PSD = aic_Kmin)
-    manual_K_PSD    = boolean, True if K_PSD was specified, False if aic_Kmin is being used
 
     ** INTERNAL VARIABLES:
     samplelogpsd  = the original sample log-PSD - logpsd_THEORY_mean
 
     logpsdK  = the cepstrum of the data, \\hat{C}_n (i.e. the DCT of samplelogpsd)
     aic_min  = minimum value of the AIC
-    aic_Kmin = cutoff K that minimizes the AIC, K = P*-1
+    aic_Kmin = cutoffK that minimizes the AIC
+    aic_Kmin_corrfactor = aic_Kmin cutoff correction factor (default: 1.0)
+    cutoffK  = (P*-1) = cutoff used to compute logtau and logpsd (by default = aic_Kmin * aic_Kmin_corrfactor)
+    manual_cutoffK_flag = True if cutoffK was manually specified, False if aic_Kmin is being used
 
-    logtau          = filtered log(tau) as a function of K, L_0(P*-1)
-    logtau_Kmin     = filtered log(tau) at the aic_Kmin, L*_0
-    logtau_var_Kmin = theoretical L*_0 variance
-    logtau_std_Kmin = theoretical L*_0 standard deviation
-    logpsd          = filtered log-PSD at the specified cutoff K_PSD
+    logtau          = filtered log(tau) as a function of cutoffK, L_0(P*-1)
+    logtau_cutoffK  = filtered log(tau) at cutoffK, L*_0
+    logtau_var_cutoffK = theoretical L*_0 variance
+    logtau_std_cutoffK = theoretical L*_0 standard deviation
+    logpsd          = filtered log-PSD at cutoffK
 
-    tau          = filtered tau as a function of K, S_0(P*-1)
-    tau_Kmin     = filtered tau at the aic_Kmin, S*_0
-    tau_var_Kmin = theoretical S*_0 variance
-    tau_std_Kmin = theoretical S*_0 standard deviation
-    psd          = filtered PSD at the specified cutoff K_PSD
+    tau          = filtered tau as a function of cutoffK, S_0(P*-1)
+    tau_cutoffK  = filtered tau at cutoffK, S*_0
+    tau_var_cutoffK = theoretical S*_0 variance
+    tau_std_cutoffK = theoretical S*_0 standard deviation
+    psd          = filtered PSD at the specified cutoffK
 
     p_aic... = Bayesian AIC weighting stuff
     """
 
-    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic', Kmin_corrfactor=1.0):
+    def __init__(self, samplelogpsd, ck_theory_var=None, psd_theory_mean=None, aic_type='aic'):
 
-        NF = samplelogpsd.size
+        if not isinstance(samplelogpsd, np.ndarray):
+            raise TypeError('samplelogpsd should be an object of type numpy.ndarray')
+        elif len(samplelogpsd.shape) != 1:
+            raise ValueError('samplelogpsd should be a 1-dimensional array.')
+        self.samplelogpsd = samplelogpsd
+        self.initialize_cepstral_distribution(ck_theory_var, psd_theory_mean)
+
+        # subtract the mean of the distribution
+        self.samplelogpsd = samplelogpsd - self.logpsd_THEORY_mean
+
+        # compute cepstral coefficients
+        self.logpsdK = dct_coefficients(self.samplelogpsd)
+
+        # estimate AIC and its minimum
+        if (aic_type == 'aic'):
+            self.aic = aic.dct_AIC(self.logpsdK, ck_theory_var)
+        elif (aic_type == 'aicc'):
+            self.aic = aic.dct_AICc(self.logpsdK, ck_theory_var)
+        else:
+            raise ValueError('AIC type not valid.')
+        self.aic_type = aic_type
+        self.aic_min = np.min(self.aic)
+        self.aic_Kmin = np.argmin(self.aic)
+        if (self.aic_Kmin == 0):
+            log.write_log('! Warning:  aic_Kmin is zero. You may want to use a larger number of frequencies.')
+        self.aic_Kmin_corrfactor = 1.0
+        self.cutoffK = None
+        self.manual_cutoffK_flag = False
+
+    def __repr__(self):
+        msg = 'CepstralFilter:\n' + \
+              '  AIC type  = {:}\n'.format(self.aic_type) + \
+              '  AIC min   = {:f}\n'.format(self.aic_min) + \
+              '  AIC_Kmin  = {:d}  (P* = {:d})\n'.format(self.aic_Kmin, self.aic_Kmin + 1)
+        if self.cutoffK is not None:
+            msg += \
+                '  AIC_Kmin_corrfactor = {:f}\n'.format(self.aic_Kmin_corrfactor) + \
+                '  cutoffK   = {:d} {:}\n'.format(self.cutoffK, '(manual)' if self.manual_cutoffK_flag else '(auto)') + \
+                '  L_0*   = {:15f} +/- {:10f}\n'.format(self.logtau_cutoffK, self.logtau_std_cutoffK) + \
+                '  S_0*   = {:15f} +/- {:10f}\n'.format(self.tau_cutoffK, self.tau_std_cutoffK)
+        return msg
+
+    def initialize_cepstral_distribution(self, ck_theory_var=None, psd_theory_mean=None):
+        """
+        Initialize the theoretical distribution of the cepstral coefficients.
+        The samplelogpsd must has been already set.
+
+        Input parameters:
+            ck_theory_var   = the theoretical variance of cepstral coefficients, \\sigma*^2(P*,N)
+            psd_theory_mean = the theoretical bias of log-PSD, \\lambda_l
+
+        If ck_theory_var and/or psd_theory_mean are not specified, the default theoretical values will be used.
+        """
+        NF = self.samplelogpsd.size
         N = 2 * (NF - 1)
 
         if psd_theory_mean is None:
@@ -116,30 +169,6 @@ class CepstralFilter(object):
             self.logpsd_THEORY_mean[-1] = -EULER_GAMMA - np.log(2)
         else:
             self.logpsd_THEORY_mean = psd_theory_mean
-
-        # subtract the mean of the distribution
-        self.samplelogpsd = samplelogpsd - self.logpsd_THEORY_mean
-
-        # compute cepstral coefficients
-        self.logpsdK = dct_coefficients(self.samplelogpsd)
-
-        # estimate AIC
-        if (aic_type == 'aic'):
-            self.aic = aic.dct_AIC(self.logpsdK, ck_theory_var)
-        elif (aic_type == 'aicc'):
-            self.aic = aic.dct_AICc(self.logpsdK, ck_theory_var)
-        else:
-            raise ValueError('AIC type not valid.')
-        self.aic_type = aic_type
-        self.aic_min = np.min(self.aic)
-        self.Kmin_corrfactor = Kmin_corrfactor
-        self.aic_Kmin = int(round(np.argmin(self.aic) * Kmin_corrfactor))
-        if (self.aic_Kmin >= NF):
-            log.write_log('! Warning:  aic_Kmin ({:}) is out of range.'.format(self.aic_Kmin))
-        if (self.aic_Kmin == 0):
-            log.write_log('! Warning:  aic_Kmin is zero. You may want to use a larger number of frequencies.')
-        self.K_PSD = None
-        self.manual_K_PSD = False
 
         # set theoretical errors
         if ck_theory_var is None:
@@ -166,76 +195,82 @@ class CepstralFilter(object):
             self.logtau_THEORY_var[-1] = self.logtau_THEORY_var[-2] + self.logpsdK_THEORY_var[-1]
             self.logtau_THEORY_std = np.sqrt(self.logtau_THEORY_var)
 
-    def __repr__(self):
-        msg = 'CepstralFilter:\n' + \
-              '  AIC type  = {:}\n'.format(self.aic_type) + \
-              '  AIC min   = {:f}\n'.format(self.aic_min) + \
-              '  AIC_Kmin  = {:d}  (P* = {:d})\n'.format(self.aic_Kmin, self.aic_Kmin + 1) + \
-              '  L_0*   = {:15f} +/- {:10f}\n'.format(self.logtau_Kmin, self.logtau_std_Kmin) + \
-              '  S_0*   = {:15f} +/- {:10f}\n'.format(self.tau_Kmin, self.tau_std_Kmin) + \
-              '  K_PSD  = {:d} {:}\n'.format(self.K_PSD, '(manual)' if self.manual_K_PSD else '(auto)')
-        return msg
-
-    def scan_filter_tau(self, K_PSD=None, correct_mean=True):
+    def scan_filter_tau(self, cutoffK=None, aic_Kmin_corrfactor=1.0, correct_mean=True):
         """
-        Computes the tau as a function of the cutoff K (= P*-1).
-        Also computes psd and logpsd for the given K_PSD cutoff.
-        If not set, aic_Kmin will be used.
+        Computes tau as a function of the cutoffK (= P*-1).
+        Also computes psd and logpsd for the given cutoffK.
+        If cutoffK is None, aic_Kmin * aic_Kmin_corrfactor will be used.
 
-        self.tau_Kmin will contain the value of tau for the specified cutoff K_PSD
+        Input parameters:
+            cutoffK = (P*-1) = cutoff used to compute logtau and logpsd (by default = aic_Kmin * aic_Kmin_corrfactor)
+            aic_Kmin_corrfactor = aic_Kmin cutoff correction factor (default: 1.0)
+            correct_mean = fix the bias introduced by the log-distribution (default: True)
+
+        self.tau_cutoffK will contain the value of tau for the specified cutoff cutoffK
+
+        If cutoffK is out of range, the maximum K will be used.
         """
-        if K_PSD is None:
-            self.K_PSD = self.aic_Kmin
-            self.manual_K_PSD = False
+        if cutoffK is not None:
+            if not isinstance(cutoffK, int) or (cutoffK < 0):
+                raise ValueError('cutoffK must be a positive integer.')
+            if aic_Kmin_corrfactor != 1.0:
+                raise ValueError(
+                    'If you specify cutoffK manually, the AIC will not be used, hence aic_Kmin_corrfactor will be ignored.'
+                )
+        self.aic_Kmin_corrfactor = aic_Kmin_corrfactor
+
+        if cutoffK is None:
+            self.cutoffK = int(round(self.aic_Kmin * self.aic_Kmin_corrfactor))
+            self.manual_cutoffK_flag = False
         else:
-            self.K_PSD = K_PSD
-            self.aic_Kmin = self.K_PSD
-            self.manual_K_PSD = True
+            self.cutoffK = cutoffK
+            self.manual_cutoffK_flag = True
 
-        if (self.K_PSD >= self.samplelogpsd.size):
-            log.write_log('! Warning:  K_PSD ({:}) is out of range.'.format(self.K_PSD))
+        if (self.cutoffK >= self.samplelogpsd.size):
+            log.write_log('! Warning:  cutoffK ({:}) is out of range.'.format(self.cutoffK))
+            #log.write_log('! Warning:  cutoffK ({:}) is out of range. The maximum frequency ({:}) will be used.'.format(self.cutoffK, self.samplelogpsd.size - 1))
+            #self.cutoffK = self.samplelogpsd.size - 1
 
         # COS-filter analysis with frequency cutoff K
         self.logtau = dct_filter_tau(self.samplelogpsd)
-        self.logpsd = dct_filter_psd(self.samplelogpsd, self.K_PSD)   # usually is log(psd)@aic_Kmin
+        self.logpsd = dct_filter_psd(self.samplelogpsd, self.cutoffK)   # that is log(psd) for the chosen cutoffK
         self.psd = np.exp(self.logpsd)
         self.tau = np.exp(self.logtau)
         self.tau_THEORY_std = self.tau * self.logtau_THEORY_std
 
-        if (self.K_PSD < self.samplelogpsd.size):
-            self.logtau_Kmin = self.logtau[self.K_PSD]
-            self.logtau_var_Kmin = self.logtau_THEORY_var[self.K_PSD]
-            self.logtau_std_Kmin = self.logtau_THEORY_std[self.K_PSD]
-            self.tau_Kmin = self.tau[self.K_PSD]
-            self.tau_std_Kmin = self.tau_THEORY_std[self.K_PSD]
-            self.tau_var_Kmin = self.tau_std_Kmin**2
+        if (self.cutoffK < self.samplelogpsd.size):
+            self.logtau_cutoffK = self.logtau[self.cutoffK]
+            self.logtau_var_cutoffK = self.logtau_THEORY_var[self.cutoffK]
+            self.logtau_std_cutoffK = self.logtau_THEORY_std[self.cutoffK]
+            self.tau_cutoffK = self.tau[self.cutoffK]
+            self.tau_std_cutoffK = self.tau_THEORY_std[self.cutoffK]
+            self.tau_var_cutoffK = self.tau_std_cutoffK**2
         else:
-            self.logtau_Kmin = np.NaN
-            self.logtau_var_Kmin = np.NaN
-            self.logtau_std_Kmin = np.NaN
-            self.tau_Kmin = np.NaN
-            self.tau_var_Kmin = np.NaN
-            self.tau_std_Kmin = np.NaN
+            self.logtau_cutoffK = np.NaN
+            self.logtau_var_cutoffK = np.NaN
+            self.logtau_std_cutoffK = np.NaN
+            self.tau_cutoffK = np.NaN
+            self.tau_var_cutoffK = np.NaN
+            self.tau_std_cutoffK = np.NaN
 
         if correct_mean:
             self.logpsd = self.logpsd + self.logpsd_THEORY_mean
             self.logtau = self.logtau + self.logpsd_THEORY_mean[0]
-            self.logtau_Kmin = self.logtau_Kmin + self.logpsd_THEORY_mean[0]
+            self.logtau_cutoffK = self.logtau_cutoffK + self.logpsd_THEORY_mean[0]
 
-    def scan_filter_psd(self, K_LIST, correct_mean=True):
-        """Computes the psd as a function of the cutoff K for the CepstralFilter.
-        Repeats the procedure for all the cutoffs in the K_LIST."""
-        self.K_LIST = K_LIST
-        self.logpsd_K_LIST = np.zeros((self.samplelogpsd.size, len(self.K_LIST)))
-        self.psd_K_LIST = np.zeros((self.samplelogpsd.size, len(self.K_LIST)))
-        self.logtau_K_LIST = np.zeros(len(self.K_LIST))   # DEFINED AS log(PSD[0]), no factor 0.5 or 0.25
-        self.tau_K_LIST = np.zeros(len(self.K_LIST))
+    def scan_filter_psd(self, cutoffK_LIST, correct_mean=True):
+        """Computes the psd and tau as a function of the cutoff K.
+        Repeats the procedure for all the cutoffs in cutoffK_LIST."""
+        self.cutoffK_LIST = cutoffK_LIST
+        self.logpsd_K_LIST = np.zeros((self.samplelogpsd.size, len(self.cutoffK_LIST)))
+        self.psd_K_LIST = np.zeros((self.samplelogpsd.size, len(self.cutoffK_LIST)))
+        self.logtau_K_LIST = np.zeros(len(self.cutoffK_LIST))   # DEFINED AS log(PSD[0]), no factor 0.5 or 0.25
+        self.tau_K_LIST = np.zeros(len(self.cutoffK_LIST))
 
-        for k, K in enumerate(self.K_LIST):
+        for k, K in enumerate(self.cutoffK_LIST):
             # COS-filter analysis with frequency cutoff K
             self.logpsd_K_LIST[:, k] = dct_filter_psd(self.samplelogpsd, K)
             self.logtau_K_LIST[k] = self.logpsd_K_LIST[0, k]
-
             self.psd_K_LIST[:, k] = np.exp(self.logpsd_K_LIST[:, k])
             self.tau_K_LIST[k] = np.exp(self.logtau_K_LIST[k])
 
@@ -281,18 +316,18 @@ class CepstralFilter(object):
                                                                          self.p_logtau_density_xstd)
 
 
-#    def optimize_cos_filter(self, thr=0.05, K_LIST=None, logtauref=None):
-#        if K_LIST is not None:
-#            self.K_LIST = K_LIST
+#    def optimize_cos_filter(self, thr=0.05, cutoffK_LIST=None, logtauref=None):
+#        if cutoffK_LIST is not None:
+#            self.cutoffK_LIST = cutoffK_LIST
 #        self.scan_cos_filter_K()
 #        ## find minimum cutoff K that satisfies  |log(tau) - tauref| < thr
 #        if logtauref is not None:
 #            self.logtauref = logtauref
 #        else:
 #            self.logtauref = self.logtau[-1]  # if tauref is not given, use logtau with max cutoff
-#        self.optimalK_idx = len(self.K_LIST) - np.argmin(np.abs(self.logtau - self.logtauref)[::-1] <= thr)
-#        if (self.optimalK_idx < len(self.K_LIST)):
-#            self.optimalK = self.K_LIST[self.optimalK_idx]
+#        self.optimalK_idx = len(self.cutoffK_LIST) - np.argmin(np.abs(self.logtau - self.logtauref)[::-1] <= thr)
+#        if (self.optimalK_idx < len(self.cutoffK_LIST)):
+#            self.optimalK = self.cutoffK_LIST[self.optimalK_idx]
 #        else:
 #            self.optimalK_idx = np.NaN
 #            self.optimalK = np.NaN
