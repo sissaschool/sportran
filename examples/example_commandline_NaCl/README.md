@@ -4,7 +4,7 @@ In this example we perform the same analysis that is performed in the `example_c
 
 Simply run, after installing the package, the following command (see `run_example.sh`):
 
-```
+```bash
 sportran-analysis ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 --VOLUME 65013.301261 --param-from-input-file-column Temp TEMPERATURE -w 0.1 --FSTAR 14.0 -r
 ```
 
@@ -20,7 +20,8 @@ The options have the following meaning:
 * `-r` : resample the time-series according to the value of $f^*$ specified with `--FSTAR`
 
 The output of the program in the terminal is:
-```
+
+```text
  Input file (table):      ../data/NaCl.dat
  Units:      metal
  Time step:      5.0 fs
@@ -84,7 +85,7 @@ Using multicomponent code.
 -----------------------------------------------------
   CEPSTRAL ANALYSIS
 -----------------------------------------------------
-  cutoff_K = 3  (auto, AIC_Kmin = (P*-1) = 3, corr_factor =  1.0)
+  cutoffK = 3  (auto, AIC_Kmin = (P*-1) = 3, corr_factor =  1.0)
   L_0*   =          15.158757 +/-   0.056227
   S_0*   =     6824108.702608 +/- 383697.095268
 -----------------------------------------------------
