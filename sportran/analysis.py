@@ -453,17 +453,17 @@ def run_analysis(args):
         binoutobj.TEMPERATURE = jf.TEMPERATURE
         binoutobj.VOLUME = jf.VOLUME
 
-        binoutobj.jf_dct_logpsdK = jf.dct.logpsdK
-        binoutobj.jf_dct_logpsdK_THEORY_std = jf.dct.logpsdK_THEORY_std
-        binoutobj.jf_dct_logtau = jf.dct.logtau
-        binoutobj.jf_dct_logtau_THEORY_std = jf.dct.logtau_THEORY_std
-        binoutobj.jf_dct_kappa = jf.dct.tau * jf.KAPPA_SCALE * 0.5
-        binoutobj.jf_dct_kappa_THEORY_std = jf.dct.tau_THEORY_std * jf.KAPPA_SCALE * 0.5
-        binoutobj.jf_dct_aic_Kmin = jf.dct.aic_Kmin
-        binoutobj.jf_dct_aic_Kmin_corrfactor = jf.dct.aic_Kmin_corrfactor
-        binoutobj.jf_dct_cutoffK = jf.dct.cutoffK
-        binoutobj.jf_dct_psd = jf.dct.psd
-        binoutobj.jf_dct_logpsd = jf.dct.logpsd
+        binoutobj.jf_cepf_logpsdK = jf.cepf.logpsdK
+        binoutobj.jf_cepf_logpsdK_THEORY_std = jf.cepf.logpsdK_THEORY_std
+        binoutobj.jf_cepf_logtau = jf.cepf.logtau
+        binoutobj.jf_cepf_logtau_THEORY_std = jf.cepf.logtau_THEORY_std
+        binoutobj.jf_cepf_kappa = jf.cepf.tau * jf.KAPPA_SCALE * 0.5
+        binoutobj.jf_cepf_kappa_THEORY_std = jf.cepf.tau_THEORY_std * jf.KAPPA_SCALE * 0.5
+        binoutobj.jf_cepf_aic_Kmin = jf.cepf.aic_Kmin
+        binoutobj.jf_cepf_aic_Kmin_corrfactor = jf.cepf.aic_Kmin_corrfactor
+        binoutobj.jf_cepf_cutoffK = jf.cepf.cutoffK
+        binoutobj.jf_cepf_psd = jf.cepf.psd
+        binoutobj.jf_cepf_logpsd = jf.cepf.logpsd
 
         if binout_old:
             binoutobj.write_old_binary(output)
@@ -495,13 +495,13 @@ def run_analysis(args):
             np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
         outfile_name = output + '.cepstral.dat'
-        outarray = np.c_[jf.dct.logpsdK, jf.dct.logpsdK_THEORY_std, jf.dct.logtau, jf.dct.logtau_THEORY_std,
-                         jf.dct.tau * jf.KAPPA_SCALE * 0.5, jf.dct.tau_THEORY_std * jf.KAPPA_SCALE * 0.5]
+        outarray = np.c_[jf.cepf.logpsdK, jf.cepf.logpsdK_THEORY_std, jf.cepf.logtau, jf.cepf.logtau_THEORY_std,
+                         jf.cepf.tau * jf.KAPPA_SCALE * 0.5, jf.cepf.tau_THEORY_std * jf.KAPPA_SCALE * 0.5]
         outfile_header = 'ck  ck_std  L0(P*)  L0_std(P*)  kappa(P*)  kappa_std(P*)\n'
         np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
         outfile_name = output + '.cepstrumfiltered_psd.dat'
-        outarray = np.c_[jf.freqs_THz, jf.dct.psd, jf.dct.logpsd]
+        outarray = np.c_[jf.freqs_THz, jf.cepf.psd, jf.cepf.logpsd]
         outfile_header = 'freqs_THz  cepf_psd cepf_logpsd\n'
         np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
@@ -533,7 +533,7 @@ def run_analysis(args):
 
         # plot cepstral coefficients
         ax = jf.plot_ck()
-        ax.set_xlim([0, 5 * jf.dct.cutoffK])
+        ax.set_xlim([0, 5 * jf.cepf.cutoffK])
         ax.set_ylim([-1, 15])
         ax.grid()
         pdf.savefig()
@@ -541,13 +541,13 @@ def run_analysis(args):
 
         # plot L0(Pstar)
         ax = jf.plot_L0_Pstar()
-        ax.set_xlim([0, 10 * jf.dct.cutoffK])
+        ax.set_xlim([0, 10 * jf.cepf.cutoffK])
         pdf.savefig()
         plt.close()
 
         # # plot kappa(Pstar)
         # ax = jf.plot_kappa_Pstar()
-        # ax.set_xlim([0, 10*jf.dct.cutoffK])
+        # ax.set_xlim([0, 10*jf.cepf.cutoffK])
 
         addPlotToPdf(jf.plot_cepstral_conv, pdf, pstar_max=args.plot_conv_max_pstar,
                      pstar_tick=args.plot_conv_pstar_tick_interval, k_SI_max=args.plot_conv_max_kappa,
@@ -597,17 +597,17 @@ class TCOutput(object):
         self.jf_Nyquist_f_THz = None
         self.jf_resample_log  = None
 
-        self.jf_dct_logpsdK            = None
-        self.jf_dct_logpsdK_THEORY_std = None
-        self.jf_dct_logtau             = None
-        self.jf_dct_logtau_THEORY_std  = None
-        self.jf_dct_kappa              = None
-        self.jf_dct_kappa_THEORY_std   = None
-        self.jf_dct_psd                = None
-        self.jf_dct_logpsd             = None
-        self.jf_dct_aic_Kmin           = None
-        self.jf_dct_aic_Kmin_corrfactor = None
-        self.jf_dct_cutoffK            = None
+        self.jf_cepf_logpsdK            = None
+        self.jf_cepf_logpsdK_THEORY_std = None
+        self.jf_cepf_logtau             = None
+        self.jf_cepf_logtau_THEORY_std  = None
+        self.jf_cepf_kappa              = None
+        self.jf_cepf_kappa_THEORY_std   = None
+        self.jf_cepf_psd                = None
+        self.jf_cepf_logpsd             = None
+        self.jf_cepf_aic_Kmin           = None
+        self.jf_cepf_aic_Kmin_corrfactor = None
+        self.jf_cepf_cutoffK            = None
 
         self.kappa          = None
         self.kappa_std      = None
@@ -637,11 +637,11 @@ class TCOutput(object):
         outarray = np.c_[self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd]
         np.save(output + '.resampled_psd.npy', outarray, **opts)
 
-        outarray = np.c_[self.jf_dct_logpsdK, self.jf_dct_logpsdK_THEORY_std, self.jf_dct_logtau,
-                         self.jf_dct_logtau_THEORY_std, self.jf_dct_kappa, self.jf_dct_kappa_THEORY_std]
+        outarray = np.c_[self.jf_cepf_logpsdK, self.jf_cepf_logpsdK_THEORY_std, self.jf_cepf_logtau,
+                         self.jf_cepf_logtau_THEORY_std, self.jf_cepf_kappa, self.jf_cepf_kappa_THEORY_std]
         np.save(output + '.cepstral', outarray, **opts)
 
-        outarray = np.c_[self.jf_freqs_THz, self.jf_dct_psd, self.jf_dct_logpsd]
+        outarray = np.c_[self.jf_freqs_THz, self.jf_cepf_psd, self.jf_cepf_logpsd]
         np.save(output + '.cepstrumfiltered_psd', outarray, **opts)
 
 
