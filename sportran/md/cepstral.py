@@ -136,11 +136,11 @@ class CepstralFilter(object):
         msg = 'CepstralFilter:\n' + \
               '  AIC type  = {:}\n'.format(self.aic_type) + \
               '  AIC min   = {:f}\n'.format(self.aic_min) + \
-              '  AIC_Kmin  = {:d}  (P* = {:d})\n'.format(self.aic_Kmin, self.aic_Kmin + 1)
+              '  AIC_Kmin  = {:d}\n'.format(self.aic_Kmin)
         if self.cutoffK is not None:
             msg += \
                 '  AIC_Kmin_corrfactor = {:f}\n'.format(self.aic_Kmin_corrfactor) + \
-                '  cutoffK   = {:d} {:}\n'.format(self.cutoffK, '(manual)' if self.manual_cutoffK_flag else '(auto)') + \
+                '  cutoffK = (P*-1) = {:d} {:}\n'.format(self.cutoffK, '(manual)' if self.manual_cutoffK_flag else '(auto)') + \
                 '  L_0*   = {:15f} +/- {:10f}\n'.format(self.logtau_cutoffK, self.logtau_std_cutoffK) + \
                 '  S_0*   = {:15f} +/- {:10f}\n'.format(self.tau_cutoffK, self.tau_std_cutoffK)
         return msg
