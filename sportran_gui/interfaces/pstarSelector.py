@@ -2,7 +2,6 @@
 
 from sportran_gui.utils.custom_widgets import *
 from sportran_gui.core import control_unit as cu
-from uncertainties import ufloat
 
 INDENT = 0
 
@@ -113,18 +112,18 @@ class PStarSelector(Frame):
         else:
             raise ValueError('Prev frame isn\'t defined')
 
-    def _get_pstar(self, aic_type='aic', Kmin_corrfactor=1.0):
-        cu.data.xf.cepstral_analysis(aic_type=aic_type, K_PSD=Kmin_corrfactor - 1)
+    def _get_pstar(self, aic_type='aic', cutoffK=None):
+        cu.data.xf.cepstral_analysis(aic_type=aic_type, manual_cutoffK=((cutoffK - 1) if cutoffK is not None else None))
 
     def _pstar(self):
         self.value_entry.config(from_=2, to=cu.data.xf.NFREQS)
 
-        if cu.data.xf.dct:
+        if cu.data.xf.cepf:
             self.value_entry.delete(0, END)
-            self.value_entry.insert(0, (cu.data.xf.dct.aic_Kmin + 1))
-            self.fstar_label.config(text='f*: {:.3f}    P*: {}'.format(cu.data.fstar, cu.data.xf.dct.aic_Kmin + 1))
-            self.kmin_label.config(
-                text=u'\u03f0: {:eP} W/mK'.format(ufloat(cu.data.xf.kappa_Kmin, cu.data.xf.kappa_Kmin_std)))
+            self.value_entry.insert(0, (cu.data.xf.cepf.cutoffK + 1))
+            self.fstar_label.config(text='f*: {:.3f}    P*: {}'.format(cu.data.fstar, cu.data.xf.cepf.cutoffK + 1))
+            self.kmin_label.config(text=u'\u03f0: {:18f} +/- {:8f}  {}\n'.format(cu.data.xf.kappa, cu.data.xf.kappa_std,
+                                                                                 cu.data.xf._KAPPA_SI_UNITS))
 
     def _change_increment(self):
         self.value_entry.config(increment=int(self.increment.get()))
@@ -134,7 +133,7 @@ class PStarSelector(Frame):
             kmin_c = int(self.value_entry.get())
         else:
             kmin_c = 0
-        self._get_pstar(aic_type='aic', Kmin_corrfactor=kmin_c)
+        self._get_pstar(aic_type='aic', cutoffK=kmin_c)
         self.graph.add_graph(cu.gm.plot_cepstral_spectrum, 'cepstral', mode='linear', current=cu.data.xf,
                              kappa_units=True)
         xf = cu.data.xf
@@ -143,7 +142,7 @@ class PStarSelector(Frame):
         self._pstar()
 
     def _setup_pstar(self):
-        cu.data.xf.cepstral_analysis(aic_type='aic', K_PSD=None)
+        cu.data.xf.cepstral_analysis(aic_type='aic', manual_cutoffK=None)
         self._pstar()
         cu.data.pstar = int(self.value_entry.get())
 

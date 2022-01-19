@@ -568,7 +568,7 @@ def update_info(frame):
     frame.write('psd filter width: {}'.format(data.psd_filter_width))
     frame.write('F*:               {}'.format(data.fstar))
 
-    if data.xf is not None and data.xf.dct is not None:
-        frame.write('aic type:         {}'.format(data.xf.dct.aic_type))
-        frame.write('aic min:          {}'.format(data.xf.dct.aic_min))
-        frame.write('P*:               {}'.format(data.xf.dct.aic_Kmin + 1))
+    if data.xf is not None and data.xf.cepf is not None:
+        frame.write('aic type:         {}'.format(data.xf.cepf.aic_type))
+        frame.write('aic min:          {}'.format(data.xf.cepf.aic_min))
+        frame.write('P*:               {}'.format(data.xf.cepf.cutoffK + 1))
