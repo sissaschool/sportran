@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+## !! THIS MODULE IS DEPRECATED !!
+
 ################################################################################
 ###
 ###   Code to analyze heat current trajectories in blocks using the CepstralFilter
@@ -86,22 +88,22 @@ class MDBlocks(object):
         for L in range(self.N_BLOCKS):
             if self.MULTI_COMPONENT:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS, average_components=True)
-                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, \
+                self.block[L].cepf = st.md.CepstralFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor, normalization=self.BLOCK_SIZE)
             else:
                 self.block[L].compute_psd(DT=self.TSKIP, DT_FS=self.DT_FS)
-                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, aic_type=aic_type,
+                self.block[L].cepf = st.md.CepstralFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor,
                                                     normalization=self.BLOCK_SIZE)   # theory_var=None
 
-            self.block[L].dct.scan_filter_tau()
+            self.block[L].cepf.scan_filter_tau()
             if self.bayes_p:
-                self.block[L].dct.compute_p_aic(method='ba')
+                self.block[L].cepf.compute_p_aic(method='ba')
                 if density_grid is not None:
                     self.density_grid = density_grid
-                    self.block[L].dct.compute_logtau_density(method='ba', only_stats=False, density_grid=density_grid)
+                    self.block[L].cepf.compute_logtau_density(method='ba', only_stats=False, density_grid=density_grid)
                 else:
-                    self.block[L].dct.compute_logtau_density(method='ba', only_stats=True)
+                    self.block[L].cepf.compute_logtau_density(method='ba', only_stats=True)
             if self.GUI:
                 progbar.value = float(L + 1) / self.N_BLOCKS * 100.
                 progbar.description = '%5.2f %%' % progbar.value
@@ -134,22 +136,22 @@ class MDBlocks(object):
             if self.MULTI_COMPONENT:
                 self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP, DT_FS=self.DT_FS,
                                             average_components=True)   #different method call!
-                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, \
+                self.block[L].cepf = st.md.CepstralFilter(self.block[L].logpsd, \
                     ck_theory_var=self.ck_THEORY_var, psd_theory_mean=self.psd_THEORY_mean, aic_type=aic_type, Kmin_corrfactor=Kmin_corrfactor)#, normalization=self.BLOCK_SIZE) #removed (personal comunication with Loris)
             else:
                 self.block[L].compute_kappa(other=other.block[L], DT=self.TSKIP,
                                             DT_FS=self.DT_FS)   #different method call!
-                self.block[L].dct = st.md.CepstralFilter(self.block[L].logpsd, aic_type=aic_type,
+                self.block[L].cepf = st.md.CepstralFilter(self.block[L].logpsd, aic_type=aic_type,
                                                     Kmin_corrfactor=Kmin_corrfactor)
 
-            self.block[L].dct.scan_filter_tau()
+            self.block[L].cepf.scan_filter_tau()
             if self.bayes_p:
-                self.block[L].dct.compute_p_aic(method='ba')
+                self.block[L].cepf.compute_p_aic(method='ba')
                 if density_grid is not None:
                     self.density_grid = density_grid
-                    self.block[L].dct.compute_logtau_density(method='ba', only_stats=False, density_grid=density_grid)
+                    self.block[L].cepf.compute_logtau_density(method='ba', only_stats=False, density_grid=density_grid)
                 else:
-                    self.block[L].dct.compute_logtau_density(method='ba', only_stats=True)
+                    self.block[L].cepf.compute_logtau_density(method='ba', only_stats=True)
             if self.GUI:
                 progbar.value = float(L + 1) / self.N_BLOCKS * 100.
                 progbar.description = '%5.2f %%' % progbar.value
@@ -171,123 +173,123 @@ class MDBlocks(object):
 
     def logpsdK(self):
         """DCT coefficients of log(PSD) custom generator function."""
-        for col in np.transpose([blk.dct.logpsdK for blk in self.block]):
+        for col in np.transpose([blk.cepf.logpsdK for blk in self.block]):
             yield col
 
     def flogtau(self):
         """DCT-Filtered (variable K) log(TAU) custom generator function."""
-        for col in np.transpose([blk.dct.logtau for blk in self.block]):
+        for col in np.transpose([blk.cepf.logtau for blk in self.block]):
             yield col
 
     def ftau(self):
         """DCT-Filtered (variable K) TAU custom generator function."""
-        for col in np.transpose([blk.dct.tau for blk in self.block]):
+        for col in np.transpose([blk.cepf.tau for blk in self.block]):
             yield col
 
     def aic(self):
         """DCT AIC custom generator function."""
-        for col in np.transpose([blk.dct.aic for blk in self.block]):
+        for col in np.transpose([blk.cepf.aic for blk in self.block]):
             yield col
 
     def aic_Kmin(self):
         """DCT AIC_Kmin custom generator function."""
         for blk in self.block:
-            yield blk.dct.aic_Kmin
+            yield blk.cepf.aic_Kmin
 
     def flogpsd_Kmin(self):
         """DCT-Filtered@aic_Kmin log(PSD) custom generator function."""
-        for col in np.transpose([blk.dct.logpsd for blk in self.block]):
+        for col in np.transpose([blk.cepf.logpsd for blk in self.block]):
             yield col
 
     def fpsd_Kmin(self):
         """DCT-Filtered@aic_Kmin PSD custom generator function."""
-        for col in np.transpose([blk.dct.psd for blk in self.block]):
+        for col in np.transpose([blk.cepf.psd for blk in self.block]):
             yield col
 
     def flogtau_Kmin(self):
         """DCT-Filtered@aic_Kmin log(TAU) custom generator function."""
         for blk in self.block:
-            yield blk.dct.logtau_Kmin
+            yield blk.cepf.logtau_Kmin
 
     def ftau_Kmin(self):
         """DCT-Filtered@aic_Kmin TAU custom generator function."""
         for blk in self.block:
-            yield blk.dct.tau_Kmin
+            yield blk.cepf.tau_Kmin
 
     def FTAU_Kmin(self):
         """DCT-Filtered@aic_Kmin KAPPA custom generator function."""
         for blk in self.block:
-            yield blk.dct.tau_Kmin * 0.5 * self.tau_scale
+            yield blk.cepf.tau_Kmin * 0.5 * self.tau_scale
 
     def flogtau_Kmin_THEORYvar(self):
         """DCT-Filtered@aic_Kmin THEORYvar(log(TAU)) custom generator function."""
         for blk in self.block:
-            yield blk.dct.logtau_var_Kmin
+            yield blk.cepf.logtau_var_Kmin
 
     def ftau_Kmin_THEORYvar(self):
         """DCT-Filtered@aic_Kmin THEORYvar(TAU) custom generator function."""
         for blk in self.block:
-            yield blk.dct.tau_var_Kmin
+            yield blk.cepf.tau_var_Kmin
 
     def flogtau_Kmin_THEORYstd(self):
         """DCT-Filtered@aic_Kmin THEORYstd(log(TAU)) custom generator function."""
         for blk in self.block:
-            yield blk.dct.logtau_std_Kmin
+            yield blk.cepf.logtau_std_Kmin
 
     def ftau_Kmin_THEORYstd(self):
         """DCT-Filtered@aic_Kmin THEORYstd(TAU) custom generator function."""
         for blk in self.block:
-            yield blk.dct.tau_std_Kmin
+            yield blk.cepf.tau_std_Kmin
 
     def FTAU_Kmin_THEORYstd(self):
         """DCT-Filtered@aic_Kmin THEORYstd(KAPPA) custom generator function."""
         for blk in self.block:
-            yield blk.dct.tau_std_Kmin * 0.5 * self.tau_scale
+            yield blk.cepf.tau_std_Kmin * 0.5 * self.tau_scale
 
     def p_aic(self):
         """DCT AIC weights distribution custom generator function."""
-        for col in np.transpose([blk.dct.p_aic for blk in self.block]):
+        for col in np.transpose([blk.cepf.p_aic for blk in self.block]):
             yield col
 
     def p_aic_Kave(self):
         """DCT AIC weights distribution mean custom generator function."""
         for blk in self.block:
-            yield blk.dct.p_aic_Kave
+            yield blk.cepf.p_aic_Kave
 
     def p_aic_Kstd(self):
         """DCT AIC weights distribution std custom generator function."""
         for blk in self.block:
-            yield blk.dct.p_aic_Kstd
+            yield blk.cepf.p_aic_Kstd
 
     def flogtau_density(self):
         """DCT-Filtered log(TAU) Bayesian distribution custom generator function."""
-        for col in np.transpose([blk.dct.p_logtau_density for blk in self.block]):
+        for col in np.transpose([blk.cepf.p_logtau_density for blk in self.block]):
             yield col
 
     def flogtau_density_xave(self):
         """DCT-Filtered log(TAU) Bayesian distribution mean custom generator function."""
         for blk in self.block:
-            yield blk.dct.p_logtau_density_xave
+            yield blk.cepf.p_logtau_density_xave
 
     def flogtau_density_xstd(self):
         """DCT-Filtered (TAU) Bayesian distribution std custom generator function."""
         for blk in self.block:
-            yield blk.dct.p_logtau_density_xstd
+            yield blk.cepf.p_logtau_density_xstd
 
     def ftau_density(self):
         """DCT-Filtered TAU Bayesian distribution custom generator function."""
-        for col in np.transpose([blk.dct.p_tau_density for blk in self.block]):
+        for col in np.transpose([blk.cepf.p_tau_density for blk in self.block]):
             yield col
 
     def ftau_density_xave(self):
         """DCT-Filtered TAU Bayesian distribution mean custom generator function."""
         for blk in self.block:
-            yield blk.dct.p_tau_density_xave
+            yield blk.cepf.p_tau_density_xave
 
     def ftau_density_xstd(self):
         """DCT-Filtered TAU Bayesian distribution std custom generator function."""
         for blk in self.block:
-            yield blk.dct.p_tau_density_xstd
+            yield blk.cepf.p_tau_density_xstd
 
     def compute_averages(self):
         """Compute all the averages."""
@@ -305,11 +307,11 @@ class MDBlocks(object):
         #self.spsd_histogram()
 
         ## log(psd), log(tau), psd, tau THEORY VARIANCES
-        self.logpsdK_THEORY_var = self.block[0].dct.logpsdK_THEORY_var.copy()
-        self.logpsdK_THEORY_std = self.block[0].dct.logpsdK_THEORY_std.copy()
-        self.logtau_THEORY_var = self.block[0].dct.logtau_THEORY_var.copy()
-        self.logtau_THEORY_std = self.block[0].dct.logtau_THEORY_std.copy()
-        self.logpsd_THEORY_mean = self.block[0].dct.logpsd_THEORY_mean.copy()
+        self.logpsdK_THEORY_var = self.block[0].cepf.logpsdK_THEORY_var.copy()
+        self.logpsdK_THEORY_std = self.block[0].cepf.logpsdK_THEORY_std.copy()
+        self.logtau_THEORY_var = self.block[0].cepf.logtau_THEORY_var.copy()
+        self.logtau_THEORY_std = self.block[0].cepf.logtau_THEORY_std.copy()
+        self.logpsd_THEORY_mean = self.block[0].cepf.logpsd_THEORY_mean.copy()
 
         ## DCT c_k
         self.logpsdK_ave = np.mean(list(self.logpsdK()), axis=1)

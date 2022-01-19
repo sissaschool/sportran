@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ! THIS FILE IS DEPRECATED !
+## !! THIS MODULE IS DEPRECATED !!
 
 import sys, os, math
 import sportran as st
@@ -465,7 +465,7 @@ def plt_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_00=False, n
     if j2 != None:
         axes.axvline(x=j2.Nyquist_f_THz, ls='--', c='k', dashes=(1.4, 0.6), zorder=3)
     if j2pl != None:
-        axes.plot(j2pl.freqs_THz, j2pl.dct.psd * j2pl.kappa_scale * .5, c=c[2])
+        axes.plot(j2pl.freqs_THz, j2pl.cepf.psd * j2pl.kappa_scale * .5, c=c[2])
     try:
         axes.plot(jf.freqs_THz, np.real(jf.cospectrum[0, 0]) * jf.kappa_scale * .5, c=c[3], lw=1.0, zorder=1)
     except AttributeError:

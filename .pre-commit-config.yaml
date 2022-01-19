@@ -13,6 +13,7 @@ repos:
     args: ["-i"]
     exclude: &exclude_files >
       (?x)^(
+        sportran/utils/obsolete/.*|
         sportran_gui/utils/tk_html_widgets/*.py|
         docs/.*|
         tests/test_cli/.*|
@@ -33,10 +34,12 @@ repos:
     exclude: >
       (?x)^(
         tests/test_cli/.*|
+        sportran/utils/obsolete/.*|
       )$
   - id: trailing-whitespace
     exclude: >
       (?x)^(
+        sportran/utils/obsolete/.*|
         sportran_gui/utils/tk_html_widgets/.*py|
         docs/.*|
         tests/test_cli/.*|
