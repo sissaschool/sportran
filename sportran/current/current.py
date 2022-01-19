@@ -374,10 +374,10 @@ class Current(MDSample):
               '-----------------------------------------------------\n'
         if not self.cepf.manual_cutoffK_flag:
             self.cepstral_log += \
-                '  cutoffK = {:d}  (auto, AIC_Kmin = (P*-1) = {:d}, corr_factor = {:4})\n'.format(self.cepf.cutoffK, self.cepf.aic_Kmin, self.cepf.aic_Kmin_corrfactor)
+                '  cutoffK = (P*-1) = {:d}  (auto, AIC_Kmin = {:d}, corr_factor = {:4})\n'.format(self.cepf.cutoffK, self.cepf.aic_Kmin, self.cepf.aic_Kmin_corrfactor)
         else:
             self.cepstral_log += \
-                '  cutoffK  = {:d}  (manual, AIC_Kmin = (P*-1) = {:d})\n'.format(self.cepf.cutoffK, self.cepf.aic_Kmin, self.cepf.aic_Kmin_corrfactor)
+                '  cutoffK  = (P*-1) = {:d}  (manual, AIC_Kmin = {:d})\n'.format(self.cepf.cutoffK, self.cepf.aic_Kmin, self.cepf.aic_Kmin_corrfactor)
         self.cepstral_log += \
               '  L_0*   = {:18f} +/- {:10f}\n'.format(self.cepf.logtau_cutoffK, self.cepf.logtau_std_cutoffK) +\
               '  S_0*   = {:18f} +/- {:10f}\n'.format(self.cepf.tau_cutoffK, self.cepf.tau_std_cutoffK) +\
