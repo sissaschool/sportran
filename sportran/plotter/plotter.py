@@ -61,18 +61,19 @@ def addPlotToPdf(func, pdf, *args, **kwargs):
 ## The first argument should be a Current or MDSample object, if they are supposed to be transformed into a method by the add_method decorator.
 
 
-def plot_trajectory(x, *, axes=None, FIGSIZE=None, **plot_kwargs):
+def plot_trajectory(x, *, axis=None, FIGSIZE=None, **plot_kwargs):
     """
     Plot the time series.
     """
     if x.traj is None:
         raise ValueError('Trajectory not defined.')
-    if axes is None:
-        figure, axes = plt.subplots(1, figsize=FIGSIZE)
-    axes.plot(x.traj, **plot_kwargs)
-    axes.set_xlabel(r'$t$ [ps]')
-    axes.grid()
-    return axes
+    if axis is None:
+        figure, axis = plt.subplots(1, figsize=FIGSIZE)
+    axis.plot(x.traj, **plot_kwargs)
+    axis.set_xlabel(r'$t$ [ps]')
+    axis.grid()
+    return axis
+
 
 def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
                      FIGSIZE=None, mode='log', **plot_kwargs):   # yapf: disable
@@ -132,93 +133,151 @@ def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale
         axes[1].xaxis.set_ticks_position('bottom')
         axes[1].set_ylabel(r'log(PSD)')
         axes[1].grid()
-    #print('axes2=', axes)
     return axes
 
 
-def plot_ck(current, *, axes=None, label=None, FIGSIZE=None):
+def plot_cospectrum_component(current, idx1, idx2, *, axis=None, FIGSIZE=None, f_THz_max=None, k_SI_max=None,
+                              k_SI_min=None, k_tick=None, f_tick=None):
+    """
+    Plot the (idx1, idx2) component of the cospectrum.
+    """
+    if axis is None:
+        figure, axis = plt.subplots(1, figsize=FIGSIZE)
+    color1 = next(axis._get_lines.prop_cycler)['color']
+    color2 = next(axis._get_lines.prop_cycler)['color']
+    axis.plot(current.freqs_THz, np.real(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color1)
+    axis.plot(current.freqs_THz, np.imag(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color2)
+
+    if f_THz_max is None:
+        f_THz_max = current.freqs_THz[_index_cumsum(np.abs(current.fcospectrum[idx1][idx2]), 0.95)]
+    else:
+        f_THz_max = min(f_THz_max, current.freqs_THz[-1])
+    axis.set_xlim([0, f_THz_max])
+    if k_SI_max is None:
+        k_SI_max = np.max(
+            np.abs(current.fcospectrum[idx1][idx2])[:int(current.NFREQS * f_THz_max / current.freqs_THz[-1])] *
+            current.KAPPA_SCALE * 0.5) * 1.3
+    if k_SI_min is None:
+        k_SI_min = -k_SI_max
+    axis.set_ylim([k_SI_min, k_SI_max])
+    axis.set_xlabel(r'$\omega/2\pi$ (THz)')
+    axis.set_ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
+
+    if f_tick is None:
+        dx1, dx2 = _n_tick_in_range(0, f_THz_max, 5)
+    else:
+        dx1, dx2 = (f_tick, f_tick / 2)
+    if k_tick is None:
+        dy1, dy2 = _n_tick_in_range(0, k_SI_max, 5)
+    else:
+        dy1, dy2 = (k_tick, k_tick / 2)
+
+    axis.xaxis.set_major_locator(MultipleLocator(dx1))
+    axis.xaxis.set_minor_locator(MultipleLocator(dx2))
+    axis.yaxis.set_major_locator(MultipleLocator(dy1))
+    axis.yaxis.set_minor_locator(MultipleLocator(dy2))
+
+
+def plot_ck(current, *, axis=None, label=None, FIGSIZE=None):
     """
     Plots the cepstral coefficients c_K.
     :param current: current object to plot
-    :param axes: matplotlib.axes.Axes object (if None, create one)
+    :param axis: matplotlib.axes.Axes object (if None, create one)
     :param label:
     :param FIGSIZE: size of the plot
 
-    :return: a matplotlib.axes.Axes object
+    :return: a matplotlib.axis.Axes object
     """
 
-    if axes is None:
-        figure, axes = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axes._get_lines.prop_cycler)['color']
-    axes.plot(current.cepf.logpsdK, 'o-', c=color, label=label)
-    axes.plot(current.cepf.logpsdK + current.cepf.logpsdK_THEORY_std, '--', c=color)
-    axes.plot(current.cepf.logpsdK - current.cepf.logpsdK_THEORY_std, '--', c=color)
-    axes.axvline(x=current.cepf.aic_Kmin, ls=':', c=color)
-    axes.axvline(x=current.cepf.cutoffK, ls='--', c=color)
-    axes.set_xlabel(r'$k$')
-    axes.set_ylabel(r'$c_k$')
-    return axes
+    if axis is None:
+        figure, axis = plt.subplots(1, figsize=FIGSIZE)
+    color = next(axis._get_lines.prop_cycler)['color']
+    axis.plot(current.cepf.logpsdK, 'o-', c=color, label=label)
+
+    axis.plot(current.cepf.logpsdK + current.cepf.logpsdK_THEORY_std, '--', c=color)
+    axis.plot(current.cepf.logpsdK - current.cepf.logpsdK_THEORY_std, '--', c=color)
+    axis.axvline(x=current.cepf.aic_Kmin, ls=':', c=color)
+    axis.axvline(x=current.cepf.cutoffK, ls='--', c=color)
+    axis.set_xlabel(r'$k$')
+    axis.set_ylabel(r'$c_k$')
+    return axis
 
 
-def plot_L0_Pstar(current, *, axes=None, label=None, FIGSIZE=None):
+def plot_L0_Pstar(current, *, axis=None, label=None, FIGSIZE=None):
     """
     Plots L0 as a function of P*.
     :param current:         current object to plot
-    :param axes:            matplotlib.axes.Axes object (if None, create one)
+    :param axis:            matplotlib.axes.Axes object (if None, create one)
     :param label:
     :param FIGSIZE:         size of the plot
 
-    :return: a matplotlib.axes.Axes object
+    :return: a matplotlib.axis.Axes object
     """
-    if axes is None:
-        figure, axes = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axes._get_lines.prop_cycler)['color']
-    axes.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau, '.-', c=color, label=label)
-    axes.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau + current.cepf.logtau_THEORY_std, '--', c=color)
-    axes.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau - current.cepf.logtau_THEORY_std, '--', c=color)
-    axes.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
-    axes.axvline(x=current.cepf.cutoffK + 1, ls='--', c=color)
-    axes.set_xlim([0, 3 * current.cepf.cutoffK])
+    if axis is None:
+        figure, axis = plt.subplots(1, figsize=FIGSIZE)
+    color = next(axis._get_lines.prop_cycler)['color']
+    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau, '.-', c=color, label=label)
+    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau + current.cepf.logtau_THEORY_std, '--', c=color)
+    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau - current.cepf.logtau_THEORY_std, '--', c=color)
+    axis.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
+    axis.axvline(x=current.cepf.cutoffK + 1, ls='--', c=color)
+    axis.set_xlim([0, 3 * current.cepf.cutoffK])
     max_y = np.amax(
         (current.cepf.logtau + current.cepf.logtau_THEORY_std)[current.cepf.cutoffK:3 * current.cepf.cutoffK])
     min_y = np.amin(
         (current.cepf.logtau - current.cepf.logtau_THEORY_std)[current.cepf.cutoffK:3 * current.cepf.cutoffK])
-    axes.set_ylim([min_y * 0.8, max_y * 1.2])
-    axes.set_xlabel(r'$P^*$')
-    axes.set_ylabel(r'$L_0(P*)$')
-    return axes
+    axis.set_ylim([min_y * 0.8, max_y * 1.2])
+    axis.set_xlabel(r'$P^*$')
+    axis.set_ylabel(r'$L_0(P*)$')
+    return axis
 
 
-def plot_kappa_Pstar(current, *, axes=None, label=None, FIGSIZE=None):
+def plot_kappa_Pstar(current, *, axis=None, label=None, FIGSIZE=None, pstar_max=None, kappa_SI_min=None,
+                     kappa_SI_max=None, pstar_tick=None, kappa_tick=None):
     """
     Plots the value of kappa as a function of P*.
     :param current: current object to plot
-    :param axes: matplotlib.axes.Axes object (if None, create one)
+    :param axis: matplotlib.axes.Axes object (if None, create one)
     :param label:
     :param FIGSIZE: size of the plot
 
     :return: a matplotlib.axes.Axes object
     """
-    if axes is None:
-        figure, axes = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axes._get_lines.prop_cycler)['color']
-    axes.plot(np.arange(current.NFREQS) + 1, current.cepf.tau * current.KAPPA_SCALE * 0.5, '.-', c=color, label=label)
-    axes.plot(np.arange(current.NFREQS) + 1, (current.cepf.tau + current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
-              '--', c=color)   # yapf: disable
-    axes.plot(np.arange(current.NFREQS) + 1, (current.cepf.tau - current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
-              '--', c=color)   # yapf: disable
-    axes.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
-    axes.axvline(x=current.cepf.cutoffK + 1, ls='--', c=color)
-    axes.axhline(y=current.kappa, ls='--', c=color)
-    axes.set_xlim([0, 3 * current.cepf.cutoffK])
-    max_y = np.amax(current.KAPPA_SCALE * 0.5 *
-                    (current.cepf.tau + current.cepf.tau_THEORY_std)[current.cepf.cutoffK:3 * current.cepf.cutoffK])
-    min_y = np.amin(current.KAPPA_SCALE * 0.5 *
-                    (current.cepf.tau - current.cepf.tau_THEORY_std)[current.cepf.cutoffK:3 * current.cepf.cutoffK])
-    axes.set_ylim([min_y * 0.8, max_y * 1.2])
-    axes.set_xlabel(r'$P^*$')
-    axes.set_ylabel(r'$\kappa(P^*)$ [{}]'.format(current._KAPPA_SI_UNITS))
-    return axes
+    if axis is None:
+        figure, axis = plt.subplots(1, figsize=FIGSIZE)
+    color = next(axis._get_lines.prop_cycler)['color']
+    axis.fill_between(
+        np.arange(current.NFREQS) + 1, (current.cepf.tau - current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
+        (current.cepf.tau + current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5, alpha=0.3, color=color)
+    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.tau * current.KAPPA_SCALE * 0.5, 'o-', c=color, label=label)
+    axis.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
+    axis.axvline(x=current.cepf.cutoffK + 1, ls='--', c=color)
+    axis.axhline(y=current.kappa, ls='--', c=color)
+    if pstar_max is None:
+        pstar_max = int(round((current.cepf.cutoffK + 1) * 2.5))
+    axis.set_xlim([0, pstar_max])
+    if kappa_SI_max is None:
+        kappa_SI_max = 1.2 * np.amax(current.KAPPA_SCALE * 0.5 *
+                                     (current.cepf.tau + current.cepf.tau_THEORY_std)[current.cepf.cutoffK:pstar_max])
+    if kappa_SI_min is None:
+        kappa_SI_min = 0.8 * np.amin(current.KAPPA_SCALE * 0.5 *
+                                     (current.cepf.tau - current.cepf.tau_THEORY_std)[current.cepf.cutoffK:pstar_max])
+    axis.set_ylim([kappa_SI_min, kappa_SI_max])
+    axis.set_xlabel(r'$P^*$')
+    axis.set_ylabel(r'$\kappa(P^*)$ [{}]'.format(current._KAPPA_SI_UNITS))
+    if pstar_tick is None:
+        dx1, dx2 = _n_tick_in_range(0, pstar_max, 5)
+    else:
+        dx1, dx2 = (pstar_tick, pstar_tick / 2)
+    if kappa_tick is None:
+        dy1, dy2 = _n_tick_in_range(0, kappa_SI_max, 5)
+    else:
+        dy1, dy2 = (kappa_tick, kappa_tick / 2)
+    axis.xaxis.set_major_locator(MultipleLocator(dx1))
+    axis.xaxis.set_minor_locator(MultipleLocator(dx2))
+    axis.yaxis.set_major_locator(MultipleLocator(dy1))
+    axis.yaxis.set_minor_locator(MultipleLocator(dy2))
+    return axis
 
 def plot_cepstral_spectrum(current, *, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, mode='log',
                            **plot_kwargs):   # yapf: disable
@@ -272,37 +331,39 @@ def plot_cepstral_spectrum(current, *, freq_units='THz', freq_scale=1.0, axes=No
     return axes
 
 
-def plot_fstar_analysis(current, xf, FSTAR_THZ_LIST, *, axes=None, FIGSIZE=None, **plot_kwargs):
+def plot_fstar_analysis(currents, FSTAR_THZ_LIST, original_current=None, *, axes=None, FIGSIZE=None, **plot_kwargs):
     """
     Plots kappa(P*) as a function of the f*.
     """
     if axes is None:
-        figure, ax = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+        figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
+        return_axes = True
     else:
-        ax = axes
-    ax[0].errorbar(FSTAR_THZ_LIST, [xff.kappa for xff in xf], yerr=[xff.kappa_std for xff in xf], **plot_kwargs)
-    ax[1].errorbar(FSTAR_THZ_LIST, [xff.cepf.logtau_cutoffK for xff in xf],
-                   yerr=[xff.cepf.logtau_std_cutoffK for xff in xf], **plot_kwargs)
-    # ax[0].plot(current.freqs_THz, current.fpsd,    **plot_kwargs)
-    # ax[1].plot(current.freqs_THz, current.flogpsd, **plot_kwargs)
-    ax[0].xaxis.set_ticks_position('top')
-    ax[0].set_ylabel(r'PSD')
-    ax[0].grid()
-    ax[1].xaxis.set_ticks_position('bottom')
-    ax[1].set_xlabel(r'$f$ [THz]')
-    ax[1].set_ylabel(r'log(PSD)')
-    ax[1].grid()
-
-    if axes is None:
-        ax2 = [ax[0].twinx(), ax[1].twinx()]
-        color = next(ax[0]._get_lines.prop_cycler)['color']
-        color = next(ax[1]._get_lines.prop_cycler)['color']
-        plot_periodogram(current, axes=ax2, c=color)
-        ax[0].set_ylabel(r'$\kappa$ [W/(m*K)]')
-        ax[1].set_ylabel(r'$\kappa$ [W/(m*K)]')
-        return xf, ax, figure
+        return_axes = False
+    axes[0].errorbar(FSTAR_THZ_LIST, [xff.kappa for xff in currents], yerr=[xff.kappa_std for xff in currents],
+                     zorder=-1, **plot_kwargs)
+    axes[1].errorbar(FSTAR_THZ_LIST, [xff.cepf.logtau_cutoffK for xff in currents],
+                     yerr=[xff.cepf.logtau_std_cutoffK for xff in currents], zorder=-1, **plot_kwargs)
+    axes[0].xaxis.set_ticks_position('top')
+    axes[0].set_ylabel(r'PSD')
+    axes[0].grid()
+    axes[1].xaxis.set_ticks_position('bottom')
+    axes[1].set_xlabel(r'$f$ [THz]')
+    axes[1].set_ylabel(r'log(PSD)')
+    axes[1].grid()
+    if original_current is not None:
+        ax2 = [axes[0].twinx(), axes[1].twinx()]
+        plot_periodogram(original_current, axes=ax2, c='0.6')
+        axes[0].set_ylabel(r'$\kappa$ [{}]'.format(original_current._KAPPA_SI_UNITS))
+        axes[1].set_ylabel(r'$\kappa$ [{}]'.format(original_current._KAPPA_SI_UNITS))
+        axes[0].set_zorder(ax2[0].get_zorder() + 1)
+        axes[1].set_zorder(ax2[1].get_zorder() + 1)
+        axes[0].set_frame_on(False)
+        axes[1].set_frame_on(False)
+    if return_axes:
+        return currents, axes, figure
     else:
-        return xf, ax
+        return currents, axes
 
 
 def plot_resample(x, xf, PSD_FILTER_W=None, *, freq_units='THz', axes=None, FIGSIZE=None, mode='log'):
@@ -381,95 +442,6 @@ def plot_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None,
     ax.set_xlim([0, f_THz_max])
     ax.set_xlabel(r'$\omega/2\pi$ (THz)')
     ax.set_ylabel(r'${{}}^{{\ell}}\hat{{S}}_{{\,k}}$ [{}]'.format(jf._KAPPA_SI_UNITS))
-
-    if f_tick is None:
-        dx1, dx2 = _n_tick_in_range(0, f_THz_max, 5)
-    else:
-        dx1 = f_tick
-        dx2 = dx1 / 2
-    if k_tick is None:
-        dy1, dy2 = _n_tick_in_range(0, k_SI_max, 5)
-    else:
-        dy1 = k_tick
-        dy2 = dy1 / 2
-
-    ax.xaxis.set_major_locator(MultipleLocator(dx1))
-    ax.xaxis.set_minor_locator(MultipleLocator(dx2))
-    ax.yaxis.set_major_locator(MultipleLocator(dy1))
-    ax.yaxis.set_minor_locator(MultipleLocator(dy2))
-
-
-################################################################################
-## MAYBE OBSOLETE STUFF
-
-
-def plot_cepstral_conv(jf, pstar_max=None, k_SI_max=None, pstar_tick=None, kappa_tick=None):
-    """
-    MAYBE OBSOLETE
-    """
-    if pstar_max is None:
-        pstar_max = (jf.cepf.cutoffK + 1) * 2.5
-    if k_SI_max is None:
-        k_SI_max = jf.cepf.tau[jf.cepf.cutoffK] * jf.KAPPA_SCALE
-
-    f, ax2 = plt.subplots(1, 1)   # figsize=(3.8, 2.3)
-    ax2.axvline(x=jf.cepf.cutoffK + 1, ls='--', c='k', dashes=(1.4, 0.6), zorder=-3)
-    ax2.fill_between(
-        np.arange(jf.cepf.logtau.shape[0]) + 1, (jf.cepf.tau - jf.cepf.tau_THEORY_std) * jf.KAPPA_SCALE * 0.5,
-        (jf.cepf.tau + jf.cepf.tau_THEORY_std) * jf.KAPPA_SCALE * 0.5, alpha=0.3, color=colors[4], zorder=-3)
-    ax2.plot(
-        np.arange(jf.cepf.logtau.shape[0]) + 1, jf.cepf.tau * jf.KAPPA_SCALE * 0.5, label=r'Cepstral method',
-        marker='o', c=colors[4], zorder=-3)
-    ax2.set_xlabel(r'$P^*$')
-    ax2.set_ylabel(r'$\kappa$ [{}]'.format(jf._KAPPA_SI_UNITS))
-    ax2.set_xlim([0, pstar_max])
-    ax2.set_ylim([0, k_SI_max])
-    # ax2.grid()
-    ax2.legend()
-
-    if pstar_tick is None:
-        dx1, dx2 = _n_tick_in_range(0, pstar_max, 5)
-    else:
-        dx1 = pstar_tick
-        dx2 = dx1 / 2
-    if kappa_tick is None:
-        dy1, dy2 = _n_tick_in_range(0, k_SI_max, 5)
-    else:
-        dy1 = kappa_tick
-        dy2 = dy1 / 2
-    ax2.xaxis.set_major_locator(MultipleLocator(dx1))
-    ax2.xaxis.set_minor_locator(MultipleLocator(dx2))
-    ax2.yaxis.set_major_locator(MultipleLocator(dy1))
-    ax2.yaxis.set_minor_locator(MultipleLocator(dy2))
-
-
-def plot_other(jf, idx1, idx2, f_THz_max=None, k_SI_max=None, k_SI_min=None, k_tick=None, f_tick=None):
-    """
-    MAYBE OBSOLETE
-    """
-    if f_THz_max is None:
-        idx_max = _index_cumsum(np.abs(jf.fcospectrum[idx1][idx2]), 0.95)
-        f_THz_max = jf.freqs_THz[idx_max]
-    else:
-        maxT = jf.freqs_THz[-1]
-        if maxT < f_THz_max:
-            f_THz_max = maxT
-
-    if k_SI_max is None:
-        k_SI_max = np.max(
-            np.abs(jf.fcospectrum[idx1][idx2])[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] *
-            jf.KAPPA_SCALE * 0.5) * 1.3
-    if k_SI_min is None:
-        k_SI_min = -k_SI_max
-
-    figure, ax = plt.subplots(1, 1)   # figsize=(3.8, 2.3)
-    ax.plot(jf.freqs_THz, np.real(jf.fcospectrum[idx1][idx2]) * jf.KAPPA_SCALE * 0.5, c=colors[3], lw=1.0, zorder=1)
-    ax.plot(jf.freqs_THz, np.imag(jf.fcospectrum[idx1][idx2]) * jf.KAPPA_SCALE * 0.5, c=colors[2], lw=1.0, zorder=1)
-
-    ax.set_ylim([k_SI_min, k_SI_max])
-    ax.set_xlim([0, f_THz_max])
-    ax.set_xlabel(r'$\omega/2\pi$ (THz)')
-    ax.set_ylabel(r'$S^{{{}{}}}$'.format(idx1, idx2))
 
     if f_tick is None:
         dx1, dx2 = _n_tick_in_range(0, f_THz_max, 5)

@@ -54,7 +54,7 @@ class MDSample(object):
        - flogpsd                filtered log-periodogram
        - acf                    autocorrelation function
        - N_EQUIV_COMPONENTS     number of EQUIVALENT (e.g. Cartesian) components (an average over them will be computed)
-       - MANY_EQUIV_COMPONENTS        True if N_EQUIV_COMPONENTS > 1
+       - MANY_EQUIV_COMPONENTS  True if N_EQUIV_COMPONENTS > 1
        - PSD_FILTER_W           width of the moving average filter (reduced frequency units)
        - PSD_FILTER_W_THZ       width of the moving average filter (THz)
        - PSD_FILTER_WF          width of the moving average filter (number of frequencies)
