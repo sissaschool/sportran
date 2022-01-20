@@ -54,7 +54,7 @@ class MDSample(object):
        - flogpsd                filtered log-periodogram
        - acf                    autocorrelation function
        - N_EQUIV_COMPONENTS     number of EQUIVALENT (e.g. Cartesian) components (an average over them will be computed)
-       - MANY_COMPONENTS        True if N_EQUIV_COMPONENTS > 1
+       - MANY_EQUIV_COMPONENTS        True if N_EQUIV_COMPONENTS > 1
        - PSD_FILTER_W           width of the moving average filter (reduced frequency units)
        - PSD_FILTER_W_THZ       width of the moving average filter (THz)
        - PSD_FILTER_WF          width of the moving average filter (number of frequencies)
@@ -151,10 +151,10 @@ class MDSample(object):
         if array is not None:
             array = np.array(array, dtype=float)
             if (len(array.shape) == 1):
-                self.MANY_COMPONENTS = False
+                self.MANY_EQUIV_COMPONENTS = False
                 self.traj = array[:, np.newaxis]
             elif (len(array.shape) == 2):
-                self.MANY_COMPONENTS = True
+                self.MANY_EQUIV_COMPONENTS = True
                 if (array.shape[0] % 2 == 1):
                     self.traj = array[:-1]
                     log.write_log('Trajectory has an odd number of points. Removing the last one.')
