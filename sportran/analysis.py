@@ -527,7 +527,7 @@ def run_analysis(args):
         try:
             for idx1 in range(j.N_CURRENTS):
                 for idx2 in range(idx1, j.N_CURRENTS):
-                    addPlotToPdf(j.plot_other, pdf, idx1, idx2)
+                    addPlotToPdf(j.plot_cospectrum_component, pdf, idx1, idx2)
         except:
             pass
 
@@ -549,8 +549,8 @@ def run_analysis(args):
         # ax = jf.plot_kappa_Pstar()
         # ax.set_xlim([0, 10*jf.cepf.cutoffK])
 
-        addPlotToPdf(jf.plot_cepstral_conv, pdf, pstar_max=args.plot_conv_max_pstar,
-                     pstar_tick=args.plot_conv_pstar_tick_interval, k_SI_max=args.plot_conv_max_kappa,
+        addPlotToPdf(jf.plot_kappa_Pstar, pdf, pstar_max=args.plot_conv_max_pstar,
+                     pstar_tick=args.plot_conv_pstar_tick_interval, kappa_SI_max=args.plot_conv_max_kappa,
                      kappa_tick=args.plot_conv_kappa_tick_interval)
 
         # plot cepstral log-PSD

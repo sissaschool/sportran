@@ -12,8 +12,8 @@ class CurrentPlotter(plotter.Plotter):
     """
     A Plotter subclass containing the plot functions used by an object of type Current.
     """
-    from .plotter import (plot_trajectory, plot_periodogram, plot_ck, plot_L0_Pstar, plot_kappa_Pstar,
-                          plot_cepstral_spectrum, plot_fstar_analysis, plot_resample)
+    from .plotter import (plot_trajectory, plot_periodogram, plot_cospectrum_component, plot_ck, plot_L0_Pstar,
+                          plot_kappa_Pstar, plot_cepstral_spectrum, plot_resample)
     _plot_style = 'api_style.mplstyle'
     pass
 
@@ -25,7 +25,6 @@ class CurrentPlotter(plotter.Plotter):
 #        'plot_L0_Pstar',
 #        'plot_kappa_Pstar',
 #        'plot_cepstral_spectrum',
-#        'plot_fstar_analysis',
 #        'plot_resample'):
 #
 #    # get the function from the plotter module, and make it an attribute of CurrentPlotter

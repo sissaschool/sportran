@@ -476,8 +476,10 @@ def fstar_analysis(x, TSKIP_LIST, aic_type='aic', aic_Kmin_corrfactor=1.0, manua
     FSTAR_THZ_LIST = [xff.Nyquist_f_THz for xff in xf]
 
     if plot:
+        from sportran.plotter.plotter import plot_fstar_analysis
         try:
-            x.plot_fstar_analysis(xf, FSTAR_THZ_LIST, axes=axes, FIGSIZE=FIGSIZE, **plot_kwargs)
+            return plot_fstar_analysis(xf, FSTAR_THZ_LIST, original_current=x, axes=axes, FIGSIZE=FIGSIZE,
+                                       **plot_kwargs)
         except AttributeError:
             print('Plotter does not support the plot_resample method')
     else:
