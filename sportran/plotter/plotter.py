@@ -75,8 +75,8 @@ def plot_trajectory(x, *, axis=None, FIGSIZE=None, **plot_kwargs):
     return axis
 
 
-def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=False,
-                     FIGSIZE=None, mode='log', **plot_kwargs):   # yapf: disable
+def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True,
+                     FIGSIZE=None, mode='log', **plot_kwargs):
     """
     Plots the current's periodogram (psd)
     :param current:         current object to plot periodogram
@@ -84,8 +84,8 @@ def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale
     :param freq_units:      'thz'  [THz]
                             'red'  [omega*DT/(2*pi)]
     :param freq_scale:      rescale red frequencies by this factor (e.g. 2 --> freq = [0, 0.25])
-    :param axes:            plot periodograms in units of kappa (default: False) - NB: log-psd not converted
-    :param kappa_units:     matplotlib.axes.Axes object (if None, create one)
+    :param axes:            matplotlib.axes.Axes object (if None, create one)
+    :param kappa_units:     plot periodograms in units of kappa (default: True) - NB: log-psd not converted
     :param FIGSIZE:         size of the plot
 
     :return: a matplotlib.axes.Axes object
@@ -288,8 +288,8 @@ def plot_cepstral_spectrum(current, *, freq_units='THz', freq_scale=1.0, axes=No
     :param freq_units:      'thz'  [THz]
                             'red'  [omega*DT/(2*pi)]
     :param freq_scale:      rescale red frequencies by this factor (e.g. 2 --> freq = [0, 0.25])
-    :param axes:            plot periodograms in units of kappa (default: False) - NB: log-psd not converted
-    :param kappa_units:     matplotlib.axes.Axes object (if None, create one)
+    :param axes:            matplotlib.axes.Axes object (if None, create one)
+    :param kappa_units:     plot periodograms in units of kappa (default: True) - NB: log-psd not converted
     :param FIGSIZE:         size of the plot
 
     :return: a matplotlib.axes.Axes object
@@ -383,11 +383,13 @@ def plot_resample(x, xf, PSD_FILTER_W=None, *, freq_units='THz', axes=None, FIGS
     fstar_THz = xf.Nyquist_f_THz
     TSKIP = int(x.Nyquist_f_THz / xf.Nyquist_f_THz)
 
+    from sportran.current import Current
+    plot_kappa_units = isinstance(x, Current)
     if not axes:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         axes = plot_periodogram(x, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes, mode=mode,
-                                kappa_units=True)   # this also updates x.PSD_FILTER_W
-    xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode, kappa_units=True)
+                                kappa_units=plot_kappa_units)   # this also updates x.PSD_FILTER_W
+    xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode, kappa_units=plot_kappa_units)
     if freq_units in ('THz', 'thz'):
         axes[0].axvline(x=fstar_THz, ls='--', c='k')
         axes[0].set_xlim([0., x.Nyquist_f_THz])
