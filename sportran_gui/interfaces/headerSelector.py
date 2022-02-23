@@ -97,8 +97,8 @@ class HeaderSelector(Frame):
         if cu.Data.options[1] in description:   #energy current
             if description.count(cu.Data.options[1]) == 1:
                 if description.count(cu.Data.options[3]) <= 1:   #temperature
-                    if description.count(cu.Data.options[4]) <= 1:
-                        if description.count(cu.Data.options[5]) <= 1:
+                    if description.count(cu.Data.options[4]) <= 1:   #volume
+                        if description.count(cu.Data.options[5]) <= 1:   #DT
                             cu.data.keys = keys
                             cu.data.description = description
                             cu.Data.loaded = True

@@ -93,6 +93,8 @@
     "fw_low": "Filter width can't be less than 0",
     "fw_void": "Filter width can't be void",
     "automatic_T": "The temperature will be automatically calculated",
+    "automatic_V": "The volume will be automatically calculated",
+    "automatic_DT": "The DT_FS will be automatically calculated",
     "back_reset": "Go back?",
     "back_reset_t": "Save changes?\nIf reopen the same file\nthe values that you chosed will not be deleted!",
     "fs_loaded": "F* loaded from input file ({})",
@@ -191,6 +193,8 @@
     "fw_low": "La larghezza del filtro non può essere negativa",
     "fw_void": "Il campo \"larghezza del filtro\" non può essere vuoto",
     "automatic_T": "La temperatura verrà calcolata automaticamente",
+    "automatic_V": "Il volume verrà calcolato automaticamente",
+    "automatic_DT": "Il timestep verrà calcolato automaticamente",
     "back_reset": "Andare indietro?",
     "back_reset_t": "Salvo le modifiche?\nSe si riapre lo stesso file\ni valori scelti non saranno cancellati!",
     "fs_loaded": "F* caricato dal file di input ({})"

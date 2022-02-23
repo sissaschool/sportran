@@ -167,31 +167,45 @@ class OtherVariables(Frame):
         self.DT_FS_entry.config(state=NORMAL)
         self.volume_entry.config(state=NORMAL)
 
-        if cu.data.inputformat == 'dict':
-            if True:   #not cu.Data.loaded:
-                if cu.Data.options[3] in cu.data.description:
-                    self.temp_advertise.config(text=LANGUAGES[settings.LANGUAGE]['automatic_T'], fg='red')
-                    temp = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[3])]]
-                    if type(temp) == float:
-                        cu.data.temperature = temp
-                    else:
-                        cu.data.temperature = temp.mean()
-                        cu.data.temperature_std = temp.std()
-                    self.temperature_entry.config(state=DISABLED)
-                if cu.Data.options[4] in cu.data.description:
-                    self.volume_advertise.config(text='The volume will be automatically calculated', fg='red')
-                    vol = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[4])]]
-                    if type(vol) == float:
-                        cu.data.volume = vol
-                    else:
-                        cu.data.volume = vol.mean()
-                    self.volume_entry.config(state=DISABLED)
-                if cu.Data.options[5] in cu.data.description:
-                    self.DT_FS_advertise.config(text='The DT_FS will be automatically calculated', fg='red')
-                    cu.data.DT_FS = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[5])]]
-                    self.DT_FS_entry.config(state=DISABLED)
+        if cu.Data.options[3] in cu.data.description:
+            self.temp_advertise.config(text=LANGUAGES[settings.LANGUAGE]['automatic_T'], fg='red')
+            if cu.data.inputformat == 'dict':   #only for dict I have the data here
+                temp = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[3])]]
+                if type(temp) == float:
+                    cu.data.temperature = temp
+                else:
+                    cu.data.temperature = temp.mean()
+                    cu.data.temperature_std = temp.std()
+            self.temperature_entry.config(state=DISABLED)
+        else:
+            self.temperature_entry.config(state=NORMAL)
+            self.temp_advertise.config(text='')
+        if cu.Data.options[4] in cu.data.description:
+            self.volume_advertise.config(text=LANGUAGES[settings.LANGUAGE]['automatic_V'], fg='red')
+            if cu.data.inputformat == 'dict':   #only for dict I have the data here
+                vol = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[4])]]
+                if type(vol) == float:
+                    cu.data.volume = vol
+                else:
+                    cu.data.volume = vol.mean()
+            else:
+                raise RuntimeError('NOT IMPLEMENTED')
+            self.volume_entry.config(state=DISABLED)
+        else:
+            self.volume_advertise.config(text='')
+            self.volume_entry.config(state=NORMAL)
+        if cu.Data.options[5] in cu.data.description:
+            self.DT_FS_advertise.config(text=LANGUAGES[settings.LANGUAGE]['automatic_DT'], fg='red')
+            if cu.data.inputformat == 'dict':   #only for dict I have the data here
+                cu.data.DT_FS = cu.data.jdata[cu.data.keys[cu.data.description.index(cu.Data.options[5])]]
+            else:
+                raise RuntimeError('NOT IMPLEMENTED')
+            self.DT_FS_entry.config(state=DISABLED)
+        else:
+            self.DT_FS_advertise.config(text='')
+            self.DT_FS_entry.config(state=NORMAL)
 
-            self.update_data()
+        self.update_data()
 
         self.main_frame.viewPort.columnconfigure(0, weight=1)
         self.main_frame.viewPort.rowconfigure(0, weight=1)
