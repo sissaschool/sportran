@@ -13,7 +13,7 @@ jobs:
   check-release-tag:
 
     # Only run this job on the main repository and not on forks
-    if: github.repository == 'lorisercole/sportran'
+    if: github.repository == "sissaschool/sportran"
     runs-on: ubuntu-latest
 
     steps:

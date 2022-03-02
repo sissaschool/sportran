@@ -46,17 +46,10 @@ repos:
         tests/test_notebooks/.*|
         examples/.*|
       )$
-
-#  # prospector: collection of linters
-#  - id: prospector
-#    language: system
-#    types: [file, python]
-#    name: prospector
-#    description: "This hook runs Prospector: https://github.com/landscapeio/prospector"
-#    entry: prospector
 #
-#  - id: version-number
-#    name: Check version numbers
-#    entry: python ./.travis-data/check_version.py
-#    language: system
-#    files: '^(setup.json)|(aiida_diff/__init__.py)'
+#-  repo: https://github.com/PyCQA/pylint
+#   rev: v2.12.2
+#   hooks:
+#   - id: pylint
+#     language: system
+#     exclude: *exclude_files

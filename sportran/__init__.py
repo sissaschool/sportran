@@ -4,10 +4,12 @@
 Sportran library
 ==========================
 
-This is the core library containing all the code necessary to perform a nice and fast cepstral analysis on your time series
+This is the core library containing all the code necessary to perform a nice
+and fast cepstral analysis on your time series.
 """
 
 from . import md
+from . import current
 from .current import *
 from . import utils
 from . import plotter
