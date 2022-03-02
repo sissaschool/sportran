@@ -9,7 +9,7 @@ A code to estimate transport coefficients from the cepstral analysis of a multi-
 https://sportran.readthedocs.io
 
 ### References
- - Ercole L., Bertossa R., Bisacchi S., and Baroni S., _SporTran: a code to estimate transport coefficients from the cepstral analysis of (multivariate) current time series_. (in preparation)
+ - [Ercole L., Bertossa R., Bisacchi S., and Baroni S., "_SporTran: a code to estimate transport coefficients from the cepstral analysis of (multivariate) current time series_", *arXiv*:2202.11571 (2022)](https://arxiv.org/abs/2202.11571), submitted to *Comput. Phys. Commun.*
  - (cepstral analysis) [Ercole, Marcolongo, Baroni, *Sci. Rep.* **7**, 15835 (2017)](https://doi.org/10.1038/s41598-017-15843-2)
  - (multicomponent systems) [Bertossa, Grasselli, Ercole, Baroni, *Phys. Rev. Lett.* **122**, 255901 (2019)](https://doi.org/10.1103/PhysRevLett.122.255901) ([arXiv](https://arxiv.org/abs/1808.03341))
  - (review) [Baroni, Bertossa, Ercole, Grasselli, Marcolongo, *Handbook of Materials Modeling* (2018)](https://doi.org/10.1007/978-3-319-50257-1_12-1) ([arXiv](https://arxiv.org/abs/1802.08006))
@@ -31,25 +31,20 @@ It can execute most of the cepstral analysis routines, returning the results in 
 See the [`examples/example_commandline_NaCl`](examples/example_commandline_NaCl/) folder and the help (`python analysis.py --help`) for more information.
 
 ### Requirements
-#### python library and command line interface
  - numpy
  - scipy
  - matplotlib
-
-#### graphical user interface
- - all the requirements of cepstral analysis
  - tkinter
  - markdown2
  - pillow
- - uncertainties
 
 
 ### Installation
-  You can simply pip-install sportran downloading it from PyPI with `pip install sportran`.
+  You can simply pip-install SporTran downloading it from PyPI with `pip install sportran`.
 
   Alternatively:
 
-  1. Clone this repository: `git clone https://github.com/lorisercole/sportran.git`
+  1. Clone this repository: `git clone https://github.com/sissaschool/sportran.git`
   2. Install the package with pip (dependencies will be automatically downloaded). For example:
 ```
 cd sportran
@@ -57,7 +52,7 @@ pip install .
 ```
   You are all set! You can check that the installation is working by trying to run the command `sportran-analysis`.
 
-  The Graphical User Interface will be installed and can be started with the command `sportran-gui`.
+  The Graphical User Interface can be started with the command `sportran-gui`.
 
 ### Issues
-  You are strongly encouraged to report any issue on the [official](https://github.com/lorisercole/sportran/issues) GitHub issues page.
+  You are strongly encouraged to report any issue on the [official](https://github.com/sissaschool/sportran/issues) GitHub issues page.

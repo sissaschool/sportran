@@ -91,7 +91,7 @@ def main():
      - Bertossa, Grasselli, Ercole, Baroni, Phys. Rev. Lett. 122, 255901 (2019), https://doi.org/10.1103/PhysRevLett.122.255901
      - Baroni, Bertossa, Ercole, Grasselli, Marcolongo, Handbook of Materials Modeling (2018), https://doi.org/10.1007/978-3-319-50257-1_12-1
 
-    GitHub:    https://github.com/lorisercole/sportran
+    GitHub:    https://github.com/sissaschool/sportran
     Contact:   loris.ercole@epfl.ch, rbertoss@sissa.it
 
     Acknowledgment

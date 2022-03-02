@@ -1,11 +1,11 @@
 {
     "name": "sportran",
-    "version": "1.0.0a1",
+    "version": "1.0.0rc1",
     "author": "Loris Ercole, Riccardo Bertossa, Sebastiano Bisacchi",
     "author_email": "loris.ercole@epfl.ch",
     "description": "Cepstral Data Analysis of current time series for Green-Kubo transport coefficients",
     "license": "GPL 3",
-    "url": "https://github.com/lorisercole/sportran",
+    "url": "https://github.com/sissaschool/sportran",
     "keywords": "cepstral data analysis thermal conductivity transport coefficients physics green-kubo",
     "python_requires": ">=3.6.*, <4",
     "classifiers": [
