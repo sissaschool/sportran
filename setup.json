@@ -56,6 +56,6 @@
             "sportran-gui=sportran_gui.main:run"
         ]
     },
-    "gui_version" : "0.1.0b",
+    "gui_version" : "0.1.2",
     "credits" : "developed at SISSA, Via Bonomea, 265 - 34136 Trieste ITALY"
 }

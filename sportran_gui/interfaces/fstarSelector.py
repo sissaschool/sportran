@@ -20,8 +20,6 @@ class FStarSelector(Frame):
         self.filter_width_value = DoubleVar()
         # self.main_frame.grid(column=0, row=0, sticky='nsew')
 
-        # Label(self.main_frame, text='Select F*', font='Arial 14 bold').grid(row=0, column=0)
-
         self.sections = Frame(self.main_frame, pady=20)
         self.sections.grid(row=0, column=0, sticky='nsew')
 
@@ -32,7 +30,7 @@ class FStarSelector(Frame):
         slider_frame = Frame(self.sections)
         slider_frame.pack(side=TOP, anchor='w', padx=20, fill=BOTH)
 
-        Label(slider_frame, text=LANGUAGES[settings.LANGUAGE]['stp4'],
+        Label(slider_frame, text=LANGUAGES[settings.LANGUAGE]['fslide'],
               font='Arial 12').grid(row=0, column=1, sticky='w', padx=20)
 
         self.slider = ttk.Scale(slider_frame, from_=0, to_=0.1)
@@ -52,6 +50,9 @@ class FStarSelector(Frame):
 
         value_frame = Frame(self.sections)
         value_frame.pack(side=TOP, pady=10, padx=20, fill=BOTH, expand=1)
+
+        Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['stp4'],
+              font='Arial 12 bold').grid(row=0, column=0, sticky='w')
 
         ttk.Separator(value_frame, orient=HORIZONTAL).grid(row=0, column=0, sticky='we', columnspan=4, pady=5, padx=20)
 

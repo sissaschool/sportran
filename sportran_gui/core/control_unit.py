@@ -214,7 +214,7 @@ def new(main):
     global log
     data = Data()
     main.show_frame(main.home)
-    log.set_method(None)
+    log = PrintMethod()
 
 
 # -------- GRAPH SECTION --------
@@ -439,8 +439,8 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
     data.currents = currents
     # create Current object
     emsgs = []
-    if volume is not -1:
-        if temperature is not -1:
+    if volume != -1:
+        if temperature != -1:
             data.j = Current(currents, UNITS=data.units, DT_FS=DT_FS, TEMPERATURE=temperature, VOLUME=volume,
                              PSD_FILTER_W=psd_filter_w)
         else:

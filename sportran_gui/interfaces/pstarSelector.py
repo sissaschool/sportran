@@ -58,16 +58,18 @@ class PStarSelector(Frame):
               font='Arial 12 bold').grid(row=0, column=0, sticky='w')
         ttk.Separator(value_frame, orient=HORIZONTAL).grid(row=1, column=0, sticky='we', pady=10, columnspan=5)
 
-        Label(value_frame, text='P*: ', font='Arial 12').grid(row=2, column=0, sticky='w')
+        Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['pstar_cmt'],
+              font='Arial 12').grid(row=2, column=0, sticky='w')
+        Label(value_frame, text='P*: ', font='Arial 12').grid(row=3, column=0, sticky='w')
         self.value_entry = Spinbox(value_frame, bd=1, relief=SOLID, increment=1)
-        self.value_entry.grid(row=2, column=1, sticky='w')
+        self.value_entry.grid(row=3, column=1, sticky='w')
 
         self.increment = IntVar()
         Label(value_frame, text=LANGUAGES[settings.LANGUAGE]['inc'],
-              font='Arial 12').grid(row=3, column=0, sticky='w', pady=10)
+              font='Arial 12').grid(row=4, column=0, sticky='w', pady=10)
 
         rdbt_frame = Frame(value_frame)
-        rdbt_frame.grid(row=3, column=1, sticky='w')
+        rdbt_frame.grid(row=4, column=1, sticky='w')
 
         Radiobutton(rdbt_frame, text='1', font='Arial 11 bold', variable=self.increment, value=1,
                     command=self._change_increment).pack(side=LEFT)

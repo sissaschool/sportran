@@ -45,7 +45,7 @@ class OtherVariables(Frame):
         self.temp_advertise.grid(row=3, column=2, sticky='w')
 
         Label(variable_frame,
-              text=LANGUAGES[settings.LANGUAGE]['volume'] + ' (angstrom^3):').grid(row=4, column=0, sticky='w')
+              text=LANGUAGES[settings.LANGUAGE]['volume'] + ' (Angstrom^3):').grid(row=4, column=0, sticky='w')
         self.volume_entry = Spinbox(variable_frame, from_=0.1, to=10000, increment=0.1, bd=1, relief=SOLID,
                                     textvariable=self.volume_value)
         self.volume_entry.grid(row=4, column=1, padx=2, sticky='w')
