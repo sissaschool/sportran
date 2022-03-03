@@ -1,6 +1,7 @@
 # Install pre-commit hooks via
 # pre-commit install
 
+repos:
 - repo: local
   hooks:
   # yapf = yet another python formatter
@@ -12,13 +13,15 @@
     args: ["-i"]
     exclude: &exclude_files >
       (?x)^(
-        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        sportran/utils/obsolete/.*|
+        sportran_gui/utils/tk_html_widgets/*.py|
         docs/.*|
+        tests/test_cli/.*|
         examples/.*|
         setup.py|
       )$
 
-- repo: git://github.com/pre-commit/pre-commit-hooks
+- repo: https://github.com/pre-commit/pre-commit-hooks.git
   rev: v2.3.0
   hooks:
   - id: check-yaml
@@ -28,24 +31,25 @@
   - id: check-executables-have-shebangs
   - id: double-quote-string-fixer
   - id: end-of-file-fixer
+    exclude: >
+      (?x)^(
+        tests/test_cli/.*|
+        sportran/utils/obsolete/.*|
+      )$
   - id: trailing-whitespace
     exclude: >
       (?x)^(
-        thermocepstrum_gui/utils/tk_html_widgets/*.py|
+        sportran/utils/obsolete/.*|
+        sportran_gui/utils/tk_html_widgets/.*py|
         docs/.*|
+        tests/test_cli/.*|
+        tests/test_notebooks/.*|
         examples/.*|
       )$
-
-#  # prospector: collection of linters
-#  - id: prospector
-#    language: system
-#    types: [file, python]
-#    name: prospector
-#    description: "This hook runs Prospector: https://github.com/landscapeio/prospector"
-#    entry: prospector
 #
-#  - id: version-number
-#    name: Check version numbers
-#    entry: python ./.travis-data/check_version.py
-#    language: system
-#    files: '^(setup.json)|(aiida_diff/__init__.py)'
+#-  repo: https://github.com/PyCQA/pylint
+#   rev: v2.12.2
+#   hooks:
+#   - id: pylint
+#     language: system
+#     exclude: *exclude_files

@@ -1,40 +1,46 @@
 # Command line example
 
-In this example we perform the same analysis that is perfomed in the `example_cepstrum_doublecomp_NaCl.ipynb` jupyter notebook in a much straightforward way.
-Symply run, after installing the package, the following command (see `command.sh`)
+In this example we perform the same analysis that is performed in the `example_cepstrum_doublecomp_NaCl.ipynb` example notebook, but using the command-line interface.
 
+Simply run, after installing the package, the following command (see `run_example.sh`):
+
+```bash
+sportran-analysis ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 --VOLUME 65013.301261 --param-from-input-file-column Temp TEMPERATURE -w 0.1 --FSTAR 14.0 -r
 ```
-thermocepstrum-analysis ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r
-```
-If the package is not installed you can run this instead:
-`../../thermocepstrum/analysis.py ../data/NaCl.dat -k flux -j 'vcm[1]' -t 5.0 -V 65013.301261 -w 0.1 --FSTAR 14.0 -r`
 
 The options have the following meaning:
-* `-k flux` use the columns with header `flux` as the energy flux
-* `-j 'vcm[1]` use the columns with header `vcm[1]` as the convective flux
-* `-t 5.0` set the timestep to 5.0 fs
-* `-V 65013.301261` set the volume of the system to 65013.301261 A^3
-* `-w 0.1` the width of the moving average filter used only to visualize the spectrum is 0.1 THz
-* `--FSTAR 14.0` set the $f^*$ cutoff frequency to 14.0 THz
-* `-r` resample according to the value of $f^*$ specified with `--FSTAR`
+
+* `-k flux` : use the columns with header `flux` as the main (energy) flux
+* `-j 'vcm[1]` : use the columns with header `vcm[1]` as the convective (mass) flux
+* `-t 5.0` : set the timestep to 5.0 fs
+* `--VOLUME 65013.301261` : set the volume of the system
+* `--param-from-input-file-column Temp TEMPERATURE` : use the column with header `Temp` as the temperature of the system
+* `-w 0.1` : set the width of the moving average filter to 0.1 THz, that is used only to visualize the spectrum
+* `--FSTAR 14.0` : set the $f^*$ cutoff frequency to 14.0 THz
+* `-r` : resample the time-series according to the value of $f^*$ specified with `--FSTAR`
 
 The output of the program in the terminal is:
-```
+
+```text
  Input file (table):      ../data/NaCl.dat
  Units:      metal
  Time step:      5.0 fs
+# Molten NaCl - ?? potential
+# ?? atoms, T~1400K
+# NVE, dt = ?, 100 ps, print_step = 5.0 fs
+# Volume = 65013.301261 A^3
+# LAMMPS metal units
 Temp    c_flux[1] c_flux[2] c_flux[3] c_vcm[1][1] c_vcm[1][2] c_vcm[1][3]
  #####################################
-  all_ckeys =  {'Temp': [0], 'flux': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6])}
+  all_ckeys = [('Temp', [0]), ('flux', array([1, 2, 3])), ('vcm[1]', array([4, 5, 6]))]
  #####################################
-Data length =  20000
-  ckey =  {'flux': array([1, 2, 3]), 'vcm[1]': array([4, 5, 6]), 'Temp': [0]}
+Data length = 20000
+  ckey = [('Temp', [0]), ('flux', array([1, 2, 3])), ('vcm[1]', array([4, 5, 6]))]
   ( 20000 ) steps read.
-DONE.  Elapsed time:  0.25597500801086426 seconds
- Mean Temperature (computed):  1399.3477811999999 K  +/-  19.318785820942594
- Volume (input):  65013.301261 A^3
+DONE.  Elapsed time: 0.2916121482849121seconds
+VOLUME (input): 65013.301261
+Mean TEMPERATURE (computed): 1399.3477811999999 +/- 19.318785820942594
  Time step (input):  5.0 fs
-['flux', 'vcm[1]'] None
   currents shape is (2, 20000, 3)
 snippet:
 [[[ 2.5086549e+02  2.0619423e+01  2.0011500e+02]
@@ -55,7 +61,7 @@ snippet:
 Using multicomponent code.
  Number of currents = 2
  Number of components = 3
- kappa_scale = 1.4604390788939313e-07
+ KAPPA_SCALE = 1.4604390788939313e-07
  Nyquist_f   = 100.0  THz
 Using multicomponent code.
 -----------------------------------------------------
@@ -67,25 +73,26 @@ Using multicomponent code.
                              =        35.000 fs
  Original  n. of frequencies =         10001
  Resampled n. of frequencies =          1429
- PSD      @cutoff  (pre-filter) = 443152.37265
-                  (post-filter) = 564877.86516
- log(PSD) @cutoff  (pre-filter) =     12.89638
-                  (post-filter) =     13.05597
- min(PSD)          (pre-filter) =      0.31536
- min(PSD)         (post-filter) =  22166.11934
- % of original PSD Power f<f* (pre-filter)  = 96.678574
+ PSD      @cutoff  (pre-filter&sample) ~ 443152.37265
+                  (post-filter&sample) ~ 564877.86516
+ log(PSD) @cutoff  (pre-filter&sample) ~     12.89638
+                  (post-filter&sample) ~     13.05597
+ min(PSD)          (pre-filter&sample) =      0.31536
+ min(PSD)         (post-filter&sample) =  22166.11934
+ % of original PSD Power f<f* (pre-filter&sample)  = 96.679 %
 -----------------------------------------------------
 
 -----------------------------------------------------
   CEPSTRAL ANALYSIS
 -----------------------------------------------------
-  AIC_Kmin  = 3  (P* = 4, corr_factor = 1.000000)
+  cutoffK = 3  (auto, AIC_Kmin = (P*-1) = 3, corr_factor =  1.0)
   L_0*   =          15.158757 +/-   0.056227
   S_0*   =     6824108.702608 +/- 383697.095268
 -----------------------------------------------------
-  kappa* =           0.498310 +/-   0.028018  W/mK
+  kappa* =           0.498310 +/-   0.028018  W/m/K
 -----------------------------------------------------
+
 ```
 
-The program outputs raw data and some pdf plots.\
+The program outputs raw data and some PDF plots.\
 In this example the output files are called `output.*`.
