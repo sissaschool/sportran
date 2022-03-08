@@ -311,7 +311,7 @@ class LAMMPS_Dump(object):
             raise ValueError('ckey not set.')
         if self.timestep is None:
             raise ValueError('timestep not set.')
-        self.data = [dict() for i in range(self.nsteps)]
+        self.data = [{} for i in range(self.nsteps)]
         for istep in range(self.nsteps):
             for key, idx in self.ckey.items():
                 if (key == 'element'):   # this should be improved

@@ -407,7 +407,7 @@ class CheckList(Frame):
                        be generated.
     """
 
-    def __init__(self, parent, controller, check_list=dict(), start_row=0):
+    def __init__(self, parent, controller, check_list={}, start_row=0):
         Frame.__init__(self, parent, controller)
 
         self.controller = controller

@@ -218,10 +218,7 @@ def new(main):
 
 
 # -------- GRAPH SECTION --------
-"""
-This section contains the functions that deal with
-the graph manager.
-"""
+# This section contains the functions that deal with the graph manager.
 
 gm = CurrentPlotter
 
@@ -259,13 +256,9 @@ def set_graph(axis_, func, **kwargs):
 
 
 # -------- FILES AND LOAD SECTION --------
-"""
-In this section there are the functions that are used to load the data
-that the software will use and some functions to work with files.
-
-The starter settings are loaded from the .ini file that contains the
-values that need to be stored.
-"""
+# In this section there are the functions that are used to load the data
+# that the software will use and some functions to work with files.
+# The starter settings are loaded from the .ini file that contains the values that need to be stored.
 
 
 def get_file_size(path):
@@ -452,9 +445,7 @@ def load_data(inputfile, input_format, _selected_keys, temperature=None, NSTEPS=
 
 
 # -------- UTILITY SECTION --------
-"""
-This section contains some utility functions.
-"""
+# This section contains some utility functions.
 
 
 def export_data(fileout):
