@@ -10,7 +10,7 @@ from . import plotter
 
 class MDSamplePlotter(plotter.Plotter):
     """
-    A Plotter subclass containing the plot functions used by an object of type Current.
+    A Plotter subclass containing the plot functions used by an object of type MDSample.
     """
     from .plotter import (plot_trajectory, plot_resample)
     _plot_style = 'api_style.mplstyle'

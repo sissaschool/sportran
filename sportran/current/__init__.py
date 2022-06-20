@@ -25,12 +25,13 @@ To add a new current type and/or unit you have to do the following.
      The parameters must be consistent with `_input_parameters`. The parameters (with the same name) will be provided by the user in the class constructor or in the various interfaces
 
 """
-from .current import *
+from .current import Current
+from .generic import *
 from .heat import *
 from .electric import *
 from .stress import *
 
-__all__ = ['Current', 'HeatCurrent', 'ElectricCurrent', 'StressCurrent']
+__all__ = ['GenericCurrent', 'HeatCurrent', 'ElectricCurrent', 'StressCurrent']
 
 # define list of all classes with units defined
 import inspect

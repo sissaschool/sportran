@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..current import Current
+from sportran.current import Current
 from sportran.utils import log
 from sportran.plotter.plotter import plot_fstar_analysis
 

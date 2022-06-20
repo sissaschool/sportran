@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Current defines a generic flux time series that can be associated to a transport coefficient."""
+"""
+Current defines a generic flux time series that can be associated to a transport coefficient.
+This is just an abstract class, that should be subclassed.
+"""
 
+import abc
 import numpy as np
 import inspect
 from sportran.md.mdsample import MDSample
@@ -14,9 +18,9 @@ from sportran.plotter.current import CurrentPlotter
 __all__ = ['Current']
 
 
-class Current(MDSample):
+class Current(MDSample, abc.ABC):
     """
-    Current API for thermo-cepstral analysis.
+    Current abstract class for thermo-cepstral analysis.
     Defines a Current object with useful tools to perform analysis.
 
     INPUT parameters:
@@ -32,6 +36,9 @@ class Current(MDSample):
      - MAIN_CURRENT_FACTOR factor to be multiplied by the main current [1.0]
 
     The default plotter is `plotter.CurrentPlotter`. It can be set by `Current.set_plotter`.
+
+    The `_current_type`, `_input_parameters`, and  `_KAPPA_SI_UNITS` attributes, and the `_builder` method must
+    be defined at the subclass level.
     """
 
     # parameters are class-specific (a HeatCurrent may use different ones wrt ElectricCurrent) and case-insensitive
@@ -90,13 +97,15 @@ class Current(MDSample):
         return msg
 
     @property
+    @abc.abstractmethod
     def _builder(self):
         """
         Returns a dictionary of all keyworded parameters needed to rebuild an identical object of the same class.
         The trajectory is excluded. Used by self._get_builder().
+
+        This is a virtual method that must be defined in a subclass of Current.
         """
-        return dict(DT_FS=self.DT_FS, KAPPA_SCALE=self.KAPPA_SCALE, PSD_FILTER_W=self.PSD_FILTER_W_THZ,
-                    FREQ_UNITS='THz')
+        raise NotImplementedError
 
     def _get_builder(self):
         """

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
 from . import Current
-from . import units
 
 __all__ = ['HeatCurrent']
 
@@ -29,12 +27,7 @@ class HeatCurrent(Current):
     _current_type = 'heat'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
     _KAPPA_SI_UNITS = 'W/m/K'
-
     # _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
-
-    def __init__(self, traj, **params):
-        # params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
-        super().__init__(traj, **params)
 
     @property
     def _builder(self):

@@ -26,7 +26,7 @@ log.set_method('bash')
 log.append_method('file')
 from sportran.plotter.cli import CLIPlotter
 
-st.Current.set_plotter(CLIPlotter)
+st.current.Current.set_plotter(CLIPlotter)
 from sportran.plotter import plt   # this imports matplotlib.pyplot
 from sportran.plotter import addPlotToPdf, PdfPages
 
@@ -389,7 +389,7 @@ def run_analysis(args):
     log.write_log('snippet:')
     log.write_log(currents)
 
-    # create HeatCurrent object
+    # create Current object
     j = st.current.all_currents[current_type][0](currents, DT_FS=DT_FS, UNITS=units, **parameters,
                                                  PSD_FILTER_W=psd_filter_w)
 

@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
 from . import Current
-from . import units
 
 __all__ = ['ElectricCurrent']
 
 
 class ElectricCurrent(Current):
     """
-    EnergyCurrent API for thermo-cepstral analysis.
+    ElectricCurrent API for thermo-cepstral analysis.
     Defines an ElectricCurrent object with useful tools to perform analysis.
 
     INPUT parameters:
@@ -29,12 +27,7 @@ class ElectricCurrent(Current):
     _current_type = 'electric'
     _input_parameters = {'DT_FS', 'UNITS', 'TEMPERATURE', 'VOLUME'}
     _KAPPA_SI_UNITS = 'S/m'
-
     # _optional_parameters = {'PSD_FILTER_W', 'FREQ_UNITS', 'MAIN_CURRENT_INDEX', 'MAIN_CURRENT_FACTOR'}
-
-    def __init__(self, traj, **params):
-        # params: (DT_FS, UNITS, TEMPERATURE, VOLUME, PSD_FILTER_W=None, FREQ_UNITS='THz')
-        super().__init__(traj, **params)
 
     @property
     def _builder(self):
