@@ -52,13 +52,3 @@ def scale_kappa_gpumd(TEMPERATURE, VOLUME):
     VOLUME      cell VOLUME [A^3]
     """
     return constants.charge**3 / TEMPERATURE / constants.massunit / constants.kB / VOLUME * 1.0e8
-
-
-def scale_kappa_dlpoly(TEMPERATURE, VOLUME):
-    """
-    Conversion factor for the thermal conductivity from DL_POLY units to SI units.
-    INPUT:
-    TEMPERATURE [K]
-    VOLUME      cell VOLUME [A^3]
-    """
-    return constants.charge**2 / TEMPERATURE / constants.kB / VOLUME * 10000.

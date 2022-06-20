@@ -58,14 +58,3 @@ def scale_kappa_gpumd(TEMPERATURE, VOLUME):
     VOLUME      cell VOLUME [A^3]
     """
     return constants.charge**2 * VOLUME / TEMPERATURE / constants.kB
-
-
-# I did not manage to understand in which units the stress is outputted in dl_poly
-# def scale_kappa_dlpoly(TEMPERATURE, VOLUME):
-#     """
-#     Conversion factor for the viscosity from DL_POLY units to SI units.
-#     INPUT:
-#     TEMPERATURE [K]
-#     VOLUME      cell VOLUME [A^3]
-#     """
-#     return  / TEMPERATURE / constants.kB / VOLUME * 10000.
