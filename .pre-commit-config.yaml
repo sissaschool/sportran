@@ -18,6 +18,7 @@ repos:
         examples/.*|
         setup.py|
       )$
+    additional_dependencies: ['toml']
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
   rev: v4.1.0

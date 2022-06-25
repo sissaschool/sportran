@@ -46,12 +46,14 @@ def data_NaCl(data_NaCl_path):
 @pytest.fixture(scope='session')
 def data_SiO2(data_SiO2_path):
     import sportran as st
+    import numpy as np
 
     jfile = st.i_o.TableFile(data_SiO2_path, group_vectors=True)
-    jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['flux1'])
+    jfile.read_datalines(start_step=0, NSTEPS=0, select_ckeys=['flux1', 'Temp'])
     DT_FS = 1.0   # time step [fs]
-    TEMPERATURE = 1065.705630   # temperature [K]
+    TEMPERATURE = np.mean(jfile.data['Temp'])   # temperature [K]
     VOLUME = 3130.431110818   # volume [A^3]
+    print('T = {:f} K'.format(TEMPERATURE))
     return jfile, DT_FS, TEMPERATURE, VOLUME
 
 
@@ -69,8 +71,8 @@ def check_reg(num_regression, data_regression):
             'Nyquist_f_THz': np.array([float(jf.Nyquist_f_THz)]),
             'kappa_Kmin': np.array([float(jf.kappa)]),
             'kappa_Kmin_std': np.array([float(jf.kappa_std)]),
-            'aic_min': np.array([float(jf.cepf.aic_min)])
+            'aic_min': np.array([float(jf.cepf.aic_min)]),
         })
-        data_regression.check({'aic_Kmin': int(jf.cepf.aic_Kmin),})
+        data_regression.check({'aic_Kmin': int(jf.cepf.aic_Kmin)})
 
     return _check
