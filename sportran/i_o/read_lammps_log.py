@@ -43,8 +43,8 @@
 ###     data.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
 ###     print(data.data)
 ###
-###     # to save data into a Numpy file:
-###     save_hc_npz(data, ['flux'], 'lammps.data', 'flux.npz')
+###     # to save data into a Numpy binary file:
+###     data.save_numpy_dict('flux.npy', ['flux'], 'lammps.data')
 ################################################################################
 
 import numpy as np
@@ -128,26 +128,23 @@ class LAMMPSLogFile(object):
 #############################################################################
     """
 
-    def __init__(self, *args, **kwargs):
-        """LAMMPSLogFile(filename, run_keyword, select_ckeys)"""
-        if (len(args) > 0):
-            self.filename = args[0]
-            if (len(args) >= 2):
-                self.run_keyword = args[1]
-                if (len(args) == 3):
-                    self.select_ckeys = args[2]
-                else:
-                    self.select_ckeys = None
-            else:
-                self.run_keyword = None
-        else:
-            raise ValueError('No file given.')
-        self.run_keyword = kwargs.get('run_keyword', None)
+    def __init__(self, filename, run_keyword=None, select_ckeys=None, **kwargs):
+        """
+        LAMMPSLogFile(filename, run_keyword, select_ckeys, **kwargs)
+
+        **kwargs:
+            endrun_keyword  [default: 'Loop time']
+            group_vectores  [default: True]
+            GUI             [default: False]
+        """
+        self.filename = filename
+        self.run_keyword = run_keyword
+        self.select_ckeys = select_ckeys
         self.endrun_keyword = kwargs.get('endrun_keyword', 'Loop time')
         group_vectors = kwargs.get('group_vectors', True)
         self._GUI = kwargs.get('GUI', False)
         if self.run_keyword is None:
-            raise ValueError('Please specify run_keyword.')
+            raise ValueError('Please specify run_keyword (e.g. "DUMP_RUN").')
         if self._GUI:
             from ipywidgets import FloatProgress
             from IPython.display import display
@@ -287,7 +284,7 @@ class LAMMPSLogFile(object):
           start_step  = -1 -> continue from current step (default)
                          0 -> go to start step
                          N -> go to N-th step
-          select_ckeys   -> an array with the column keys you want to read (see all_ckeys for a list)
+          select_ckeys   -> an array with the column keys you want to read (see all_ckeys for a list, default: all)
           max_vector_dim -> when reading vectors read only this number of components (None = read all components)
           even_NSTEPS    -> round the number of steps to an even number (default: True)
 
@@ -353,14 +350,18 @@ class LAMMPSLogFile(object):
         log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
         return self.data
 
+    def save_numpy_dict(self, out_file, select_ckeys=None, lammps_structure_file=None):
+        'Export LAMMPSLogFile to Numpy binary format.'
+        save_numpy_dict(self, out_file, select_ckeys, lammps_structure_file)
 
-def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilename):
+
+def save_numpy_dict(lammpslogfile_obj, out_file, select_ckeys=None, lammps_structure_file=None):
     """
      Takes a LAMMPSLogFile object, a LAMMPS structure data file (optional), takes
      the desired columns and save data into a Numpyz file.
 
      # example to save data into a Numpyz file:
-     Save_HC_npz(lammpslogfile_object, ['flux'], 'lammps.data', 'flux.npz')
+     save_numpy_dict(lammpslogfile_object, 'flux.npy', ['flux'], 'lammps.data')
    """
 
     def get_box(filename):
@@ -379,32 +380,35 @@ def save_hc_npz(lammpslogfile, select_ckeys, lammps_structurefilename, outfilena
         volume = np.prod(box[1, :] - box[0, :])
         return box, volume
 
-    if not isinstance(lammpslogfile, LAMMPSLogFile):
-        raise ValueError('lammpslogfile is not a LAMMPSLogFile object.')
+    if not isinstance(lammpslogfile_obj, LAMMPSLogFile):
+        raise ValueError('lammpslogfile_obj is not a LAMMPSLogFile object.')
 
     dic = {}
-    if 'Temp' not in lammpslogfile.ckey:
+    if 'Temp' not in lammpslogfile_obj.ckey:
         raise RuntimeError('Temp not found.')
-    dic['Temp_ave'] = np.mean(lammpslogfile.data['Temp'])
-    dic['Temp_std'] = np.std(lammpslogfile.data['Temp'])
+    dic['Temp_ave'] = np.mean(lammpslogfile_obj.data['Temp'])
+    dic['Temp_std'] = np.std(lammpslogfile_obj.data['Temp'])
 
+    if select_ckeys is None:
+        select_ckeys = lammpslogfile_obj.ckey
     for key in select_ckeys:
-        if key in lammpslogfile.ckey:
-            dic[key] = lammpslogfile.data[key]
+        if key in lammpslogfile_obj.ckey:
+            dic[key] = lammpslogfile_obj.data[key]
         else:
             raise ValueError('ckey not found.')
 
-    box, volume = get_box(lammps_structurefilename)
-    dic['box'] = box
-    dic['Volume'] = volume
+    if lammps_structure_file is not None:
+        box, volume = get_box(lammps_structure_file)
+        dic['box'] = box
+        dic['Volume'] = volume
 
-    dic['DT'] = lammpslogfile.data['Step'][1, 0] - lammpslogfile.data['Step'][0, 0]
-    if 'Time' in lammpslogfile.ckey:
-        dic['DT_TIMEUNITS'] = lammpslogfile.data['Time'][1, 0] - lammpslogfile.data['Time'][0, 0]
+    dic['DT'] = lammpslogfile_obj.data['Step'][1, 0] - lammpslogfile_obj.data['Step'][0, 0]
+    if 'Time' in lammpslogfile_obj.ckey:
+        dic['DT_TIMEUNITS'] = lammpslogfile_obj.data['Time'][1, 0] - lammpslogfile_obj.data['Time'][0, 0]
 
-    log.write_log('These keys will be saved in file \"{:}\" :'.format(outfilename))
+    log.write_log('These keys will be saved in file \"{:}\" :'.format(out_file))
     log.write_log(' ', list(dic.keys()))
-    np.savez(outfilename, **dic)
+    np.save(out_file, dic)
     return
 
 
@@ -423,24 +427,25 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('lammps_logfile', help='lammps log file to read')
-    parser.add_argument('lammps_structurefile', help='lammps structure data file to read')
     parser.add_argument('output_file', help='numpy file that will be saved')
+    parser.add_argument('-s', '--lammps_structurefile',
+                        help='lammps structure data file, to read cell matrix and volume')
     parser.add_argument('-k', '--ckeys', nargs='+', dest='ckeys', help='list of column keys to read')
     parser.add_argument('-d', '--runkey', help='RUN keyword')
     parser.add_argument('-e', '--endrunkey', help='ENDRUN keyword (default: "Loop time")')
     args = parser.parse_args()
 
     logfile = LAMMPSLogFile(args.lammps_logfile, run_keyword=args.runkey)
-    select_ckeys = args.ckeys[:]
-    if 'Step' not in args.ckeys:
-        select_ckeys += ['Step']
-    if 'Time' not in args.ckeys:
-        if 'Time' in logfile.all_ckeys:
+    select_ckeys = args.ckeys
+    if args.ckeys is not None:
+        if 'Step' not in args.ckeys:
+            select_ckeys += ['Step']
+        if ('Time' not in args.ckeys) and ('Time' in logfile.all_ckeys):
             select_ckeys += ['Time']
-    if 'Temp' not in args.ckeys:
-        select_ckeys += ['Temp']
+        if 'Temp' not in args.ckeys:
+            select_ckeys += ['Temp']
     logfile.read_datalines(select_ckeys=select_ckeys)
-    save_hc_npz(logfile, args.ckeys, args.lammps_structurefile, args.output_file)
+    logfile.save_numpy_dict(out_file=args.output_file, lammps_structure_file=args.lammps_structurefile)
     return 0
 
 

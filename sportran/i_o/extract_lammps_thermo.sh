@@ -120,7 +120,7 @@ flag == 2 {
           printf("%d ", $i + START_STEP)
         }
         else if (i == timecol) {
-          printf("%d ", $i + START_TIME)
+          printf("%g ", $i + START_TIME)
         }
         else {
           printf("%s ", $i)
