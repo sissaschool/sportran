@@ -20,12 +20,12 @@ def filepath_tests():
 
 @pytest.fixture(scope='session')
 def data_NaCl_path(filepath_tests):
-    return filepath_tests + '/data/NaCl.dat'
+    return filepath_tests + '/data/NaCl/NaCl.dat'
 
 
 @pytest.fixture(scope='session')
 def data_SiO2_path(filepath_tests):
-    return filepath_tests + '/data/Silica.dat'
+    return filepath_tests + '/data/Silica/Silica.dat'
 
 
 @pytest.fixture(scope='session')
