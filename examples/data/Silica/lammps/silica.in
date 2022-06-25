@@ -1,0 +1,93 @@
+#########################################################################
+### Computes heat flux and thermal conductivity of glass silica
+#########################################################################
+#
+# run with e.g.:  mpirun -np 12 lmp_mpi -in silica.in -log silica.out
+#
+
+variable     kB         equal  1.3806504e-23    # [J/K]
+variable     NA         equal  6.02214e23       # [1/mol]
+variable     massunit   equal  1.660538921e-27  # [kg]
+variable     V          equal  vol
+
+variable     T_eq       equal  1000.            # [K]  -- Temperature
+variable     dt         equal  0.001            # [ps] -- MD time step
+variable     nvt_tau    equal  0.200            # [ps] -- NVT thermostat coupling time
+
+variable     thermo_print_interval     equal 1   # [timesteps]
+variable     traj_print_interval       equal 100 # [timesteps]
+
+
+#######################################
+### Output style
+#######################################
+
+units        metal
+atom_style   charge
+
+
+#######################################
+### Read Structure
+#######################################
+
+read_data silica_216_1000K.init
+
+group        oxygen  type 2
+group        silicon type 1
+
+#######################################
+### Pair style
+#######################################
+
+# BKS potential  [B.W.H. van Beest et al., Phys. Rev. Lett. 64 (1990) 1955-1958]
+# + Wolf truncation and smoothing  [A. Carré, J. Chem. Phys. 127 (11) (2007)]
+# + 1/r^12 core repulsion  [as parameterized by N.S. Shcheblanov et al., J. Non-Cryst. Sol. 428 (2015) 6-19]
+pair_style   table linear 12000
+pair_coeff   1 1  ./BKSwolf_0.3.potrsq  BKSWOLF_SI_SI
+pair_coeff   1 2  ./BKSwolf_0.3.potrsq  BKSWOLF_SI_O
+pair_coeff   2 2  ./BKSwolf_0.3.potrsq  BKSWOLF_O_O
+
+timestep     ${dt}
+
+#######################################
+### Output settings
+#######################################
+
+# Compute heat flux
+compute      KEat       all ke/atom
+compute      PEat       all pe/atom
+compute      Stressat   all stress/atom NULL virial
+compute      flux1      all heat/flux KEat PEat Stressat
+
+# Equilibrating CSVR
+fix          NVE_RELAX all nve
+fix          CSVR_RELAX all temp/csvr ${T_eq} ${T_eq} ${nvt_tau} 942057
+run          20000
+unfix        CSVR_RELAX
+
+# Equilibrating NVE
+run          10000
+unfix        NVE_RELAX
+
+#########################################################################
+### Simulation:  production
+#########################################################################
+
+thermo	     ${thermo_print_interval}
+thermo_style custom step time temp pe ke etotal press c_flux1[1] c_flux1[2] c_flux1[3]
+
+reset_timestep 0
+
+## The following line can be uncommented to print the trajectory.
+## sportran.i_o.LAMMPSLogFile will detect this line containing "DUMP_RUN" in the log.lammps file,
+## it will extract the desired columns, and save the data in numpy binary format
+#dump         DUMP_RUN all custom ${traj_print_interval} silica-run.lammpstrj id type xu yu zu vx vy vz
+
+# NVE
+fix          NVE_RUN all nve
+run          100000
+unfix        NVE_RUN
+#undump       DUMP_RUN
+
+write_restart silica-run.rst
+write_data silica-run.init
