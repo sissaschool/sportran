@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+This module is supposed to implement a SportranBinaryFile, but it is not ready.
+See:  https://github.com/sissaschool/sportran/issues/37
+"""
 
 from sportran.utils.attributedict import AttributeDict
 from sportran.current import Current

@@ -9,6 +9,7 @@ or simply
    #dump DUMP_RUN_KEY
 is present in the file before the 'run' command.
 DUMP_RUN can be set with the -d flag.
+Note: DUMP_RUN cannot contain spaces
 
 Usage:  extract_current.sh -f LOG_FILE [-h]
          -f LOG_FILE LAMMPS log file name
