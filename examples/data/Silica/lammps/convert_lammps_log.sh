@@ -11,4 +11,4 @@ SPORTRAN_DIR='../../../../sportran'
 ${SPORTRAN_DIR}/i_o/extract_lammps_thermo.sh -f ${LAMMPS_FILE} -d 'DUMP_RUN' > Silica.dat
 
 # convert to numpy binary
-python ${SPORTRAN_DIR}/i_o/read_lammps_log.py ${LAMMPS_FILE} Silica.npy -s silica_216_1000K.init -d 'DUMP_RUN' 
+python ${SPORTRAN_DIR}/i_o/read_lammps_log.py ${LAMMPS_FILE} Silica.npy -s silica_216_1000K.init -d 'NVE RUN' 
