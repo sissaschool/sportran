@@ -159,7 +159,7 @@ def main():
             help='Units. (optional, default: metal)')
     input_params_group.add_argument('-C', '--current', type=str, default='heat',
             choices=list(st.current.all_currents.keys()),
-            help='Type of currents that is provided to the code. Usually this just changes the conversion factor')
+            help='Type of currents that is provided to the code. Usually this just changes the conversion factor. (optional, default: heat)')
     input_params_group.add_argument('--param-from-input-file-column', type=str,
             action='append', dest='parameters_from_input_file', nargs=2,
             help='in order: header of the column and name of the parameter that will be setted to the average of that column of the input file')
