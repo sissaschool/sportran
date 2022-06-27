@@ -119,12 +119,13 @@ class LAMMPSLogFile(object):
 
 #############################################################################
   Example script:
-     data = LAMMPSLogFile(filename, run_keyword='PRODUCTION RUN')
-     data.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-     print(data.data)
+     jfile = LAMMPSLogFile(filename, run_keyword='PRODUCTION RUN')
+     jfile.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
+     print(jfile.data)
 
-     # to save data into a Numpyz file:
-     save_hc_npz(data, ['flux'], 'lammps.data', 'flux.npz')
+     # to save data into a Numpy binary file:
+     # 'lammps.data' is a LAMMPS data file containing the structure, where the cell information can be retrieved
+     jfile.save_numpy_dict('flux.npy', ['flux'], 'lammps.data')
 #############################################################################
     """
 
@@ -350,35 +351,29 @@ class LAMMPSLogFile(object):
         log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
         return self.data
 
-    def save_numpy_dict(self, out_file, select_ckeys=None, lammps_structure_file=None):
-        'Export LAMMPSLogFile to Numpy binary format.'
-        save_numpy_dict(self, out_file, select_ckeys, lammps_structure_file)
+    def save_numpy_dict(self, out_file, select_ckeys=None, lammps_data_file=None):
+        """Export LAMMPSLogFile to Numpy binary format."""
+        save_numpy_dict(self, out_file, select_ckeys, lammps_data_file)
 
 
-def save_numpy_dict(lammpslogfile_obj, out_file, select_ckeys=None, lammps_structure_file=None):
+def save_numpy_dict(lammpslogfile_obj, out_file, select_ckeys=None, lammps_data_file=None):
     """
      Takes a LAMMPSLogFile object, a LAMMPS structure data file (optional), takes
      the desired columns and save data into a Numpyz file.
+
+    Parameters
+    ----------
+    lammpslogfile_obj  = LAMMPSLogFile object
+    out_file           = numpy output file to be saved
+    select_ckeys       = name of variables to be saved
+    lammps_data_file   = LAMMPS data file containing the structure information
+                         (generated using the `write_data` command)
 
      # example to save data into a Numpyz file:
      save_numpy_dict(lammpslogfile_object, 'flux.npy', ['flux'], 'lammps.data')
    """
 
-    def get_box(filename):
-        """Return the box edges and volume from a LAMMPS Data file."""
-        box = np.zeros((2, 3))
-        with open(filename, 'r') as f:
-            while True:
-                line = f.readline().split()
-                if 'xlo' in line:
-                    box[:, 0] = [float(line[0]), float(line[1])]
-                if 'ylo' in line:
-                    box[:, 1] = [float(line[0]), float(line[1])]
-                if 'zlo' in line:
-                    box[:, 2] = [float(line[0]), float(line[1])]
-                    break
-        volume = np.prod(box[1, :] - box[0, :])
-        return box, volume
+    from sportran.i_o.read_lammps_datafile import get_box
 
     if not isinstance(lammpslogfile_obj, LAMMPSLogFile):
         raise ValueError('lammpslogfile_obj is not a LAMMPSLogFile object.')
@@ -397,8 +392,8 @@ def save_numpy_dict(lammpslogfile_obj, out_file, select_ckeys=None, lammps_struc
         else:
             raise ValueError('ckey not found.')
 
-    if lammps_structure_file is not None:
-        box, volume = get_box(lammps_structure_file)
+    if lammps_data_file is not None:
+        box, volume = get_box(lammps_data_file)
         dic['box'] = box
         dic['Volume'] = volume
 
@@ -428,8 +423,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('lammps_logfile', help='lammps log file to read')
     parser.add_argument('output_file', help='numpy file that will be saved')
-    parser.add_argument('-s', '--lammps_structurefile',
-                        help='lammps structure data file, to read cell matrix and volume')
+    parser.add_argument('-s', '--lammps-data-file', help='lammps structure data file, to read cell matrix and volume')
     parser.add_argument('-k', '--ckeys', nargs='+', dest='ckeys', help='list of column keys to read')
     parser.add_argument('-d', '--runkey', help='RUN keyword')
     parser.add_argument('-e', '--endrunkey', help='ENDRUN keyword (default: "Loop time")')
@@ -445,7 +439,7 @@ def main():
         if 'Temp' not in args.ckeys:
             select_ckeys += ['Temp']
     logfile.read_datalines(select_ckeys=select_ckeys)
-    logfile.save_numpy_dict(out_file=args.output_file, lammps_structure_file=args.lammps_structurefile)
+    logfile.save_numpy_dict(out_file=args.output_file, lammps_data_file=args.lammps_data_file)
     return 0
 
 
