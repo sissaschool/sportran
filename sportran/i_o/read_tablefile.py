@@ -30,9 +30,9 @@
 ###
 ################################################################################
 ###   example:
-###      current = TableFile(filename)
-###      current.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
-###      print(current.data)
+###      jfile = TableFile(filename)
+###      jfil.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
+###      print(jfile.data)
 ################################################################################
 
 import numpy as np
@@ -78,9 +78,9 @@ class TableFile(object):
     A table-style file that can be read in blocks.
 
     Example:
-      current = TableFile(filename)
-      current.read_datalines(NSTEPS=100, select_ckeys=['Step', 'Temp', 'flux'])
-      print(current.data)
+      jfile = TableFile(filename)
+      jfile.read_datalines(NSTEPS=100, select_ckeys=['Step', 'Temp', 'flux'])
+      print(jfile.data)
 
     Variables (columns) are organized into a dictionary according to the column headers.
     LAMMPS-style vector variables header are grouped together (only if group_vector = True).
@@ -101,16 +101,17 @@ class TableFile(object):
     etc.
     """
 
-    def __init__(self, *args, **kwargs):
-        """ LAMMPS_Current(filename, select_ckeys) """
-        if (len(args) > 0):
-            self.filename = args[0]
-            if (len(args) == 2):
-                self.select_ckeys = args[1]
-            else:
-                self.select_ckeys = None
-        else:
-            raise ValueError('No file given.')
+    def __init__(self, filename, select_ckeys=None, **kwargs):
+        """
+        LAMMPS_Current(filename, select_ckeys, **kwargs)
+
+        **kwargs:
+            group_vectors  [default: True]
+            GUI            [default: False]
+            print_elapsed  [default: True]
+        """
+        self.filename = filename
+        self.select_ckeys = select_ckeys
         group_vectors = kwargs.get('group_vectors', True)
         self._GUI = kwargs.get('GUI', False)
         self._print_elapsed = kwargs.get('print_elapsed', True)
@@ -278,21 +279,25 @@ class TableFile(object):
 
         if self._GUI:
             progbar.close()
+
         # check number of steps read, keep an even number of steps
-        if (step + 1 < self.NSTEPS):
+        if (step + 1 < NSTEPS):
             if (step == 0):
                 log.write_log('WARNING:  no step read.')
-                return
+                NSTEPS = 0
             else:
                 log.write_log('Warning:  less steps read.')
-                self.NSTEPS = step + 1
+                NSTEPS = step + 1
         if even_NSTEPS:
             if (NSTEPS % 2 == 1):
                 NSTEPS = NSTEPS - 1
-        for key, idx in self.ckey.items():   # free memory not used
+
+        # free not used memory
+        for key, idx in self.ckey.items():
             self.data[key] = self.data[key][:NSTEPS, :]
         log.write_log('  ( %d ) steps read.' % (NSTEPS))
         self.NSTEPS = NSTEPS
+
         if self._print_elapsed:
             log.write_log('DONE.  Elapsed time: ', time() - start_time, 'seconds')
         return self.data
