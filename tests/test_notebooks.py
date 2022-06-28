@@ -33,3 +33,9 @@ def test_doublecomp_NaCl(tb, file_regression):
 def test_singlecomp_silica(tb, file_regression):
     res = tb.cell_output_text('results_cell')
     file_regression.check(res, basename='final_result2')
+
+
+@local_dir
+@testbook(test_folder_path + '/../examples/05_example_input_formats.ipynb', execute=True)
+def test_singlecomp_input_formats(tb, file_regression):
+    pass   #here I only test that the notebook runs
