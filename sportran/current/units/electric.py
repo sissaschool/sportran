@@ -18,6 +18,7 @@ def scale_kappa_real(TEMPERATURE, VOLUME):
     INPUT:
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
+    Input current is in units of electrons_charge * Angstrom/femtosecond. Current is EXTENSIVE.
     """
     return constants.charge**2 / TEMPERATURE / constants.kB / VOLUME * 10000. * 1.0e6
 
@@ -28,6 +29,7 @@ def scale_kappa_metal(TEMPERATURE, VOLUME):
     INPUT:
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
+    Input current is in units of electrons_charge * Angstrom/picosecond. Current is EXTENSIVE.
     """
     return constants.charge**2 / TEMPERATURE / constants.kB / VOLUME * 10000.
 
@@ -38,17 +40,9 @@ def scale_kappa_qepw(TEMPERATURE, VOLUME):
     INPUT:
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
+    Input current is in units of electrons_charge * a_0 / tau_{a.u.} . Current is EXTENSIVE.
+      a0 = 5.2918 10^{-11}m
+      tau_{a.u.} = 4.8378 10^{-17} s
+
     """
     return constants.charge**2 / TEMPERATURE / constants.kB / VOLUME * 10000. * constants.J_PWtoMETAL**2
-
-
-def scale_kappa_gpumd(TEMPERATURE, VOLUME):
-    """
-    Conversion factor for the thermal conductivity from GPUMD units to SI units.
-    Note that units for time are derived from energy [eV], mass [amu] and position [A].
-    Therefore, units for square velocity are [eV/amu].
-    INPUT:
-    TEMPERATURE [K]
-    VOLUME      cell VOLUME [A^3]
-    """
-    return constants.charge**3 / TEMPERATURE / constants.massunit / constants.kB / VOLUME * 1.0e8

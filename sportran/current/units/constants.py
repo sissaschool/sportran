@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+'''
+In this file you can find the conversion factors used in the code.
+'''
 
 kB = 1.3806504
 NA = 6.02214
