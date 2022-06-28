@@ -25,6 +25,7 @@ These examples show how to use the sportran package in a Python script, step by 
 .. toctree::
    example_cepstrum_singlecomp_silica
    example_cepstrum_doublecomp_NaCl
+   example_input_formats
 
 Command line examples
 ---------------------
@@ -36,6 +37,11 @@ You can find the examples in the `repository <https://github.com/sissaschool/spo
    EXAMPLE_SILICA.md
    EXAMPLE_NACL.md
 
+LAMMPS input files for energy current generation
+------------------------------------------------
+
+.. toctree::
+   LAMMPS_SILICA.md
 
 API
 ===
