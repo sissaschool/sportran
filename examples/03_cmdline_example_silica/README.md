@@ -1,6 +1,6 @@
 # Example 3: command line (silica)
 
-In this example we perform the same analysis that is performed in the correspondent [example notebook](../02_example_cepstrum_doublecomp_NaCl.ipynb), but using the command-line interface.
+In this example we perform the same analysis that is performed in the correspondent [example notebook](../01_example_cepstrum_singlecomp_silica.ipynb), but using the command-line interface.
 
 Simply run, after installing the package, the following command (see [`run_example.sh`](run_example.sh)):
 

@@ -16,5 +16,5 @@ These examples show how to use the `sportran` package in a Python script, step b
 
 These examples show how to use the command line program `sportran-analysis` (`analysis.py`) to perform cepstral analysis in a straightforward way. This is an expedient tool to analyse a time series using predefined parameters. Results are produced in the form of several text/binary files and pdf plots.
 
-* [03 - Command-line Silica](03_cmdline_example_silica/): analysis of molten NaCl, a two-component system.
+* [03 - Command-line Silica](03_cmdline_example_silica/): analysis of silica glass, a one-component system.
 * [04 - Command-line NaCl](04_cmdline_example_NaCl/): analysis of molten NaCl, a two-component system.
