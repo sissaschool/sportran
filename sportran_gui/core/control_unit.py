@@ -49,7 +49,7 @@ class Data:
     """
 
     loaded = False
-    options = ['None', 'Energy current', 'Other current', 'Temperature (K)', 'Volume (A^3)', 'DT (fs)']
+    options = ['None', 'Main current', 'Other current', 'Temperature (K)', 'Volume (A^3)', 'DT (fs)']
 
     def __init__(self):
         self._CURRENT_FILE = ''
