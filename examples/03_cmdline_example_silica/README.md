@@ -1,4 +1,4 @@
-# Command line example
+# Command line example (silica)
 
 In this example we perform the same analysis that is performed in the correspondent [example notebook](../02_example_cepstrum_doublecomp_NaCl.ipynb), but using the command-line interface.
 
