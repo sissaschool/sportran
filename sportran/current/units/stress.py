@@ -10,7 +10,7 @@ def scale_kappa_GPa(TEMPERATURE, VOLUME):
     INPUT:
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
-    Input stress in GPa
+    Input stress in GPa.
     """
     return 1.0e-4 * VOLUME / TEMPERATURE / constants.kB
 
@@ -34,6 +34,30 @@ def scale_kappa_metal(TEMPERATURE, VOLUME):
     INPUT:
     TEMPERATURE [K]
     VOLUME      cell VOLUME [A^3]
-    Input stress in bars
+    Input stress in bars.
     """
     return 1.0e-12 * VOLUME / TEMPERATURE / constants.kB
+
+def scale_kappa_qepw(TEMPERATURE, VOLUME):
+    """
+    Conversion factor for the viscosity from Quantum Espresso PW units to SI units.
+    INPUT:
+    TEMPERATURE [K]
+    VOLUME      cell VOLUME [A^3]
+    Input stress is in units of Ry / bohr_radius^3 .
+    """
+    return (constants.charge * constants.Ry_per_bohr3)**2 * VOLUME / TEMPERATURE / constants.kB
+
+
+def scale_kappa_gpumd(TEMPERATURE, VOLUME):
+    """
+    Conversion factor for the viscosity from GPUMD units to SI units.
+    Note that units for stress and pressure, derived from energy [eV] and volume [A^3],
+    are [eV/A^3].
+    INPUT:
+    TEMPERATURE [K]
+    VOLUME      cell VOLUME [A^3]
+    Input stress is in units of eV / Angstrom^3 .
+    """
+    return constants.charge**2 * VOLUME / TEMPERATURE / constants.kB
+

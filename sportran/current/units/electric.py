@@ -46,3 +46,15 @@ def scale_kappa_qepw(TEMPERATURE, VOLUME):
 
     """
     return constants.charge**2 / TEMPERATURE / constants.kB / VOLUME * 10000. * constants.J_PWtoMETAL**2
+
+def scale_kappa_gpumd(TEMPERATURE, VOLUME):
+    """
+    Conversion factor for the thermal conductivity from GPUMD units to SI units.
+    Note that units for time are derived from energy [eV], mass [amu] and position [A].
+    Therefore, units for square velocity are [eV/amu].
+    INPUT:
+    TEMPERATURE [K]
+    VOLUME      cell VOLUME [A^3]
+    """
+    return constants.charge**3 / TEMPERATURE / constants.massunit / constants.kB / VOLUME * 1.0e8
+
