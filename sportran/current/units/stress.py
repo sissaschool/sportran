@@ -38,6 +38,7 @@ def scale_kappa_metal(TEMPERATURE, VOLUME):
     """
     return 1.0e-12 * VOLUME / TEMPERATURE / constants.kB
 
+
 def scale_kappa_qepw(TEMPERATURE, VOLUME):
     """
     Conversion factor for the viscosity from Quantum Espresso PW units to SI units.
@@ -60,4 +61,3 @@ def scale_kappa_gpumd(TEMPERATURE, VOLUME):
     Input stress is in units of eV / Angstrom^3 .
     """
     return constants.charge**2 * VOLUME / TEMPERATURE / constants.kB
-

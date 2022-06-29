@@ -47,6 +47,7 @@ def scale_kappa_qepw(TEMPERATURE, VOLUME):
     """
     return constants.charge**2 / TEMPERATURE / constants.kB / VOLUME * 10000. * constants.J_PWtoMETAL**2
 
+
 def scale_kappa_gpumd(TEMPERATURE, VOLUME):
     """
     Conversion factor for the thermal conductivity from GPUMD units to SI units.
@@ -57,4 +58,3 @@ def scale_kappa_gpumd(TEMPERATURE, VOLUME):
     VOLUME      cell VOLUME [A^3]
     """
     return constants.charge**3 / TEMPERATURE / constants.massunit / constants.kB / VOLUME * 1.0e8
-

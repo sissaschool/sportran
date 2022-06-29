@@ -36,4 +36,4 @@ def use_plot_style(plot_style_filename=None):
         # print('using style ', plot_style_filename)
         plt.style.use(pltstyle_file)
     except:
-        warn('The plot style {} could not be loaded.'.format(plot_style_filename))
+        warn('The plot style {} could not be loaded.'.format(pltstyle_file))
