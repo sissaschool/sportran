@@ -11,7 +11,7 @@ These examples show how to use the `sportran` package in a Python script, step b
 
 * [01 - Silica (single component)](01_example_cepstrum_singlecomp_silica.ipynb): analysis of solid amorphous silica, a one-component system.
 * [02 - Liquid NaCl (multi-)](02_example_cepstrum_doublecomp_NaCl.ipynb): analysis of molten NaCl, a two-component system.
-* [06 - Liquid h2o](06_example_cesptrum_viscosity_water.ipynb) : computation of the shear viscosity of liquid water.
+* [06 - Liquid h2o](06_example_cesptrum_viscosity_h2o.ipynb) : computation of the shear viscosity of liquid water.
 
 ### Command line examples
 
