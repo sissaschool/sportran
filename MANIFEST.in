@@ -3,9 +3,9 @@ include LICENSE.txt
 include setup.json
 include sportran/README.md
 include sportran/metadata.json
-include sportran/utils/plot_style.mplstyle
-exclude sportran/utils/blocks.py
-exclude sportran/utils/blockanalysis.py
+exclude sportran/utils/obsolete/
 include sportran_gui/README_GUI.md
 include sportran_gui/assets/icon.gif
 include sportran_gui/assets/languages.json
+include sportran/plotter/styles/api_style.mplstyle
+include sportran/plotter/styles/cli_style.mplstyle
