@@ -215,12 +215,12 @@ def concatenate_if_not_none_with_labels(concat, labels=None):
     out_arr = []
     out_label = ''
     if labels is None:
-        labels = ['' for i in range(len(concat))]
+        labels = ['' for i in concat]
     for arr, label in zip(concat, labels):
         if arr is not None:
             out_arr.append(arr)
-            out_label += ' ' + label
-    return np.concatenate([out_arr], axis=1).transpose(), out_label + '\n'
+            out_label += f' {label}'
+    return np.concatenate([out_arr], axis=1).transpose(), f'{out_label}\n'
 
 
 def run_analysis(args):
@@ -639,7 +639,6 @@ class TCOutput(object):
         optsa = {'axis': 1}
         outarray, _ = concatenate_if_not_none_with_labels(
             [self.j_freqs_THz, self.j_fpsd, self.j_flogpsd, self.j_psd, self.j_logpsd])
-        #outarray = np.c_[self.j_freqs_THz, self.j_fpsd, self.j_flogpsd, self.j_psd, self.j_logpsd]
         np.save(output + '.psd.npy', outarray, **opts)
 
         if self.j_cospectrum is not None:
@@ -650,7 +649,6 @@ class TCOutput(object):
             outarray = np.c_[self.j_freqs_THz, self.j_fcospectrum.reshape(-1, self.j_fcospectrum.shape[-1]).transpose()]
             np.save(output + '.cospectrum.filt.npy', outarray, **opts)
 
-        #outarray = np.c_[self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd]
         outarray, _ = concatenate_if_not_none_with_labels(
             [self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd])
         np.save(output + '.resampled_psd.npy', outarray, **opts)

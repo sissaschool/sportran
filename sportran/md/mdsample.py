@@ -320,7 +320,7 @@ class MDSample(object):
         """
         Filter the periodogram with the given PSD_FILTER_W [freq_units].
           - PSD_FILTER_W  PSD filter window [freq_units]
-          - freq_units    frequency units   ['THz', 'red' (default)]
+          - freq_units    frequency units   ['THz' (default), 'red']
           - window_type   filtering window type ['rectangular']
         """
         if self.psd is None:
