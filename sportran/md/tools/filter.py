@@ -13,5 +13,10 @@ def runavefilter(X, WF):
         WF = WF + 1
     W = int(WF / 2)
 
+    if W > X.shape[0] - 1:
+        W = X.shape[0] - 1
+        WF = 2 * W
+        print('Warning: reducing filtering window')
+
     Y = np.concatenate((X[W:0:-1], X, X[-2:-W - 2:-1]))
     return np.convolve(Y, np.array([1.0 / WF] * WF), 'valid')

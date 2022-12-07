@@ -9,7 +9,7 @@ A code to estimate transport coefficients from the cepstral analysis of a multi-
 https://sportran.readthedocs.io
 
 ### References
- - [Ercole L., Bertossa R., Bisacchi S., and Baroni S., "_SporTran: a code to estimate transport coefficients from the cepstral analysis of (multivariate) current time series_", *arXiv*:2202.11571 (2022)](https://arxiv.org/abs/2202.11571), submitted to *Comput. Phys. Commun.*
+ - [Ercole L., Bertossa R., Bisacchi S., and Baroni S., "_SporTran: a code to estimate transport coefficients from the cepstral analysis of (multivariate) current time series_", *Comput. Phys. Commun.*, 108470](https://doi.org/10.1016/j.cpc.2022.108470), [*arXiv*:2202.11571 (2022)](https://arxiv.org/abs/2202.11571)
  - (cepstral analysis) [Ercole, Marcolongo, Baroni, *Sci. Rep.* **7**, 15835 (2017)](https://doi.org/10.1038/s41598-017-15843-2)
  - (multicomponent systems) [Bertossa, Grasselli, Ercole, Baroni, *Phys. Rev. Lett.* **122**, 255901 (2019)](https://doi.org/10.1103/PhysRevLett.122.255901) ([arXiv](https://arxiv.org/abs/1808.03341))
  - (review) [Baroni, Bertossa, Ercole, Grasselli, Marcolongo, *Handbook of Materials Modeling* (2018)](https://doi.org/10.1007/978-3-319-50257-1_12-1) ([arXiv](https://arxiv.org/abs/1802.08006))
