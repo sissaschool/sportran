@@ -50,7 +50,7 @@
 import numpy as np
 from time import time
 from sportran.utils import log
-
+from io import BytesIO, StringIO
 
 def is_string(string):
     try:
@@ -66,22 +66,49 @@ def is_vector_variable(string):
         bracket = 0
     return bracket
 
-
-def file_length(filename):
+def _get_file_length(f):
     i = -1
-    with open(filename) as f:
-        for i, l in enumerate(f, 1):
+    for i, l in enumerate(f, 1):
+                pass
+    return i
+
+def file_length(file):
+    i = -1
+    if isinstance(file, bytes):
+        f = BytesIO(file)
+        i = _get_file_length(f)
+        f.close()
+    elif isinstance(file, str):
+        with open(file) as f:
+            i = _get_file_length(f)
+    else:
+        raise ValueError("Unsupported data type for file: {}".format(type(file)))
+    
+    return i
+
+def _get_data_length(f):
+    i = 0
+    while is_string(f.readline().split()[0]):   # skip text lines
             pass
+    for i, l in enumerate(f, 2):
+        pass
+
     return i
 
 
-def data_length(filename):
+def data_length(file):
     i = 0
-    with open(filename) as f:
-        while is_string(f.readline().split()[0]):   # skip text lines
-            pass
-        for i, l in enumerate(f, 2):
-            pass
+
+    if isinstance(file, bytes):
+        f = BytesIO(file)
+        i = _get_data_length(f)
+        f.close()
+    elif isinstance(file, str):
+        with open(file) as f:
+           i = _get_data_length(f)
+    else:
+        raise ValueError("Unsupported data type for file: {}".format(type(file)))
+    
     return i
 
 
@@ -119,7 +146,7 @@ class LAMMPSLogFile(object):
 
 #############################################################################
   Example script:
-     jfile = LAMMPSLogFile(filename, run_keyword='PRODUCTION RUN')
+     jfile = LAMMPSLogFile(data_file, run_keyword='PRODUCTION RUN')
      jfile.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
      print(jfile.data)
 
@@ -129,16 +156,20 @@ class LAMMPSLogFile(object):
 #############################################################################
     """
 
-    def __init__(self, filename, run_keyword=None, select_ckeys=None, **kwargs):
+    def __init__(self, data_file, run_keyword=None, select_ckeys=None, **kwargs):
         """
-        LAMMPSLogFile(filename, run_keyword, select_ckeys, **kwargs)
+        LAMMPSLogFile(data_file, run_keyword, select_ckeys, **kwargs)
 
         **kwargs:
             endrun_keyword  [default: 'Loop time']
             group_vectores  [default: True]
             GUI             [default: False]
         """
-        self.filename = filename
+
+        if not isinstance(data_file, (bytes, str)):
+            raise ValueError("Unsupported dat type for file: {}".format(type(data_file)))
+    
+        self.data_file = data_file
         self.run_keyword = run_keyword
         self.select_ckeys = select_ckeys
         self.endrun_keyword = kwargs.get('endrun_keyword', 'Loop time')
@@ -152,14 +183,14 @@ class LAMMPSLogFile(object):
             global FloatProgress, display
 
         self._open_file()
-        self.MAX_NSTEPS = file_length(self.filename)
+        self.MAX_NSTEPS = file_length(self.data_file)
         self._read_ckeys(self.run_keyword, group_vectors)
         self.ckey = None
         return
 
     def __repr__(self):
         msg = 'TableFile:\n' + \
-              '  filename:      {}\n'.format(self.filename) + \
+              '  data_file:      {}\n'.format(self.data_file) + \
               '  all_ckeys:     {}\n'.format(self.all_ckeys) + \
               '  select_ckeys:  {}\n'.format(self.select_ckeys) + \
               '  used ckey:     {}\n'.format(self.ckey) + \
@@ -169,10 +200,13 @@ class LAMMPSLogFile(object):
 
     def _open_file(self):
         """Open the file."""
-        try:
-            self.file = open(self.filename, 'r')
-        except:
-            raise ValueError('File does not exist.')
+        if isinstance(self.data_file, bytes):
+            self.file = StringIO(BytesIO(self.data_file).read().decode('utf-8'))
+        elif isinstance(self.data_file, str):
+            try:
+                self.file = open(self.data_file, 'r')
+            except:
+                raise ValueError('File does not exist.')
         return
 
     def _read_ckeys(self, run_keyword, group_vectors=True):
