@@ -40,6 +40,7 @@ from time import time
 from sportran.utils import log
 from io import BytesIO, StringIO
 
+
 def is_string(string):
     try:
         float(string)
@@ -55,12 +56,12 @@ def is_vector_variable(string):
     return bracket
 
 
-
 def _get_file_length(f):
     i = -1
     for i, l in enumerate(f, 1):
-                pass
+        pass
     return i
+
 
 def file_length(file):
     i = -1
@@ -72,14 +73,15 @@ def file_length(file):
         with open(file) as f:
             i = _get_file_length(f)
     else:
-        raise ValueError("Unsupported data type for file: {}".format(type(file)))
-    
+        raise ValueError('Unsupported data type for file: {}'.format(type(file)))
+
     return i
+
 
 def _get_data_length(f):
     i = 0
     while is_string(f.readline().split()[0]):   # skip text lines
-            pass
+        pass
     for i, l in enumerate(f, 2):
         pass
 
@@ -95,10 +97,10 @@ def data_length(file):
         f.close()
     elif isinstance(file, str):
         with open(file) as f:
-           i = _get_data_length(f)
+            i = _get_data_length(f)
     else:
-        raise ValueError("Unsupported data type for file: {}".format(type(file)))
-    
+        raise ValueError('Unsupported data type for file: {}'.format(type(file)))
+
     return i
 
 
@@ -141,8 +143,8 @@ class TableFile(object):
         """
 
         if not isinstance(data_file, (bytes, str)):
-            raise ValueError("Unsupported dat type for file: {}".format(type(data_file)))
-        
+            raise ValueError('Unsupported dat type for file: {}'.format(type(data_file)))
+
         self.data_file = data_file
         self.select_ckeys = select_ckeys
         group_vectors = kwargs.get('group_vectors', True)
