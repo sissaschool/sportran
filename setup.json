@@ -1,6 +1,6 @@
 {
     "name": "sportran",
-    "version": "1.0.0rc3",
+    "version": "1.0.0rc4",
     "author": "Loris Ercole, Riccardo Bertossa, Sebastiano Bisacchi",
     "author_email": "loris.ercole@epfl.ch",
     "description": "Cepstral Data Analysis of current time series for Green-Kubo transport coefficients",
