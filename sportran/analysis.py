@@ -130,7 +130,7 @@ def main():
     input_file_group.add_argument('--split', type=int, default=1,
             help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m. (optional)')
 
-    lammps_group = input_file_group.add_argument_group('LAMMPS format settings')
+    lammps_group = parser.add_argument_group('LAMMPS input file format settings')
     lammps_group.add_argument('--run-keyword', type=str,
             help='Keyword that identifies the run to be read: a specific comment line placed just before the run command (only for "lammps" format)')
     lammps_group.add_argument('--structure', type=str,
