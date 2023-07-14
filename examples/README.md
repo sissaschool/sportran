@@ -10,7 +10,8 @@ The `data` folder contains the trajectories, obtained from classical NVE molecul
 These examples show how to use the `sportran` package in a Python script, step by step, to analyse a time series and perform cepstral analysis. Some of the tools and plot functions of the code are presented.
 
 * [01 - Silica (single component)](01_example_cepstrum_singlecomp_silica.ipynb): analysis of solid amorphous silica, a one-component system.
-* [02 - Liquid NaCl (multi-component)](02_example_cepstrum_doublecomp_NaCl.ipynb): analysis of molten NaCl, a two-component system.
+* [02 - Liquid NaCl (multi-)](02_example_cepstrum_doublecomp_NaCl.ipynb): analysis of molten NaCl, a two-component system.
+* [06 - Liquid h2o (viscosity)](06_example_cesptrum_viscosity_h2o.ipynb) : computation of the shear viscosity of liquid water.
 
 ### Command line examples
 
