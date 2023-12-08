@@ -33,6 +33,13 @@ def test_doublecomp_NaCl(tb, file_regression):
 def test_singlecomp_silica(tb, file_regression):
     res = tb.cell_output_text('results_cell')
     file_regression.check(res, basename='final_result2')
+    
+@local_dir
+@testbook(test_folder_path + '/../examples/06_example_cepstrum_viscosity_h2o.ipynb', execute=True)
+def test_singlecomp_silica(tb, file_regression):
+    res = tb.cell_output_text('results_cell')
+    file_regression.check(res, basename='final_result6')
+    
 
 
 @local_dir
