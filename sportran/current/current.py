@@ -357,19 +357,33 @@ class Current(MDSample, abc.ABC):
                           backend = 'chain.h5',
                           burn_in = None,
                           thin = None,
-                          mask = None):
-
-        self.bayes = BayesFilter(self.cospectrum, model, n_parameters, self.N_EQUIV_COMPONENTS,
-                                 is_restart = is_restart, 
+                          mask = None,
+                          log_like='off',
+                          parallel = False,
+                          ncpus = 1
+                          ):
+        if parallel:
+            self.bayes = BayesFilter_parallel(self.cospectrum, model, n_parameters, self.N_EQUIV_COMPONENTS,
+                                 is_restart = is_restart,
+                                 n_steps = n_steps,
+                                 backend = backend,
+                                 burn_in = burn_in,
+                                 thin = thin,
+                                 ncpus = ncpus,
+                                 mask = mask)
+            self.bayes.run_mcmc(log_like=log_like)
+        else:
+            self.bayes = BayesFilter(self.cospectrum, model, n_parameters, self.N_EQUIV_COMPONENTS,
+                                 is_restart = is_restart,
                                  n_steps = n_steps,
                                  backend = backend,
                                  burn_in = burn_in,
                                  thin = thin,
                                  mask = mask)
+            self.bayes.run_mcmc(log_like=log_like)
         
-        self.bayes.run_mcmc()
-        self.offdiag = self.bayes.parameters_mean[0]
-        self.offdiag_std = self.bayes.parameters_std[0]
+        self.offdiag = self.bayes.parameters_mean[0]*self.bayes.factor
+        self.offdiag_std = self.bayes.parameters_std[0]*self.bayes.factor
 
         self.bayesian_log = \
               '-----------------------------------------------------\n' +\
@@ -379,6 +393,8 @@ class Current(MDSample, abc.ABC):
               '  L_01   = {:18f} +/- {:10f}\n'.format(self.offdiag, self.offdiag_std) +\
               '-----------------------------------------------------\n'
         log.write_log(self.bayesian_log)
+        with open('bayesian_analysis_{}'.format(n_parameters), 'w+') as g:
+            g.write('{}\t{}\n'.format(self.offdiag, self.offdiag_std))
 
     def cepstral_analysis(self, aic_type='aic', aic_Kmin_corrfactor=1.0, manual_cutoffK=None):
         """
