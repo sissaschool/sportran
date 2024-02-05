@@ -41,6 +41,18 @@ def test_example_SiO2_fixed_K(data_SiO2, check_reg):
     jf.cepstral_analysis(manual_cutoffK=42)
     print(jf.cepstral_log)
     check_reg(jf)
+    
+def test_example_viscosity_h2o(data_h2o, check_reg):
+    import sportran as st
+
+    jfile, DT_FS, TEMPERATURE, VOLUME = data_h2o
+    j = st.StressCurrent(np.column_stack([jfile.data['s_xy'], jfile.data['s_xz'], jfile.data['s_yz']]),
+                        UNITS='real', DT_FS=DT_FS, TEMPERATURE=TEMPERATURE, VOLUME=VOLUME)
+    print(j.Nyquist_f_THz)
+    FSTAR_THZ = 25.0
+    jf = j.resample(fstar_THz=FSTAR_THZ, plot=False, freq_units='thz')
+    jf.cepstral_analysis()
+    print(jf.cepstral_log)
 
 
 if __name__ == '__main__':

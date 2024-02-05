@@ -56,6 +56,20 @@ def data_SiO2(data_SiO2_path):
     print('T = {:f} K'.format(TEMPERATURE))
     return jfile, DT_FS, TEMPERATURE, VOLUME
 
+@pytest.fixture(scope='session')
+def data_h2o(data_h2o_path):
+    import sportran as st
+    import numpy as np
+
+    jfile = st.i_o.TableFile(data_h2o_path, group_vectors=True)
+    jfile.read_datalines()
+    DT_FS = 1.0                                # time step [fs]
+    TEMPERATURE = np.mean(jfile.data['Temp'])  # temperature [K] (983.173 K)
+    VOLUME = 1918.4149658                      # volume [A^3]
+    print('T = {:f} K'.format(TEMPERATURE))
+    print('V = {:f} A^3'.format(VOLUME))
+    return jfile, DT_FS, TEMPERATURE, VOLUME
+
 
 @pytest.fixture
 def check_reg(num_regression, data_regression):
