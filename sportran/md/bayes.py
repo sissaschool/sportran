@@ -188,7 +188,7 @@ class BayesFilter(object):
         if is_restart:
             coord = backend.get_chain()[-1]
             good_idx = None
-            tau = backend.get_autocorr_time(discard=100)
+            tau = backend.get_autocorr_time(discard=500)
             burn_in = int(2 * np.max(tau))
             thin = np.max([1, int(0.5 * np.min(tau))])
             log.write_log('MCMC autocorrelation time = {}'.format(tau))
@@ -204,15 +204,14 @@ class BayesFilter(object):
             rho_min = []
             rho_max = []
             print(sampler.iteration)
-            self.acceprance_fraction=np.mean(sampler.acceptance_fraction)
+            self.acceprance_fraction = np.mean(sampler.acceptance_fraction)
             for i in range(self.n_parameters):
                 mcmc = np.percentile(samples[:, i], [16, 50, 84])
-                # mcmc = np.percentile(samples[:, i], [50-95/2, 50, 50+95/2])
                 q = np.diff(mcmc)
-                # print(mcmc[1], q[0], q[1])
                 rho.append(mcmc[1])
                 rho_min.append(mcmc[1]-q[0])
                 rho_max.append(mcmc[1]+q[1])
+
             # The estimated parameters are the values of rho as a function of frequency
             self.parameters_mean = np.array(rho)
             self.parameters_args = args
@@ -232,8 +231,8 @@ class BayesFilter(object):
             coord = np.copy(p0)
 
         todo=True
-        if is_restart: todo=False
-        disc=0
+        if is_restart : todo = False
+        disc = 0
         for sample in sampler.sample(coord, iterations = n_steps, progress = True, store = True):
             # Only check convergence every 100 steps
             if sampler.iteration % 250:
@@ -243,25 +242,27 @@ class BayesFilter(object):
             # Compute the autocorrelation time so far
             # Using tol=0 means that we'll always get an estimate even
             # if it isn't trustworthy
-            tau = sampler.get_autocorr_time(tol=0, discard=disc)
+            tau = sampler.get_autocorr_time(tol = 0, discard = disc)
             autocorr[index] = np.mean(tau)
             index += 1
+            if sampler.iteration % 2000 == 0: print(tau)
 
-            if todo  and sampler.iteration>1000:
+            if todo and sampler.iteration > 1000:
                 s_old = np.ones(n_parameters)
-                for i in range(100, int(sampler.iteration/2)+1, 100):
+                for i in range(100, int(sampler.iteration / 2) + 1, 100):
 
                     s = sampler.get_autocorr_time(tol=0, discard=i)
 
-                    if np.all(abs((s-s_old)/s)*100<5):
-                        disc=i
-                        todo=False
+                    if np.all(abs((s - s_old) / s) * 100 < 5):
+                        disc = i
+                        todo = False
+                        print(s)
                         break
                     s_old = s
 
             # Check convergence
-            converged = np.all(tau * 300 < sampler.iteration)
-            converged &= np.all(np.abs(old_tau - tau) / tau < 0.005)
+            converged = np.all(tau * 100 < sampler.iteration)
+            converged &= np.all(np.abs(old_tau - tau) / tau < 0.015)
             if converged:
                 break
             old_tau = tau
@@ -285,14 +286,7 @@ class BayesFilter(object):
             log.write_log('Fixed MCMC autocorrelation time = {}'.format(tau))
             burn_in = int(6 * np.max(tau))
             thin = np.max([1, int(1.5 * np.min(tau))])
-        # if self.burn_in is not None:
-        #     burn_in = self.burn_in
-        # else:
-        #     self.burn_in = burn_in
-        # if self.thin is not None:
-        #     thin = self.thin
-        # else:
-        #     self.thin = thin
+
         log.write_log('MCMC burn in = {}; thin = {}'.format(burn_in, thin))
         
         if good_idx is None:
@@ -308,9 +302,7 @@ class BayesFilter(object):
         rho_max = []
         for i in range(self.n_parameters):
             mcmc = np.percentile(samples[:, i], [16, 50, 84])
-            # mcmc = np.percentile(samples[:, i], [50-95/2, 50, 50+95/2])
             q = np.diff(mcmc)
-            # print(mcmc[1], q[0], q[1])
             rho.append(mcmc[1])
             rho_min.append(mcmc[1]-q[0])
             rho_max.append(mcmc[1]+q[1])
@@ -318,7 +310,7 @@ class BayesFilter(object):
         # The estimated parameters are the values of rho as a function of frequency
         self.parameters_mean = np.array(rho)
         self.parameters_args = args
-        self.parameters_std = 0.5*(np.array(rho_max) - np.array(rho_min))
+        self.parameters_std = 0.5 * (np.array(rho_max) - np.array(rho_min))
         self.sampler = sampler
         self.noisy_data = noisy_data
         if log_like=='normal':
@@ -327,7 +319,7 @@ class BayesFilter(object):
         elif log_like=='off':
             self.aic = 2 * self.log_likelihood_offdiag(self.parameters_mean, omega, omega_fixed, noisy_data, nu, ell) \
                        - 2 * self.n_parameters
-            self.dic = -2*self.log_likelihood_offdiag(self.parameters_mean, omega, omega_fixed, noisy_data, nu, ell) \
+            self.dic = - 2 * self.log_likelihood_offdiag(self.parameters_mean, omega, omega_fixed, noisy_data, nu, ell) \
                        + 4 * sampler.get_log_prob(discard=burn_in, flat=True, thin=thin).mean()
         with open('aic_{}'.format(self.n_parameters), 'w+') as g:
             g.write('{}\t{}\n'.format(self.n_parameters, self.aic))
@@ -383,13 +375,13 @@ class BayesFilter(object):
         ell = self.n_components
         # Define noisy data
         if mask is not None:
-            noisy_data = (self.spectrum[0,1])[mask]
+            noisy_data = (self.spectrum[0, 1])[mask]
         else:
-            noisy_data = (self.spectrum[0,1])
+            noisy_data = (self.spectrum[0, 1])
 
         # Define initial points for the MCMC
         try:
-            guess_data = runavefilter(noisy_data, 1000)
+            guess_data = runavefilter(noisy_data, 200)
         except:
             guess_data = runavefilter(noisy_data, 100)
 
@@ -404,9 +396,9 @@ class BayesFilter(object):
         log.write_log(f'Running up to {n_steps} steps')
 
         p0 = guess_data
-        if log_like=='normal' or log_like=='off':        
+        if log_like == 'normal' or log_like == 'off':
             p0 = np.clip(p0[args][np.newaxis, :n_parameters] + \
-                     np.random.normal(0, 0.1, (n_walkers, n_parameters)), -0.98, 0.98)
+                     np.random.normal(0, 0.2, (n_walkers, n_parameters)), -40, 40)
 
         if log_like=='diag':
             p0 = np.clip(p0[args][np.newaxis, :n_parameters] + \
@@ -425,18 +417,18 @@ class BayesFilter(object):
             backend.reset(n_walkers, n_parameters)
 
         # Initialize the sampler
-        if log_like=='off':
+        if log_like == 'off':
             sampler = emcee.EnsembleSampler(n_walkers, n_parameters,
                                             self.log_posterior_offdiag,
                                             args=(omega, omega_fixed, noisy_data, nu, ell),
                                             backend=backend)
-        elif log_like=='normal':
+        elif log_like == 'normal':
             sampler = emcee.EnsembleSampler(n_walkers, n_parameters,
                                             self.log_posterior_normal,
                                             args=(omega, omega_fixed, noisy_data, nu, ell),
                                             backend=backend)
 
-        elif log_like=='diag':
+        elif log_like == 'diag':
             sampler = emcee.EnsembleSampler(n_walkers, n_parameters,
                                             self.log_posterior_diag,
                                             args=(omega, omega_fixed, noisy_data,  ell),
@@ -484,15 +476,15 @@ class BayesFilter(object):
             self.parameters_std = 0.5*(np.array(rho_max) - np.array(rho_min))
             self.sampler = sampler
             self.noisy_data = noisy_data
-            if log_like=='normal':
+            if log_like == 'normal':
                 self.aic = 2 * self.log_likelihood_normal(self.parameters_mean, omega, omega_fixed, noisy_data, nu, ell) \
                            - 2 * self.n_parameters
-            elif log_like=='off':
+            elif log_like == 'off':
                 self.aic = 2 * self.log_likelihood_offdiag(self.parameters_mean, omega, omega_fixed, noisy_data, nu, ell) \
                            - 2 * self.n_parameters
                 burn_in = int(2 * np.max(tau))
                 thin = np.max([1, int(0.5 * np.min(tau))])
-            elif log_like=='diag':
+            elif log_like == 'diag':
                 self.aic = 2 * self.log_likelihood_diag(self.parameters_mean, omega, omega_fixed, noisy_data, ell) \
                            - 2 * self.n_parameters
                 burn_in = int(2 * np.max(tau))
@@ -502,15 +494,16 @@ class BayesFilter(object):
             coord = np.copy(p0)
 
         todo = True
-        disc=0
+        disc = 0
         for sample in sampler.sample(coord, iterations=n_steps, progress=True, store = True):
             # Only check convergence every 100 steps
             if sampler.iteration % 250:
                 continue
 
             # Compute the autocorrelation time so far
-            if sampler.iteration%5000==0:
+            if sampler.iteration % 1000 == 0:
                 print(tau)
+
 
             # Using tol=0 means that we'll always get an estimate even
             # if it isn't trustworthy
@@ -519,8 +512,8 @@ class BayesFilter(object):
             index += 1
 
             # Check convergence
-            converged = np.all(tau * 300 < sampler.iteration)
-            converged &= np.all(np.abs(old_tau - tau) / tau < 0.005)
+            converged = np.all(tau * 100 < sampler.iteration)
+            converged &= np.all(np.abs(old_tau - tau) / tau < 0.015)
 
             if todo and sampler.iteration%500==0 and sampler.iteration>1000:
                 s_old = np.ones(n_parameters)
