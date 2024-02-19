@@ -9,14 +9,15 @@ import numpy as np
 import inspect
 from sportran.md.mdsample import MDSample
 from sportran.md.cepstral import CepstralFilter, multicomp_cepstral_parameters
+from sportran.md.bayes import BayesFilter
 from sportran.md.tools.filter import runavefilter
 from sportran.md.tools.spectrum import freq_THz_to_red, freq_red_to_THz
 from . import units
 from sportran.utils import log
 from sportran.plotter.current import CurrentPlotter
+import warnings
 
 __all__ = ['Current']
-
 
 class Current(MDSample, abc.ABC):
     """
@@ -236,8 +237,9 @@ class Current(MDSample, abc.ABC):
         # number of degrees of freedom of the chi-square distribution of the psd / 2
         self.ndf_chi = self.N_EQUIV_COMPONENTS - self.N_CURRENTS + 1
         if self.ndf_chi <= 0:
-            raise RuntimeError('The number of degrees of freedom of the chi-squared distribution is <=0. The number of '
-                               'equivalent (Cartesian) components of the input current must be >= number of currents.')
+            warnings.warn('The number of degrees of freedom of the chi-squared distribution is <=0. The number of '
+                               'equivalent (Cartesian) components of the input current must be >= number of currents.',
+                               RuntimeWarning)
 
         if self.MANY_CURRENTS:
             if self.otherMD is None:
@@ -348,6 +350,51 @@ class Current(MDSample, abc.ABC):
             if self.ndf_chi is None:
                 raise RuntimeError('self.ndf_chi cannot be None.')
             self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.NFREQS, self.ndf_chi)
+
+    def bayesian_analysis(self, model, n_parameters, 
+                          is_restart = False, 
+                          n_steps = 2000000,
+                          backend = 'chain.h5',
+                          burn_in = None,
+                          thin = None,
+                          mask = None,
+                          log_like='off',
+                          parallel = False,
+                          ncpus = 1
+                          ):
+        if parallel:
+            self.bayes = BayesFilter_parallel(self.cospectrum, model, n_parameters, self.N_EQUIV_COMPONENTS,
+                                 is_restart = is_restart,
+                                 n_steps = n_steps,
+                                 backend = backend,
+                                 burn_in = burn_in,
+                                 thin = thin,
+                                 ncpus = ncpus,
+                                 mask = mask)
+            self.bayes.run_mcmc(log_like=log_like)
+        else:
+            self.bayes = BayesFilter(self.cospectrum, model, n_parameters, self.N_EQUIV_COMPONENTS,
+                                 is_restart = is_restart,
+                                 n_steps = n_steps,
+                                 backend = backend,
+                                 burn_in = burn_in,
+                                 thin = thin,
+                                 mask = mask)
+            self.bayes.run_mcmc(log_like=log_like)
+        
+        self.offdiag = self.bayes.parameters_mean[0]*self.bayes.factor
+        self.offdiag_std = self.bayes.parameters_std[0]*self.bayes.factor
+
+        self.bayesian_log = \
+              '-----------------------------------------------------\n' +\
+              '  BAYESIAN ANALYSIS\n' +\
+              '-----------------------------------------------------\n'
+        self.bayesian_log += \
+              '  L_01   = {:18f} +/- {:10f}\n'.format(self.offdiag, self.offdiag_std) +\
+              '-----------------------------------------------------\n'
+        log.write_log(self.bayesian_log)
+        with open('bayesian_analysis_{}'.format(n_parameters), 'w+') as g:
+            g.write('{}\t{}\n'.format(self.offdiag, self.offdiag_std))
 
     def cepstral_analysis(self, aic_type='aic', aic_Kmin_corrfactor=1.0, manual_cutoffK=None):
         """
