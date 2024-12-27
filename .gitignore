@@ -50,6 +50,9 @@ coverage.xml
 # Visual Studio Code
 .vscode/
 
+# idea editor
+.idea
+
 # Translations
 *.mo
 *.pot
