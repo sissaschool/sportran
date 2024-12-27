@@ -18,10 +18,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: '3.9'
     - run: python .github/workflows/check_release_tag.py $GITHUB_REF setup.json
 
   pre-commit:
@@ -41,10 +41,10 @@ jobs:
         restore-keys:
           pip-pre-commit-
 
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: '3.9'
 
     - name: Install python dependencies
       run:
@@ -60,7 +60,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
 
     steps:
     - name: Checkout
@@ -100,10 +100,10 @@ jobs:
     steps:
     - name: Checkout source
       uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: '3.9'
     - name: Build package
       run: |
         pip install wheel
