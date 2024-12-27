@@ -19,6 +19,7 @@ import warnings
 
 __all__ = ['Current']
 
+
 class Current(MDSample, abc.ABC):
     """
     Current abstract class for thermo-cepstral analysis.
@@ -237,9 +238,9 @@ class Current(MDSample, abc.ABC):
         # number of degrees of freedom of the chi-square distribution of the psd / 2
         self.ndf_chi = self.N_EQUIV_COMPONENTS - self.N_CURRENTS + 1
         if self.ndf_chi <= 0:
-            warnings.warn('The number of degrees of freedom of the chi-squared distribution is <=0. The number of '
-                               'equivalent (Cartesian) components of the input current must be >= number of currents.',
-                               RuntimeWarning)
+            warnings.warn(
+                'The number of degrees of freedom of the chi-squared distribution is <=0. The number of '
+                'equivalent (Cartesian) components of the input current must be >= number of currents.', RuntimeWarning)
 
         if self.MANY_CURRENTS:
             if self.otherMD is None:
@@ -351,39 +352,21 @@ class Current(MDSample, abc.ABC):
                 raise RuntimeError('self.ndf_chi cannot be None.')
             self.ck_THEORY_var, self.psd_THEORY_mean = multicomp_cepstral_parameters(self.NFREQS, self.ndf_chi)
 
-    def bayesian_analysis(self, model, n_parameters, 
-                          is_restart = False, 
-                          n_steps = 2000000,
-                          backend = 'chain.h5',
-                          burn_in = None,
-                          thin = None,
-                          mask = None,
-                          log_like='off',
-                          parallel = False,
-                          ncpus = 1
-                          ):
+    def bayesian_analysis(self, model, n_parameters, is_restart=False, n_steps=2000000, backend='chain.h5',
+                          burn_in=None, thin=None, mask=None, log_like='off', parallel=False, ncpus=1):
         if parallel:
             self.bayes = BayesFilter_parallel(self.cospectrum, model, n_parameters, self.N_EQUIV_COMPONENTS,
-                                 is_restart = is_restart,
-                                 n_steps = n_steps,
-                                 backend = backend,
-                                 burn_in = burn_in,
-                                 thin = thin,
-                                 ncpus = ncpus,
-                                 mask = mask)
+                                              is_restart=is_restart, n_steps=n_steps, backend=backend, burn_in=burn_in,
+                                              thin=thin, ncpus=ncpus, mask=mask)
             self.bayes.run_mcmc(log_like=log_like)
         else:
             self.bayes = BayesFilter(self.cospectrum, model, n_parameters, self.N_EQUIV_COMPONENTS,
-                                 is_restart = is_restart,
-                                 n_steps = n_steps,
-                                 backend = backend,
-                                 burn_in = burn_in,
-                                 thin = thin,
-                                 mask = mask)
+                                     is_restart=is_restart, n_steps=n_steps, backend=backend, burn_in=burn_in,
+                                     thin=thin, mask=mask)
             self.bayes.run_mcmc(log_like=log_like)
-        
-        self.offdiag = self.bayes.parameters_mean[0]*self.bayes.factor
-        self.offdiag_std = self.bayes.parameters_std[0]*self.bayes.factor
+
+        self.offdiag = self.bayes.parameters_mean[0] * self.bayes.factor
+        self.offdiag_std = self.bayes.parameters_std[0] * self.bayes.factor
 
         self.bayesian_log = \
               '-----------------------------------------------------\n' +\
