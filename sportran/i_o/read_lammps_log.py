@@ -231,7 +231,7 @@ class LAMMPSLogFile(object):
             nlines += 1
             if len(line) == 0:   # EOF
                 raise RuntimeError('Reached EOF, no ckeys found.')
-            values = np.array(line.split())
+            values = line.split()
             # find the column headers line
             if (len(values) and (is_string(values[0])) and (values[0] == 'Step')):
                 log.write_log('  column headers found at line {:d}. Reading data...'.format(nlines))
