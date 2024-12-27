@@ -143,10 +143,8 @@ def plot_cospectrum_component(current, idx1, idx2, *, axis=None, FIGSIZE=None, f
     """
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color1 = next(axis._get_lines.prop_cycler)['color']
-    color2 = next(axis._get_lines.prop_cycler)['color']
-    axis.plot(current.freqs_THz, np.real(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color1)
-    axis.plot(current.freqs_THz, np.imag(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color2)
+    axis.plot(current.freqs_THz, np.real(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5)
+    axis.plot(current.freqs_THz, np.imag(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5)
 
     if f_THz_max is None:
         f_THz_max = current.freqs_THz[_index_cumsum(np.abs(current.fcospectrum[idx1][idx2]), 0.95)]
@@ -191,8 +189,8 @@ def plot_ck(current, *, axis=None, label=None, FIGSIZE=None):
 
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axis._get_lines.prop_cycler)['color']
-    axis.plot(current.cepf.logpsdK, 'o-', c=color, label=label)
+    l, = axis.plot(current.cepf.logpsdK, 'o-', label=label)
+    color = l.get_color()
 
     axis.plot(current.cepf.logpsdK + current.cepf.logpsdK_THEORY_std, '--', c=color)
     axis.plot(current.cepf.logpsdK - current.cepf.logpsdK_THEORY_std, '--', c=color)
@@ -215,8 +213,8 @@ def plot_L0_Pstar(current, *, axis=None, label=None, FIGSIZE=None):
     """
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axis._get_lines.prop_cycler)['color']
-    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau, '.-', c=color, label=label)
+    l, = axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau, '.-', label=label)
+    color = l.get_color()
     axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau + current.cepf.logtau_THEORY_std, '--', c=color)
     axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau - current.cepf.logtau_THEORY_std, '--', c=color)
     axis.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
@@ -245,11 +243,11 @@ def plot_kappa_Pstar(current, *, axis=None, label=None, FIGSIZE=None, pstar_max=
     """
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axis._get_lines.prop_cycler)['color']
+    l, = axis.plot(np.arange(current.NFREQS) + 1, current.cepf.tau * current.KAPPA_SCALE * 0.5, 'o-', label=label)
+    color = l.get_color()
     axis.fill_between(
         np.arange(current.NFREQS) + 1, (current.cepf.tau - current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
         (current.cepf.tau + current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5, alpha=0.3, color=color)
-    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.tau * current.KAPPA_SCALE * 0.5, 'o-', c=color, label=label)
     axis.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
     axis.axvline(x=current.cepf.cutoffK + 1, ls='--', c=color)
     axis.axhline(y=current.kappa, ls='--', c=color)
