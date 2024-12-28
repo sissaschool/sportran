@@ -191,7 +191,7 @@ class TableFile(object):
             line = self.file.readline()
             if len(line) == 0:   # EOF
                 raise RuntimeError('Reached EOF, no ckeys found.')
-            values = np.array(line.split())
+            values = line.split()
             # text line: read variables names and save indexes in ckey
             if (is_string(values[0]) and (values[0].find('#') < 0)):
                 self.header += line[:-1]

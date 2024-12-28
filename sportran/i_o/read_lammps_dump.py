@@ -144,7 +144,7 @@ class LAMMPS_Dump(object):
             line = self.file.readline()
             if len(line) == 0:   # EOF
                 raise RuntimeError('Reached EOF, no ckeys found.')
-            values = np.array(line.split())
+            values = line.split()
             if (values[0] == 'ITEM:'):
                 if (values[1] == 'TIMESTEP'):
                     self.current_timestep = int(self.file.readline())

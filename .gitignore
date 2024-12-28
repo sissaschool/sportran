@@ -50,6 +50,9 @@ coverage.xml
 # Visual Studio Code
 .vscode/
 
+# idea editor
+.idea
+
 # Translations
 *.mo
 *.pot
@@ -105,3 +108,24 @@ ENV/
 
 # vi swap files
 *.swp
+.DS_Store
+examples/aic_4
+examples/aic_6
+examples/bayesian_analysis_4
+examples/bayesian_analysis_6
+examples/chain.h5
+examples/data_rahman.zip
+examples/dic_4
+examples/dic_6
+examples/data_manager/gpumd/compute.out
+examples/data_manager/gpumd/dump.sample.xyz
+examples/data_manager/gpumd/model.xyz
+examples/data_manager/gpumd/run.in
+examples/data_manager/gpumd/thermo.out
+examples/data_manager/lammps/config.lammpsdata
+examples/data_manager/lammps/dump.sample.lammpstrj
+examples/data_manager/lammps/sample.lammps
+examples/07_example_negative_log_likelihood copy.ipynb
+examples/08_example_optimize_prior .ipynb
+examples/stress_flux_hacked.npy
+sportran/md/maxlike copy.py
