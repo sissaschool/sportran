@@ -30,7 +30,7 @@
 ###
 ################################################################################
 ###   example:
-###      jfile = TableFile(filename)
+###      jfile = TableFile(file)
 ###      jfil.read_datalines(NSTEPS=100, start_step=0, select_ckeys=['Step', 'Temp', 'flux'])
 ###      print(jfile.data)
 ################################################################################
@@ -38,6 +38,7 @@
 import numpy as np
 from time import time
 from sportran.utils import log
+from io import BytesIO, StringIO
 
 
 def is_string(string):
@@ -55,21 +56,51 @@ def is_vector_variable(string):
     return bracket
 
 
-def file_length(filename):
+def _get_file_length(f):
     i = -1
-    with open(filename) as f:
-        for i, l in enumerate(f, 1):
-            pass
+    for i, l in enumerate(f, 1):
+        pass
     return i
 
 
-def data_length(filename):
+def file_length(file):
+    i = -1
+    if isinstance(file, bytes):
+        f = BytesIO(file)
+        i = _get_file_length(f)
+        f.close()
+    elif isinstance(file, str):
+        with open(file) as f:
+            i = _get_file_length(f)
+    else:
+        raise ValueError('Unsupported data type for file: {}'.format(type(file)))
+
+    return i
+
+
+def _get_data_length(f):
     i = 0
-    with open(filename) as f:
-        while is_string(f.readline().split()[0]):   # skip text lines
-            pass
-        for i, l in enumerate(f, 2):
-            pass
+    while is_string(f.readline().split()[0]):   # skip text lines
+        pass
+    for i, l in enumerate(f, 2):
+        pass
+
+    return i
+
+
+def data_length(file):
+    i = 0
+
+    if isinstance(file, bytes):
+        f = BytesIO(file)
+        i = _get_data_length(f)
+        f.close()
+    elif isinstance(file, str):
+        with open(file) as f:
+            i = _get_data_length(f)
+    else:
+        raise ValueError('Unsupported data type for file: {}'.format(type(file)))
+
     return i
 
 
@@ -78,7 +109,7 @@ class TableFile(object):
     A table-style file that can be read in blocks.
 
     Example:
-      jfile = TableFile(filename)
+      jfile = TableFile(data_file)
       jfile.read_datalines(NSTEPS=100, select_ckeys=['Step', 'Temp', 'flux'])
       print(jfile.data)
 
@@ -101,16 +132,20 @@ class TableFile(object):
     etc.
     """
 
-    def __init__(self, filename, select_ckeys=None, **kwargs):
+    def __init__(self, data_file, select_ckeys=None, **kwargs):
         """
-        LAMMPS_Current(filename, select_ckeys, **kwargs)
+        LAMMPS_Current(data_file, select_ckeys, **kwargs)
 
         **kwargs:
             group_vectors  [default: True]
             GUI            [default: False]
             print_elapsed  [default: True]
         """
-        self.filename = filename
+
+        if not isinstance(data_file, (bytes, str)):
+            raise ValueError('Unsupported dat type for file: {}'.format(type(data_file)))
+
+        self.data_file = data_file
         self.select_ckeys = select_ckeys
         group_vectors = kwargs.get('group_vectors', True)
         self._GUI = kwargs.get('GUI', False)
@@ -123,13 +158,13 @@ class TableFile(object):
         self._open_file()
         self._read_ckeys(group_vectors)
         self.ckey = None
-        self.MAX_NSTEPS = data_length(self.filename)
+        self.MAX_NSTEPS = data_length(self.data_file)
         log.write_log('Data length = ', self.MAX_NSTEPS)
         return
 
     def __repr__(self):
         msg = 'TableFile:\n' + \
-              '  filename:      {}\n'.format(self.filename) + \
+              '  file:      {}\n'.format(self.data_file) + \
               '  all_ckeys:     {}\n'.format(self.all_ckeys) + \
               '  select_ckeys:  {}\n'.format(self.select_ckeys) + \
               '  used ckey:     {}\n'.format(self.ckey) + \
@@ -139,10 +174,13 @@ class TableFile(object):
 
     def _open_file(self):
         """Open the file."""
-        try:
-            self.file = open(self.filename, 'r')
-        except:
-            raise ValueError('File does not exist.')
+        if isinstance(self.data_file, bytes):
+            self.file = StringIO(BytesIO(self.data_file).read().decode('utf-8'))
+        elif isinstance(self.data_file, str):
+            try:
+                self.file = open(self.data_file, 'r')
+            except:
+                raise ValueError('File does not exist.')
         return
 
     def _read_ckeys(self, group_vectors=True):

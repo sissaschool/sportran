@@ -130,7 +130,7 @@ def main():
     input_file_group.add_argument('--split', type=int, default=1,
             help='Build a time series with n*m independent processes (n is the number of processes of the original timeseries, m is the number provided with --split). The length of the new time series will be [original length]/m. (optional)')
 
-    lammps_group = input_file_group.add_argument_group('LAMMPS format settings')
+    lammps_group = parser.add_argument_group('LAMMPS input file format settings')
     lammps_group.add_argument('--run-keyword', type=str,
             help='Keyword that identifies the run to be read: a specific comment line placed just before the run command (only for "lammps" format)')
     lammps_group.add_argument('--structure', type=str,
@@ -209,6 +209,18 @@ def main():
 
     run_analysis(args)
     return 0
+
+
+def concatenate_if_not_none_with_labels(concat, labels=None):
+    out_arr = []
+    out_label = ''
+    if labels is None:
+        labels = ['' for i in concat]
+    for arr, label in zip(concat, labels):
+        if arr is not None:
+            out_arr.append(arr)
+            out_label += f' {label}'
+    return np.concatenate([out_arr], axis=1).transpose(), f'{out_label}\n'
 
 
 def run_analysis(args):
@@ -472,8 +484,8 @@ def run_analysis(args):
 
     if not no_text_out:
         outfile_name = output + '.psd.dat'
-        outarray = np.c_[j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd]
-        outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
+        outarray, outfile_header = concatenate_if_not_none_with_labels(
+            [j.freqs_THz, j.psd, j.fpsd, j.logpsd, j.flogpsd], ['freqs_THz', 'psd', 'fpsd', 'logpsd', 'flogpsd'])
         np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
         if j.MANY_CURRENTS:
             outfile_name = output + '.cospectrum.dat'
@@ -483,15 +495,17 @@ def run_analysis(args):
             np.savetxt(outfile_name, np.column_stack([outarray.real, outarray.imag]), fmt=fmt)
 
             outfile_name = output + '.cospectrum.filt.dat'
-            outarray = np.c_[j.freqs_THz,
-                             j.fcospectrum.reshape(
-                                 (j.fcospectrum.shape[0] * j.fcospectrum.shape[1], j.fcospectrum.shape[2])).transpose()]
-            np.savetxt(outfile_name, np.column_stack([outarray.real, outarray.imag]), fmt=fmt)
+            if j.fcospectrum is not None:
+                outarray = np.c_[j.freqs_THz,
+                                 j.fcospectrum.reshape((j.fcospectrum.shape[0] * j.fcospectrum.shape[1],
+                                                        j.fcospectrum.shape[2])).transpose()]
+                np.savetxt(outfile_name, np.column_stack([outarray.real, outarray.imag]), fmt=fmt)
 
         if resample:
             outfile_name = output + '.resampled_psd.dat'
-            outarray = np.c_[jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd]
-            outfile_header = 'freqs_THz  psd  fpsd  logpsd  flogpsd\n'
+            outarray, outfile_header = concatenate_if_not_none_with_labels(
+                [jf.freqs_THz, jf.psd, jf.fpsd, jf.logpsd, jf.flogpsd],
+                ['freqs_THz', 'psd', 'fpsd', 'logpsd', 'flogpsd'])
             np.savetxt(outfile_name, outarray, header=outfile_header, fmt=fmt)
 
         outfile_name = output + '.cepstral.dat'
@@ -623,7 +637,8 @@ class TCOutput(object):
         """Write old binary format."""
         opts = {'allow_pickle': False}
         optsa = {'axis': 1}
-        outarray = np.c_[self.j_freqs_THz, self.j_fpsd, self.j_flogpsd, self.j_psd, self.j_logpsd]
+        outarray, _ = concatenate_if_not_none_with_labels(
+            [self.j_freqs_THz, self.j_fpsd, self.j_flogpsd, self.j_psd, self.j_logpsd])
         np.save(output + '.psd.npy', outarray, **opts)
 
         if self.j_cospectrum is not None:
@@ -634,7 +649,8 @@ class TCOutput(object):
             outarray = np.c_[self.j_freqs_THz, self.j_fcospectrum.reshape(-1, self.j_fcospectrum.shape[-1]).transpose()]
             np.save(output + '.cospectrum.filt.npy', outarray, **opts)
 
-        outarray = np.c_[self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd]
+        outarray, _ = concatenate_if_not_none_with_labels(
+            [self.jf_freqs_THz, self.jf_psd, self.jf_fpsd, self.jf_logpsd, self.jf_flogpsd])
         np.save(output + '.resampled_psd.npy', outarray, **opts)
 
         outarray = np.c_[self.jf_cepf_logpsdK, self.jf_cepf_logpsdK_THEORY_std, self.jf_cepf_logtau,
