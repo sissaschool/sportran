@@ -1,0 +1,101 @@
+#########################################################################
+### Computes stress current and shear viscosity of liquid h2o
+#########################################################################
+#
+# run with e.g.:  mpirun -np 12 lmp_mpi -in h2o.in -log h2o.out
+#
+
+variable     T_eq       equal  400.            # [K]  -- Temperature
+variable     dt         equal  0.2             # [fs] -- MD time step
+variable     nvt_tau    equal  200             # [fs] -- NVT thermostat coupling time
+
+variable     thermo_print_interval     equal 5   # [timesteps]
+variable     traj_print_interval       equal 10   # [timesteps]
+
+
+#######################################
+### Output style
+#######################################
+
+units        real
+atom_style   full
+
+
+#######################################
+### Pair style
+#######################################
+
+# TIP4P/2005 potential for water [ J. L. F. Abascal and C. Vega, "A general purpose model for the condensed phases of water: TIP4P/2005",
+#                                  J. Chem. Phys. 123, 234505 (2005) https://doi.org/10.1063/1.2121687 ] 
+# 
+#
+
+
+pair_style lj/cut/tip4p/long 2 1 1 1 0.1546 8.5
+bond_style harmonic
+angle_style harmonic
+
+read_data "h2o_64.init"
+
+pair_modify tail yes
+kspace_style pppm/tip4p 1.0e-5
+
+pair_coeff   2 2    0.18520 3.1589 
+pair_coeff   1 1    0.0 0.0
+pair_coeff   1 2    0.0 0.0
+
+bond_coeff 1 0.0 0.9572
+
+angle_coeff 1 0.0 104.52 
+
+neighbor 2.0 bin
+neigh_modify every 1 delay 0 check yes
+
+group ftip4p type  2  1
+fix fshake ftip4p shake 1e-4 100 0 b 1 a 1
+
+
+timestep     ${dt}
+
+#######################################
+### Read Structure
+#######################################
+
+
+#######################################
+### Output settings
+#######################################
+
+
+# Equilibrating CSVR
+fix          NVE_RELAX all nve
+fix          CSVR_RELAX all temp/csvr ${T_eq} ${T_eq} ${nvt_tau} 942057
+run          100000
+unfix        CSVR_RELAX
+
+# Equilibrating NVE
+run          100000
+unfix        NVE_RELAX
+
+#########################################################################
+### Simulation:  production
+#########################################################################
+
+thermo	     ${thermo_print_interval}
+thermo_style custom temp c_thermo_press[4] c_thermo_press[5] c_thermo_press[6]
+
+reset_timestep 0
+
+## The following line can be uncommented to print the trajectory.
+## sportran.i_o.LAMMPSLogFile will detect this line containing "DUMP_RUN" in the log.lammps file,
+## it will extract the desired columns, and save the data in numpy binary format
+#dump         DUMP_RUN all custom ${traj_print_interval} h2o-run.lammpstrj id type xu yu zu vx vy vz
+
+# NVE
+fix          NVE_RUN all nve
+run          500000
+unfix        NVE_RUN
+#undump       DUMP_RUN
+
+write_restart h2o-run.rst
+write_data h2o-run.init

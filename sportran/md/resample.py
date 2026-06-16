@@ -93,7 +93,7 @@ def resample_timeseries(x, TSKIP=None, fstar_THz=None, FILTER_W=None, plot=False
     xf.resample_log += \
         ' min(PSD)          (pre-filter&sample) = {:12.5f}\n'.format(x.psd_min) +\
         ' min(PSD)         (post-filter&sample) = {:12.5f}\n'.format(xf.psd_min) +\
-        ' % of original PSD Power f<f* (pre-filter&sample)  = {:6.3f} %\n'.format(np.trapz(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
+        ' % of original PSD Power f<f* (pre-filter&sample)  = {:6.3f} %\n'.format(np.trapezoid(x.psd[:fstar_idx+1]) / x.psd_power * 100.)
     if x.fpsd is None or xf.fpsd is None:
         xf.resample_log += ' fPSD not calculated before resampling\n '
     xf.resample_log += '-----------------------------------------------------\n'

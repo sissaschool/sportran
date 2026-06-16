@@ -114,7 +114,7 @@ def produce_p(aic, method='ba', force_normalize=False):
 
     # normalize p
     if force_normalize:
-        integral = np.trapz(p)
+        integral = np.trapezoid(p)
         for ik in range(kM):
             p[ik] = p[ik] / integral
 
@@ -145,7 +145,7 @@ def produce_p_density(p, sigma, mean, grid=None, grid_size=1000):
     density = np.zeros(len(grid))
     for ik in range(kM):
         density = density + p[ik] * np.exp(-(grid - mean[ik])**2 / (2.0 * (sigma[ik]**2))) / sigma[ik]
-    somma = np.trapz(density) * delta
+    somma = np.trapezoid(density) * delta
     density = density / somma
     if return_grid:
         return density, grid
