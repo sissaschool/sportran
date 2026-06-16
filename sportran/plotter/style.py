@@ -20,17 +20,16 @@ def use_plot_style(plot_style_filename=None):
         pltstyle_file = plot_style_filename
     else:
         try:
-            import pkg_resources
-            pltstyle_file = pkg_resources.resource_filename('sportran.plotter.styles', plot_style_filename)
-        except:
-            # fallback (if sportran is not installed...)
+            from importlib.resources import files
+            pltstyle_file = str(files('sportran.plotter.styles').joinpath(plot_style_filename))
+        except Exception:
             try:
-                abs_path = os.path.abspath(__file__)
-                tc_path = abs_path[:abs_path.rfind('/')]
-                os.path.append(tc_path[:tc_path.rfind('/')])
-            except:
-                abs_path = '.'
-            pltstyle_file = tc_path + '/plotter/styles/' + plot_style_filename
+                import pkg_resources
+                pltstyle_file = pkg_resources.resource_filename('sportran.plotter.styles', plot_style_filename)
+            except Exception:
+                import os
+                tc_path = os.path.dirname(os.path.abspath(__file__))
+                pltstyle_file = os.path.join(tc_path, 'styles', plot_style_filename)
 
     try:
         # print('using style ', plot_style_filename)
