@@ -308,12 +308,12 @@ class Current(MDSample, abc.ABC):
         multi_psd = (np.linalg.inv(self.cospectrum.transpose((2, 0, 1)))[:, 0, 0]**-1).real / self.ndf_chi
 
         if normalize:
-            multi_psd = multi_psd / np.trapz(multi_psd) / self.N / self.DT_FS
+            multi_psd = multi_psd / np.trapezoid(multi_psd) / self.N / self.DT_FS
 
         self.psd = multi_psd
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
-        self.psd_power = np.trapz(self.psd)   # one-side PSD power
+        self.psd_power = np.trapezoid(self.psd)   # one-side PSD power
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
             self.filter_psd(PSD_FILTER_W, freq_units)
 

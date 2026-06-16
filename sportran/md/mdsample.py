@@ -307,10 +307,10 @@ class MDSample(object):
         self.freqs_THz = self.freqs / self.DT_FS * 1000.
         self.Nyquist_f_THz = self.freqs_THz[-1]
         if normalize:
-            self.psd = self.psd / np.trapz(self.psd) / self.N / self.DT_FS
+            self.psd = self.psd / np.trapezoid(self.psd) / self.N / self.DT_FS
         self.logpsd = np.log(self.psd)
         self.psd_min = np.min(self.psd)
-        self.psd_power = np.trapz(self.psd)   # one-side PSD power
+        self.psd_power = np.trapezoid(self.psd)   # one-side PSD power
 
         # (re)compute filtered psd, if a window has been defined
         if (PSD_FILTER_W is not None) or (self.PSD_FILTER_W is not None):
