@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from os.path import isfile
 from . import plt
 from warnings import warn
@@ -19,18 +20,24 @@ def use_plot_style(plot_style_filename=None):
     if isfile(plot_style_filename):
         pltstyle_file = plot_style_filename
     else:
+        pltstyle_file = None
         try:
-            import pkg_resources
-            pltstyle_file = pkg_resources.resource_filename('sportran.plotter.styles', plot_style_filename)
-        except:
+            from importlib import resources
+
+            with resources.as_file(
+                resources.files('sportran.plotter.styles').joinpath(plot_style_filename)
+            ) as style_path:
+                pltstyle_file = str(style_path)
+        except Exception:
+            pass
+
+        if pltstyle_file is None:
             # fallback (if sportran is not installed...)
-            try:
-                abs_path = os.path.abspath(__file__)
-                tc_path = abs_path[:abs_path.rfind('/')]
-                os.path.append(tc_path[:tc_path.rfind('/')])
-            except:
-                abs_path = '.'
-            pltstyle_file = tc_path + '/plotter/styles/' + plot_style_filename
+            pltstyle_file = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                'styles',
+                plot_style_filename,
+            )
 
     try:
         # print('using style ', plot_style_filename)

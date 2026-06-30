@@ -25,6 +25,7 @@ These examples show how to use the sportran package in a Python script, step by 
 .. toctree::
    example_cepstrum_singlecomp_silica
    example_cepstrum_doublecomp_NaCl
+   example_thermoelectric_wishart
    example_input_formats
 
 Command line examples

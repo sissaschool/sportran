@@ -16,14 +16,15 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 # list of colors
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
+iter_colors = iter(colors)
 ################################################################################
 
 
-class Plotter():
+class Plotter:
     """
     Plotter abstract class. Essentially empty.
     """
+
     _plot_style = None
     pass
 
@@ -98,7 +99,7 @@ def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale
     if (PSD_FILTER_W is not None) or (current.PSD_FILTER_W is not None):
         current.filter_psd(PSD_FILTER_W, freq_units)
     else:   # use a zero-width (non-filtering) window
-        current.filter_psd(0.)
+        current.filter_psd(0.0)
     if kappa_units:   # plot psd in units of kappa - the log(psd) is not converted
         psd_scale = 0.5 * current.KAPPA_SCALE
     else:
@@ -109,17 +110,17 @@ def plot_periodogram(current, PSD_FILTER_W=None, *, freq_units='THz', freq_scale
         plt.subplots_adjust(hspace=0.1)
     if freq_units in ('THz', 'thz'):
         axes[0].plot(current.freqs_THz, psd_scale * current.fpsd, **plot_kwargs)
-        axes[0].set_xlim([0., current.Nyquist_f_THz])
+        axes[0].set_xlim([0.0, current.Nyquist_f_THz])
         if mode == 'log':
             axes[1].plot(current.freqs_THz, current.flogpsd, **plot_kwargs)
-            axes[1].set_xlim([0., current.Nyquist_f_THz])
+            axes[1].set_xlim([0.0, current.Nyquist_f_THz])
             axes[1].set_xlabel(r'$f$ [THz]')
     elif freq_units == 'red':
         axes[0].plot(current.freqs / freq_scale, psd_scale * current.fpsd, **plot_kwargs)
-        axes[0].set_xlim([0., 0.5 / freq_scale])
+        axes[0].set_xlim([0.0, 0.5 / freq_scale])
         if mode == 'log':
             axes[1].plot(current.freqs / freq_scale, current.flogpsd, **plot_kwargs)
-            axes[1].set_xlim([0., 0.5 / freq_scale])
+            axes[1].set_xlim([0.0, 0.5 / freq_scale])
             axes[1].set_xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
     else:
         raise ValueError('Frequency units not valid.')
@@ -143,10 +144,10 @@ def plot_cospectrum_component(current, idx1, idx2, *, axis=None, FIGSIZE=None, f
     """
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color1 = next(axis._get_lines.prop_cycler)['color']
-    color2 = next(axis._get_lines.prop_cycler)['color']
-    axis.plot(current.freqs_THz, np.real(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color1)
-    axis.plot(current.freqs_THz, np.imag(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color2)
+    color1 = next(iter_colors)
+    color2 = next(iter_colors)
+    axis.plot(current.freqs_THz, np.real(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color1,)
+    axis.plot(current.freqs_THz, np.imag(current.fcospectrum[idx1][idx2]) * current.KAPPA_SCALE * 0.5, c=color2,)
 
     if f_THz_max is None:
         f_THz_max = current.freqs_THz[_index_cumsum(np.abs(current.fcospectrum[idx1][idx2]), 0.95)]
@@ -154,9 +155,9 @@ def plot_cospectrum_component(current, idx1, idx2, *, axis=None, FIGSIZE=None, f
         f_THz_max = min(f_THz_max, current.freqs_THz[-1])
     axis.set_xlim([0, f_THz_max])
     if k_SI_max is None:
-        k_SI_max = np.max(
+        k_SI_max = (np.max(
             np.abs(current.fcospectrum[idx1][idx2])[:int(current.NFREQS * f_THz_max / current.freqs_THz[-1])] *
-            current.KAPPA_SCALE * 0.5) * 1.3
+            current.KAPPA_SCALE * 0.5) * 1.3)
     if k_SI_min is None:
         k_SI_min = -k_SI_max
     axis.set_ylim([k_SI_min, k_SI_max])
@@ -191,7 +192,7 @@ def plot_ck(current, *, axis=None, label=None, FIGSIZE=None):
 
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axis._get_lines.prop_cycler)['color']
+    color = next(iter_colors)
     axis.plot(current.cepf.logpsdK, 'o-', c=color, label=label)
 
     axis.plot(current.cepf.logpsdK + current.cepf.logpsdK_THEORY_std, '--', c=color)
@@ -215,10 +216,10 @@ def plot_L0_Pstar(current, *, axis=None, label=None, FIGSIZE=None):
     """
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axis._get_lines.prop_cycler)['color']
+    color = next(iter_colors)   # quick fix to avoid error with mlp>=3.8
     axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau, '.-', c=color, label=label)
-    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau + current.cepf.logtau_THEORY_std, '--', c=color)
-    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau - current.cepf.logtau_THEORY_std, '--', c=color)
+    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau + current.cepf.logtau_THEORY_std, '--', c=color,)
+    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.logtau - current.cepf.logtau_THEORY_std, '--', c=color,)
     axis.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
     axis.axvline(x=current.cepf.cutoffK + 1, ls='--', c=color)
     axis.set_xlim([0, 3 * current.cepf.cutoffK])
@@ -245,11 +246,12 @@ def plot_kappa_Pstar(current, *, axis=None, label=None, FIGSIZE=None, pstar_max=
     """
     if axis is None:
         figure, axis = plt.subplots(1, figsize=FIGSIZE)
-    color = next(axis._get_lines.prop_cycler)['color']
+    color = next(iter_colors)
     axis.fill_between(
         np.arange(current.NFREQS) + 1, (current.cepf.tau - current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5,
-        (current.cepf.tau + current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5, alpha=0.3, color=color)
-    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.tau * current.KAPPA_SCALE * 0.5, 'o-', c=color, label=label)
+        (current.cepf.tau + current.cepf.tau_THEORY_std) * current.KAPPA_SCALE * 0.5, alpha=0.3, color=color,
+    )
+    axis.plot(np.arange(current.NFREQS) + 1, current.cepf.tau * current.KAPPA_SCALE * 0.5, 'o-', c=color, label=label,)
     axis.axvline(x=current.cepf.aic_Kmin + 1, ls=':', c=color)
     axis.axvline(x=current.cepf.cutoffK + 1, ls='--', c=color)
     axis.axhline(y=current.kappa, ls='--', c=color)
@@ -279,8 +281,18 @@ def plot_kappa_Pstar(current, *, axis=None, label=None, FIGSIZE=None, pstar_max=
     axis.yaxis.set_minor_locator(MultipleLocator(dy2))
     return axis
 
-def plot_cepstral_spectrum(current, *, freq_units='THz', freq_scale=1.0, axes=None, kappa_units=True, FIGSIZE=None, mode='log',
-                           **plot_kwargs):   # yapf: disable
+
+def plot_cepstral_spectrum(
+    current,
+    *,
+    freq_units='THz',
+    freq_scale=1.0,
+    axes=None,
+    kappa_units=True,
+    FIGSIZE=None,
+    mode='log',
+    **plot_kwargs
+):  # yapf: disable
     """
     Plots the cepstral spectrum.
 
@@ -303,17 +315,17 @@ def plot_cepstral_spectrum(current, *, freq_units='THz', freq_scale=1.0, axes=No
         psd_scale = 1.0
     if freq_units in ('THz', 'thz'):
         axes[0].plot(current.freqs_THz, current.cepf.psd * psd_scale, **plot_kwargs)
-        axes[0].set_xlim([0., current.Nyquist_f_THz])
+        axes[0].set_xlim([0.0, current.Nyquist_f_THz])
         if mode == 'log':
             axes[1].plot(current.freqs_THz, current.cepf.logpsd, **plot_kwargs)
-            axes[1].set_xlim([0., current.Nyquist_f_THz])
+            axes[1].set_xlim([0.0, current.Nyquist_f_THz])
             axes[1].set_xlabel(r'$f$ [THz]')
     elif freq_units == 'red':
         axes[0].plot(current.freqs / freq_scale, current.cepf.psd * psd_scale, **plot_kwargs)
-        axes[0].set_xlim([0., 0.5 / freq_scale])
+        axes[0].set_xlim([0.0, 0.5 / freq_scale])
         if mode == 'log':
             axes[1].plot(current.freqs / freq_scale, current.cepf.logpsd, **plot_kwargs)
-            axes[1].set_xlim([0., 0.5 / freq_scale])
+            axes[1].set_xlim([0.0, 0.5 / freq_scale])
             axes[1].set_xlabel(r'$f$ [$\omega$*DT/2$\pi$]')
     else:
         raise ValueError('Units not valid.')
@@ -384,24 +396,26 @@ def plot_resample(x, xf, PSD_FILTER_W=None, *, freq_units='THz', axes=None, FIGS
     TSKIP = int(x.Nyquist_f_THz / xf.Nyquist_f_THz)
 
     from sportran.current import Current
+
     plot_kappa_units = isinstance(x, Current)
     if not axes:
         figure, axes = plt.subplots(2, sharex=True, figsize=FIGSIZE)
         axes = plot_periodogram(x, PSD_FILTER_W=PSD_FILTER_W, freq_units=freq_units, axes=axes, mode=mode,
-                                kappa_units=plot_kappa_units)   # this also updates x.PSD_FILTER_W
-    xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode, kappa_units=plot_kappa_units)
+                                kappa_units=plot_kappa_units,
+                               )   # this also updates x.PSD_FILTER_W
+    xf.plot_periodogram(freq_units=freq_units, freq_scale=TSKIP, axes=axes, mode=mode, kappa_units=plot_kappa_units,)
     if freq_units in ('THz', 'thz'):
         axes[0].axvline(x=fstar_THz, ls='--', c='k')
-        axes[0].set_xlim([0., x.Nyquist_f_THz])
+        axes[0].set_xlim([0.0, x.Nyquist_f_THz])
         if mode == 'log':
             axes[1].axvline(x=fstar_THz, ls='--', c='k')
-            axes[1].set_xlim([0., x.Nyquist_f_THz])
+            axes[1].set_xlim([0.0, x.Nyquist_f_THz])
     elif freq_units == 'red':
         axes[0].axvline(x=0.5 / TSKIP, ls='--', c='k')
-        axes[0].set_xlim([0., 0.5])
+        axes[0].set_xlim([0.0, 0.5])
         if mode == 'log':
             axes[1].axvline(x=0.5 / TSKIP, ls='--', c='k')
-            axes[1].set_xlim([0., 0.5])
+            axes[1].set_xlim([0.0, 0.5])
     return axes
 
 
@@ -425,8 +439,8 @@ def plot_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None,
             f_THz_max = maxT
 
     if k_SI_max is None:
-        k_SI_max = np.max(
-            jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.KAPPA_SCALE * 0.5) * 1.3
+        k_SI_max = (np.max(jf.fpsd[:int(jf.freqs_THz.shape[0] * f_THz_max / jf.freqs_THz[-1])] * jf.KAPPA_SCALE * 0.5) *
+                    1.3)
 
     figure, ax = plt.subplots(1, 1)   # figsize=(3.8, 2.3)
     ax.plot(jf.freqs_THz, jf.psd * jf.KAPPA_SCALE * 0.5, lw=0.2, c='0.8', zorder=0)
@@ -434,9 +448,9 @@ def plot_psd(jf, j2=None, j2pl=None, f_THz_max=None, k_SI_max=None, k_tick=None,
     if j2 is not None:
         plt.axvline(x=j2.Nyquist_f_THz, ls='--', c='k', dashes=(1.4, 0.6), zorder=3)
     if j2pl is not None:
-        plt.plot(j2pl.freqs_THz, j2pl.cepf.psd * j2pl.KAPPA_SCALE * 0.5, c=colors[1], zorder=1)
+        plt.plot(j2pl.freqs_THz, j2pl.cepf.psd * j2pl.KAPPA_SCALE * 0.5, c=colors[1], zorder=1,)
     try:
-        plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[0][0]) * jf.KAPPA_SCALE * 0.5, c=colors[3], lw=1.0, zorder=1)
+        plt.plot(jf.freqs_THz, np.real(jf.fcospectrum[0][0]) * jf.KAPPA_SCALE * 0.5, c=colors[3], lw=1.0, zorder=1,)
     except:
         pass
 

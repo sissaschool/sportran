@@ -132,7 +132,7 @@ def CSS_Solve(y, P):
     # compute asymptotic covariance matrix of parameters
     yy = y[P - 1:-1]
     for i in range(P - 1):
-        yy = np.row_stack((yy, y[P - 2 - i:-2 - i]))
+        yy = np.vstack((yy, y[P - 2 - i:-2 - i]))
 
     V = np.zeros((P + 1, P + 1))
     V[:P, :P] = inv(np.cov(yy)) * sigma2 / (RUN_TIME - P - 1)

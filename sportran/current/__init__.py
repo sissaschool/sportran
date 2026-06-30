@@ -30,8 +30,15 @@ from .generic import *
 from .heat import *
 from .electric import *
 from .stress import *
+from .thermoelectric import *
 
-__all__ = ['GenericCurrent', 'HeatCurrent', 'ElectricCurrent', 'StressCurrent']
+__all__ = [
+    'GenericCurrent',
+    'HeatCurrent',
+    'ElectricCurrent',
+    'StressCurrent',
+    'ThermoElectricCurrent',
+]
 
 # define list of all classes with units defined
 import inspect

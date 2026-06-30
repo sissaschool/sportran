@@ -11,6 +11,7 @@ These examples show how to use the `sportran` package in a Python script, step b
 
 * [01 - Silica (single component)](01_example_cepstrum_singlecomp_silica.ipynb): analysis of solid amorphous silica, a one-component system.
 * [02 - Liquid NaCl (multi-component)](02_example_cepstrum_doublecomp_NaCl.ipynb): analysis of molten NaCl, a two-component system.
+* [07 - Thermoelectric Wishart (NaCl)](07_example_thermoelectric_wishart.ipynb): one-shot Wishart analysis with `ThermoElectricCurrent` to estimate conductivity, thermal conductivity and Seebeck coefficient.
 
 ### Command line examples
 
